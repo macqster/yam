@@ -169,6 +169,11 @@ The installer copies files into these runtime locations:
 The repo remains the editable source of truth.
 The installed files are runtime copies.
 
+## Reference screenshot
+
+Current known-good startup reference:
+- `screenshots/startup-reference.png`
+
 ## Dependencies
 
 Install with Homebrew:

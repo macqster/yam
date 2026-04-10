@@ -2,11 +2,13 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 #############
 ### input ###
 #############
 
-IMAGE_PATH="${IMAGE_PATH:-/Users/maciejkuster/Downloads/ives_clean_ai.png}"
+IMAGE_PATH="${IMAGE_PATH:-$SCRIPT_DIR/../assets/ives_yam.png}"
 # IMAGE_PATH="${IMAGE_PATH:-/Users/maciejkuster/Desktop/calibration_palette.png}"
 
 #########################

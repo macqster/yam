@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p "$HOME/.config/kitty" "$HOME/.config/fastfetch" "$HOME/.local/bin" "$HOME/.local/share/fastfetch-chafa"
+mkdir -p "$HOME/.local/share/fastfetch-chafa/assets"
 
 cp "$ROOT/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf"
 cp "$ROOT/kitty/current-theme.conf" "$HOME/.config/kitty/current-theme.conf"
@@ -12,6 +13,7 @@ cp "$ROOT/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 cp "$ROOT/fastfetch/startup.zsh" "$HOME/.config/fastfetch/startup.zsh"
 cp "$ROOT/bin/fastfetch-chafa" "$HOME/.local/bin/fastfetch-chafa"
 cp "$ROOT/chafa/chafa_lab.sh" "$HOME/.local/share/fastfetch-chafa/chafa_lab.sh"
+cp "$ROOT/assets/ives_yam.png" "$HOME/.local/share/fastfetch-chafa/assets/ives_yam.png"
 
 chmod +x "$HOME/.local/bin/fastfetch-chafa" "$HOME/.local/share/fastfetch-chafa/chafa_lab.sh" "$HOME/.config/fastfetch/startup.zsh"
 
@@ -27,8 +29,8 @@ Next steps:
      brew install kitty fastfetch chafa
   2. Ensure the font exists:
      JetBrainsMono Nerd Font
-  3. Edit the logo source image in:
-     ~/.local/share/fastfetch-chafa/chafa_lab.sh
+  3. Logo source image is installed to:
+     ~/.local/share/fastfetch-chafa/assets/ives_yam.png
   4. Reopen Kitty.
 
 Repo source of truth:

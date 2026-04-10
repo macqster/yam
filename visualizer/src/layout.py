@@ -31,6 +31,18 @@ class Rect:
             height=self.height + 2 * pady,
         )
 
+    def inset(self, left: int, top: int, right: int, bottom: int) -> "Rect":
+        new_x = self.x + max(0, left)
+        new_y = self.y + max(0, top)
+        new_right = max(new_x + 1, self.right - max(0, right))
+        new_bottom = max(new_y + 1, self.bottom - max(0, bottom))
+        return Rect(
+            x=new_x,
+            y=new_y,
+            width=max(1, new_right - new_x),
+            height=max(1, new_bottom - new_y),
+        )
+
 
 @dataclass(frozen=True)
 class SceneLayout:
@@ -38,6 +50,8 @@ class SceneLayout:
     info: Rect
     ivy_bounds: Rect
     no_go_zones: tuple[Rect, ...]
+    allowed_cells: frozenset[tuple[int, int]]
+    region_cells: dict[str, frozenset[tuple[int, int]]]
     warning: str | None
 
 
@@ -96,14 +110,67 @@ def build_layout(
     hero_pad_y = layout_cfg.get("hero_safe_pad_y", 1)
     info_pad_x = layout_cfg.get("info_safe_pad_x", 2)
     info_pad_y = layout_cfg.get("info_safe_pad_y", 1)
-    no_go_zones = (
-        hero.inflate(hero_pad_x, hero_pad_y),
-        info.inflate(info_pad_x, info_pad_y),
+    hero_collision = hero.inset(
+        layout_cfg.get("hero_collision_trim_left", 0),
+        layout_cfg.get("hero_collision_trim_top", 0),
+        layout_cfg.get("hero_collision_trim_right", 0),
+        layout_cfg.get("hero_collision_trim_bottom", 0),
     )
+    info_collision = info.inset(
+        layout_cfg.get("info_collision_trim_left", 0),
+        layout_cfg.get("info_collision_trim_top", 0),
+        layout_cfg.get("info_collision_trim_right", 0),
+        layout_cfg.get("info_collision_trim_bottom", 0),
+    )
+    no_go_zones = (
+        hero_collision.inflate(hero_pad_x, hero_pad_y),
+        info_collision.inflate(info_pad_x, info_pad_y),
+    )
+
+    allowed_cells: set[tuple[int, int]] = set()
+    for y in range(1, max(1, ivy_bounds.height - 1)):
+        for x in range(1, max(1, ivy_bounds.width - 1)):
+            if any(zone.contains(x, y) for zone in no_go_zones):
+                continue
+            allowed_cells.add((x, y))
+
+    hero_zone = no_go_zones[0]
+    region_cells = _build_region_cells(allowed_cells, ivy_bounds, hero_zone)
+
     return SceneLayout(
         hero=hero,
         info=info,
         ivy_bounds=ivy_bounds,
         no_go_zones=no_go_zones,
+        allowed_cells=frozenset(allowed_cells),
+        region_cells=region_cells,
         warning=warning,
     )
+
+
+def _build_region_cells(
+    allowed_cells: set[tuple[int, int]],
+    bounds: Rect,
+    hero_zone: Rect,
+) -> dict[str, frozenset[tuple[int, int]]]:
+    midpoint = bounds.width // 2
+
+    regions: dict[str, set[tuple[int, int]]] = {
+        "above_hero": set(),
+        "below_hero": set(),
+        "left_field": set(),
+        "right_field": set(),
+    }
+
+    for x, y in allowed_cells:
+        if y < hero_zone.y:
+            regions["above_hero"].add((x, y))
+        elif y >= hero_zone.bottom:
+            regions["below_hero"].add((x, y))
+
+        if x < midpoint:
+            regions["left_field"].add((x, y))
+        else:
+            regions["right_field"].add((x, y))
+
+    return {name: frozenset(cells) for name, cells in regions.items()}

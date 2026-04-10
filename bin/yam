@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+REPO_ROOT="$HOME/yam/visualizer"
+APP_ROOT="${YAM_VISUALIZER_ROOT:-}"
+
+if [[ -z "$APP_ROOT" ]]; then
+  if [[ -x "$REPO_ROOT/run_visualizer.sh" ]]; then
+    APP_ROOT="$REPO_ROOT"
+  else
+    APP_ROOT="$HOME/.local/share/yam-visualizer"
+  fi
+fi
+
+LAUNCHER="$APP_ROOT/run_visualizer.sh"
+
+if [[ ! -x "$LAUNCHER" ]]; then
+  echo "yam visualizer launcher not found at $LAUNCHER" >&2
+  exit 1
+fi
+
+exec "$LAUNCHER" "$@"

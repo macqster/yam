@@ -1,0 +1,99 @@
+{
+  "chafa": {
+    "source_gif": "/Users/maciejkuster/Downloads/chafa_studies/ives_window_keyed_opt.gif",
+    "fallback_image": "../assets/ives_yam.png",
+    "cache_dir_raw": "assets/frames_raw",
+    "cache_dir_chafa": "assets/frames_chafa",
+    "frame_count": 14,
+    "width": 48,
+    "height": 48,
+    "align": "left,top",
+    "symbols": "braille",
+    "fill": "none",
+    "colors": "full",
+    "color_space": "rgb",
+    "color_extractor": "average",
+    "fg_only": true,
+    "bg": "#21211c",
+    "threshold": 0.92,
+    "preprocess": "on",
+    "dither": "none"
+  },
+  "timing": {
+    "render_fps": 12,
+    "hero_fps": 2,
+    "ivy_tick_seconds": 0.1,
+    "info_refresh_seconds": 1.0
+  },
+  "layout": {
+    "min_terminal_columns": 100,
+    "min_terminal_rows": 28,
+    "outer_margin_x": 4,
+    "outer_margin_y": 4,
+    "hero_anchor": "center",
+    "hero_offset_x": -16,
+    "hero_offset_y":-2,
+    "hero_safe_pad_x": 2,
+    "hero_safe_pad_y": 1,
+    "info_width": 16,
+    "info_height": 8,
+    "info_gap": 4,
+    "info_offset_x": -24,
+    "info_offset_y": 4,
+    "info_safe_pad_x": 2,
+    "info_safe_pad_y": 1
+  },
+  "ivy": {
+    "seed_count": 5,
+    "min_active_heads": 4,
+    "max_active_heads": 28,
+    "max_segments": 2400,
+    "split_chance": 0.22,
+    "turn_chance": 0.48,
+    "leaf_chance": 0.12,
+    "dot_chance": 0.08,
+    "branch_decay": 0.93,
+    "respawn_energy": 0.82,
+    "min_energy": 0.08,
+    "hero_corridor_respawn_bias": 0.85,
+    "hero_corridor_pad_x": 14,
+    "hero_corridor_pad_y": 10,
+    "hero_corridor_min_segments": 260,
+    "open_space_respawn_bias": 0.7,
+    "edge_respawn_bias": 0.7,
+    "rebalance_threshold": 80,
+    "stem_colors": [
+      "\u001b[38;5;65m",
+      "\u001b[38;5;71m",
+      "\u001b[38;5;108m"
+    ],
+    "leaf_colors": [
+      "\u001b[38;5;108m",
+      "\u001b[38;5;114m",
+      "\u001b[38;5;151m"
+    ],
+    "stem_glyphs": [
+      "\u2500",
+      "\u2572",
+      "\u2571",
+      "\u2572",
+      "\u2571",
+      "\u2572"
+    ],
+    "leaf_glyphs": [
+      "\u2022",
+      "\u273f",
+      "\u25cf"
+    ],
+    "dot_glyphs": [
+      "\u00b7",
+      "\u2024"
+    ]
+  },
+  "panel": {
+    "enabled": true,
+    "title": "yam",
+    "timezone": "local",
+    "show_weather_placeholder": false
+  }
+}

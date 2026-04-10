@@ -1,0 +1,109 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from terminal import TerminalSize
+
+
+@dataclass(frozen=True)
+class Rect:
+    x: int
+    y: int
+    width: int
+    height: int
+
+    @property
+    def right(self) -> int:
+        return self.x + self.width
+
+    @property
+    def bottom(self) -> int:
+        return self.y + self.height
+
+    def contains(self, x: int, y: int) -> bool:
+        return self.x <= x < self.right and self.y <= y < self.bottom
+
+    def inflate(self, padx: int, pady: int) -> "Rect":
+        return Rect(
+            x=max(0, self.x - padx),
+            y=max(0, self.y - pady),
+            width=self.width + 2 * padx,
+            height=self.height + 2 * pady,
+        )
+
+
+@dataclass(frozen=True)
+class SceneLayout:
+    hero: Rect
+    info: Rect
+    ivy_bounds: Rect
+    no_go_zones: tuple[Rect, ...]
+    warning: str | None
+
+
+def build_layout(
+    size: TerminalSize,
+    config: dict,
+    hero_width: int,
+    hero_height: int,
+) -> SceneLayout:
+    layout_cfg = config["layout"]
+    margin_x = layout_cfg["outer_margin_x"]
+    margin_y = layout_cfg["outer_margin_y"]
+    warning = None
+
+    if (
+        size.columns < layout_cfg["min_terminal_columns"]
+        or size.rows < layout_cfg["min_terminal_rows"]
+    ):
+        warning = (
+            f"Resize terminal to at least "
+            f"{layout_cfg['min_terminal_columns']}x{layout_cfg['min_terminal_rows']}"
+        )
+
+    hero_anchor = layout_cfg.get("hero_anchor", "left")
+    if hero_anchor == "center":
+        hero_base_x = max(margin_x, (size.columns - hero_width) // 2)
+    elif hero_anchor == "right":
+        hero_base_x = max(margin_x, size.columns - hero_width - margin_x)
+    else:
+        hero_base_x = margin_x
+
+    hero_x = hero_base_x + layout_cfg["hero_offset_x"]
+    hero_y = margin_y + layout_cfg["hero_offset_y"]
+    hero = Rect(x=hero_x, y=hero_y, width=hero_width, height=hero_height)
+
+    info_gap = layout_cfg.get("info_gap", 6)
+    info_base_x = size.columns - layout_cfg["info_width"] - margin_x
+    info_x = info_base_x + layout_cfg["info_offset_x"]
+    info_y = margin_y + layout_cfg["info_offset_y"]
+    min_info_x = hero.right + info_gap
+    max_info_x = max(margin_x, size.columns - layout_cfg["info_width"] - margin_x)
+    info = Rect(
+        x=max(min_info_x, min(info_x, max_info_x)),
+        y=info_y,
+        width=layout_cfg["info_width"],
+        height=layout_cfg["info_height"],
+    )
+
+    ivy_bounds = Rect(
+        x=0,
+        y=0,
+        width=max(1, size.columns),
+        height=max(1, size.rows),
+    )
+    hero_pad_x = layout_cfg.get("hero_safe_pad_x", 2)
+    hero_pad_y = layout_cfg.get("hero_safe_pad_y", 1)
+    info_pad_x = layout_cfg.get("info_safe_pad_x", 2)
+    info_pad_y = layout_cfg.get("info_safe_pad_y", 1)
+    no_go_zones = (
+        hero.inflate(hero_pad_x, hero_pad_y),
+        info.inflate(info_pad_x, info_pad_y),
+    )
+    return SceneLayout(
+        hero=hero,
+        info=info,
+        ivy_bounds=ivy_bounds,
+        no_go_zones=no_go_zones,
+        warning=warning,
+    )

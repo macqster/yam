@@ -3,12 +3,22 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ASSET_PATH="$SCRIPT_DIR/../assets/ives_yam.png"
+RUNTIME_ASSET_PATH="$SCRIPT_DIR/assets/ives_yam.png"
 
 #############
 ### input ###
 #############
 
-IMAGE_PATH="${IMAGE_PATH:-$SCRIPT_DIR/../assets/ives_yam.png}"
+if [[ -z "${IMAGE_PATH:-}" ]]; then
+  if [[ -f "$REPO_ASSET_PATH" ]]; then
+    IMAGE_PATH="$REPO_ASSET_PATH"
+  elif [[ -f "$RUNTIME_ASSET_PATH" ]]; then
+    IMAGE_PATH="$RUNTIME_ASSET_PATH"
+  else
+    IMAGE_PATH="$REPO_ASSET_PATH"
+  fi
+fi
 # IMAGE_PATH="${IMAGE_PATH:-/Users/maciejkuster/Desktop/calibration_palette.png}"
 
 #########################

@@ -1,1 +1,7 @@
 .DS_Store
+visualizer/.venv/
+visualizer/src/__pycache__/
+visualizer/assets/frames_raw/
+visualizer/assets/frames_chafa/
+visualizer/assets/source.gif
+visualizer/visualizer/

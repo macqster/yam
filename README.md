@@ -1,11 +1,36 @@
 # yam
 
-Personal macOS Kitty + Fastfetch + Chafa startup scene.
+Personal macOS Kitty + Fastfetch + Chafa startup scene, plus a dedicated Kitty visualizer mode.
 
 This repo preserves the current working terminal rice and keeps the moving parts
 small enough to reinstall and modify without reverse-engineering it later.
 
 The setup is intentionally macOS-specific and personal.
+
+## Visualizer mode
+
+The repo now also includes a separate visualizer app under [visualizer/](/Users/maciejkuster/yam/visualizer).
+
+This is intentionally not part of shell startup. It is a standalone Kitty-friendly scene that combines:
+
+- cached Chafa hero animation from a GIF
+- slow procedural ivy ornament
+- compact time/date info panel
+
+Run it from the repo root with:
+
+```bash
+./visualizer/run_visualizer.sh
+```
+
+After `./install.sh`, launch it from Kitty with:
+
+```bash
+yam
+```
+
+See [visualizer/README.md](/Users/maciejkuster/yam/visualizer/README.md) for setup and tuning details.
+See [visualizer/STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md) for the current maintenance snapshot and ivy-engine status.
 
 ## What this repo is
 
@@ -36,6 +61,8 @@ Animation is for manual Chafa testing, not shell startup.
   - `chafa_lab.sh`
 - `assets/`
   - `ives_yam.png`
+- `visualizer/`
+  - standalone Kitty visualizer app
 - `install.sh`
 - `Brewfile`
 
@@ -254,7 +281,9 @@ brew install kitty fastfetch chafa
 - copies the wrapper into `~/.local/bin/`
 - copies the Chafa script into `~/.local/share/fastfetch-chafa/`
 - copies the source portrait image into `~/.local/share/fastfetch-chafa/assets/`
+- copies the visualizer runtime bundle into `~/.local/share/yam-visualizer/`
 - makes the scripts executable
+- creates the visualizer venv in `~/.local/share/yam-visualizer/.venv`
 - appends one source line to `~/.zshrc` only if it is not already there
 
 It is intentionally conservative.
@@ -353,11 +382,9 @@ That means:
 Do not assume the installed files are safe to edit and forget.
 If you do that, the repo and the live setup will drift apart and future debugging gets confusing fast.
 
-One specific expected difference is `chafa/chafa_lab.sh`:
-- in the repo it loads the image from `../assets/ives_yam.png`
-- in the installed runtime copy it loads the image from `assets/ives_yam.png`
-
-That path difference is intentional because the repo and runtime directory layouts are different.
+One specific expected difference is `chafa/chafa_lab.sh` asset resolution:
+- the script supports the repo layout and the installed runtime layout
+- that dual-path behavior is intentional because the directory layouts are different
 
 
 ## Recommended workflow

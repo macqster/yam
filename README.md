@@ -306,6 +306,30 @@ Edit:
   - It is not trying to be the minimal stock Fastfetch look.
 - If a future config drift makes things confusing, check this README first and restore from repo files rather than guessing from installed copies.
 
+## Avoid drift
+
+There are two copies of this setup at any given time:
+
+- the repo copy in `~/yam`
+- the installed runtime copy under `~/.config` and `~/.local`
+
+The repo copy is the canonical one.
+
+That means:
+- edit repo files first whenever possible
+- run `./install.sh` to sync the runtime copy
+- if you hot-fix a live file under `~/.config` or `~/.local`, copy that change back into the repo before committing
+
+Do not assume the installed files are safe to edit and forget.
+If you do that, the repo and the live setup will drift apart and future debugging gets confusing fast.
+
+One specific expected difference is `chafa/chafa_lab.sh`:
+- in the repo it loads the image from `../assets/ives_yam.png`
+- in the installed runtime copy it loads the image from `assets/ives_yam.png`
+
+That path difference is intentional because the repo and runtime directory layouts are different.
+
+
 ## Recommended workflow
 
 1. Edit files in this repo.

@@ -30,4 +30,7 @@ Next steps:
   3. Edit the logo source image in:
      ~/.local/share/fastfetch-chafa/chafa_lab.sh
   4. Reopen Kitty.
+
+Repo source of truth:
+  ~/yam
 EOF

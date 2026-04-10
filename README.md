@@ -37,6 +37,7 @@ Animation is for manual Chafa testing, not shell startup.
 - `assets/`
   - `ives_yam.png`
 - `install.sh`
+- `Brewfile`
 
 ## File ownership
 
@@ -174,12 +175,30 @@ The installed files are runtime copies.
 Current known-good startup reference:
 - `screenshots/startup-reference.png`
 
+## Verified on
+
+This repo was last verified on:
+- macOS Tahoe 26.4
+- Kitty 0.46.2
+- Fastfetch 2.61.0
+- Chafa 1.18.1
+- Homebrew 5.1.5
+- Font: JetBrainsMono Nerd Font
+
+Minor rendering differences may still happen across macOS, font, or package versions.
+
 ## Dependencies
 
 Install with Homebrew:
 
 ```bash
 brew install kitty fastfetch chafa
+```
+
+Or from the repo root:
+
+```bash
+brew bundle
 ```
 
 Required font:
@@ -204,6 +223,12 @@ cd ~/yam
 ```
 
 2. Install dependencies:
+
+```bash
+brew bundle
+```
+
+Fallback if you do not want to use `Brewfile`:
 
 ```bash
 brew install kitty fastfetch chafa

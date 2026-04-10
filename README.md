@@ -34,6 +34,8 @@ Animation is for manual Chafa testing, not shell startup.
   - `fastfetch-chafa`
 - `chafa/`
   - `chafa_lab.sh`
+- `assets/`
+  - `ives_yam.png`
 - `install.sh`
 
 ## File ownership
@@ -144,6 +146,14 @@ Edit this file when you want to change:
 
 This is the source of truth for the portrait rendering style.
 
+### `assets/ives_yam.png`
+
+Owns:
+- the default source portrait used by the Chafa script
+
+Edit or replace this file when you want to change:
+- the source image behind the startup portrait
+
 ## Current live paths after install
 
 The installer copies files into these runtime locations:
@@ -154,6 +164,7 @@ The installer copies files into these runtime locations:
 - `~/.config/fastfetch/startup.zsh`
 - `~/.local/bin/fastfetch-chafa`
 - `~/.local/share/fastfetch-chafa/chafa_lab.sh`
+- `~/.local/share/fastfetch-chafa/assets/ives_yam.png`
 
 The repo remains the editable source of truth.
 The installed files are runtime copies.
@@ -212,6 +223,7 @@ brew install kitty fastfetch chafa
 - copies Fastfetch config into `~/.config/fastfetch/`
 - copies the wrapper into `~/.local/bin/`
 - copies the Chafa script into `~/.local/share/fastfetch-chafa/`
+- copies the source portrait image into `~/.local/share/fastfetch-chafa/assets/`
 - makes the scripts executable
 - appends one source line to `~/.zshrc` only if it is not already there
 
@@ -283,6 +295,7 @@ Edit:
 - Fastfetch is used as the startup frame and system panel.
   - We are not replacing it with a custom compositor.
 - Chafa rendering is optimized for the current portrait aesthetic, not for general image fidelity.
+- The default portrait image is resolved relative to `chafa_lab.sh`, so the live setup does not depend on `Desktop` or `Downloads`.
 - The repo stays personal and macOS-specific.
 
 ## Known caveats

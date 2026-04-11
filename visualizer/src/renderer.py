@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass
 
 from layout import SceneLayout
@@ -17,10 +16,6 @@ class PositionedBlock:
     lines: list[str]
 
 
-def _blank_row(width: int) -> str:
-    return " " * width
-
-
 def compose_scene(
     size: TerminalSize,
     layout: SceneLayout,
@@ -28,67 +23,99 @@ def compose_scene(
     ivy_segments: dict[tuple[int, int], str],
     panel_lines: list[str],
 ) -> str:
-    row_segments: dict[int, list[tuple[int, str]]] = defaultdict(list)
+    rows: list[list[str]] = [[" " for _ in range(size.columns)] for _ in range(size.rows)]
+
+    for (x, y), glyph in ivy_segments.items():
+        if 0 <= x < size.columns and 0 <= y < size.rows:
+            rows[y][x] = glyph
+
     blocks = [
         PositionedBlock(layout.hero.x, layout.hero.y, hero_lines),
         PositionedBlock(layout.info.x, layout.info.y, panel_lines),
     ]
+    for block in blocks:
+        _stamp_block(rows, size, block)
 
-    for (x, y), glyph in ivy_segments.items():
-        if 0 <= y < size.rows and 0 <= x < size.columns:
-            row_segments[y].append((x, glyph))
-
-    for block in sorted(blocks, key=lambda item: (item.y, item.x, len(item.lines))):
-        _stamp_block(row_segments, size, block)
-
-    base_rows = [_compose_row(size.columns, row_segments.get(row, [])) for row in range(size.rows)]
-    if layout.warning:
-        warning = f"{AMBIENT}{layout.warning.center(size.columns)}{RESET}"
-        if size.rows > 1:
-            base_rows[1] = warning
-
+    base_rows = [_compose_row(row) for row in rows]
+    if layout.warning and size.rows > 1:
+        base_rows[1] = f"{AMBIENT}{layout.warning.center(size.columns)}{RESET}"
     return "\n".join(base_rows)
 
 
-def _stamp_block(
-    row_segments: dict[int, list[tuple[int, str]]],
-    size: TerminalSize,
-    block: PositionedBlock,
-) -> None:
+def _stamp_block(rows: list[list[str]], size: TerminalSize, block: PositionedBlock) -> None:
     for line_index, content in enumerate(block.lines):
         row_index = block.y + line_index
         if row_index < 0 or row_index >= size.rows:
             continue
         if block.x >= size.columns:
             continue
-        row_segments[row_index].append((block.x, content))
+
+        for offset, glyph in enumerate(_tokenize_ansi_cells(content)):
+            column = block.x + offset
+            if column < 0 or column >= size.columns:
+                continue
+            rows[row_index][column] = glyph
 
 
-def _compose_row(width: int, segments: list[tuple[int, str]]) -> str:
-    if not segments:
-        return _blank_row(width)
-
-    cursor = 0
+def _compose_row(cells: list[str]) -> str:
     parts: list[str] = []
-    for x, content in sorted(segments, key=lambda item: item[0]):
-        if x > cursor:
-            parts.append(" " * (x - cursor))
-            cursor = x
-        parts.append(content)
-        cursor = x + len(_strip_ansi(content))
+    active_style = ""
+    for cell in cells:
+        text, style = _split_cell_style(cell)
+        if style != active_style:
+            if active_style and not style:
+                parts.append(RESET)
+            elif style:
+                parts.append(style)
+            active_style = style
+        parts.append(text)
+    if active_style:
+        parts.append(RESET)
     return "".join(parts)
 
 
-def _strip_ansi(text: str) -> str:
-    result: list[str] = []
-    in_escape = False
-    for char in text:
-        if in_escape:
-            if char.isalpha():
-                in_escape = False
-            continue
+def _tokenize_ansi_cells(text: str) -> list[str]:
+    tokens: list[str] = []
+    style = ""
+    index = 0
+    length = len(text)
+    while index < length:
+        char = text[index]
         if char == "\x1b":
-            in_escape = True
+            end = index + 1
+            while end < length and not text[end].isalpha():
+                end += 1
+            if end < length:
+                end += 1
+            sequence = text[index:end]
+            style = "" if sequence == RESET else sequence
+            index = end
             continue
-        result.append(char)
-    return "".join(result)
+        tokens.append(f"{style}{char}{RESET}" if style else char)
+        index += 1
+    return tokens
+
+
+def _split_cell_style(cell: str) -> tuple[str, str]:
+    if not cell.startswith("\x1b"):
+        return cell, ""
+
+    index = 0
+    style_parts: list[str] = []
+    while index < len(cell) and cell[index] == "\x1b":
+        end = index + 1
+        while end < len(cell) and not cell[end].isalpha():
+            end += 1
+        if end < len(cell):
+            end += 1
+        sequence = cell[index:end]
+        if sequence != RESET:
+            style_parts.append(sequence)
+        index = end
+        if index < len(cell) and cell[index] != "\x1b":
+            break
+
+    text_end = cell.find("\x1b", index)
+    if text_end == -1:
+        text_end = len(cell)
+    return cell[index:text_end], "".join(style_parts)

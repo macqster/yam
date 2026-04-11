@@ -77,6 +77,10 @@ Primary config file:
 
 - `config/visualizer.json`
 
+Detailed manual:
+
+- `CONFIG.md`
+
 Current major sections:
 
 - `chafa`
@@ -181,3 +185,16 @@ Before ingesting more ivy code:
 2. preserve the existing engine interface
 3. expand `layout.py` to expose allowed masks/regions
 4. replace `ivy_engine.py` behind the same public API
+
+## Unspecified Future Objectives
+
+These are intentionally deferred, but should remain visible in project scope:
+
+- multi-glyph leaves with richer shape language
+- flower rendering as a distinct ornament system
+- full lifecycle handling for leaves and flowers:
+  - emergence
+  - maturity
+  - aging
+  - decay
+- a secondary independent plant/organism for the upper-right negative space, if that corner continues to feel compositionally empty

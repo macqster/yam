@@ -50,12 +50,90 @@ yam
 
 Main settings live in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json).
 
-The easiest things to tweak are:
+There are now two documentation layers for config:
+
+- practical overview here in this README
+- full field-by-field manual in [CONFIG.md](/Users/maciejkuster/yam/visualizer/CONFIG.md)
+
+The easiest things to tweak first are:
 
 - Chafa frame count, size, symbol mode, palette, and alpha handling
 - renderer cadence for hero and ivy motion
 - info panel dimensions and placement
 - ivy experiment settings and glyph/color vocabulary
+
+### Practical Config Guide
+
+Start with these sections in order:
+
+1. `chafa`
+   Use this to control the hero art footprint and quality.
+   The single most important composition knob here is `height`.
+
+2. `layout`
+   Use this to place the hero and panel and define how close ivy is allowed to get.
+   The most important collision controls are:
+   - `hero_collision_trim_*`
+   - `hero_safe_pad_*`
+   - `info_collision_trim_*`
+   - `info_safe_pad_*`
+
+3. `timing`
+   Use this to switch between development/debug cadence and calmer presentation cadence.
+   Typical pattern:
+   - development: higher `render_fps`, faster `ivy_tick_seconds`
+   - presentation: slower hero and ivy cadence
+
+4. `ivy`
+   Use this last.
+   This is the most experimental section and the easiest place to create aggressive or awkward growth if multiple values are pushed at once.
+
+### Recommended Tuning Order
+
+When the scene looks wrong, change things in this order:
+
+1. hero size and position
+2. panel position
+3. collision trims and safe padding
+4. timing cadence
+5. ivy growth pressure
+6. ornament density
+
+This avoids using growth tuning to solve what is really a layout problem.
+
+### High-Impact Knobs
+
+These settings have the biggest visible effect:
+
+- `chafa.height`
+  Changes how much of the scene the hero occupies.
+- `layout.hero_offset_y`
+  Changes the vertical composition and available crawl space.
+- `layout.hero_safe_pad_x`
+  Controls how tightly ivy can frame the hero.
+- `layout.info_safe_pad_x`
+  Controls how tightly ivy can approach the panel text.
+- `ivy.forward_bonus`
+  Too high makes scaffold-like rails.
+- `ivy.support_wrap_bonus`
+  Too high makes the vine orbit obstacle edges.
+- `ivy.hero_contour_attraction`
+  Too high makes the vine feel pushy around hero/panel boundaries.
+- `ivy.leaf_stamp_chance`
+  Controls how quickly the plant becomes visually busy.
+- `timing.ivy_tick_seconds`
+  Strongly affects perceived aggressiveness.
+
+### Debug vs Presentation
+
+Two common operating modes:
+
+- Debug mode
+  Use faster redraw and faster ivy stepping so growth behavior is easy to inspect.
+- Presentation mode
+  Use calmer cadence so the scene feels atmospheric rather than mechanical.
+
+Current values can move between those modes during development. The config should be treated as a live tuning surface, not a fixed finished spec.
 
 ## Assets and caching
 
@@ -71,7 +149,11 @@ Delete the cache directories if you want to force a fresh render after changing 
 - `src/main.py` owns the loop and screen lifecycle
 - `src/chafa_pipeline.py` creates or loads fixed-size cached Chafa frames
 - `src/layout.py` defines hero/info regions and ivy no-go zones
-- `src/ivy_engine.py` maintains slow edge-biased ornamental growth
+- `src/ivy_engine.py` is the public ivy engine adapter
+- `src/ivy_growth.py` holds movement, guidance, support, and contour-follow logic
+- `src/ivy_ornament.py` holds leaf stamps, death clusters, thickening, and segment merge logic
+- `src/ivy_state.py` holds mutable ivy state
+- `src/ivy_types.py` holds shared types and palette constants
 - `src/info_panel.py` renders the quiet time/date card
 - `src/renderer.py` composes the terminal scene in one process
 - `src/terminal.py` handles alt-screen and cursor cleanup
@@ -84,4 +166,17 @@ For the current project status, known caveats, and future ivy integration bounda
 - The renderer assumes the hero art and info panel do not overlap ivy because composition stays terminal-text-native and avoids raster stacking
 - Layout is tuned for a roomy Kitty window, not tiny terminals
 - The fallback GIF is a generated stand-in, not bespoke animation art
-- The current ivy engine is experimental and not yet considered the final model for reliable full-scene sprawl
+- The current ivy engine is still experimental and not yet considered the final model for reliable full-scene sprawl
+
+## Future Objectives
+
+Unspecified-future objectives worth preserving explicitly:
+
+- multi-glyph leaves with fuller shape language instead of only small single-cell accents and stamps
+- flowers as first-class ornament elements, not just glyph substitutions
+- full lifecycle treatment for foliage and flowers:
+  - emergence
+  - maturity
+  - aging
+  - decay
+- a possible second independent plant/organism in the upper-right corner if that area remains compositionally underused

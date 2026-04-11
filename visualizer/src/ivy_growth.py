@@ -9,7 +9,7 @@ from layout import SceneLayout
 
 
 def initial_trunk_seed(config: dict, layout: SceneLayout, rng: random.Random, state: IvyState) -> Point | None:
-    hero_zone = layout.no_go_zones[0]
+    hero_zone = layout.hero_guide
     target_x = min(layout.ivy_bounds.width - 2, hero_zone.right + int(config["trunk_seed_offset_x"]))
     start_y = layout.ivy_bounds.height - max(3, int(config["trunk_seed_bottom_margin"]))
     end_y = 1
@@ -106,11 +106,25 @@ def move_score(
 
 
 def trunk_guidance_score(tip: GrowthTip, config: dict, x: int, y: int, dx: int, dy: int, layout: SceneLayout) -> float:
-    hero_zone = layout.no_go_zones[0]
+    hero_zone = layout.hero_guide
     support_top, support_bottom, support_left, support_right = support_geometry(config, layout)
     top_soft_limit = int(config["top_edge_soft_limit"])
+    ascent_margin = int(config.get("hero_ascent_margin", 0))
+    top_traverse_margin = int(config.get("hero_top_traverse_margin", 0))
 
     score = 0.0
+    if hero_zone.right < tip.x <= hero_zone.right + ascent_margin and tip.y >= hero_zone.y:
+        if dy == -1:
+            score += float(config.get("hero_ascent_bonus", 0.0))
+        if dx == -1 and dy == -1:
+            score += 0.6 * float(config.get("hero_ascent_bonus", 0.0))
+        if dx == 0 and dy == -1:
+            score += 0.35 * float(config.get("hero_ascent_bonus", 0.0))
+        if dy == 0:
+            score -= 0.75 * float(config.get("hero_pileup_penalty", 0.0))
+        if dy == 1:
+            score -= float(config.get("hero_pileup_penalty", 0.0))
+
     if tip.y > support_bottom:
         if dy == -1:
             score += float(config["trunk_climb_bonus"])
@@ -155,12 +169,45 @@ def trunk_guidance_score(tip: GrowthTip, config: dict, x: int, y: int, dx: int, 
     if x < hero_zone.x and dx == 1:
         score -= 0.75
 
+    if x > hero_zone.right + ascent_margin and dx == -1 and dy == -1:
+        score += float(config.get("pre_ascent_diagonal_bonus", 0.0))
+    if x > hero_zone.right + ascent_margin and dy == 0:
+        score -= 0.5 * float(config.get("hero_pileup_penalty", 0.0))
+
+    if (
+        hero_zone.y - top_traverse_margin <= y <= hero_zone.y + top_traverse_margin
+        and hero_zone.x <= x <= hero_zone.right + ascent_margin
+    ):
+        if dx == -1:
+            score += float(config.get("hero_top_traverse_bonus", 0.0))
+        if dx == -1 and dy == 0:
+            score += 0.5 * float(config.get("hero_top_traverse_bonus", 0.0))
+        if dy == 1:
+            score -= 0.75 * float(config.get("hero_top_traverse_bonus", 0.0))
+
+    score += below_hero_recovery_score(config, x, y, dx, dy, layout, branch=False)
+    score += floor_avoidance_score(config, y, dx, dy, layout, branch=False)
+
+    overlap_margin = int(config.get("hero_lateral_overlap_margin", 0))
+    lateral_penalty = float(config.get("hero_lateral_entry_penalty", 0.0))
+    if lateral_penalty > 0 and (hero_zone.y - overlap_margin) <= y <= (hero_zone.bottom + overlap_margin):
+        if hero_zone.right < x <= hero_zone.right + overlap_margin and dx < 0:
+            score -= lateral_penalty
+            if dy != 0:
+                score += 0.75
+        if hero_zone.x - overlap_margin <= x < hero_zone.x and dx > 0:
+            score -= lateral_penalty
+            if dy != 0:
+                score += 0.75
+
     score += contour_follow_score(config, x, y, dx, dy, layout)
+    score -= proximity_pressure_score(config, x, y, dx, dy, layout)
     return score
 
 
 def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout: SceneLayout) -> float:
-    hero_zone = layout.no_go_zones[0]
+    hero_zone = layout.hero_guide
+    ascent_margin = int(config.get("hero_ascent_margin", 0))
     score = 0.0
     if dy == 1:
         score += float(config["branch_gravity_bonus"])
@@ -170,7 +217,7 @@ def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout
         score += 0.5
 
     nearest_zone_x = hero_zone.x if x < hero_zone.x else hero_zone.right
-    if abs(x - nearest_zone_x) <= int(config["hero_contour_attraction"]):
+    if abs(x - nearest_zone_x) <= int(config.get("hero_boundary_attraction", config["hero_contour_attraction"])):
         score += 0.75
     if (x, y) in layout.region_cells.get("below_hero", frozenset()):
         score += 0.5
@@ -179,7 +226,28 @@ def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout
         if dy == 1:
             score += 1.0
 
+    if hero_zone.right < x <= hero_zone.right + ascent_margin and hero_zone.y <= y <= hero_zone.bottom:
+        if dy == -1:
+            score += 0.5 * float(config.get("hero_ascent_bonus", 0.0))
+        if dx != 0 and dy == 0:
+            score -= 0.5 * float(config.get("hero_pileup_penalty", 0.0))
+
+    overlap_margin = int(config.get("hero_lateral_overlap_margin", 0))
+    lateral_penalty = 0.6 * float(config.get("hero_lateral_entry_penalty", 0.0))
+    if lateral_penalty > 0 and (hero_zone.y - overlap_margin) <= y <= (hero_zone.bottom + overlap_margin):
+        if hero_zone.right < x <= hero_zone.right + overlap_margin and dx < 0:
+            score -= lateral_penalty
+            if dy != 0:
+                score += 0.5
+        if hero_zone.x - overlap_margin <= x < hero_zone.x and dx > 0:
+            score -= lateral_penalty
+            if dy != 0:
+                score += 0.5
+
     score += 0.75 * contour_follow_score(config, x, y, dx, dy, layout)
+    score -= 0.75 * proximity_pressure_score(config, x, y, dx, dy, layout)
+    score += below_hero_recovery_score(config, x, y, dx, dy, layout, branch=True)
+    score += floor_avoidance_score(config, y, dx, dy, layout, branch=True)
     return score
 
 
@@ -199,7 +267,7 @@ def branch_direction(config: dict, x: int, y: int, dy: int, layout: SceneLayout)
 
 
 def support_geometry(config: dict, layout: SceneLayout) -> tuple[int, int, int, int]:
-    hero_zone = layout.no_go_zones[0]
+    hero_zone = layout.hero_guide
     band_height = int(config["support_band_height"])
     above_gap = max(0, hero_zone.y - 1)
     below_gap = max(0, layout.ivy_bounds.height - hero_zone.bottom - 2)
@@ -222,18 +290,192 @@ def support_geometry(config: dict, layout: SceneLayout) -> tuple[int, int, int, 
 
 def contour_follow_score(config: dict, x: int, y: int, dx: int, dy: int, layout: SceneLayout) -> float:
     score = 0.0
-    attraction = float(config["hero_contour_attraction"])
-    for zone in layout.no_go_zones:
-        horizontal_gap = min(abs(x - zone.x), abs(x - zone.right))
-        vertical_gap = min(abs(y - zone.y), abs(y - zone.bottom))
-        near_vertical_face = zone.y <= y <= zone.bottom and horizontal_gap <= attraction
-        near_horizontal_face = zone.x <= x <= zone.right and vertical_gap <= attraction
-        if near_vertical_face and dy != 0:
-            score += 2.0
-        if near_horizontal_face and dx != 0:
-            score += 2.0
-        if zone.contains(x + dx, y + dy):
-            score -= 6.0
+    hero_attraction = float(config.get("hero_boundary_attraction", config["hero_contour_attraction"]))
+    score += _mask_contour_follow_score(
+        x,
+        y,
+        dx,
+        dy,
+        layout.hero_mask_boundary_cells,
+        layout.hero_mask_cells,
+        hero_attraction,
+    )
+
+    info_zone = layout.info_guide
+    info_attraction = float(config.get("info_boundary_attraction", config["hero_contour_attraction"]))
+    horizontal_gap = min(abs(x - info_zone.x), abs(x - info_zone.right))
+    vertical_gap = min(abs(y - info_zone.y), abs(y - info_zone.bottom))
+    near_vertical_face = info_zone.y <= y <= info_zone.bottom and horizontal_gap <= info_attraction
+    near_horizontal_face = info_zone.x <= x <= info_zone.right and vertical_gap <= info_attraction
+    if near_vertical_face and dy != 0:
+        score += 2.0
+    if near_horizontal_face and dx != 0:
+        score += 2.0
+    if info_zone.contains(x + dx, y + dy):
+        score -= 6.0
+    return score
+
+
+def proximity_pressure_score(config: dict, x: int, y: int, dx: int, dy: int, layout: SceneLayout) -> float:
+    score = 0.0
+    score += _mask_proximity_pressure_score(
+        x,
+        y,
+        dx,
+        dy,
+        layout.hero_mask_boundary_cells,
+        int(config.get("hero_collision_soft_margin", config.get("collision_soft_margin", 0))),
+        float(config.get("hero_collision_proximity_penalty", config.get("collision_proximity_penalty", 0.0))),
+    )
+
+    info_zone = layout.info_guide
+    soft_margin = int(config.get("info_collision_soft_margin", config.get("collision_soft_margin", 0)))
+    proximity_penalty = float(config.get("info_collision_proximity_penalty", config.get("collision_proximity_penalty", 0.0)))
+    if soft_margin <= 0 or proximity_penalty <= 0:
+        return score
+    horizontal_gap = info_zone.x - x if x < info_zone.x else x - info_zone.right if x > info_zone.right else 0
+    vertical_gap = info_zone.y - y if y < info_zone.y else y - info_zone.bottom if y > info_zone.bottom else 0
+    gap = min(horizontal_gap, vertical_gap) if horizontal_gap and vertical_gap else max(horizontal_gap, vertical_gap)
+    if gap <= 0 or gap > soft_margin:
+        return score
+
+    pressure = (soft_margin - gap + 1) / soft_margin
+    score += proximity_penalty * pressure
+    if x < info_zone.x and dx > 0:
+        score += 0.5 * proximity_penalty * pressure
+    elif x > info_zone.right and dx < 0:
+        score += 0.5 * proximity_penalty * pressure
+    if y < info_zone.y and dy > 0:
+        score += 0.5 * proximity_penalty * pressure
+    elif y > info_zone.bottom and dy < 0:
+        score += 0.5 * proximity_penalty * pressure
+
+    return score
+
+
+def _mask_contour_follow_score(
+    x: int,
+    y: int,
+    dx: int,
+    dy: int,
+    boundary_cells: frozenset[Point],
+    blocked_cells: frozenset[Point],
+    attraction: float,
+) -> float:
+    if not boundary_cells or attraction <= 0:
+        return 0.0
+    nearest = _nearest_point(boundary_cells, x, y)
+    if nearest is None:
+        return 0.0
+    bx, by = nearest
+    horizontal_gap = abs(x - bx)
+    vertical_gap = abs(y - by)
+    score = 0.0
+    if horizontal_gap <= attraction and dy != 0:
+        score += 2.0
+    if vertical_gap <= attraction and dx != 0:
+        score += 2.0
+    if (x + dx, y + dy) in blocked_cells:
+        score -= 6.0
+    return score
+
+
+def _mask_proximity_pressure_score(
+    x: int,
+    y: int,
+    dx: int,
+    dy: int,
+    boundary_cells: frozenset[Point],
+    soft_margin: int,
+    proximity_penalty: float,
+) -> float:
+    if not boundary_cells or soft_margin <= 0 or proximity_penalty <= 0:
+        return 0.0
+    nearest = _nearest_point(boundary_cells, x, y)
+    if nearest is None:
+        return 0.0
+    bx, by = nearest
+    horizontal_gap = abs(x - bx)
+    vertical_gap = abs(y - by)
+    gap = min(horizontal_gap, vertical_gap) if horizontal_gap and vertical_gap else max(horizontal_gap, vertical_gap)
+    if gap <= 0 or gap > soft_margin:
+        return 0.0
+
+    pressure = (soft_margin - gap + 1) / soft_margin
+    score = proximity_penalty * pressure
+    if x < bx and dx > 0:
+        score += 0.5 * proximity_penalty * pressure
+    elif x > bx and dx < 0:
+        score += 0.5 * proximity_penalty * pressure
+    if y < by and dy > 0:
+        score += 0.5 * proximity_penalty * pressure
+    elif y > by and dy < 0:
+        score += 0.5 * proximity_penalty * pressure
+    return score
+
+
+def _nearest_point(points: frozenset[Point], x: int, y: int) -> Point | None:
+    if not points:
+        return None
+    return min(points, key=lambda point: abs(point[0] - x) + abs(point[1] - y))
+
+
+def below_hero_recovery_score(
+    config: dict,
+    x: int,
+    y: int,
+    dx: int,
+    dy: int,
+    layout: SceneLayout,
+    branch: bool,
+) -> float:
+    hero_zone = layout.hero_guide
+    if (x, y) not in layout.region_cells.get("below_hero", frozenset()):
+        return 0.0
+
+    lateral_penalty = float(config.get("below_hero_left_traverse_penalty", 0.0))
+    recovery_bonus = float(config.get("below_hero_recovery_bonus", 0.0))
+    margin = int(config.get("below_hero_escape_margin", 0))
+    scale = 0.6 if branch else 1.0
+
+    score = 0.0
+    if x <= hero_zone.right + margin:
+        if dx < 0 and dy == 0:
+            score -= lateral_penalty * scale
+        if dx < 0 and dy > 0:
+            score -= 0.75 * lateral_penalty * scale
+        if dy < 0:
+            score += recovery_bonus * scale
+        if dx == 0 and dy < 0:
+            score += 0.5 * recovery_bonus * scale
+    return score
+
+
+def floor_avoidance_score(
+    config: dict,
+    y: int,
+    dx: int,
+    dy: int,
+    layout: SceneLayout,
+    branch: bool,
+) -> float:
+    band_height = int(config.get("floor_band_height", 0))
+    if band_height <= 0:
+        return 0.0
+
+    floor_start = layout.ivy_bounds.height - 1 - band_height
+    if y < floor_start:
+        return 0.0
+
+    penalty = float(config.get("floor_horizontal_penalty", 0.0))
+    upward_bonus = float(config.get("floor_escape_bonus", 0.0))
+    scale = 0.7 if branch else 1.0
+
+    score = 0.0
+    if dx != 0 and dy == 0:
+        score -= penalty * scale
+    if dy < 0:
+        score += upward_bonus * scale
     return score
 
 

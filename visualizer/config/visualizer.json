@@ -1,12 +1,26 @@
 {
+  "_about": "YAM visualizer configuration. Safe rule for editing: change values, keep key names the same unless you also update the Python code. Keys starting with '_' are human-readable notes and are ignored by the current code.",
+
+  "_editing_guide": {
+    "_about": "Quick orientation for new users.",
+    "asset_paths": "Point to source files used by the visualizer, such as the hero GIF, fallback image, and hero mask files.",
+    "timing": "Controls how fast the screen redraws, how often the hero frame advances, and how quickly ivy updates.",
+    "layout": "Controls where the hero and info panel sit on the screen, and how much space they reserve around themselves.",
+    "ivy": "Controls growth behavior, direction bias, collision handling, and ornament generation.",
+    "panel": "Controls the small info panel shown in the scene.",
+    "warning": "If something looks wrong, first check file paths, then mask settings, then layout offsets."
+  },
+
+
   "chafa": {
-    "source_gif": "/Users/maciejkuster/Downloads/chafa_studies/ives_window_keyed_opt.gif",
-    "fallback_image": "../assets/ives_yam.png",
+    "_about": "Hero image rendering settings. This group controls how the source GIF is converted into ANSI/text frames.",
+    "source_gif": "assets/ives_window_keyed_opt.gif",
+    "fallback_image": "assets/ives_yam.png",
     "cache_dir_raw": "assets/frames_raw",
     "cache_dir_chafa": "assets/frames_chafa",
     "frame_count": 14,
     "width": 48,
-    "height": 36,
+    "height": 24,
     "align": "left,top",
     "symbols": "braille",
     "fill": "none",
@@ -20,57 +34,81 @@
     "dither": "none"
   },
   "timing": {
+    "_about": "Animation/update speeds. Higher render_fps redraws the terminal more often. hero_fps changes hero frames. ivy_tick_seconds controls how often ivy logic advances.",
     "render_fps": 12,
-    "hero_fps": 2,
+    "hero_fps": 0.5,
     "ivy_tick_seconds": 0.1,
     "info_refresh_seconds": 1.0
   },
+
   "layout": {
+    "_about": "Screen placement and reserved-space rules for the hero and info panel. This also contains hero mask settings and older trim-based fallback controls.",
     "min_terminal_columns": 100,
     "min_terminal_rows": 28,
     "outer_margin_x": 3,
     "outer_margin_y": 3,
+
     "hero_anchor": "center",
     "hero_offset_x": -16,
-    "hero_offset_y":0,
-    "hero_collision_trim_left": 8,
-    "hero_collision_trim_top": 8,
-    "hero_collision_trim_right": 6,
-    "hero_collision_trim_bottom": 16,
-    "hero_safe_pad_x": 4,
-    "hero_safe_pad_y": 4,
+    "hero_offset_y": 0,
+
+    "hero_mask_path": "assets/hero_mask.png",
+    "hero_mask_scaled_fallback_path": "assets/hero_mask_scaled_48x36.png",
+    "hero_mask_threshold": 200,
+    "hero_mask_scale_x": 0.75,
+    "hero_mask_scale_y": 0.9,
+    "hero_mask_alignment_margin": 1,
+
+    "hero_collision_trim_left": 4,
+    "hero_collision_trim_top": 4,
+    "hero_collision_trim_right": 4,
+    "hero_collision_trim_bottom": 4,
+    "hero_collision_bleed_right": 3,
+    "hero_corner_trim_top_left": 3,
+    "hero_corner_trim_bottom_left": 5,
+    "hero_corner_trim_bottom_right": 6,
+    "hero_safe_pad_x": 1,
+    "hero_safe_pad_y": 1,
+
     "info_width": 16,
     "info_height": 8,
     "info_gap": 6,
     "info_offset_x": -22,
     "info_offset_y": 4,
-    "info_collision_trim_left": 2,
-    "info_collision_trim_top": 0,
-    "info_collision_trim_right": 0,
+    "info_collision_trim_left": 4,
+    "info_collision_trim_top": 2,
+    "info_collision_trim_right": 4,
     "info_collision_trim_bottom": 2,
-    "info_safe_pad_x": 4,
+    "info_safe_pad_x": 2,
     "info_safe_pad_y": 2
   },
+
   "ivy": {
+    "_about": "Ivy growth, movement bias, collision pressure, and ornament generation. If ivy feels too aggressive or too timid, this is the main section to tune.",
     "max_tips": 4,
     "max_structural_cells": 3200,
     "max_ornament_cells": 2400,
+
     "trunk_life": 160,
     "trunk_decay": 0.5,
     "branch_life_min": 12,
     "branch_life_max": 16,
     "branch_decay": 1.0,
     "branch_chance": 0.05,
+
     "forward_bonus": 5.0,
     "turn_penalty": 1.0,
     "organic_variation": 0.2,
+
     "trunk_seed_offset_x": 32,
     "trunk_seed_bottom_margin": 0,
+
     "support_band_above": 4,
     "support_band_height": 4,
     "support_min_headroom": 3,
     "support_span_left": 10,
     "support_span_right": 10,
+
     "trunk_climb_bonus": 10.0,
     "trunk_diagonal_bonus": 4,
     "trunk_reverse_penalty": 5.0,
@@ -78,19 +116,56 @@
     "support_wrap_bonus": 4.0,
     "settle_down_bonus": 2,
     "branch_gravity_bonus": 2,
+
     "hero_contour_attraction": 5,
+    "hero_boundary_attraction": 3,
+    "info_boundary_attraction": 5,
+
+    "collision_soft_margin": 4,
+    "collision_proximity_penalty": 2.0,
+    "hero_collision_soft_margin": 6,
+    "hero_collision_proximity_penalty": 3.0,
+
+    "hero_ascent_margin": 12,
+    "hero_ascent_bonus": 5.0,
+    "pre_ascent_diagonal_bonus": 2.5,
+    "hero_top_traverse_margin": 2,
+    "hero_top_traverse_bonus": 4.0,
+    "hero_pileup_penalty": 3.0,
+
+    "info_hanger_trigger_margin": 4,
+    "info_hanger_vertical_margin": 6,
+    "info_hanger_target_offset": 1,
+    "info_hanger_life": 22,
+
+    "hero_lateral_overlap_margin": 6,
+    "hero_lateral_entry_penalty": 3.0,
+    "below_hero_escape_margin": 8,
+    "below_hero_left_traverse_penalty": 3.5,
+    "below_hero_recovery_bonus": 3.0,
+
+    "info_collision_soft_margin": 4,
+    "info_collision_proximity_penalty": 1.5,
     "top_edge_soft_limit": 2,
     "top_edge_penalty": 1.0,
+    "floor_band_height": 6,
+    "floor_horizontal_penalty": 3.0,
+    "floor_escape_bonus": 2.5,
+
     "leaf_stamp_chance": 0.35,
     "thickening_min_age": 24,
     "thickening_full_age": 48,
     "thickening_spread_chance": 0.2,
+
     "debug": {
+      "_about": "Temporary troubleshooting switches for inspecting growth output.",
       "enabled": false,
       "stem_only_view": false
     }
   },
+
   "panel": {
+    "_about": "Small info panel settings. This affects whether the panel appears and how it labels itself.",
     "enabled": true,
     "title": "yam",
     "timezone": "local",

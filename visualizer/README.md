@@ -72,7 +72,16 @@ Start with these sections in order:
 
 2. `layout`
    Use this to place the hero and panel and define how close ivy is allowed to get.
+   Hero collision now prefers the silhouette mask asset and only falls back to trim logic if the mask is unavailable.
+   The current working assumption is:
+   - the cleaned hero mask is the real temporary sprawl boundary
+   - future mask/GIF asset swaps are expected
    The most important collision controls are:
+   - `hero_mask_path`
+   - `hero_mask_threshold`
+   - `hero_mask_scale_x`
+   - `hero_mask_scale_y`
+   - `hero_mask_alignment_margin`
    - `hero_collision_trim_*`
    - `hero_safe_pad_*`
    - `info_collision_trim_*`
@@ -109,6 +118,8 @@ These settings have the biggest visible effect:
   Changes how much of the scene the hero occupies.
 - `layout.hero_offset_y`
   Changes the vertical composition and available crawl space.
+- `layout.hero_mask_threshold`
+  Controls how aggressively the hero silhouette mask blocks cells.
 - `layout.hero_safe_pad_x`
   Controls how tightly ivy can frame the hero.
 - `layout.info_safe_pad_x`
@@ -164,6 +175,8 @@ For the current project status, known caveats, and future ivy integration bounda
 
 - Weather is intentionally not implemented yet
 - The renderer assumes the hero art and info panel do not overlap ivy because composition stays terminal-text-native and avoids raster stacking
+- Hero collision now uses `visualizer/assets/hero_mask.png` when available, with trim-based collision kept only as fallback behavior
+- The current hero baseline is `48x24`, and mask tuning should be understood relative to that footprint
 - Layout is tuned for a roomy Kitty window, not tiny terminals
 - The fallback GIF is a generated stand-in, not bespoke animation art
 - The current ivy engine is still experimental and not yet considered the final model for reliable full-scene sprawl

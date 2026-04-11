@@ -115,23 +115,26 @@ Specifically:
 
 Current conclusion:
 
-- the existing `VineHead`-based local wandering model is not the right primary abstraction for eventual fill of allowed space
-- future ivy work should replace the current engine with a coverage-first scaffold model instead of continuing ad hoc tuning
+- the engine is now beyond the original `VineHead` prototype and is split into state/growth/ornament modules
+- it still remains heuristic and experimental rather than a principled coverage planner
+- future work should favor stronger route/state logic over more scalar penalty stacking
 
 ## Current Ivy Engine Status
 
-`src/ivy_engine.py` is provisional.
+`src/ivy_engine.py` remains provisional, but the current ivy stack is now:
 
-It contains:
+- `src/ivy_engine.py`
+  - orchestration and public API
+- `src/ivy_growth.py`
+  - trunk/branch guidance and route heuristics
+- `src/ivy_ornament.py`
+  - leaves, wood thickening, death clusters, flowers, merge logic
+- `src/ivy_state.py`
+  - mutable runtime state
+- `src/ivy_types.py`
+  - shared types and palette constants
 
-- local head-based growth
-- edge-biased seeding
-- multiple respawn heuristics
-- region-like bias controls
-
-It does **not** provide reliable global coverage of all legal cells.
-
-This file should be treated as replaceable.
+This is maintainable enough to keep iterating on, but it is not yet the final behavior model.
 
 ## Recommended Future Integration Direction
 
@@ -160,8 +163,12 @@ That keeps `main.py` and `renderer.py` stable while allowing a full engine repla
 ## Known Technical Debt
 
 - `visualizer/README.md` originally described the ivy layer more optimistically than current results justify
-- `layout.py` currently provides rectangles and no-go zones, but not explicit allowed-cell or region masks
-- `ivy_engine.py` mixes structural coverage and ornament occupancy into one output model
+- `layout.py` now provides allowed-cell and region masks, but hero collision only recently pivoted to silhouette-mask-first behavior
+- `layout.py` now distinguishes between:
+  - blocked hero collision geometry derived from the silhouette mask
+  - visible hero guidance geometry used by growth/routing logic
+- flowers exist in ornament code but are not yet the finished visual system
+- the current cleaned hero mask is good enough to use as the temporary sprawl boundary, but it should still be treated as provisional art/source data rather than a final canonical silhouette
 - there is no debug instrumentation view yet for:
   - allowed mask
   - stem-only coverage
@@ -183,8 +190,14 @@ Before ingesting more ivy code:
 
 1. keep current visualizer launch/install behavior as-is
 2. preserve the existing engine interface
-3. expand `layout.py` to expose allowed masks/regions
-4. replace `ivy_engine.py` behind the same public API
+3. keep using `hero_mask.png` as the preferred hero collision source and reduce reliance on rectangular trim heuristics
+4. continue refining trunk route states before moving on to large leaf/flower lifecycle work
+
+Current practical baseline:
+
+- hero frame is `48x24`
+- hero mask placement is accepted as temporary truth
+- trim tweaking should now be secondary to route behavior refinement
 
 ## Unspecified Future Objectives
 

@@ -70,6 +70,10 @@ Effect:
 - one of the strongest composition controls
 - smaller height opens more crawl space for ivy
 
+Current baseline:
+- the active hero footprint is `48x24`
+- if you change `height`, recheck mask fit and trunk route behavior immediately
+
 ### `align`
 
 Chafa alignment string.
@@ -199,6 +203,19 @@ There are two different ideas in this section:
 
 Those are related but not identical.
 
+Hero collision is now mask-first:
+
+- if `hero_mask_path` exists, the silhouette mask defines blocked hero cells
+- `hero_safe_pad_*` expands that blocked silhouette
+- `hero_collision_trim_*` remains as fallback behavior when the mask is unavailable
+- growth guidance still follows the visible hero block, not the padded collision envelope
+
+This is the preferred model because it matches the visible hero shape better than rectangular trimming.
+
+Current working rule:
+- treat the hero mask as the real temporary border of vine sprawl
+- use trim values only for readability and fallback behavior, not as the primary silhouette tool
+
 ### `min_terminal_columns`
 
 Minimum supported terminal width before the warning line appears.
@@ -246,11 +263,82 @@ Effect:
 - one of the most visible composition controls
 - increasing it moves the hero lower and often opens headroom above
 
+### `hero_mask_path`
+
+Path to the black/white hero silhouette mask.
+
+Effect:
+- white pixels are treated as blocked hero shape
+- black pixels remain passable
+- should match the current hero frame aspect and visual silhouette as closely as possible
+
+Current baseline:
+- the current repo treats the cleaned hero mask asset as the temporary source of truth
+- both the GIF and the mask may still be replaced later
+
+### `hero_mask_scaled_fallback_path`
+
+Optional path to a pre-scaled mask that already matches the terminal-cell hero footprint.
+
+Effect:
+- used only if the primary mask rasterizes into a degenerate near-full-frame footprint
+- useful while iterating on mask assets or when the source mask needs manual terminal-grid compensation
+- should generally point to a mask already sized to the configured hero `width` and `height`
+
+Practical note:
+- this is a safety net, not the preferred asset path
+
+### `hero_mask_threshold`
+
+Brightness threshold used to interpret the hero mask.
+
+Effect:
+- higher values block only brighter/whiter mask pixels
+- lower values block more aggressively
+- useful when the mask contains antialiasing or soft edges
+
+### `hero_mask_scale_x`
+
+Horizontal compensation applied before the primary hero mask is rasterized onto the terminal grid.
+
+Effect:
+- values below `1.0` compress the mask horizontally before per-cell sampling
+- useful when the source mask was authored in pixel space but the rendered hero is displayed on terminal cells with different aspect behavior
+
+Current baseline:
+- this is still a legitimate correction knob
+- but the current workflow assumes a manually cleaned mask first, then only modest scaling adjustment
+
+### `hero_mask_scale_y`
+
+Vertical compensation applied before the primary hero mask is rasterized onto the terminal grid.
+
+Effect:
+- values below `1.0` compress the mask vertically before per-cell sampling
+- usually needs smaller adjustment than `hero_mask_scale_x`
+
+Current baseline:
+- vertical correction should stay conservative unless the source mask changes materially
+
+### `hero_mask_alignment_margin`
+
+Number of terminal cells to keep clear between the visible hero frame edge and the raw rasterized mask.
+
+Effect:
+- trims the rasterized mask inward on all four sides after sampling
+- useful when the mask is visually correct but still lands slightly too close to the Chafa frame border
+- good default for this project is `1`
+
+Intent:
+- this is alignment tolerance, not shape design
+- if a large margin seems necessary, the mask asset itself is probably wrong
+
 ### `hero_collision_trim_left`
 
 How much of the left side of the hero frame is excluded from the collision mask before padding.
 
 Effect:
+- primarily fallback/secondary when mask-based collision is active
 - larger value means ivy can legally come closer to the left visual edge of the hero
 
 ### `hero_collision_trim_top`
@@ -258,6 +346,7 @@ Effect:
 Top trim of the hero collision mask.
 
 Effect:
+- primarily fallback/secondary when mask-based collision is active
 - larger value means less protected space above the visible hero
 
 ### `hero_collision_trim_right`
@@ -265,6 +354,7 @@ Effect:
 Right trim of the hero collision mask.
 
 Effect:
+- primarily fallback/secondary when mask-based collision is active
 - useful if the Chafa frame has visually empty right-side area
 
 ### `hero_collision_trim_bottom`
@@ -272,6 +362,7 @@ Effect:
 Bottom trim of the hero collision mask.
 
 Effect:
+- primarily fallback/secondary when mask-based collision is active
 - useful when the frame box extends lower than the meaningful hero pixels
 
 ### `hero_safe_pad_x`

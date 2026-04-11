@@ -17,6 +17,10 @@ class IvyState:
     leaf_stamps: dict[Point, str] = field(default_factory=dict)
     dead_leaf_stamps: dict[Point, str] = field(default_factory=dict)
     thickened_wood: dict[Point, str] = field(default_factory=dict)
+    flower_stamps: dict[Point, str] = field(default_factory=dict)
+    flower_birth: dict[Point, int] = field(default_factory=dict)
+    flower_parent: dict[Point, Point] = field(default_factory=dict)
+    info_hanger_spawned: bool = False
     debug_stats: dict[str, object] = field(
         default_factory=lambda: {
             "spawn_origin_counts": {},

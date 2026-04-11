@@ -26,14 +26,16 @@ def build_panel_lines(config: dict) -> list[str]:
     tz_text = now.tzname() or "local"
 
     width = config["layout"]["info_width"]
-    rule = PANEL_RULE + ("─" * width) + RESET
+    rule = PANEL_RULE + ("─" * (width-1)) + RESET
     lines = [
-        PANEL_ACCENT + _fit(title.upper(), width) + RESET,
         rule,
-        PANEL_TEXT + _fit(time_text, width) + RESET,
-        PANEL_MUTED + _fit(date_text, width) + RESET,
-        PANEL_MUTED + _fit(full_date_text, width) + RESET,
         "",
-        PANEL_RULE + _fit(tz_text, width) + RESET,
+        " " + PANEL_ACCENT + _fit(title.upper(), width) + RESET,
+        "",
+        " " + PANEL_TEXT + _fit(time_text, width) + RESET,
+        " " + PANEL_MUTED + _fit(date_text, width) + RESET,
+        " " + PANEL_MUTED + _fit(full_date_text, width) + RESET,
+        "",
+        rule
     ]
     return lines

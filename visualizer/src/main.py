@@ -55,6 +55,8 @@ def main() -> int:
     hero_frames = pipeline.load_frames()
     hero_width = config["chafa"]["width"]
     hero_height = config["chafa"]["height"]
+    if not hero_frames:
+        hero_frames = [[" " * hero_width for _ in range(hero_height)]]
 
     ivy = IvyEngine(config)
     last_ivy_tick = 0.0
@@ -100,8 +102,9 @@ def main() -> int:
                 size=size,
                 layout=scene_layout,
                 hero_lines=hero_frames[frame_index],
-                ivy_segments=ivy.get_segments(),
+                vine_segments=ivy.get_segments(),
                 panel_lines=panel_lines,
+                debug_enabled=bool(config.get("ivy", {}).get("debug", {}).get("enabled")),
             )
             terminal.move_home()
             sys.stdout.write(scene)

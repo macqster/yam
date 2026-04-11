@@ -125,3 +125,19 @@
   - large-leaf polish
   - flower visual polish and lifecycle expansion
   - any secondary organism in upper-right negative space
+
+### Monstera Leaf Study Ingest
+
+- Ingested external reference:
+  - `/Users/maciejkuster/Desktop/study_leaf_monstera_report.md`
+- Added in-repo deferred design reference:
+  - [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)
+- Recorded the future design baseline for large-leaf work:
+  - silhouette first
+  - bottom-origin upward growth
+  - broad lower-middle mass
+  - edge-attached cuts only
+  - lifecycle logic separate from morphology/rendering
+- Confirmed that current work priority does not change:
+  - trunk route refinement first
+  - large leaves later

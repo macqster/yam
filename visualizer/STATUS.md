@@ -211,3 +211,7 @@ These are intentionally deferred, but should remain visible in project scope:
   - aging
   - decay
 - a secondary independent plant/organism for the upper-right negative space, if that corner continues to feel compositionally empty
+
+Related deferred design reference:
+
+- [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)

@@ -193,3 +193,7 @@ Unspecified-future objectives worth preserving explicitly:
   - aging
   - decay
 - a possible second independent plant/organism in the upper-right corner if that area remains compositionally underused
+
+Deferred design reference for future large-leaf work:
+
+- [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)

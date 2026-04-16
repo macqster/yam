@@ -1,6 +1,6 @@
 # yam
 
-Personal macOS terminal scene repo: legacy Kitty + Fastfetch startup rice, plus a dedicated visualizer now tuned for Ghostty.
+Personal macOS terminal scene repo: Ghostty + Fastfetch startup rice, plus a dedicated visualizer tuned for Ghostty.
 
 This repo preserves the current working terminal rice and keeps the moving parts
 small enough to reinstall and modify without reverse-engineering it later.
@@ -38,10 +38,10 @@ Current visualizer direction:
 
 ## What this repo is
 
-When Kitty opens:
+When Ghostty opens:
 
 1. `zsh` starts.
-2. `~/.config/fastfetch/startup.zsh` runs only in interactive Kitty shells.
+2. `~/.config/fastfetch/startup.zsh` runs only in interactive Ghostty shells.
 3. That startup hook calls `~/.local/bin/fastfetch-chafa`.
 4. `fastfetch-chafa` renders a still ANSI logo using `chafa/chafa_lab.sh`.
 5. The ANSI logo is passed to Fastfetch as a raw logo.
@@ -56,6 +56,8 @@ Animation is for manual Chafa testing, not shell startup.
 - `kitty/`
   - `kitty.conf`
   - `current-theme.conf`
+- `ghostty/`
+  - `config`
 - `fastfetch/`
   - `config.jsonc`
   - `startup.zsh`
@@ -66,13 +68,31 @@ Animation is for manual Chafa testing, not shell startup.
 - `assets/`
   - `ives_yam.png`
 - `visualizer/`
-  - standalone Kitty visualizer app
+  - standalone Ghostty visualizer app
 - `install.sh`
 - `Brewfile`
 
 ## File ownership
 
 This section is the most important part of the repo.
+
+### `ghostty/config`
+
+Owns:
+- Ghostty font
+- Ghostty padding
+- Ghostty opacity
+- Ghostty palette
+- Ghostty cursor behavior
+
+Edit this file when you want to change:
+- the baseline Ghostty look and feel
+- the terminal environment that `yam` is tuned against
+
+Installed runtime path:
+- `~/.config/ghostty/config`
+
+The installer now symlinks this file back to the repo copy.
 
 ### `kitty/kitty.conf`
 
@@ -139,7 +159,7 @@ Owns:
 
 Edit this file when you want to change:
 - whether startup runs at all
-- whether it runs only in Kitty
+- whether it runs only in Ghostty
 - prompt spacing around startup
 
 Do not put large rendering logic in `~/.zshrc`.
@@ -188,10 +208,9 @@ Edit or replace this file when you want to change:
 
 ## Current live paths after install
 
-The installer copies files into these runtime locations:
+The installer installs files into these runtime locations:
 
-- `~/.config/kitty/kitty.conf`
-- `~/.config/kitty/current-theme.conf`
+- `~/.config/ghostty/config` (symlink to repo file)
 - `~/.config/fastfetch/config.jsonc`
 - `~/.config/fastfetch/startup.zsh`
 - `~/.local/bin/fastfetch-chafa`
@@ -199,7 +218,7 @@ The installer copies files into these runtime locations:
 - `~/.local/share/fastfetch-chafa/assets/ives_yam.png`
 
 The repo remains the editable source of truth.
-The installed files are runtime copies.
+The Ghostty config is repo-backed by symlink; the other runtime files are copies.
 
 ## Reference screenshot
 
@@ -210,7 +229,7 @@ Current known-good startup reference:
 
 This repo was last verified on:
 - macOS Tahoe 26.4
-- Kitty 0.46.2
+- Ghostty target baseline
 - Fastfetch 2.61.0
 - Chafa 1.18.1
 - Homebrew 5.1.5
@@ -223,7 +242,7 @@ Minor rendering differences may still happen across macOS, font, or package vers
 Install with Homebrew:
 
 ```bash
-brew install kitty fastfetch chafa
+brew install ghostty fastfetch chafa
 ```
 
 Or from the repo root:
@@ -262,7 +281,7 @@ brew bundle
 Fallback if you do not want to use `Brewfile`:
 
 ```bash
-brew install kitty fastfetch chafa
+brew install ghostty fastfetch chafa
 ```
 
 3. Install the font:
@@ -274,13 +293,13 @@ brew install kitty fastfetch chafa
 ./install.sh
 ```
 
-5. Reopen Kitty.
+5. Reopen Ghostty.
 
 ## How the installer works
 
 `install.sh` does only a few things:
 
-- copies Kitty config into `~/.config/kitty/`
+- symlinks Ghostty config into `~/.config/ghostty/`
 - copies Fastfetch config into `~/.config/fastfetch/`
 - copies the wrapper into `~/.local/bin/`
 - copies the Chafa script into `~/.local/share/fastfetch-chafa/`
@@ -341,7 +360,12 @@ printf '\n\n'
 printf '\n'
 ```
 
-### Change Kitty window padding / geometry / font
+### Change Ghostty window padding / geometry / font
+
+Edit:
+- `ghostty/config`
+
+### Change Kitty window padding / geometry / font (legacy)
 
 Edit:
 - `kitty/kitty.conf`
@@ -400,7 +424,7 @@ One specific expected difference is `chafa/chafa_lab.sh` asset resolution:
 ./install.sh
 ```
 
-3. Reopen Kitty.
+3. Reopen Ghostty.
 4. Commit only after the live setup looks correct.
 
 ## Git notes

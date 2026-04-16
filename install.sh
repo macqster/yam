@@ -4,12 +4,26 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-mkdir -p "$HOME/.config/kitty" "$HOME/.config/fastfetch" "$HOME/.local/bin" "$HOME/.local/share/fastfetch-chafa"
+link_repo_config() {
+  local source="$1"
+  local target="$2"
+
+  mkdir -p "$(dirname "$target")"
+
+  if [[ -L "$target" ]]; then
+    rm -f "$target"
+  elif [[ -e "$target" ]]; then
+    mv "$target" "${target}.pre-yam-backup"
+  fi
+
+  ln -s "$source" "$target"
+}
+
+mkdir -p "$HOME/.config/ghostty" "$HOME/.config/fastfetch" "$HOME/.local/bin" "$HOME/.local/share/fastfetch-chafa"
 mkdir -p "$HOME/.local/share/fastfetch-chafa/assets"
 mkdir -p "$HOME/.local/share/yam-visualizer"
 
-cp "$ROOT/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf"
-cp "$ROOT/kitty/current-theme.conf" "$HOME/.config/kitty/current-theme.conf"
+link_repo_config "$ROOT/ghostty/config" "$HOME/.config/ghostty/config"
 cp "$ROOT/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 cp "$ROOT/fastfetch/startup.zsh" "$HOME/.config/fastfetch/startup.zsh"
 cp "$ROOT/bin/fastfetch-chafa" "$HOME/.local/bin/fastfetch-chafa"
@@ -39,16 +53,16 @@ if ! grep -Fq 'source "$HOME/.config/fastfetch/startup.zsh"' "$HOME/.zshrc" 2>/d
 fi
 
 cat <<'EOF'
-Installed Kitty + Fastfetch + Chafa startup bundle.
+Installed Ghostty + Fastfetch + Chafa startup bundle.
 
 Next steps:
   1. Ensure dependencies are installed:
-     brew install kitty fastfetch chafa
+     brew install ghostty fastfetch chafa
   2. Ensure the font exists:
      JetBrainsMono Nerd Font
   3. Logo source image is installed to:
      ~/.local/share/fastfetch-chafa/assets/ives_yam.png
-  4. Reopen Kitty.
+  4. Reopen Ghostty.
   5. Launch the visualizer any time with:
      yam
      By default this now prefers ~/yam/visualizer when that repo exists.

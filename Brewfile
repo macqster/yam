@@ -1,3 +1,3 @@
-brew "kitty"
+brew "ghostty"
 brew "fastfetch"
 brew "chafa"

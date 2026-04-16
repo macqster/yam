@@ -15,7 +15,7 @@ Current maintenance snapshot:
 ## Requirements
 
 - macOS
-- Kitty
+- Ghostty
 - `python3`
 - `chafa`
 - Python package from `visualizer/requirements.txt`
@@ -210,7 +210,7 @@ For the current project status, known caveats, and future ivy integration bounda
 - The renderer assumes the hero art and info panel do not overlap ivy because composition stays terminal-text-native and avoids raster stacking
 - Hero collision uses `visualizer/assets/hero_mask.png` as the primary collision geometry (source of truth), with trim-based collision kept only as fallback behavior
 - The current hero baseline is `72x36`, and mask tuning should be understood relative to that footprint
-- Layout is tuned for a roomy Kitty window, not tiny terminals
+- Layout is tuned for a roomy Ghostty window, not tiny terminals
 - The fallback GIF is a generated stand-in, not bespoke animation art
 - The current ivy engine is still experimental and not yet considered the final model for reliable full-scene sprawl
 

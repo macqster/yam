@@ -1,0 +1,48 @@
+# yam Ghostty baseline
+#
+# Source of truth:
+#   ~/yam/ghostty/config
+#
+# This file is installed by symlink into:
+#   ~/.config/ghostty/config
+#
+# Keep this conservative. Only include settings that are stable and clearly
+# useful for the current macOS + Ghostty + yam visualizer workflow.
+
+font-family = "JetBrainsMono Nerd Font"
+font-size = 12
+
+background-opacity = 0.90
+window-padding-x = 18
+window-padding-y = 18
+
+cursor-style = block
+cursor-style-blink = false
+
+shell-integration = zsh
+
+copy-on-select = clipboard
+
+# Core palette aligned with the existing yam terminal look.
+background = #21211c
+foreground = #807973
+cursor-color = #facb7f
+selection-background = #403729
+selection-foreground = #21211c
+
+palette = 0=#3c3b30
+palette = 1=#97280f
+palette = 2=#917900
+palette = 3=#7f7110
+palette = 4=#497f7d
+palette = 5=#7e4e2e
+palette = 6=#387f58
+palette = 7=#807974
+palette = 8=#545444
+palette = 9=#df502a
+palette = 10=#564b00
+palette = 11=#d69827
+palette = 12=#78d8d8
+palette = 13=#cd7c53
+palette = 14=#424e00
+palette = 15=#fff1e8

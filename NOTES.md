@@ -12,7 +12,7 @@ Preferred workflow:
 1. Edit files in `~/yam`
 2. For visualizer-only iteration, run `yam` directly because the launcher now prefers `~/yam/visualizer`
 3. Run `./install.sh` when runtime copies or startup assets need to be synced
-4. Reopen Kitty and verify
+4. Reopen Ghostty and verify
 5. Commit after the live setup looks right
 
 If you edit a live file directly, copy that change back into `~/yam` before committing.
@@ -35,7 +35,17 @@ Current terminal target for the visualizer:
 
 - Ghostty first
 
-The older Kitty startup files remain in-repo as legacy rice/source material, but the standalone `yam` visualizer should now be evaluated primarily in Ghostty.
+The older Kitty startup files remain in-repo as legacy rice/source material, but the standalone `yam` visualizer and terminal baseline should now be evaluated primarily in Ghostty.
+
+Ghostty config source of truth:
+
+- `ghostty/config`
+
+Installed runtime path:
+
+- `~/.config/ghostty/config`
+
+The installer now symlinks that file back to the repo copy instead of copying it.
 
 Treat these visualizer modules as stable unless there is a clear bug:
 

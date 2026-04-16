@@ -28,6 +28,7 @@ def compose_scene(
     hero_lines: list[str],
     vine_segments: dict[tuple[int, int], str],
     panel_lines: list[str],
+    falling_leaf_segments: dict[tuple[int, int], str] | None = None,
     debug_enabled: bool = False,
 ) -> str:
     rows: list[list[str]] = [[" " for _ in range(size.columns)] for _ in range(size.rows)]
@@ -39,8 +40,6 @@ def compose_scene(
         if 0 <= x < size.columns and 0 <= y < size.rows:
             rows[y][x] = glyph
 
-    # Future leaf/flower/particle overlays should be composed after the base
-    # vine layer and before the final protection/debug pass.
     blocks = [
         PositionedBlock(layout.hero.x, layout.hero.y, hero_lines),
         PositionedBlock(layout.info.x, layout.info.y, panel_lines),
@@ -53,6 +52,28 @@ def compose_scene(
         _stamp_rect_frame(rows, size, layout.no_go_zones[1], DEBUG_MASK_BOX)
         _stamp_rect_frame(rows, size, layout.hero, DEBUG_VISIBLE_BOX)
         _stamp_rect_frame(rows, size, layout.info, DEBUG_VISIBLE_BOX)
+
+    # Topmost particle overlay, but keep UI and hero pixels readable.
+    if falling_leaf_segments:
+        panel = layout.info
+        hero_mask = layout.hero_raw_mask_cells
+        for (x, y), glyph in falling_leaf_segments.items():
+            if not (0 <= x < size.columns and 0 <= y < size.rows):
+                continue
+
+            # Do not draw particles over the info panel.
+            if (
+                panel.x <= x < panel.x + panel.width
+                and panel.y <= y < panel.y + panel.height
+            ):
+                continue
+
+            # Keep particles off the visible hero pixels so the focal point
+            # stays clean while allowing overlap around the silhouette.
+            if (x, y) in hero_mask:
+                continue
+
+            rows[y][x] = glyph
 
     base_rows = [_compose_row(row) for row in rows]
     if layout.warning and size.rows > 1:

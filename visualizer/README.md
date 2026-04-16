@@ -1,12 +1,12 @@
 # Yam Visualizer
 
-Dedicated Kitty visualizer for macOS with three coordinated layers:
+Dedicated terminal visualizer for macOS, currently tuned for Ghostty, with three coordinated layers:
 
 - Chafa-rendered hero animation from a GIF
-- slow procedural ivy ornament
+- state-driven ivy growth system with a procedural ornament layer
 - compact time/date panel
 
-This is separate from the repo's Fastfetch startup path. It is meant to be launched intentionally in its own Kitty window, tab, or overlay.
+This is separate from the repo's Fastfetch startup path. It is meant to be launched intentionally in its own terminal window, tab, or split.
 
 Current maintenance snapshot:
 
@@ -38,7 +38,7 @@ From the repo root:
 
 Quit with `Ctrl+C`.
 
-After `./install.sh`, you can launch it from any Kitty shell with:
+After `./install.sh`, you can launch it from any shell with:
 
 ```bash
 yam
@@ -146,16 +146,49 @@ Two common operating modes:
 
 Current values can move between those modes during development. The config should be treated as a live tuning surface, not a fixed finished spec.
 
+Note: debug overlays are part of the core development workflow and are essential for validating layout, mask alignment, and growth behavior.
+
 ## Assets and caching
 
-- Preferred input: `/Users/maciejkuster/Downloads/chafa_studies/ives_window_keyed_opt.gif`
-- If that GIF is missing, the app generates a subtle fallback GIF from `assets/ives_yam.png`
+- Preferred input: `visualizer/assets/ives_window_procreate_edit_22.gif`
+- If that GIF is missing, the app generates a subtle fallback GIF from `visualizer/assets/ives_yam.png`
 - extracted PNG frames are cached in `visualizer/assets/frames_raw/`
 - rendered ANSI frames are cached in `visualizer/assets/frames_chafa/`
 
 Delete the cache directories if you want to force a fresh render after changing source assets or Chafa settings.
 
 ## Architecture
+
+The system is layered conceptually as follows:
+
+1. Input Layer
+   - source GIF
+   - Chafa conversion
+
+2. Frame Pipeline
+   - optional dithering prepass
+   - frame extraction and caching
+   - transparency handling
+
+3. Layout Layer
+   - terminal grid
+   - hero placement
+   - collision mask (authoritative)
+
+4. Growth Engine
+   - trunk routing
+   - branching and spatial heuristics
+
+5. State System
+   - growth state
+   - lineage and aging
+
+6. Rendering Layer
+   - ornament (glyphs, clusters)
+   - scene composition
+
+7. Debug Layer
+   - overlays for layout, mask, and collision inspection
 
 - `src/main.py` owns the loop and screen lifecycle
 - `src/chafa_pipeline.py` creates or loads fixed-size cached Chafa frames
@@ -175,8 +208,8 @@ For the current project status, known caveats, and future ivy integration bounda
 
 - Weather is intentionally not implemented yet
 - The renderer assumes the hero art and info panel do not overlap ivy because composition stays terminal-text-native and avoids raster stacking
-- Hero collision now uses `visualizer/assets/hero_mask.png` when available, with trim-based collision kept only as fallback behavior
-- The current hero baseline is `48x24`, and mask tuning should be understood relative to that footprint
+- Hero collision uses `visualizer/assets/hero_mask.png` as the primary collision geometry (source of truth), with trim-based collision kept only as fallback behavior
+- The current hero baseline is `72x36`, and mask tuning should be understood relative to that footprint
 - Layout is tuned for a roomy Kitty window, not tiny terminals
 - The fallback GIF is a generated stand-in, not bespoke animation art
 - The current ivy engine is still experimental and not yet considered the final model for reliable full-scene sprawl

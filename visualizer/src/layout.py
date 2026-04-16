@@ -6,6 +6,8 @@ from pathlib import Path
 
 from PIL import Image
 
+INFO_PANEL_MIN_HEIGHT = 9
+
 from terminal import TerminalSize
 
 
@@ -60,6 +62,7 @@ class SceneLayout:
     hero_mask_boundary_cells: frozenset[tuple[int, int]]
     hero_mask_cells: frozenset[tuple[int, int]]
     allowed_cells: frozenset[tuple[int, int]]
+    ornament_cells: frozenset[tuple[int, int]]
     region_cells: dict[str, frozenset[tuple[int, int]]]
     warning: str | None
 
@@ -97,16 +100,19 @@ def build_layout(
     hero = Rect(x=hero_x, y=hero_y, width=hero_width, height=hero_height)
 
     info_gap = layout_cfg.get("info_gap", 6)
-    info_base_x = size.columns - layout_cfg["info_width"] - margin_x
+    info_width = layout_cfg["info_width"]
+    info_height = max(INFO_PANEL_MIN_HEIGHT, int(layout_cfg["info_height"]))
+    info_base_x = size.columns - info_width - margin_x
     info_x = info_base_x + layout_cfg["info_offset_x"]
     info_y = margin_y + layout_cfg["info_offset_y"]
     min_info_x = hero.right + info_gap
-    max_info_x = max(margin_x, size.columns - layout_cfg["info_width"] - margin_x)
+    max_info_x = max(margin_x, size.columns - info_width - margin_x)
+    max_info_y = max(margin_y, size.rows - info_height - margin_y)
     info = Rect(
         x=max(min_info_x, min(info_x, max_info_x)),
-        y=info_y,
-        width=layout_cfg["info_width"],
-        height=layout_cfg["info_height"],
+        y=max(margin_y, min(info_y, max_info_y)),
+        width=info_width,
+        height=info_height,
     )
 
     ivy_bounds = Rect(
@@ -141,26 +147,44 @@ def build_layout(
         hero_collision,
         info_collision.inflate(info_pad_x, info_pad_y),
     )
-
     allowed_cells: set[tuple[int, int]] = set()
+    ornament_cells: set[tuple[int, int]] = set()
     info_zone = no_go_zones[1]
+    hero_raw_zone = hero_raw_mask_cells if hero_raw_mask_cells else set()
     for y in range(1, max(1, ivy_bounds.height - 1)):
         for x in range(1, max(1, ivy_bounds.width - 1)):
             if info_zone.contains(x, y):
                 continue
+
+            blocked_for_growth = False
             if hero_blocked_cells:
                 if (x, y) in hero_blocked_cells:
-                    continue
+                    blocked_for_growth = True
             elif _hero_zone_blocks_cell(x, y, no_go_zones[0], layout_cfg):
-                continue
-            allowed_cells.add((x, y))
+                blocked_for_growth = True
 
-    region_cells = _build_region_cells(allowed_cells, ivy_bounds, hero)
+            blocked_for_ornament = False
+            if hero_raw_zone:
+                if (x, y) in hero_raw_zone:
+                    blocked_for_ornament = True
+            elif hero.contains(x, y):
+                blocked_for_ornament = True
+
+            if not blocked_for_growth:
+                allowed_cells.add((x, y))
+            if not blocked_for_ornament:
+                ornament_cells.add((x, y))
+
+    hero_guide = hero
+    if hero_raw_mask_cells:
+        hero_guide = _bounding_rect(set(hero_raw_mask_cells))
+
+    region_cells = _build_region_cells(allowed_cells, ivy_bounds, hero_guide)
 
     return SceneLayout(
         hero=hero,
         info=info,
-        hero_guide=hero,
+        hero_guide=hero_guide,
         info_guide=info,
         ivy_bounds=ivy_bounds,
         no_go_zones=no_go_zones,
@@ -168,6 +192,7 @@ def build_layout(
         hero_mask_boundary_cells=frozenset(_boundary_cells(hero_raw_mask_cells)),
         hero_mask_cells=frozenset(hero_blocked_cells),
         allowed_cells=frozenset(allowed_cells),
+        ornament_cells=frozenset(ornament_cells),
         region_cells=region_cells,
         warning=warning,
     )
@@ -246,7 +271,77 @@ def _build_hero_blocked_cells(
         for dy in range(-pad_y, pad_y + 1):
             for dx in range(-pad_x, pad_x + 1):
                 blocked.add((world_x + dx, world_y + dy))
+
+    raw_cells = _apply_mask_corner_trims(raw_cells, hero, layout_cfg)
+    blocked = _apply_mask_corner_trims(blocked, hero, layout_cfg)
     return raw_cells, blocked
+
+
+def _apply_mask_corner_trims(
+    blocked: set[tuple[int, int]],
+    hero: Rect,
+    layout_cfg: dict,
+) -> set[tuple[int, int]]:
+    trimmed = set(blocked)
+    corners = (
+        ("top_left", int(layout_cfg.get("hero_corner_trim_top_left", 0)), int(layout_cfg.get("hero_corner_trim_top_left_y", layout_cfg.get("hero_corner_trim_top_left", 0)))),
+        ("top_right", int(layout_cfg.get("hero_corner_trim_top_right", 0)), int(layout_cfg.get("hero_corner_trim_top_right_y", layout_cfg.get("hero_corner_trim_top_right", 0)))),
+        ("bottom_left", int(layout_cfg.get("hero_corner_trim_bottom_left", 0)), int(layout_cfg.get("hero_corner_trim_bottom_left_y", layout_cfg.get("hero_corner_trim_bottom_left", 0)))),
+        ("bottom_right", int(layout_cfg.get("hero_corner_trim_bottom_right", 0)), int(layout_cfg.get("hero_corner_trim_bottom_right_y", layout_cfg.get("hero_corner_trim_bottom_right", 0)))),
+    )
+    for x, y in tuple(trimmed):
+        local_x = x - hero.x
+        local_y = y - hero.y
+        for corner, size_x, size_y in corners:
+            if _corner_trim_allows_local_cell(local_x, local_y, hero.width, hero.height, corner=corner, size_x=size_x, size_y=size_y):
+                trimmed.discard((x, y))
+                break
+    return trimmed
+
+
+def _corner_trim_allows_local_cell(
+    local_x: int,
+    local_y: int,
+    width: int,
+    height: int,
+    *,
+    corner: str,
+    size_x: int,
+    size_y: int,
+) -> bool:
+    if size_x <= 0 or size_y <= 0:
+        return False
+
+    if corner == "top_left":
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
+            return False
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    elif corner == "top_right":
+        local_x = width - 1 - local_x
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
+            return False
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    elif corner == "bottom_left":
+        local_y = height - 1 - local_y
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
+            return False
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    elif corner == "bottom_right":
+        local_x = width - 1 - local_x
+        local_y = height - 1 - local_y
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
+            return False
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    else:
+        return False
+
+    norm_x = dx / size_x
+    norm_y = dy / size_y
+    return norm_x * norm_x + norm_y * norm_y > 1.0
 
 
 def _load_hero_mask_from_config(
@@ -337,54 +432,73 @@ def _hero_zone_blocks_cell(x: int, y: int, hero_zone: Rect, layout_cfg: dict) ->
     if not hero_zone.contains(x, y):
         return False
 
-    top_left_size = layout_cfg.get("hero_corner_trim_top_left", 3)
-    bottom_left_size = layout_cfg.get("hero_corner_trim_bottom_left", 5)
-    bottom_right_size = layout_cfg.get("hero_corner_trim_bottom_right", 5)
+    top_left_size = int(layout_cfg.get("hero_corner_trim_top_left", 3))
+    top_left_size_y = int(layout_cfg.get("hero_corner_trim_top_left_y", top_left_size))
+    top_right_size = int(layout_cfg.get("hero_corner_trim_top_right", 0))
+    top_right_size_y = int(layout_cfg.get("hero_corner_trim_top_right_y", top_right_size))
+    bottom_left_size = int(layout_cfg.get("hero_corner_trim_bottom_left", 5))
+    bottom_left_size_y = int(layout_cfg.get("hero_corner_trim_bottom_left_y", bottom_left_size))
+    bottom_right_size = int(layout_cfg.get("hero_corner_trim_bottom_right", 5))
+    bottom_right_size_y = int(layout_cfg.get("hero_corner_trim_bottom_right_y", bottom_right_size))
 
-    # Soft-trim the upper-left corner and both bottom corners so growth can
-    # creep slightly into the hero boundary without fully breaking readability.
-    if _corner_trim_allows_cell(x, y, hero_zone, corner="top_left", size=top_left_size):
+    if _corner_trim_allows_cell(x, y, hero_zone, corner="top_left", size_x=top_left_size, size_y=top_left_size_y):
         return False
-    if _corner_trim_allows_cell(x, y, hero_zone, corner="bottom_left", size=bottom_left_size):
+    if _corner_trim_allows_cell(x, y, hero_zone, corner="top_right", size_x=top_right_size, size_y=top_right_size_y):
         return False
-    if _corner_trim_allows_cell(x, y, hero_zone, corner="bottom_right", size=bottom_right_size):
+    if _corner_trim_allows_cell(x, y, hero_zone, corner="bottom_left", size_x=bottom_left_size, size_y=bottom_left_size_y):
+        return False
+    if _corner_trim_allows_cell(x, y, hero_zone, corner="bottom_right", size_x=bottom_right_size, size_y=bottom_right_size_y):
         return False
 
     return True
 
 
-def _corner_trim_allows_cell(x: int, y: int, rect: Rect, *, corner: str, size: int) -> bool:
-    if size <= 0:
+def _corner_trim_allows_cell(
+    x: int,
+    y: int,
+    rect: Rect,
+    *,
+    corner: str,
+    size_x: int,
+    size_y: int,
+) -> bool:
+    if size_x <= 0 or size_y <= 0:
         return False
 
     if corner == "top_left":
         local_x = x - rect.x
         local_y = y - rect.y
-        if not (0 <= local_x < size and 0 <= local_y < size):
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
             return False
-        dx = size - (local_x + 0.5)
-        dy = size - (local_y + 0.5)
-        return dx * dx + dy * dy > size * size
-
-    if corner == "bottom_left":
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    elif corner == "top_right":
+        local_x = rect.right - 1 - x
+        local_y = y - rect.y
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
+            return False
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    elif corner == "bottom_left":
         local_x = x - rect.x
         local_y = rect.bottom - 1 - y
-        if not (0 <= local_x < size and 0 <= local_y < size):
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
             return False
-        dx = size - (local_x + 0.5)
-        dy = size - (local_y + 0.5)
-        return dx * dx + dy * dy > size * size
-
-    if corner == "bottom_right":
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    elif corner == "bottom_right":
         local_x = rect.right - 1 - x
         local_y = rect.bottom - 1 - y
-        if not (0 <= local_x < size and 0 <= local_y < size):
+        if not (0 <= local_x < size_x and 0 <= local_y < size_y):
             return False
-        dx = size - (local_x + 0.5)
-        dy = size - (local_y + 0.5)
-        return dx * dx + dy * dy > size * size
+        dx = size_x - (local_x + 0.5)
+        dy = size_y - (local_y + 0.5)
+    else:
+        return False
 
-    return False
+    norm_x = dx / size_x
+    norm_y = dy / size_y
+    return norm_x * norm_x + norm_y * norm_y > 1.0
 
 
 def _build_region_cells(

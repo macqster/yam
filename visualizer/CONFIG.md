@@ -10,6 +10,18 @@ The visualizer is still under active development, so some settings are more stab
 - `layout` is powerful but can create accidental collisions
 - `ivy` is the most experimental section
 
+## System Model (Conceptual)
+
+The visualizer is composed of layered systems:
+
+- input + frame pipeline (GIF → Chafa → frames)
+- layout (placement + collision mask)
+- growth engine (behavior + routing)
+- rendering (ornament + glyphs)
+- debug layer (validation tools)
+
+Most config sections map to one of these layers.
+
 ## `chafa`
 
 Controls the hero animation source and how Chafa converts it into terminal symbols.
@@ -71,7 +83,7 @@ Effect:
 - smaller height opens more crawl space for ivy
 
 Current baseline:
-- the active hero footprint is `48x24`
+- the active hero footprint is `72x36`
 - if you change `height`, recheck mask fit and trunk route behavior immediately
 
 ### `align`
@@ -152,6 +164,10 @@ Dithering mode.
 Effect:
 - `none` keeps the hero calmer and less noisy
 
+Note:
+- Chafa output is cached and may pass through additional preprocessing (e.g. dithering prepass)
+- changes to source or parameters may require cache invalidation to take effect
+
 ## `timing`
 
 Controls scene cadence.
@@ -203,14 +219,14 @@ There are two different ideas in this section:
 
 Those are related but not identical.
 
-Hero collision is now mask-first:
+Hero collision uses the mask as the canonical geometry:
 
-- if `hero_mask_path` exists, the silhouette mask defines blocked hero cells
+- if `hero_mask_path` exists, the silhouette mask defines blocked hero cells (source of truth)
 - `hero_safe_pad_*` expands that blocked silhouette
-- `hero_collision_trim_*` remains as fallback behavior when the mask is unavailable
-- growth guidance still follows the visible hero block, not the padded collision envelope
+- `hero_collision_trim_*` exists only as fallback behavior when the mask is unavailable
+- growth guidance may reference the visible hero block, but must never override mask-based collision
 
-This is the preferred model because it matches the visible hero shape better than rectangular trimming.
+This model ensures that all growth behavior respects the actual visible silhouette of the hero.
 
 Current working rule:
 - treat the hero mask as the real temporary border of vine sprawl
@@ -448,6 +464,13 @@ Controls the procedural organism.
 
 This section is the least stable and should be treated as experimental.
 
+Important:
+- density, clustering, and overall plant shape must be controlled by engine parameters
+- ornament/rendering should not be used to compensate for weak growth behavior
+
+Conceptually:
+- many ivy parameters act as spatial “forces” influencing movement decisions
+
 ### `max_tips`
 
 Maximum number of live growth tips at once.
@@ -670,6 +693,37 @@ Chance of adding thickened wood before the full-age threshold.
 Effect:
 - lower values keep thickening restrained
 
+### `trunk_thickening_min_age`
+
+Minimum age before main-trunk cells begin using the stronger trunk-thickening path.
+
+Effect:
+- lower values make the base and older scaffold bulk up earlier
+- higher values keep the trunk visually lean for longer
+
+### `trunk_thickening_bonus`
+
+Extra maturity multiplier applied to trunk-lineage cells during thickening.
+
+Effect:
+- values above `1.0` make old trunk segments thicken faster and read as more woody than ordinary branches
+
+### `trunk_thickening_info_margin`
+
+Horizontal allowance beyond the info-panel guide where trunk-specific thickening is still considered part of the old main line.
+
+Effect:
+- lower values confine heavy trunk wood to the origin-to-panel corridor
+- higher values let the thick trunk treatment continue farther right
+
+### `trunk_thickening_core_bias`
+
+Base bias for adding dense wood strokes directly adjacent to mature trunk cells.
+
+Effect:
+- higher values produce a heavier trunk spine
+- too high can make the plant look boxed-in instead of woody
+
 ### `debug.enabled`
 
 Enables debug accounting hooks.
@@ -678,6 +732,10 @@ Current use:
 - failed move counts
 - region coverage tracking
 - spawn origin counts
+
+Note:
+- debug overlays are part of the core development workflow
+- use them to validate mask alignment, layout geometry, and growth behavior before tuning parameters
 
 ### `debug.stem_only_view`
 

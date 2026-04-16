@@ -1,7 +1,12 @@
 .DS_Store
 visualizer/.venv/
 visualizer/src/__pycache__/
+visualizer/src/omp.cache
 visualizer/assets/frames_raw/
 visualizer/assets/frames_chafa/
 visualizer/assets/source.gif
 visualizer/visualizer/
+visualizer/assets/frames_test/
+visualizer/assets/test_dithered.png
+visualizer/assets/test_dithered_frames/
+visualizer/assets/calibration_palette.png

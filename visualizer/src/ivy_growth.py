@@ -8,9 +8,11 @@ from ivy_types import Direction, GrowthTip, NEIGHBORS_4, Point
 from layout import SceneLayout
 
 
+
 def initial_trunk_seed(config: dict, layout: SceneLayout, rng: random.Random, state: IvyState) -> Point | None:
     hero_zone = layout.hero_guide
-    target_x = min(layout.ivy_bounds.width - 2, hero_zone.right + int(config["trunk_seed_offset_x"]))
+    hero_right = _effective_hero_right(layout)
+    target_x = min(layout.ivy_bounds.width - 2, hero_right + int(config["trunk_seed_offset_x"]))
     start_y = layout.ivy_bounds.height - max(3, int(config["trunk_seed_bottom_margin"]))
     end_y = 1
 
@@ -32,6 +34,15 @@ def initial_trunk_seed(config: dict, layout: SceneLayout, rng: random.Random, st
     if best is not None:
         count_debug(state, "spawn_origin_counts", "trunk_seed")
     return best
+
+
+# Helper function for effective hero right boundary
+def _effective_hero_right(layout: SceneLayout) -> int:
+    hero_zone = layout.hero_guide
+    right_crop = 3
+    if hero_zone.width > right_crop:
+        return hero_zone.right - right_crop
+    return hero_zone.right
 
 
 def select_move(
@@ -94,7 +105,7 @@ def move_score(
         score -= float(config["turn_penalty"])
 
     if tip.is_trunk:
-        score += trunk_guidance_score(tip, config, x, y, dx, dy, layout)
+        score += trunk_guidance_score(tip, state, config, x, y, dx, dy, layout)
     else:
         score += branch_guidance_score(config, x, y, dx, dy, layout)
 
@@ -105,15 +116,58 @@ def move_score(
     return score
 
 
-def trunk_guidance_score(tip: GrowthTip, config: dict, x: int, y: int, dx: int, dy: int, layout: SceneLayout) -> float:
+def trunk_guidance_score(
+    tip: GrowthTip,
+    state: IvyState,
+    config: dict,
+    x: int,
+    y: int,
+    dx: int,
+    dy: int,
+    layout: SceneLayout,
+) -> float:
     hero_zone = layout.hero_guide
+    hero_right = _effective_hero_right(layout)
+    info_zone = layout.info_guide
     support_top, support_bottom, support_left, support_right = support_geometry(config, layout)
     top_soft_limit = int(config["top_edge_soft_limit"])
     ascent_margin = int(config.get("hero_ascent_margin", 0))
     top_traverse_margin = int(config.get("hero_top_traverse_margin", 0))
+    top_commit_margin = int(config.get("hero_top_commit_margin", 1))
+    top_commit_bonus = float(config.get("hero_top_commit_bonus", 0.0))
+    top_drop_penalty = float(config.get("hero_top_drop_penalty", 0.0))
+    hero_contact_margin = int(config.get("hero_contact_margin", 2))
+    right_staging_margin = int(config.get("right_staging_margin", 12))
+    right_staging_left_penalty = float(config.get("right_staging_left_penalty", 0.0))
+    panel_corridor_penalty = float(config.get("panel_corridor_penalty", 0.0))
+    approach_left_bonus = float(config.get("hero_approach_left_bonus", 0.0))
+    approach_diagonal_bonus = float(config.get("hero_approach_diagonal_bonus", 0.0))
+    top_commit_state_bonus = float(config.get("hero_top_state_bonus", 0.0))
+    top_commit_state_drop_penalty = float(config.get("hero_top_state_drop_penalty", 0.0))
 
     score = 0.0
-    if hero_zone.right < tip.x <= hero_zone.right + ascent_margin and tip.y >= hero_zone.y:
+    hero_contacted = x <= hero_right + hero_contact_margin
+
+    if not hero_contacted:
+        if x > hero_right + right_staging_margin:
+            if dx == -1:
+                score += approach_left_bonus
+            if dx == -1 and dy == -1:
+                score += approach_diagonal_bonus
+            if dx == 0 and dy == -1:
+                score += 0.5 * approach_left_bonus
+            if dx >= 0 and dy == 0:
+                score -= right_staging_left_penalty
+        if (
+            info_zone.x - 1 <= x <= info_zone.right + 2
+            and hero_zone.y - 2 <= y <= info_zone.bottom + 3
+        ):
+            if dx >= 0:
+                score -= panel_corridor_penalty
+            if dx == -1:
+                score += 0.75 * panel_corridor_penalty
+
+    if hero_right < tip.x <= hero_right + ascent_margin and tip.y >= hero_zone.y:
         if dy == -1:
             score += float(config.get("hero_ascent_bonus", 0.0))
         if dx == -1 and dy == -1:
@@ -164,19 +218,19 @@ def trunk_guidance_score(tip: GrowthTip, config: dict, x: int, y: int, dx: int, 
         if dy == -1:
             score -= 1.0
 
-    if x > hero_zone.right and dx == -1:
+    if x > hero_right and dx == -1:
         score += 1.25
     if x < hero_zone.x and dx == 1:
         score -= 0.75
 
-    if x > hero_zone.right + ascent_margin and dx == -1 and dy == -1:
+    if x > hero_right + ascent_margin and dx == -1 and dy == -1:
         score += float(config.get("pre_ascent_diagonal_bonus", 0.0))
-    if x > hero_zone.right + ascent_margin and dy == 0:
+    if x > hero_right + ascent_margin and dy == 0:
         score -= 0.5 * float(config.get("hero_pileup_penalty", 0.0))
 
     if (
         hero_zone.y - top_traverse_margin <= y <= hero_zone.y + top_traverse_margin
-        and hero_zone.x <= x <= hero_zone.right + ascent_margin
+        and hero_zone.x <= x <= hero_right + ascent_margin
     ):
         if dx == -1:
             score += float(config.get("hero_top_traverse_bonus", 0.0))
@@ -185,13 +239,37 @@ def trunk_guidance_score(tip: GrowthTip, config: dict, x: int, y: int, dx: int, 
         if dy == 1:
             score -= 0.75 * float(config.get("hero_top_traverse_bonus", 0.0))
 
+    hero_mid_x = hero_zone.x + hero_zone.width // 2
+    if (
+        hero_zone.y - top_commit_margin <= y <= hero_zone.y + top_commit_margin
+        and x >= hero_mid_x
+    ):
+        if dx == -1:
+            score += top_commit_bonus
+        if dx == -1 and dy == 0:
+            score += 0.5 * top_commit_bonus
+        if dy == 1:
+            score -= top_drop_penalty
+        if dx >= 0 and dy >= 0:
+            score -= 0.75 * top_drop_penalty
+
+    if state.trunk_route_phase == "hero_top":
+        if dx == -1:
+            score += top_commit_state_bonus
+        if dx == -1 and dy == 0:
+            score += 0.5 * top_commit_state_bonus
+        if dy == 1:
+            score -= top_commit_state_drop_penalty
+        if dx >= 0 and dy >= 0:
+            score -= 0.75 * top_commit_state_drop_penalty
+
     score += below_hero_recovery_score(config, x, y, dx, dy, layout, branch=False)
     score += floor_avoidance_score(config, y, dx, dy, layout, branch=False)
 
     overlap_margin = int(config.get("hero_lateral_overlap_margin", 0))
     lateral_penalty = float(config.get("hero_lateral_entry_penalty", 0.0))
     if lateral_penalty > 0 and (hero_zone.y - overlap_margin) <= y <= (hero_zone.bottom + overlap_margin):
-        if hero_zone.right < x <= hero_zone.right + overlap_margin and dx < 0:
+        if hero_right < x <= hero_right + overlap_margin and dx < 0:
             score -= lateral_penalty
             if dy != 0:
                 score += 0.75
@@ -207,6 +285,7 @@ def trunk_guidance_score(tip: GrowthTip, config: dict, x: int, y: int, dx: int, 
 
 def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout: SceneLayout) -> float:
     hero_zone = layout.hero_guide
+    hero_right = _effective_hero_right(layout)
     ascent_margin = int(config.get("hero_ascent_margin", 0))
     score = 0.0
     if dy == 1:
@@ -216,7 +295,7 @@ def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout
     if y >= hero_zone.bottom and dx == 0:
         score += 0.5
 
-    nearest_zone_x = hero_zone.x if x < hero_zone.x else hero_zone.right
+    nearest_zone_x = hero_zone.x if x < hero_zone.x else hero_right
     if abs(x - nearest_zone_x) <= int(config.get("hero_boundary_attraction", config["hero_contour_attraction"])):
         score += 0.75
     if (x, y) in layout.region_cells.get("below_hero", frozenset()):
@@ -226,7 +305,7 @@ def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout
         if dy == 1:
             score += 1.0
 
-    if hero_zone.right < x <= hero_zone.right + ascent_margin and hero_zone.y <= y <= hero_zone.bottom:
+    if hero_right < x <= hero_right + ascent_margin and hero_zone.y <= y <= hero_zone.bottom:
         if dy == -1:
             score += 0.5 * float(config.get("hero_ascent_bonus", 0.0))
         if dx != 0 and dy == 0:
@@ -235,7 +314,7 @@ def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout
     overlap_margin = int(config.get("hero_lateral_overlap_margin", 0))
     lateral_penalty = 0.6 * float(config.get("hero_lateral_entry_penalty", 0.0))
     if lateral_penalty > 0 and (hero_zone.y - overlap_margin) <= y <= (hero_zone.bottom + overlap_margin):
-        if hero_zone.right < x <= hero_zone.right + overlap_margin and dx < 0:
+        if hero_right < x <= hero_right + overlap_margin and dx < 0:
             score -= lateral_penalty
             if dy != 0:
                 score += 0.5
@@ -268,6 +347,7 @@ def branch_direction(config: dict, x: int, y: int, dy: int, layout: SceneLayout)
 
 def support_geometry(config: dict, layout: SceneLayout) -> tuple[int, int, int, int]:
     hero_zone = layout.hero_guide
+    hero_right = _effective_hero_right(layout)
     band_height = int(config["support_band_height"])
     above_gap = max(0, hero_zone.y - 1)
     below_gap = max(0, layout.ivy_bounds.height - hero_zone.bottom - 2)
@@ -284,7 +364,7 @@ def support_geometry(config: dict, layout: SceneLayout) -> tuple[int, int, int, 
         support_bottom = min(layout.ivy_bounds.height - 2, max(support_top, hero_zone.bottom - 2))
 
     support_left = max(1, hero_zone.x - int(config["support_span_left"]))
-    support_right = min(layout.ivy_bounds.width - 2, hero_zone.right + int(config["support_span_right"]))
+    support_right = min(layout.ivy_bounds.width - 2, hero_right + int(config["support_span_right"]))
     return support_top, support_bottom, support_left, support_right
 
 
@@ -430,6 +510,7 @@ def below_hero_recovery_score(
     branch: bool,
 ) -> float:
     hero_zone = layout.hero_guide
+    hero_right = _effective_hero_right(layout)
     if (x, y) not in layout.region_cells.get("below_hero", frozenset()):
         return 0.0
 
@@ -439,7 +520,7 @@ def below_hero_recovery_score(
     scale = 0.6 if branch else 1.0
 
     score = 0.0
-    if x <= hero_zone.right + margin:
+    if x <= hero_right + margin:
         if dx < 0 and dy == 0:
             score -= lateral_penalty * scale
         if dx < 0 and dy > 0:

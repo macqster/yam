@@ -1,6 +1,6 @@
 # yam
 
-Personal macOS Kitty + Fastfetch + Chafa startup scene, plus a dedicated Kitty visualizer mode.
+Personal macOS terminal scene repo: legacy Kitty + Fastfetch startup rice, plus a dedicated visualizer now tuned for Ghostty.
 
 This repo preserves the current working terminal rice and keeps the moving parts
 small enough to reinstall and modify without reverse-engineering it later.
@@ -11,7 +11,7 @@ The setup is intentionally macOS-specific and personal.
 
 The repo now also includes a separate visualizer app under [visualizer/](/Users/maciejkuster/yam/visualizer).
 
-This is intentionally not part of shell startup. It is a standalone Kitty-friendly scene that combines:
+This is intentionally not part of shell startup. It is a standalone terminal scene that combines:
 
 - cached Chafa hero animation from a GIF
 - slow procedural ivy ornament
@@ -23,7 +23,7 @@ Run it from the repo root with:
 ./visualizer/run_visualizer.sh
 ```
 
-After `./install.sh`, launch it from Kitty with:
+After `./install.sh`, launch it with:
 
 ```bash
 yam
@@ -31,6 +31,10 @@ yam
 
 See [visualizer/README.md](/Users/maciejkuster/yam/visualizer/README.md) for setup and tuning details.
 See [visualizer/STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md) for the current maintenance snapshot and ivy-engine status.
+
+Current visualizer direction:
+- tuned for Ghostty
+- separate from the older Kitty startup rice preserved elsewhere in this repo
 
 ## What this repo is
 

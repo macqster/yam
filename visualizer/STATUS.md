@@ -6,7 +6,7 @@ It describes what exists now, what is stable, what is provisional, and where fut
 
 ## Scope
 
-The visualizer is a standalone Kitty-facing terminal scene inside `visualizer/`.
+The visualizer is a standalone terminal scene inside `visualizer/`, currently tuned for Ghostty.
 
 It is separate from the repo's Fastfetch startup path.
 
@@ -96,7 +96,7 @@ Current major sections:
 
 ## What Is Working
 
-- the visualizer launches correctly from Kitty with `yam`
+- the visualizer launches correctly with `yam`
 - Chafa GIF frames are generated and cached
 - the hero art is rendered at fixed dimensions
 - the info panel is rendered and placeable
@@ -195,7 +195,7 @@ Before ingesting more ivy code:
 
 Current practical baseline:
 
-- hero frame is `48x24`
+- hero frame is `72x36`
 - hero mask placement is accepted as temporary truth
 - trim tweaking should now be secondary to route behavior refinement
 

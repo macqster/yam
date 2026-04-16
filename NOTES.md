@@ -31,6 +31,12 @@ The current maintenance snapshot for the visualizer lives in:
 
 - `visualizer/STATUS.md`
 
+Current terminal target for the visualizer:
+
+- Ghostty first
+
+The older Kitty startup files remain in-repo as legacy rice/source material, but the standalone `yam` visualizer should now be evaluated primarily in Ghostty.
+
 Treat these visualizer modules as stable unless there is a clear bug:
 
 - `visualizer/src/main.py`

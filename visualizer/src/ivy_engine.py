@@ -338,6 +338,8 @@ class IvyEngine:
                 base_top_factor = float(self.config.get("hero_top_branch_factor", 0.2))
                 released_top_factor = float(self.config.get("hero_top_left_branch_factor", 0.8))
                 branch_chance *= base_top_factor + ((released_top_factor - base_top_factor) * leftward_progress)
+            elif self.state.trunk_route_phase == "hero_exit":
+                branch_chance *= float(self.config.get("hero_exit_branch_factor", 0.25))
 
         if tip.is_trunk and self.rng.random() < branch_chance:
             new_branch_direction = branch_direction(self.config, new_x, new_y, dy, layout)
@@ -368,6 +370,8 @@ class IvyEngine:
         top_margin = int(self.config.get("hero_top_commit_margin", 1))
         hero_mid_x = hero_zone.x + hero_zone.width // 2
         hero_left_release_x = hero_zone.x + hero_zone.width // 3
+        exit_margin = int(self.config.get("hero_exit_margin", 3))
+        exit_release_x = hero_zone.x - exit_margin
 
         in_top_band = hero_zone.y - top_margin <= y <= hero_zone.y + top_margin
         if self.state.trunk_route_phase == "approach" and in_top_band and x >= hero_mid_x:
@@ -376,8 +380,11 @@ class IvyEngine:
         if self.state.trunk_route_phase == "hero_top":
             self.state.hero_top_commit_active = True
             if x <= hero_left_release_x or y > hero_zone.y + top_margin + 1 or y < hero_zone.y - top_margin - 1:
+                self.state.trunk_route_phase = "hero_exit"
+        elif self.state.trunk_route_phase == "hero_exit":
+            self.state.hero_top_commit_active = False
+            if x <= exit_release_x or y >= hero_zone.bottom - 1:
                 self.state.trunk_route_phase = "post_top"
-                self.state.hero_top_commit_active = False
         else:
             self.state.hero_top_commit_active = False
 

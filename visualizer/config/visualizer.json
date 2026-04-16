@@ -52,7 +52,7 @@
 
     "hero_anchor": "center",
     "hero_offset_x": -16,
-    "hero_offset_y": 4,
+    "hero_offset_y": 0,
 
     "hero_mask_path": "assets/hero_mask.png",
     "hero_mask_scaled_fallback_path": "assets/hero_mask_scaled_48x36.png",
@@ -142,6 +142,11 @@
     "hero_top_drop_penalty": 4.0,
     "hero_top_state_bonus": 6.0,
     "hero_top_state_drop_penalty": 5.0,
+    "hero_exit_margin": 3,
+    "hero_exit_left_bonus": 4.0,
+    "hero_exit_downleft_bonus": 5.0,
+    "hero_exit_right_penalty": 5.0,
+    "hero_exit_up_penalty": 2.5,
     "hero_pileup_penalty": 3.0,
     "right_staging_margin": 0,
     "right_staging_left_penalty": 0.0,
@@ -149,6 +154,7 @@
     "branch_suppression_margin": 10,
     "pre_contact_branch_factor": 0.35,
     "hero_top_branch_factor": 0.2,
+    "hero_exit_branch_factor": 0.25,
 
     "info_hanger_trigger_margin": 4,
     "info_hanger_vertical_margin": 6,

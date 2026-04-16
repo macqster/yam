@@ -144,6 +144,10 @@ def trunk_guidance_score(
     approach_diagonal_bonus = float(config.get("hero_approach_diagonal_bonus", 0.0))
     top_commit_state_bonus = float(config.get("hero_top_state_bonus", 0.0))
     top_commit_state_drop_penalty = float(config.get("hero_top_state_drop_penalty", 0.0))
+    hero_exit_left_bonus = float(config.get("hero_exit_left_bonus", 0.0))
+    hero_exit_downleft_bonus = float(config.get("hero_exit_downleft_bonus", 0.0))
+    hero_exit_right_penalty = float(config.get("hero_exit_right_penalty", 0.0))
+    hero_exit_up_penalty = float(config.get("hero_exit_up_penalty", 0.0))
 
     score = 0.0
     hero_contacted = x <= hero_right + hero_contact_margin
@@ -262,6 +266,15 @@ def trunk_guidance_score(
             score -= top_commit_state_drop_penalty
         if dx >= 0 and dy >= 0:
             score -= 0.75 * top_commit_state_drop_penalty
+    elif state.trunk_route_phase == "hero_exit":
+        if dx == -1:
+            score += hero_exit_left_bonus
+        if dx == -1 and dy == 1:
+            score += hero_exit_downleft_bonus
+        if dx >= 0:
+            score -= hero_exit_right_penalty
+        if dy < 0:
+            score -= hero_exit_up_penalty
 
     score += below_hero_recovery_score(config, x, y, dx, dy, layout, branch=False)
     score += floor_avoidance_score(config, y, dx, dy, layout, branch=False)

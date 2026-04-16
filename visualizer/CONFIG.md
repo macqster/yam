@@ -86,6 +86,14 @@ Current baseline:
 - the active hero footprint is `72x36`
 - if you change `height`, recheck mask fit and trunk route behavior immediately
 
+Current route model:
+- trunk routing is phase-based rather than purely scalar-biased
+- the current intended sequence is:
+  - `approach`
+  - `hero_top`
+  - `hero_exit`
+  - `post_top`
+
 ### `align`
 
 Chafa alignment string.
@@ -470,6 +478,17 @@ Important:
 
 Conceptually:
 - many ivy parameters act as spatial “forces” influencing movement decisions
+- trunk routing is now also phase/state-driven, not just weight-driven
+
+Current trunk route sequence:
+- `approach`
+  - from the lower-right origin toward the hero
+- `hero_top`
+  - commit to the upper hero band and traverse left
+- `hero_exit`
+  - leave the top band deliberately, biased left and down-left away from the panel corridor
+- `post_top`
+  - freer downstream behavior after clearing the hero-top segment
 
 ### `max_tips`
 

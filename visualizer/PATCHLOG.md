@@ -241,6 +241,30 @@ Current focus:
   - `trunk_thickening_info_margin`
   - `trunk_thickening_core_bias`
 
+### Hero Exit Route Phase
+
+- Extended the trunk route state machine from:
+  - `approach` → `hero_top` → `post_top`
+  to:
+  - `approach` → `hero_top` → `hero_exit` → `post_top`
+- Updated [ivy_engine.py](/Users/maciejkuster/yam/visualizer/src/ivy_engine.py) so the trunk now enters a short explicit `hero_exit` phase after leaving the upper hero band
+- During `hero_exit`:
+  - branching stays suppressed
+  - the trunk is biased left and down-left
+  - rightward and upward drift is penalized
+- Updated [ivy_growth.py](/Users/maciejkuster/yam/visualizer/src/ivy_growth.py) with dedicated route-phase scoring for `hero_exit`
+- Added config controls in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json):
+  - `hero_exit_margin`
+  - `hero_exit_left_bonus`
+  - `hero_exit_downleft_bonus`
+  - `hero_exit_right_penalty`
+  - `hero_exit_up_penalty`
+  - `hero_exit_branch_factor`
+
+Intent:
+- stop the trunk from peeling into the panel corridor immediately after the top-band crawl
+- make the post-top transition read as an intentional continuation of the main vine rather than a loose release
+
 
 ## 2026-04-13
 

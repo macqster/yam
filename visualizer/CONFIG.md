@@ -28,11 +28,12 @@ Controls the hero animation source and how Chafa converts it into terminal symbo
 
 ### `source_gif`
 
-Absolute path to the preferred source GIF.
+Path to the preferred source GIF.
 
 Effect:
 - used as the primary hero animation source
 - if missing, the fallback image path is used to synthesize a GIF
+- paths are resolved relative to the visualizer repo root unless already absolute
 
 Tradeoff:
 - higher quality source material matters more than any downstream tuning
@@ -43,6 +44,7 @@ Path to a still image used when `source_gif` is unavailable.
 
 Effect:
 - keeps the visualizer runnable even without the intended GIF
+- also resolved relative to the visualizer repo root unless already absolute
 
 ### `cache_dir_raw`
 
@@ -50,6 +52,7 @@ Directory for extracted raw image frames.
 
 Effect:
 - stores decoded source frames before Chafa conversion
+- paths are resolved relative to the visualizer repo root unless already absolute
 
 ### `cache_dir_chafa`
 
@@ -57,6 +60,7 @@ Directory for cached ANSI/symbol-rendered Chafa frames.
 
 Effect:
 - avoids rerendering the hero frames every run
+- paths are resolved relative to the visualizer repo root unless already absolute
 
 ### `frame_count`
 

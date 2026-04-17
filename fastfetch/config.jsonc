@@ -4,7 +4,7 @@
     "width": 8,
     "height": 8,    
     "padding": {
-      "top": 1,
+      "top": 0,
       "left": 12,
       "right": 0
     }
@@ -14,7 +14,7 @@
     "key": {
       "width": 10,
       "paddingLeft": 0,
-      "paddingTop": 0
+      "paddingTop": -1
     },
     "color": {
       "keys": 143,

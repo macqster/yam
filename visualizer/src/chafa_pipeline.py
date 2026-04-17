@@ -2,158 +2,330 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter
 
 
 class ChafaPipeline:
+    PREPROCESS_SIGNATURE = {
+        "brightness": 1.00,
+        "gamma": 1.02,
+        "contrast": 1.02,
+        "color": 1.06,
+        "blur": 0.25,
+        "unsharp_radius": 1.0,
+        "unsharp_percent": 95,
+        "unsharp_threshold": 2,
+    }
+
     def __init__(self, repo_root: Path, config: dict) -> None:
         self.repo_root = repo_root
         self.config = config["chafa"]
 
-    def load_frames(self) -> list[list[str]]:
-        source_path = self._ensure_source_gif()
-        raw_dir = self.repo_root / self.config["cache_dir_raw"]
-        chafa_dir = self.repo_root / self.config["cache_dir_chafa"]
+    def _resolve_path(self, value: str) -> Path:
+        path = Path(value)
+        return path if path.is_absolute() else self.repo_root / path
+
+    def _select_source(self) -> Path:
+        source = self._resolve_path(self.config["source_gif"])
+        if source.exists():
+            return source
+
+        fallback = self._resolve_path(self.config["fallback_image"])
+        if fallback.exists():
+            return fallback
+
+        raise FileNotFoundError(
+            "Neither source GIF nor fallback image exists: "
+            f"{source} / {fallback}"
+        )
+
+    def _cache_dirs(self) -> tuple[Path, Path]:
+        raw_dir = self._resolve_path(self.config["cache_dir_raw"])
+        chafa_dir = self._resolve_path(self.config["cache_dir_chafa"])
         raw_dir.mkdir(parents=True, exist_ok=True)
         chafa_dir.mkdir(parents=True, exist_ok=True)
+        return raw_dir, chafa_dir
 
-        signature = self._signature_for(source_path)
-        manifest_path = chafa_dir / "manifest.json"
-        if self._is_cache_valid(manifest_path, signature):
-            return self._read_cached_frames(chafa_dir, manifest_path)
+    def _manifest_path(self, chafa_dir: Path) -> Path:
+        return chafa_dir / "manifest.json"
 
-        raw_paths = self._extract_frames(source_path, raw_dir)
-        rendered_paths = self._render_frames(raw_paths, chafa_dir)
-        manifest = {
-            "signature": signature,
-            "frames": [path.name for path in rendered_paths],
-            "frame_count": len(rendered_paths),
+    def _cache_signature(self, source: Path) -> str:
+        payload = {
+            "source": str(source.resolve()),
+            "source_mtime_ns": source.stat().st_mtime_ns,
+            "source_size": source.stat().st_size,
+            "frame_count": self.config["frame_count"],
+            "width": self.config["width"],
+            "height": self.config["height"],
+            "align": self.config["align"],
+            "symbols": self.config.get("symbols"),
+            "fill": self.config.get("fill"),
+            "colors": self.config.get("colors"),
+            "color_space": self.config.get("color_space"),
+            "color_extractor": self.config.get("color_extractor"),
+            "fg_only": self.config.get("fg_only"),
+            "bg": self.config.get("bg"),
+            "threshold": self.config.get("threshold"),
+            "dither": self.config.get("dither"),
+            "dither_grain": self.config.get("dither_grain"),
+            "dither_intensity": self.config.get("dither_intensity"),
+            "optimize": self.config.get("optimize"),
+            "preprocess": self.config.get("preprocess"),
+            "preprocess_signature": self.PREPROCESS_SIGNATURE,
         }
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        return [path.read_text(encoding="utf-8").splitlines() for path in rendered_paths]
+        digest = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        return digest
 
-    def _ensure_source_gif(self) -> Path:
-        source_value = Path(self.config["source_gif"])
-        gif_path = source_value if source_value.is_absolute() else self.repo_root / source_value
-        if gif_path.exists():
-            return gif_path
+    def _load_manifest(self, manifest_path: Path) -> dict | None:
+        if not manifest_path.exists():
+            return None
 
-        fallback_value = Path(self.config["fallback_image"])
-        fallback_path = (
-            fallback_value if fallback_value.is_absolute() else self.repo_root / fallback_value
+        try:
+            return json.loads(manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return None
+
+    def _write_manifest(self, manifest_path: Path, payload: dict) -> None:
+        manifest_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
-        if not fallback_path.exists():
-            raise FileNotFoundError(
-                f"Missing source GIF at {gif_path} and fallback image at {fallback_path}"
+
+    # -------------------- GAMMA --------------------
+    def _apply_gamma(self, frame: Image.Image, gamma: float) -> Image.Image:
+        if gamma == 1.0:
+            return frame
+
+        inv_gamma = 1.0 / gamma
+        lut = [
+            max(0, min(255, int(round((i / 255.0) ** inv_gamma * 255.0))))
+            for i in range(256)
+        ]
+
+        if frame.mode == "RGBA":
+            rgb = frame.convert("RGB").point(lut * 3)
+            alpha = frame.getchannel("A")
+            rgb.putalpha(alpha)
+            return rgb
+
+        if frame.mode == "RGB":
+            return frame.point(lut * 3)
+
+        return frame.point(lut)
+
+    # -------------------- PREPROCESS --------------------
+    def _preprocess_frame(self, frame: Image.Image) -> Image.Image:
+        sig = self.PREPROCESS_SIGNATURE
+
+        # GLOBAL tone shaping
+        frame = ImageEnhance.Brightness(frame).enhance(sig["brightness"])
+        frame = self._apply_gamma(frame, gamma=sig["gamma"])
+        frame = ImageEnhance.Contrast(frame).enhance(sig["contrast"])
+        frame = ImageEnhance.Color(frame).enhance(sig["color"])
+
+        frame = frame.convert("RGB")
+        pixels = frame.load()
+        w, h = frame.size
+
+        # PASS 1 — stronger dark red separation (quantization-safe)
+        for y in range(h):
+            for x in range(w):
+                r, g, b = pixels[x, y]
+
+                lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+                if (
+                    r > g * 1.10 and
+                    r > b * 1.10 and
+                    55 < lum < 125
+                ):
+                    # preserve separation without collapsing too many tones into one red slab
+                    r = min(255, int(r * 1.10))
+                    g = int(g * 0.90)
+                    b = int(b * 0.88)
+
+                    # small lift only for the darkest warm reds
+                    if lum < 80:
+                        r = min(255, int(r * 1.05))
+                        g = int(g * 0.98)
+
+                    pixels[x, y] = (r, g, b)
+
+        # PASS 2 — boost dark/midtone separation for braille density
+        for y in range(h):
+            for x in range(w):
+                r, g, b = pixels[x, y]
+
+                lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+                # lift darker regions slightly so they survive fg-only quantization
+                if 25 < lum < 110:
+                    boost = 1.08
+                    r = min(255, int(r * boost))
+                    g = min(255, int(g * boost))
+                    b = min(255, int(b * boost))
+
+                    # add slight contrast skew (prevents gray collapse)
+                    r = min(255, int(r * 1.03))
+                    b = min(255, int(b * 0.98))
+
+                    pixels[x, y] = (r, g, b)
+
+        # FINAL smoothing
+        frame = frame.filter(ImageFilter.GaussianBlur(radius=sig["blur"]))
+        frame = frame.filter(
+            ImageFilter.UnsharpMask(
+                radius=sig["unsharp_radius"],
+                percent=sig["unsharp_percent"],
+                threshold=sig["unsharp_threshold"],
             )
-
-        if not gif_path.is_absolute():
-            gif_path.parent.mkdir(parents=True, exist_ok=True)
-        else:
-            gif_path = self.repo_root / "assets/source.gif"
-            gif_path.parent.mkdir(parents=True, exist_ok=True)
-        self._build_fallback_gif(fallback_path, gif_path)
-        return gif_path
-
-    def _build_fallback_gif(self, source_image: Path, gif_path: Path) -> None:
-        frame_count = self.config["frame_count"]
-        base = Image.open(source_image).convert("RGBA")
-        frames = []
-        for index in range(frame_count):
-            phase = index / max(1, frame_count - 1)
-            x_shift = int((phase - 0.5) * 16)
-            y_shift = int((0.5 - abs(phase - 0.5)) * 8)
-            canvas = Image.new("RGBA", base.size, (0, 0, 0, 0))
-            canvas.alpha_composite(base, (x_shift, y_shift))
-            enhancer = ImageEnhance.Brightness(canvas)
-            frame = enhancer.enhance(0.94 + (0.08 * (1.0 - abs(phase - 0.5) * 2.0)))
-            frames.append(frame.convert("P", palette=Image.Palette.ADAPTIVE))
-        frames[0].save(
-            gif_path,
-            save_all=True,
-            append_images=frames[1:],
-            duration=90,
-            loop=0,
-            disposal=2,
-            transparency=0,
         )
 
+        return frame
+
+    # -------------------- FRAME EXTRACTION --------------------
     def _extract_frames(self, source_path: Path, output_dir: Path) -> list[Path]:
-        for old_file in output_dir.glob("frame_*.png"):
-            old_file.unlink()
+        for f in output_dir.glob("frame_*.png"):
+            f.unlink()
 
-        with Image.open(source_path) as image:
-            total_frames = getattr(image, "n_frames", 1)
+        with Image.open(source_path) as img:
+            total = getattr(img, "n_frames", 1)
             requested = self.config["frame_count"]
-            indexes = sorted({int(i * total_frames / requested) for i in range(requested)})
-            rendered: list[Path] = []
-            for output_index, frame_index in enumerate(indexes):
-                image.seek(frame_index)
-                frame = image.convert("RGBA")
-                path = output_dir / f"frame_{output_index:02d}.png"
+
+            paths = []
+            for i in range(requested):
+                idx = int(i * total / requested)
+                img.seek(idx)
+                frame = img.convert("RGBA")
+
+                path = output_dir / f"frame_{i:02d}.png"
                 frame.save(path)
-                rendered.append(path)
-        return rendered
+                paths.append(path)
 
-    def _render_frames(self, raw_paths: list[Path], output_dir: Path) -> list[Path]:
-        for old_file in output_dir.glob("frame_*.ansi"):
-            old_file.unlink()
+        return paths
 
-        rendered_paths: list[Path] = []
-        for index, raw_path in enumerate(raw_paths):
-            target_path = output_dir / f"frame_{index:02d}.ansi"
-            cmd = self._build_chafa_command(raw_path)
-            result = subprocess.run(
-                cmd,
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            target_path.write_text(result.stdout.rstrip("\n") + "\n", encoding="utf-8")
-            rendered_paths.append(target_path)
-        return rendered_paths
-
-    def _build_chafa_command(self, raw_path: Path) -> list[str]:
+    # -------------------- CHAFA --------------------
+    def _build_chafa_command(self, path: Path) -> list[str]:
         cmd = [
             "chafa",
             "--format=symbols",
             f"--size={self.config['width']}x{self.config['height']}",
             f"--align={self.config['align']}",
-            f"--symbols={self.config['symbols']}",
-            f"--fill={self.config['fill']}",
-            f"--colors={self.config['colors']}",
-            f"--color-space={self.config['color_space']}",
-            f"--color-extractor={self.config['color_extractor']}",
-            f"--bg={self.config['bg']}",
-            f"--threshold={self.config['threshold']}",
-            f"--preprocess={self.config['preprocess']}",
-            f"--dither={self.config['dither']}",
-            "--animate=off",
         ]
-        if self.config["fg_only"]:
+
+        symbols = self.config.get("symbols")
+        if symbols and symbols != "none":
+            cmd.append(f"--symbols={symbols}")
+
+        fill = self.config.get("fill")
+        if fill and fill != "none":
+            cmd.append(f"--fill={fill}")
+
+        colors = self.config.get("colors")
+        if colors:
+            cmd.append(f"--colors={colors}")
+
+        color_space = self.config.get("color_space")
+        if color_space:
+            cmd.append(f"--color-space={color_space}")
+
+        color_extractor = self.config.get("color_extractor")
+        if color_extractor:
+            cmd.append(f"--color-extractor={color_extractor}")
+
+        dither = self.config.get("dither")
+        if dither:
+            cmd.append(f"--dither={dither}")
+
+        dither_grain = self.config.get("dither_grain")
+        if dither_grain:
+            cmd.append(f"--dither-grain={dither_grain}")
+
+        dither_intensity = self.config.get("dither_intensity")
+        if dither_intensity is not None:
+            cmd.append(f"--dither-intensity={dither_intensity}")
+
+        optimize = self.config.get("optimize")
+        if optimize is not None:
+            cmd.append(f"--optimize={optimize}")
+
+        preprocess = self.config.get("preprocess")
+        if preprocess is not None:
+            cmd.append(f"--preprocess={preprocess}")
+
+        threshold = self.config.get("threshold")
+        if threshold is not None:
+            cmd.append(f"--threshold={threshold}")
+
+        bg = self.config.get("bg")
+        if bg:
+            cmd.append(f"--bg={bg}")
+
+        if self.config.get("fg_only", True):
             cmd.append("--fg-only")
-        cmd.append(str(raw_path))
+
+        cmd.append(str(path))
         return cmd
 
-    def _signature_for(self, source_path: Path) -> str:
-        config_text = json.dumps(self.config, sort_keys=True)
-        digest = hashlib.sha256()
-        digest.update(source_path.read_bytes())
-        digest.update(config_text.encode("utf-8"))
-        return digest.hexdigest()
+    # -------------------- RENDER --------------------
+    def _render_frames(self, raw_paths: list[Path], out_dir: Path) -> list[Path]:
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-    def _is_cache_valid(self, manifest_path: Path, signature: str) -> bool:
-        if not manifest_path.exists():
-            return False
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        return manifest.get("signature") == signature
+        rendered = []
+        temp_dir = out_dir / "_pre"
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+        temp_dir.mkdir(parents=True, exist_ok=True)
 
-    def _read_cached_frames(self, output_dir: Path, manifest_path: Path) -> list[list[str]]:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        frames = []
-        for file_name in manifest["frames"]:
-            frames.append((output_dir / file_name).read_text(encoding="utf-8").splitlines())
-        return frames
+        try:
+            for i, raw in enumerate(raw_paths):
+                with Image.open(raw) as img:
+                    processed = self._preprocess_frame(img)
+
+                tmp = temp_dir / f"frame_{i:02d}.png"
+                processed.save(tmp)
+
+                cmd = self._build_chafa_command(tmp)
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+                out = out_dir / f"frame_{i:02d}.ansi"
+                out.write_text(result.stdout.rstrip("\n") + "\n", encoding="utf-8")
+                rendered.append(out)
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+        return rendered
+
+    # -------------------- PUBLIC --------------------
+    def load_frames(self) -> list[list[str]]:
+        source = self._select_source()
+        raw_dir, chafa_dir = self._cache_dirs()
+        manifest_path = self._manifest_path(chafa_dir)
+        expected_signature = self._cache_signature(source)
+        requested = int(self.config["frame_count"])
+
+        manifest = self._load_manifest(manifest_path)
+        if manifest and manifest.get("signature") == expected_signature:
+            rendered = sorted(chafa_dir.glob("frame_*.ansi"))
+            if len(rendered) == requested:
+                return [p.read_text(encoding="utf-8").splitlines() for p in rendered]
+
+        raw = self._extract_frames(source, raw_dir)
+        rendered = self._render_frames(raw, chafa_dir)
+
+        self._write_manifest(
+            manifest_path,
+            {
+                "signature": expected_signature,
+                "source": str(source.resolve()),
+                "frame_count": requested,
+            },
+        )
+
+        return [p.read_text().splitlines() for p in rendered]

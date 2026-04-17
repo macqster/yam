@@ -154,6 +154,7 @@ Note: debug overlays are part of the core development workflow and are essential
 - If that GIF is missing, the app generates a subtle fallback GIF from `visualizer/assets/ives_yam.png`
 - extracted PNG frames are cached in `visualizer/assets/frames_raw/`
 - rendered ANSI frames are cached in `visualizer/assets/frames_chafa/`
+- those cache locations are configured in `visualizer.json` and resolved relative to the visualizer repo root unless given as absolute paths
 
 Delete the cache directories if you want to force a fresh render after changing source assets or Chafa settings.
 

@@ -10,39 +10,57 @@
 # useful for the current macOS + Ghostty + yam visualizer workflow.
 
 font-family = "JetBrainsMono Nerd Font"
-font-size = 12
+font-feature = liga=0
+font-size = 13
 
-background-opacity = 0.90
-window-padding-x = 18
-window-padding-y = 18
+background-opacity = 0.95
+window-padding-x = 14
+window-padding-y = 12
+window-padding-balance = true
+window-save-state = never
+
+background-blur = 6
+macos-titlebar-style = transparent
+alpha-blending = linear-corrected
 
 cursor-style = block
 cursor-style-blink = false
 
+
 shell-integration = zsh
 
+confirm-close-surface = false
+
 copy-on-select = clipboard
+quit-after-last-window-closed = false
 
 # Core palette aligned with the existing yam terminal look.
-background = #21211c
-foreground = #807973
-cursor-color = #facb7f
-selection-background = #403729
-selection-foreground = #21211c
+background = #16181A
+foreground = #E2E5E3
+minimum-contrast = 1.1
+cursor-color = #4F8E6C
+selection-background = #355FA8
+selection-foreground = #ffffff
 
-palette = 0=#3c3b30
-palette = 1=#97280f
-palette = 2=#917900
-palette = 3=#7f7110
-palette = 4=#497f7d
-palette = 5=#7e4e2e
-palette = 6=#387f58
-palette = 7=#807974
-palette = 8=#545444
-palette = 9=#df502a
-palette = 10=#564b00
-palette = 11=#d69827
-palette = 12=#78d8d8
-palette = 13=#cd7c53
-palette = 14=#424e00
-palette = 15=#fff1e8
+palette = 0=#181A1D
+palette = 1=#A33A32
+palette = 2=#3E7357
+palette = 3=#C48A2C
+palette = 4=#2C4C8A
+palette = 5=#8A3B2E
+palette = 6=#4F8E6C
+palette = 7=#C5C8C6
+palette = 8=#373C41
+palette = 9=#B24E2E
+palette = 10=#69C090
+palette = 11=#D69827
+palette = 12=#355FA8
+palette = 13=#A67C34
+palette = 14=#2F5A45
+palette = 15=#FFFFFF
+
+# NOTE:
+# `initial-window` is not a valid Ghostty configuration option and will cause errors if used.
+# Ghostty manages initial window behavior internally; do not add this key here.
+# `cursor-thickness` is also not a valid Ghostty configuration key.
+# If cursor width tuning is needed in supported Ghostty versions, use `adjust-cursor-thickness` instead.

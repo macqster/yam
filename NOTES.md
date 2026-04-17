@@ -35,8 +35,6 @@ Current terminal target for the visualizer:
 
 - Ghostty first
 
-The older Kitty startup files remain in-repo as legacy rice/source material, but the standalone `yam` visualizer and terminal baseline should now be evaluated primarily in Ghostty.
-
 Ghostty config source of truth:
 
 - `ghostty/config`

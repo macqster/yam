@@ -27,7 +27,7 @@
     "color_space": "din99d",
     "color_extractor": "median",
     "fg_only": true,
-    "bg": "100100",
+    "bg": "#101010",
     "threshold": 0.5,
     "dither": "diffusion",
     "dither_grain": "1x1",

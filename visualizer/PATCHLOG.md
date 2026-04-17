@@ -26,6 +26,43 @@ Current focus:
 - reducing ad-hoc tuning
 - preparing transition toward directional and entity-based foliage
 
+## 2026-04-17
+
+### Legacy Kitty Removal
+
+- Removed the old Kitty baseline files from the repo:
+  - `kitty/kitty.conf`
+  - `kitty/current-theme.conf`
+- The repo is now Ghostty-first without keeping parallel Kitty config around as active source material
+
+### Chafa Pipeline Contract Restoration
+
+- Restored [chafa_pipeline.py](/Users/maciejkuster/yam/visualizer/src/chafa_pipeline.py) to a config-driven path for the current visualizer baseline
+- The pipeline now again respects the configured cache directories:
+  - `cache_dir_raw`
+  - `cache_dir_chafa`
+- Restored fallback-image handling:
+  - if the primary source GIF is missing, the configured fallback image is used instead of aborting immediately
+- Re-enabled config-sensitive Chafa command assembly:
+  - symbol set
+  - fill mode
+  - color mode
+  - color space
+  - color extractor
+  - dither settings
+  - preprocess setting
+  - transparency threshold
+  - optimization level
+  - foreground/background choice
+- Added a small cache manifest so repeated launches can reuse previously rendered frames when the source/config signature has not changed
+- This keeps the runtime contract aligned with [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json) instead of leaving those keys as dead documentation-only fields
+
+### Runtime Helper Tracking
+
+- The particle helper used by [main.py](/Users/maciejkuster/yam/visualizer/src/main.py) is part of the actual runtime path:
+  - [ivy_particles.py](/Users/maciejkuster/yam/visualizer/src/ivy_particles.py)
+- It should be treated as source-of-truth runtime code, not a scratch experiment
+
 ## 2026-04-16
 
 ### Baseline Normalization
@@ -604,3 +641,205 @@ Current visualizer structure should be understood as layered:
 - helper spacing / formatting cleanup in `ivy_engine.py`
 - optional comment tightening so Phase 3 helper groups read as a cleaner policy stack
 - possible future consolidation of additional shaping heuristics into named policy helpers if needed
+
+
+## 2026-04-17
+
+### Chafa Hero Rendering Investigation — Constraint Mapping / Failure Boundary
+
+This session focused on the hero-rendering pipeline rather than the ivy engine. The goal was to determine whether the current hero GIF could be rendered in terminal with all of the following constraints active at once:
+- braille-only symbol rendering
+- no visible background painting by Chafa
+- no fill / no background-carried density cheats
+- stable, aesthetically clean integration with the visualizer scene
+
+#### Objective Clarification
+
+The desired visual target was:
+- high apparent resolution (braille density)
+- dark reds / browns / purples preserved
+- no black or grey image panel painted behind the hero
+- no blocky fill artifacts
+- no fallback to coarse ASCII-like symbol output
+
+The investigation established that this was not merely a parameter-tuning problem; it exposed hard constraints in how Chafa behaves under foreground-only symbol rendering.
+
+#### Pipeline Experiments Performed
+
+Multiple Chafa command variants were tested and iterated through `visualizer/src/chafa_pipeline.py`, including combinations of:
+- `--format=symbols`
+- `--symbols=braille`
+- `--fg-only`
+- explicit `--bg=...`
+- attempted `--bg-only`
+- different `--color-space` values:
+  - `din99d`
+  - `rgb`
+- different `--color-extractor` values:
+  - `median`
+  - `average`
+- different dither strategies:
+  - `none`
+  - `diffusion`
+  - `ordered`
+- different dither intensities / grain sizes
+
+In parallel, the image preprocessing stage in `_preprocess_frame(...)` was iteratively tuned to try to compensate for Chafa’s quantization behavior.
+
+#### Preprocess Experiments Performed
+
+The frame prepass was adjusted repeatedly to improve foreground survival under braille + fg-only rendering:
+- dark-red / warm-red preservation pass
+- midtone / dark-region lift so more pixels survive symbol quantization
+- contrast / brightness / gamma shaping
+- blur + unsharp preservation path
+- temporary spatial expansion experiment (later removed)
+
+Intent of the preprocessing experiments:
+- make dark hair reds survive quantization
+- prevent purple shirt collapse into brown / grey
+- increase perceived body density without violating the “no fill / no background” rule
+
+#### Failed Rendering Branches
+
+The following branches were explored and explicitly rejected.
+
+##### 1. Background-Carried Recovery Branch
+
+Tried to preserve darker reds by allowing Chafa to use background color, then stripping or cleaning background escape sequences after rendering.
+
+Observed failure modes:
+- horizontal bars
+- blocky background slabs
+- black or brown panel artifacts
+- unstable / ugly results despite partial dark-red recovery
+
+Conclusion:
+- letting background participate does recover some color information
+- but visually violates the project’s hard rule that background should never be painted
+- this branch was abandoned
+
+##### 2. `--bg-only` Branch
+
+Tried to treat Chafa as a background-only color field renderer.
+
+Observed failure modes:
+- invalid command combinations
+- exit status `2` from Chafa on several invocations
+- broken assumptions when combined with symbol-mode output
+- conceptual mismatch with the project goal
+
+Conclusion:
+- `--bg-only` is not a viable stable solution for this visualizer’s hero layer under the current architecture
+- this branch was abandoned
+
+##### 3. Space-Symbol / Hidden-Glyph Branch
+
+Tried to force “invisible” symbol rendering using space-like symbol settings so only color fields remained.
+
+Observed failure modes:
+- invalid symbol invocations in some combinations
+- background-style fill behavior reappearing under a different form
+- contradicted the requirement that rendering stay braille-based and foreground-driven
+
+Conclusion:
+- not compatible with the intended hero-rendering grammar
+- abandoned
+
+##### 4. Coarse ASCII / Non-Braille Branch
+
+Temporarily tested lower-density symbol choices while debugging crashes and fill behavior.
+
+Observed failure modes:
+- visible coarse glyphs
+- loss of intended high-resolution look
+- immediate aesthetic regression relative to braille baseline
+
+Conclusion:
+- project rule reaffirmed: hero rendering should remain braille-first
+
+#### Spatial Expansion Experiment (Removed)
+
+A temporary preprocess pass attempted to increase visual mass by spatially expanding qualifying pixels / tones.
+
+Observed failure modes:
+- slab artifacts
+- banding / false mass fields
+- rectangular or horizontally smeared regions that Chafa then quantized aggressively
+
+Conclusion:
+- spatial expansion was not a safe way to increase fg-only density
+- the pass was removed from the pipeline
+
+#### Stable Baseline Recovered
+
+After abandoning invalid / contradictory branches, the session converged back to the clean, stable baseline:
+- symbol mode only
+- braille symbols only
+- foreground-only rendering (`--fg-only`)
+- no background painting
+- no fill
+- simpler, safer Chafa invocation
+
+This baseline is the one reflected by the final screenshots of the session.
+
+#### Key Constraint Discovered
+
+The most important result of the session was not a new visual win but a clarified limitation:
+
+Under the simultaneous constraints of:
+- braille-only output
+- foreground-only rendering
+- no fill
+- no Chafa-painted background
+
+Chafa can only represent the hero as a sparse foreground dot field.
+
+That means:
+- empty terminal cells are unavoidable
+- “background visibility” in the final result is not necessarily a bug; it is often simply the absence of rendered foreground signal
+- preprocessing can improve color survival and local readability, but it cannot fully replace lost spatial coverage when background participation is forbidden
+
+In other words:
+- the remaining weakness is no longer primarily a command-line bug
+- it is a representation-limit issue under the chosen visual constraints
+
+#### Working Outcome at End of Session
+
+By the end of the session, the pipeline was back in a stable and honest state:
+- no Chafa crashes in the final active branch
+- no illegal symbol / bg-only combinations
+- no fill-based background panel
+- braille rendering restored
+- terminal background remains untouched
+
+Visual state at end:
+- silhouette readable
+- red hair survives partially
+- purple shirt survives partially
+- figure remains thinner / sparser than desired
+- no clean solution was found that simultaneously achieves:
+  - braille-only
+  - no fill
+  - no background painting
+  - high apparent density / solidity
+
+#### Practical Conclusion / New Boundary
+
+This session effectively mapped the current Chafa design boundary for the hero layer.
+
+What was established:
+- many prior failures were real command / mode incompatibilities and have now been ruled out
+- the current remaining shortfall is not just “more tuning needed”
+- within the current architecture, Chafa braille + fg-only behaves as a sparse point-field renderer
+- achieving a denser, more image-like hero while preserving the hard no-background / no-fill rule will likely require one of the following future directions:
+  - accept the sparse braille aesthetic as the true baseline
+  - slightly relax the no-background / no-fill rule
+  - use a denser mixed symbol vocabulary instead of pure braille
+  - build a custom renderer / compositor beyond stock Chafa behavior
+
+Status after this checkpoint:
+- investigation complete for the current constraint set
+- hero pipeline stabilized
+- limitation documented rather than left ambiguous
+- future work should treat this as a known boundary, not an unresolved mystery

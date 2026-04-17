@@ -10,3 +10,10 @@ visualizer/assets/frames_test/
 visualizer/assets/test_dithered.png
 visualizer/assets/test_dithered_frames/
 visualizer/assets/calibration_palette.png
+visualizer/assets/diagnostic.png
+todo.md
+visualizer/src/dither_prepass.py
+visualizer/src/generate_diagnostic.py
+visualizer/src/leaf_study_2.py
+visualizer/src/native_renderer_test.py
+visualizer/src/test_dither.py

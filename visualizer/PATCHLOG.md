@@ -28,6 +28,60 @@ Current focus:
 
 ## 2026-04-17
 
+### Render Field and Soft Trunk Geometry
+
+- Added [render_field.py](/Users/maciejkuster/yam/visualizer/src/render_field.py) as a lightweight intermediate density/priority layer
+- Scaffold and woody vine glyphs now accumulate through a shared render field before hero and panel overlays are stamped
+- Added `density_to_braille()` and density-aware woody glyph selection so scaffold output can read as continuous density instead of only symbolic strokes
+- Added `trunk_field` to [layout.py](/Users/maciejkuster/yam/visualizer/src/layout.py) as a soft distance map derived from trunk mask cells
+- Updated ivy scoring to use the trunk distance field instead of only binary trunk-mask membership
+- This keeps the trunk mask authoritative while giving scaffold and growth a smoother gradient to follow
+
+### Visualizer Config Hot Reload
+
+- Added mtime-based reload in [main.py](/Users/maciejkuster/yam/visualizer/src/main.py) so edits to [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json) are applied while the app is running
+- Reloading now refreshes the Chafa pipeline, hero frames, ivy engine, info panel text, and layout on config change
+- Updated [README.md](/Users/maciejkuster/yam/visualizer/README.md) and [CONFIG.md](/Users/maciejkuster/yam/visualizer/CONFIG.md) to document the live-reload contract
+
+### Scaffold Config Activation
+
+- Reworked [tree_scaffold.py](/Users/maciejkuster/yam/visualizer/src/tree_scaffold.py) so scaffold config values now move runtime geometry instead of collapsing into the same mask-snapped output
+- `base_x` and `base_y` now offset the base point from the trunk-mask center instead of behaving like soft edge hints
+- `trunk_height` now constrains which trunk-mask rows are eligible for the scaffold base and fork path
+- `fork_y` still controls the fork floor and remains active
+- `left_reach` / `right_reach` still shape branch spread
+- `upper_lift` now affects branch tip height instead of being flattened by top-row fallback
+- Scaffold remains mask-guided and clipped against visible hero pixels, but its JSON knobs are now observable again
+- Final render clipping now keeps scaffold cells inside the trunk mask itself, so the visible scaffold obeys the allowed area rather than only borrowing its shape during selection
+
+### Trunk/Scaffold Config Repair
+
+- Restored [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json) from a corrupted pasted stub back into valid JSON
+- Added the explicit trunk mask config surface:
+  - `trunk_mask_path`
+  - `trunk_mask_threshold`
+  - `trunk_mask_scale_x`
+  - `trunk_mask_scale_y`
+  - `trunk_mask_offset_x`
+  - `trunk_mask_offset_y`
+- Added the explicit scaffold config section so `build_tree_scaffold(layout, config)` can be tuned from the JSON baseline
+- Tightened scaffold placement so the fork sits below the hero instead of running through the figure
+- Updated docs to match the actual runtime config surface again
+
+### Revert Dark-Red Recovery Pass
+
+- Reverted the warm-shadow / dark-red recovery stage in [chafa_pipeline.py](/Users/maciejkuster/yam/visualizer/src/chafa_pipeline.py)
+- Kept [ives_window_procreate_edit_22.gif](/Users/maciejkuster/yam/visualizer/assets/ives_window_procreate_edit_22.gif) as the render source
+- Restored the milder preprocessing baseline because the stronger pass over-tinted lighter colors
+
+### Targeted Dark-Red Recovery Pass
+
+- Added a warm-shadow recovery stage to [chafa_pipeline.py](/Users/maciejkuster/yam/visualizer/src/chafa_pipeline.py)
+- The preprocessor now gives deep reds / burgundies a small early lift before Chafa quantization
+- Tuned the existing warm-red separation pass to be slightly more aggressive in the dark-to-mid shadow range
+- Reduced blur and sharpened the final prepass slightly so deep reds are less likely to smear into brown/grey during symbol conversion
+- Cache signatures already include the preprocess signature, so the updated pass naturally invalidates stale rendered frames
+
 ### Legacy Kitty Removal
 
 - Removed the old Kitty baseline files from the repo:
@@ -164,9 +218,6 @@ Current focus:
 - Added config controls:
   - `layout.hero_mask_scale_x`
   - `layout.hero_mask_scale_y`
-  - `layout.hero_mask_scaled_fallback_path`
-- Added a degeneracy check:
-  - if the primary mask rasterizes into a near-full-frame footprint, the loader falls back to the pre-scaled mask
 - Updated the debug overlay in [renderer.py](/Users/maciejkuster/yam/visualizer/src/renderer.py) again:
   - hero mask is now rendered as light-grey dots on the actual blocked cells instead of an outline approximation
 - Tightened the default terminal-grid compensation in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json):
@@ -175,6 +226,7 @@ Current focus:
 - Reason:
   - the current hero mask asset is still proportionally broader than the visible Chafa figure
   - this is a pragmatic rasterization correction, not a claim that the source mask is final
+- The old hero-mask fallback branch was retired after the fallback asset was removed; the current pipeline is now primary-mask-only again.
 
 ### Mask Alignment Margin
 
@@ -843,3 +895,37 @@ Status after this checkpoint:
 - hero pipeline stabilized
 - limitation documented rather than left ambiguous
 - future work should treat this as a known boundary, not an unresolved mystery
+
+## 2026-04-17 Scaffold Plumbing Fix
+- Fixed a live runtime wiring bug in `main.py`: `renderer.compose_scene(...)` now receives the active `config` object.
+- This makes `config["scaffold"]` visible to the renderer again, so scaffold edits in `visualizer.json` no longer collapse to defaults.
+- Also rebuilt `layout` and reset ivy on config reload, so layout-bound settings like mask scale/offset now propagate without requiring a terminal resize.
+
+## 2026-04-17 Scaffold Hero-Relative Placement
+- Reworked scaffold base selection so `scaffold.base_x/base_y` now anchor relative to the hero footprint instead of the trunk-mask center.
+- `fork_y` now offsets from the hero bottom band, which makes the scaffold noticeably easier to place underneath the hero GIF.
+- The scaffold now follows `layout.trunk_field` as a soft distance surface and prefers the below-hero corridor instead of hard-snapping to a single mask cell.
+- Fixed the clamp bug that was still pushing `base_x` into the same rightmost trunk-mask cell; scaffold offsets now affect the actual chosen base point.
+- Added sane minimum scaffold geometry so zero-ish reach/height values still render a visible structure instead of collapsing to nothing.
+- Relaxed the final render clip so the scaffold can actually move under the hero while still avoiding visible hero pixels.
+- Decoupled `fork_y` from the base height so the fork row now moves independently instead of flattening into the same bottom clamp.
+
+## 2026-04-18 Ivy Reset Regression
+- Fixed a runtime bug in `main.py` where Ivy was being reset every frame because terminal sizes were compared by identity instead of value.
+- The visualizer now compares `TerminalSize` objects by value, so the vine can continue growing across frames.
+- This restores the expected behavior in Ghostty and in the installed runtime bundle.
+
+## 2026-04-18 Woody Glyph Preservation
+- The render-field layer was converting explicit woody glyph hints into braille too aggressively.
+- Woody stroke glyphs are now preserved, and density glyphs are only used when no real glyph hint is present.
+- Scaffold row rendering now uses the same glyph-preserving path, which should remove the broken dotted trunk look.
+
+## 2026-04-18 Scaffold Visibility Pruning Removed
+- The scaffold builder was still clipping the final path with a trunk-distance visibility threshold and pruning small components.
+- That last-stage cull was breaking continuity and leaving the scaffold fragmented even though the path solver itself was continuous.
+- The final render now keeps the generated scaffold path as long as it stays inside bounds and off visible hero pixels.
+
+## 2026-04-18 Scaffold Connectivity Anchor
+- The scaffold was still fragmenting because the retained component was anchored to the fork-side fragment instead of the main trunk path.
+- Connected-component retention now seeds from the first visible trunk-path point, with 8-neighbor adjacency so diagonal woody contact stays contiguous.
+- If no trunk-path seed survives, the builder falls back to the largest connected component instead of an arbitrary fragment.

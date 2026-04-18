@@ -4,6 +4,8 @@ This document is the field manual for [visualizer.json](/Users/maciejkuster/yam/
 
 It describes each setting by purpose, expected effect, and common tradeoffs.
 
+The visualizer hot-reloads this file while it is running, so changes should appear without a manual restart.
+
 The visualizer is still under active development, so some settings are more stable than others. When in doubt:
 
 - `chafa` and `timing` are straightforward
@@ -304,18 +306,6 @@ Current baseline:
 - the current repo treats the cleaned hero mask asset as the temporary source of truth
 - both the GIF and the mask may still be replaced later
 
-### `hero_mask_scaled_fallback_path`
-
-Optional path to a pre-scaled mask that already matches the terminal-cell hero footprint.
-
-Effect:
-- used only if the primary mask rasterizes into a degenerate near-full-frame footprint
-- useful while iterating on mask assets or when the source mask needs manual terminal-grid compensation
-- should generally point to a mask already sized to the configured hero `width` and `height`
-
-Practical note:
-- this is a safety net, not the preferred asset path
-
 ### `hero_mask_threshold`
 
 Brightness threshold used to interpret the hero mask.
@@ -360,6 +350,60 @@ Effect:
 Intent:
 - this is alignment tolerance, not shape design
 - if a large margin seems necessary, the mask asset itself is probably wrong
+
+### `trunk_mask_path`
+
+Path to the trunk activity mask used for trunk scoring and debug overlays.
+
+Effect:
+- white pixels define the active trunk growth zone
+- the mask is loaded, scaled, and offset before it becomes part of layout geometry
+- debug mode draws trunk mask cells in cyan so you can see the active zone independently of the hero mask
+- the layout also derives a soft `trunk_field` distance map from these cells
+- ivy scoring and scaffold selection should prefer low-distance cells near the mask instead of treating the zone as a hard binary edge
+
+Current baseline:
+- points to `assets/trunk_mask_scaled_96x48.png`
+
+### `trunk_mask_threshold`
+
+Brightness threshold used to interpret the trunk mask.
+
+Effect:
+- higher values block only brighter/whiter mask pixels
+- lower values include more of the source image
+
+### `trunk_mask_scale_x`
+
+Horizontal compensation applied before the trunk mask is rasterized onto the terminal grid.
+
+Effect:
+- values below `1.0` compress the mask horizontally before per-cell sampling
+- should visibly change debug geometry when adjusted
+
+### `trunk_mask_scale_y`
+
+Vertical compensation applied before the trunk mask is rasterized onto the terminal grid.
+
+Effect:
+- values below `1.0` compress the mask vertically before per-cell sampling
+- should visibly change debug geometry when adjusted
+
+### `trunk_mask_offset_x`
+
+Signed horizontal shift applied after trunk mask scaling.
+
+Effect:
+- positive values move the mask right
+- negative values move the mask left
+
+### `trunk_mask_offset_y`
+
+Signed vertical shift applied after trunk mask scaling.
+
+Effect:
+- positive values move the mask down
+- negative values move the mask up
 
 ### `hero_collision_trim_left`
 
@@ -406,6 +450,39 @@ Extra vertical safety padding added after collision trimming.
 
 Effect:
 - larger values reduce crowding above and below the hero
+
+### `scaffold`
+
+Static woody support structure rendered beneath the hero and before ivy.
+
+Important fields:
+- `enabled`
+- `base_x`
+- `base_y`
+- `trunk_height`
+- `fork_y`
+- `left_reach`
+- `right_reach`
+- `upper_lift`
+- `thickness`
+
+Behavior:
+- scaffold is rendered before ivy so vines can overgrow it
+- scaffold is clipped against visible hero pixels
+- changing `fork_y` should visibly change where the scaffold splits below the hero
+- `base_x` shifts the finished scaffold horizontally relative to the hero center
+- `base_y` shifts the finished scaffold vertically relative to the hero bottom band
+- `trunk_height` changes how far the main spine is allowed to climb before it forks and how strict the base selection is about vertical room under the hero
+- `left_reach` and `right_reach` change how far the side branches spread inside the allowed trunk mask
+- `upper_lift` changes how high the branch tips climb relative to the fork
+- `thickness` changes how wide the support structure reads
+
+Current implementation note:
+- the scaffold is selected from the trunk distance field, then rendered through a shared density field before hero/panel overlays are applied
+- the scaffold still avoids visible hero pixels and prefers the below-hero corridor instead of freehand geometry
+- positive `base_x` values move the scaffold toward the right side of the hero
+- positive `base_y` values move the scaffold farther below the hero
+- if a knob appears weak, check whether the trunk mask has enough room in the current hero layout and whether the below-hero corridor is narrow there
 
 ### `info_width`
 

@@ -49,6 +49,7 @@ yam
 ## Configuration
 
 Main settings live in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json).
+The running app watches that file for changes and reloads it automatically, so scaffold, layout, and ivy tweaks should be visible without restarting.
 
 There are now two documentation layers for config:
 
@@ -76,16 +77,25 @@ Start with these sections in order:
    The current working assumption is:
    - the cleaned hero mask is the real temporary sprawl boundary
    - future mask/GIF asset swaps are expected
+   Internally, scaffold and woody vine layers now accumulate through a shared
+   density field before the hero and panel are stamped on top, which keeps
+   overlapping structure more continuous.
    The most important collision controls are:
    - `hero_mask_path`
    - `hero_mask_threshold`
    - `hero_mask_scale_x`
    - `hero_mask_scale_y`
    - `hero_mask_alignment_margin`
+   - `trunk_mask_path`
+   - `trunk_mask_scale_x`
+   - `trunk_mask_scale_y`
+   - `trunk_mask_offset_x`
+   - `trunk_mask_offset_y`
    - `hero_collision_trim_*`
    - `hero_safe_pad_*`
    - `info_collision_trim_*`
    - `info_safe_pad_*`
+   The static scaffold is configured separately under `scaffold` and is rendered before vines so ivy can overgrow it.
 
 3. `timing`
    Use this to switch between development/debug cadence and calmer presentation cadence.
@@ -120,10 +130,32 @@ These settings have the biggest visible effect:
   Changes the vertical composition and available crawl space.
 - `layout.hero_mask_threshold`
   Controls how aggressively the hero silhouette mask blocks cells.
+- `layout.trunk_mask_scale_x`
+  Controls the trunk mask width used for debug and growth scoring.
+- `layout.trunk_mask_offset_y`
+  Controls where the trunk mask sits in the scene.
+- `layout.trunk_field`
+  Not a config key, but the runtime distance field derived from the trunk mask.
+  It now shapes scaffold selection and ivy scoring with smooth proximity instead
+  of binary in/out behavior.
 - `layout.hero_safe_pad_x`
   Controls how tightly ivy can frame the hero.
 - `layout.info_safe_pad_x`
   Controls how tightly ivy can approach the panel text.
+- `scaffold.fork_y`
+  Controls where the scaffold splits below the hero.
+- `scaffold.base_x`
+  Shifts the finished scaffold horizontally relative to the hero center.
+- `scaffold.base_y`
+  Shifts the finished scaffold vertically relative to the hero bottom band.
+- `scaffold.trunk_height`
+  Changes how far the scaffold is allowed to climb before splitting and how much vertical room the base selection expects.
+- `scaffold.upper_lift`
+  Raises or lowers the branch tips relative to the fork.
+The scaffold is now selected from a trunk distance field and rendered through a
+shared density field, so the knobs steer placement through a soft below-hero
+preference rather than snapping to a fragmented binary mask. The visible
+scaffold still avoids hero pixels.
 - `ivy.forward_bonus`
   Too high makes scaffold-like rails.
 - `ivy.support_wrap_bonus`

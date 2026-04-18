@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 
@@ -15,49 +16,103 @@ from layout import build_layout
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
 
-    # load config
-    import json
     config_path = repo_root / "config/visualizer.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
+    config_mtime = config_path.stat().st_mtime
 
-    timing = config.get("timing", {})
-    render_fps = float(timing.get("render_fps", 12))
-    hero_fps = float(timing.get("hero_fps", 0.5))
-    ivy_tick_seconds = float(timing.get("ivy_tick_seconds", 3.0))
-    info_refresh_seconds = float(timing.get("info_refresh_seconds", 1.0))
+    def refresh_runtime_state(current_config: dict) -> tuple[
+        ChafaPipeline,
+        list[list[str]],
+        int,
+        int,
+        IvyEngine,
+        list[str],
+        float,
+        float,
+        float,
+        float,
+    ]:
+        timing = current_config.get("timing", {})
+        render_fps = float(timing.get("render_fps", 12))
+        hero_fps = float(timing.get("hero_fps", 0.5))
+        ivy_tick_seconds = float(timing.get("ivy_tick_seconds", 3.0))
+        info_refresh_seconds = float(timing.get("info_refresh_seconds", 1.0))
 
-    pipeline = ChafaPipeline(repo_root, config)
-    hero_frames = pipeline.load_frames()
+        pipeline = ChafaPipeline(repo_root, current_config)
+        hero_frames = pipeline.load_frames()
+        hero_width = current_config["chafa"]["width"]
+        hero_height = current_config["chafa"]["height"]
+        if not hero_frames:
+            hero_frames = [[" " * hero_width for _ in range(hero_height)]]
+        ivy = IvyEngine(current_config)
+        panel_lines = info_panel.build_panel_lines(current_config)
+        return (
+            pipeline,
+            hero_frames,
+            hero_width,
+            hero_height,
+            ivy,
+            panel_lines,
+            render_fps,
+            hero_fps,
+            ivy_tick_seconds,
+            info_refresh_seconds,
+        )
 
-    hero_width = config["chafa"]["width"]
-    hero_height = config["chafa"]["height"]
-
-    if not hero_frames:
-        hero_frames = [[" " * hero_width for _ in range(hero_height)]]
-
-    ivy = IvyEngine(config)
+    (
+        pipeline,
+        hero_frames,
+        hero_width,
+        hero_height,
+        ivy,
+        panel_lines,
+        render_fps,
+        hero_fps,
+        ivy_tick_seconds,
+        info_refresh_seconds,
+    ) = refresh_runtime_state(config)
 
     last_ivy_tick = 0.0
     last_info_tick = 0.0
     last_hero_tick = 0.0
 
-    panel_lines = info_panel.build_panel_lines(config)
     frame_index = 0
 
     previous_size = None
     scene_layout = None
-
-    frame_delay = 1.0 / max(1, render_fps)
-    hero_frame_delay = 1.0 / hero_fps if hero_fps > 0 else None
+    config_changed = False
 
     with terminal.terminal_session():
         while True:
+            current_mtime = config_path.stat().st_mtime
+            if current_mtime != config_mtime:
+                config = json.loads(config_path.read_text(encoding="utf-8"))
+                config_mtime = current_mtime
+                (
+                    pipeline,
+                    hero_frames,
+                    hero_width,
+                    hero_height,
+                    ivy,
+                    panel_lines,
+                    render_fps,
+                    hero_fps,
+                    ivy_tick_seconds,
+                    info_refresh_seconds,
+                ) = refresh_runtime_state(config)
+                frame_index = 0
+                last_ivy_tick = 0.0
+                last_info_tick = 0.0
+                last_hero_tick = 0.0
+                config_changed = True
+
             size = terminal.get_size()
 
-            if previous_size != size:
+            if previous_size != size or config_changed:
                 scene_layout = build_layout(size, config, hero_width, hero_height)
                 ivy.reset(size, scene_layout)
                 previous_size = size
+                config_changed = False
 
             assert scene_layout is not None
 
@@ -74,6 +129,7 @@ def main() -> int:
                 panel_lines = info_panel.build_panel_lines(config)
                 last_info_tick = now
 
+            hero_frame_delay = 1.0 / hero_fps if hero_fps > 0 else None
             if hero_frame_delay is not None and now - last_hero_tick >= hero_frame_delay:
                 frame_index = (frame_index + 1) % len(hero_frames)
                 last_hero_tick = now
@@ -84,6 +140,7 @@ def main() -> int:
                 hero_lines=hero_frames[frame_index],
                 vine_segments=ivy.get_segments(),
                 panel_lines=panel_lines,
+                config=config,
                 falling_leaf_segments=render_falling_leaves(ivy.state, scene_layout),
                 debug_enabled=bool(config.get("ivy", {}).get("debug", {}).get("enabled")),
             )
@@ -91,6 +148,7 @@ def main() -> int:
             terminal.move_home()
             print(scene, end="", flush=True)
 
+            frame_delay = 1.0 / max(1, render_fps)
             time.sleep(frame_delay)
 
 

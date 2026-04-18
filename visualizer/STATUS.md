@@ -88,7 +88,9 @@ Current major sections:
 - `timing`
   - render cadence, hero animation cadence, ivy tick cadence, info refresh cadence
 - `layout`
-  - hero placement, panel placement, panel gap, exclusion padding
+  - hero placement, panel placement, panel gap, exclusion padding, hero mask, trunk mask
+- `scaffold`
+  - static woody support structure tuned from JSON
 - `ivy`
   - current experimental ivy parameters
 - `panel`
@@ -133,6 +135,13 @@ Current conclusion:
   - mutable runtime state
 - `src/ivy_types.py`
   - shared types and palette constants
+
+The scene compositor is now also expected to honor:
+
+- `src/tree_scaffold.py`
+  - static scaffold built from config, guided by the trunk distance field, rendered through the shared density field, and softly preferred into the below-hero corridor while still avoiding visible hero pixels
+- `src/render_field.py`
+  - intermediate density/priority field used to compose scaffold and woody vine glyphs before hero and panel overlays
 
 This is maintainable enough to keep iterating on, but it is not yet the final behavior model.
 

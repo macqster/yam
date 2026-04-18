@@ -109,6 +109,23 @@ def move_score(
     else:
         score += branch_guidance_score(config, x, y, dx, dy, layout)
 
+    trunk_attraction = float(config.get("trunk_attraction", 0.0))
+    trunk_contact_bonus = float(config.get("trunk_contact_bonus", 0.0))
+    trunk_core_bonus = float(config.get("trunk_core_bonus", 0.0))
+
+    candidate_distance = layout.trunk_field.get((x, y))
+    current_distance = layout.trunk_field.get((tip.x, tip.y))
+    if candidate_distance is not None:
+        soft_margin = max(1, int(config.get("collision_soft_margin", 3)))
+        closeness = max(0.0, 1.0 - min(candidate_distance, soft_margin) / soft_margin)
+        score += trunk_contact_bonus * closeness
+        if candidate_distance == 0 and (current_distance is None or current_distance > 0):
+            score += trunk_attraction
+        if candidate_distance <= soft_margin:
+            score += trunk_core_bonus * closeness
+        if current_distance is not None:
+            score += max(0.0, float(current_distance - candidate_distance)) * 0.25
+
     distance = distance_to_structure(state, x, y)
     score += min(distance, 3) * 0.25 if tip.is_trunk else min(distance, 2) * 0.1
     score += sum((x + ox, y + oy) in state.stems for ox, oy in NEIGHBORS_4) * 0.25

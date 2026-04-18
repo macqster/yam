@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from layout import SceneLayout
+from render_field import RenderField
 from terminal import RESET, TerminalSize
+from tree_scaffold import build_tree_scaffold
 
 
 AMBIENT = "\x1b[38;5;238m"
@@ -28,17 +30,41 @@ def compose_scene(
     hero_lines: list[str],
     vine_segments: dict[tuple[int, int], str],
     panel_lines: list[str],
+    config: dict | None = None,
     falling_leaf_segments: dict[tuple[int, int], str] | None = None,
     debug_enabled: bool = False,
 ) -> str:
-    rows: list[list[str]] = [[" " for _ in range(size.columns)] for _ in range(size.rows)]
+    field = RenderField(size.columns, size.rows)
 
-    # Base growth layer first; protected scene objects are stamped later so
-    # hero and panel always remain readable.
+    # Static scaffold layer (wood structure) – rendered before vines so ivy can overgrow it
+    scaffold_config = config or {}
+    scaffold = build_tree_scaffold(layout, scaffold_config)
+    hero_mask = layout.hero_raw_mask_cells
+    for cell in scaffold.cells:
+        if (cell.x, cell.y) in hero_mask:
+            continue
+        field.add(
+            cell.x,
+            cell.y,
+            density=cell.density,
+            priority=10,
+            glyph=cell.glyph,
+            style=cell.style,
+        )
+
+    # Base growth layer
     smoothed_segments = _smooth_vine_segments(vine_segments)
     for (x, y), glyph in smoothed_segments.items():
         if 0 <= x < size.columns and 0 <= y < size.rows:
-            rows[y][x] = glyph
+            field.add(
+                x,
+                y,
+                density=_segment_density(glyph),
+                priority=20,
+                glyph=glyph,
+            )
+
+    rows = field.to_rows()
 
     blocks = [
         PositionedBlock(layout.hero.x, layout.hero.y, hero_lines),
@@ -49,6 +75,10 @@ def compose_scene(
 
     if debug_enabled:
         _stamp_mask_dots(rows, size, layout.hero_raw_mask_cells, DEBUG_MASK_BOX)
+        # Debug: trunk mask visualization (bright cyan dots)
+        trunk_cells = getattr(layout, "trunk_mask_cells", None)
+        if trunk_cells:
+            _stamp_mask_dots(rows, size, trunk_cells, "\x1b[38;5;51m")
         _stamp_rect_frame(rows, size, layout.no_go_zones[1], DEBUG_MASK_BOX)
         _stamp_rect_frame(rows, size, layout.hero, DEBUG_VISIBLE_BOX)
         _stamp_rect_frame(rows, size, layout.info, DEBUG_VISIBLE_BOX)
@@ -102,6 +132,23 @@ def _smooth_vine_segments(vine_segments: dict[tuple[int, int], str]) -> dict[tup
     return smoothed
 
 
+def _segment_density(glyph: str) -> float:
+    text, _ = _split_cell_style(glyph)
+    if not text or text.isspace() or text == "⠀":
+        return 0.0
+    if text in HEAVY_GLYPHS:
+        return 0.88
+    if text in MID_GLYPHS:
+        return 0.64
+    if text in THIN_GLYPHS:
+        return 0.42
+    if text in {"|", "/", "\\", "┆", "╌", "─", "│", "╱", "╲", "═", "║"}:
+        return 0.58
+    if text in {"*", "+", "·", "•", "◦", "o", "O"}:
+        return 0.48
+    return 0.5
+
+
 def _stamp_block(rows: list[list[str]], size: TerminalSize, block: PositionedBlock) -> None:
     for line_index, content in enumerate(block.lines):
         row_index = block.y + line_index
@@ -114,8 +161,10 @@ def _stamp_block(rows: list[list[str]], size: TerminalSize, block: PositionedBlo
             column = block.x + offset
             if column < 0 or column >= size.columns:
                 continue
-            if glyph == " ":
+
+            if _is_transparent_cell(glyph):
                 continue
+
             rows[row_index][column] = glyph
 
 
@@ -161,6 +210,17 @@ def _stamp_mask_dots(
         if not (0 <= x < size.columns and 0 <= y < size.rows):
             continue
         rows[y][x] = f"{style}·{RESET}"
+
+
+def _is_transparent_cell(cell: str) -> bool:
+    """Return True when a terminal cell carries no visible foreground glyph.
+
+    Chafa can emit styled ASCII spaces as well as the Unicode braille blank
+    character (U+2800). Both should behave like transparency inside the hero
+    block so vines remain visible anywhere the hero art is visually empty.
+    """
+    text, _ = _split_cell_style(cell)
+    return text == "" or text.isspace() or text == "⠀"
 
 
 def _compose_row(cells: list[str]) -> str:

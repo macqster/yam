@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
+from collections import deque
 from pathlib import Path
 
 from PIL import Image
@@ -61,6 +62,8 @@ class SceneLayout:
     hero_raw_mask_cells: frozenset[tuple[int, int]]
     hero_mask_boundary_cells: frozenset[tuple[int, int]]
     hero_mask_cells: frozenset[tuple[int, int]]
+    trunk_mask_cells: frozenset[tuple[int, int]]
+    trunk_field: dict[tuple[int, int], int]
     allowed_cells: frozenset[tuple[int, int]]
     ornament_cells: frozenset[tuple[int, int]]
     region_cells: dict[str, frozenset[tuple[int, int]]]
@@ -132,6 +135,8 @@ def build_layout(
         layout_cfg.get("info_collision_trim_bottom", 0),
     )
     hero_raw_mask_cells, hero_blocked_cells = _build_hero_blocked_cells(hero, hero_pad_x, hero_pad_y, layout_cfg)
+    trunk_mask_cells = _load_trunk_mask_cells(size, layout_cfg)
+    trunk_field = _build_distance_field(trunk_mask_cells, ivy_bounds)
     if hero_blocked_cells:
         hero_collision = _bounding_rect(hero_blocked_cells)
     else:
@@ -191,11 +196,77 @@ def build_layout(
         hero_raw_mask_cells=frozenset(hero_raw_mask_cells),
         hero_mask_boundary_cells=frozenset(_boundary_cells(hero_raw_mask_cells)),
         hero_mask_cells=frozenset(hero_blocked_cells),
+        trunk_mask_cells=frozenset(trunk_mask_cells),
+        trunk_field=trunk_field,
         allowed_cells=frozenset(allowed_cells),
         ornament_cells=frozenset(ornament_cells),
         region_cells=region_cells,
         warning=warning,
     )
+
+def _load_trunk_mask_cells(
+    size: TerminalSize,
+    layout_cfg: dict,
+) -> set[tuple[int, int]]:
+    trunk_path_value = layout_cfg.get("trunk_mask_path", "")
+    if not trunk_path_value:
+        return set()
+
+    trunk_path = _resolve_mask_path(trunk_path_value)
+    if not trunk_path.exists():
+        return set()
+
+    threshold = int(layout_cfg.get("trunk_mask_threshold", 200))
+    scale_x = float(layout_cfg.get("trunk_mask_scale_x", 1.0))
+    scale_y = float(layout_cfg.get("trunk_mask_scale_y", 1.0))
+    offset_x = int(layout_cfg.get("trunk_mask_offset_x", 0))
+    offset_y = int(layout_cfg.get("trunk_mask_offset_y", 0))
+    image = Image.open(trunk_path).convert("RGBA")
+
+    scaled_width = max(1, int(round(image.width * scale_x)))
+    scaled_height = max(1, int(round(image.height * scale_y)))
+    if scaled_width != image.width or scaled_height != image.height:
+        image = image.resize((scaled_width, scaled_height), Image.Resampling.BOX)
+
+    cells: set[tuple[int, int]] = set()
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = image.getpixel((x, y))
+            brightness = (r + g + b) / 3
+            if a > 0 and brightness >= threshold:
+                scene_x = x + offset_x
+                scene_y = y + offset_y
+                if 0 <= scene_x < size.columns and 0 <= scene_y < size.rows:
+                    cells.add((scene_x, scene_y))
+
+    return cells
+
+
+def _build_distance_field(
+    points: set[tuple[int, int]],
+    bounds: Rect,
+) -> dict[tuple[int, int], int]:
+    if not points:
+        return {}
+
+    distances: dict[tuple[int, int], int] = {}
+    frontier = deque()
+    for point in points:
+        distances[point] = 0
+        frontier.append(point)
+
+    while frontier:
+        x, y = frontier.popleft()
+        next_distance = distances[(x, y)] + 1
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if not bounds.contains(nx, ny):
+                continue
+            if (nx, ny) in distances and distances[(nx, ny)] <= next_distance:
+                continue
+            distances[(nx, ny)] = next_distance
+            frontier.append((nx, ny))
+
+    return distances
 
 
 @lru_cache(maxsize=8)
@@ -243,6 +314,8 @@ def _build_hero_blocked_cells(
     scale_x = float(layout_cfg.get("hero_mask_scale_x", 0.7))
     scale_y = float(layout_cfg.get("hero_mask_scale_y", 0.9))
     alignment_margin = max(0, int(layout_cfg.get("hero_mask_alignment_margin", 0)))
+    hero_mask_offset_x = int(layout_cfg.get("hero_mask_offset_x", 0))
+    hero_mask_offset_y = int(layout_cfg.get("hero_mask_offset_y", 0))
     local_cells = _load_hero_mask_from_config(
         layout_cfg,
         hero.width,
@@ -265,8 +338,8 @@ def _build_hero_blocked_cells(
     raw_cells: set[tuple[int, int]] = set()
     blocked: set[tuple[int, int]] = set()
     for local_x, local_y in local_cells:
-        world_x = hero.x + local_x
-        world_y = hero.y + local_y
+        world_x = hero.x + local_x + hero_mask_offset_x
+        world_y = hero.y + local_y + hero_mask_offset_y
         raw_cells.add((world_x, world_y))
         for dy in range(-pad_y, pad_y + 1):
             for dx in range(-pad_x, pad_x + 1):
@@ -353,19 +426,7 @@ def _load_hero_mask_from_config(
     scale_y: float,
 ) -> frozenset[tuple[int, int]]:
     primary_path = _resolve_mask_path(layout_cfg.get("hero_mask_path", "assets/hero_mask.png"))
-    fallback_value = layout_cfg.get("hero_mask_scaled_fallback_path", "")
-    fallback_path = _resolve_mask_path(fallback_value) if fallback_value else None
-
-    primary_cells = _load_mask_variant(primary_path, width, height, threshold, scale_x, scale_y)
-    if primary_cells and not _mask_is_degenerate(primary_cells, width, height):
-        return primary_cells
-
-    if fallback_path:
-        fallback_cells = _load_mask_variant(fallback_path, width, height, threshold, 1.0, 1.0)
-        if fallback_cells:
-            return fallback_cells
-
-    return primary_cells
+    return _load_mask_variant(primary_path, width, height, threshold, scale_x, scale_y)
 
 
 def _resolve_mask_path(mask_value: str) -> Path:
@@ -386,21 +447,6 @@ def _load_mask_variant(
     if not mask_path.exists():
         return frozenset()
     return _load_resized_hero_mask(str(mask_path), width, height, threshold, scale_x, scale_y)
-
-
-def _mask_is_degenerate(mask_cells: frozenset[tuple[int, int]], width: int, height: int) -> bool:
-    if not mask_cells:
-        return True
-    coverage = len(mask_cells) / max(1, width * height)
-    xs = [x for x, _ in mask_cells]
-    ys = [y for _, y in mask_cells]
-    touches_edges = (
-        min(xs) <= 0
-        and max(xs) >= width - 2
-        and min(ys) <= 0
-        and max(ys) >= height - 2
-    )
-    return coverage >= 0.72 or touches_edges
 
 
 def _bounding_rect(points: set[tuple[int, int]]) -> Rect:

@@ -1,0 +1,17 @@
+{
+  "_summary": "Expose scaffold behavior with a narrow, aggressive growth probe.",
+  "timing": {
+    "render_fps": 15,
+    "hero_fps": 8,
+    "vines_tick_seconds": 0.08
+  },
+  "vines": {
+    "debug": {
+      "enabled": true,
+      "stem_only_view": true
+    },
+    "max_tips": 2,
+    "branch_chance": 0.08,
+    "leaf_stamp_chance": 0.6
+  }
+}

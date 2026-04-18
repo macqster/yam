@@ -2,6 +2,10 @@
 
 ## Context
 
+Back to the canonical reference list:
+
+- [../SOURCE_INDEX.md](../SOURCE_INDEX.md)
+
 This document summarizes architectural insights gathered during iterative development of the YAM terminal visualizer, with cross-analysis of external projects:
 
 - Ansizalizer (Zebbeni)
@@ -10,6 +14,25 @@ This document summarizes architectural insights gathered during iterative develo
 
 Goal:
 Improve **visual coherence, rendering correctness, and system architecture** without rewriting the project.
+
+Focused extracts from this archive:
+
+- [../SOURCE_INDEX.md](../SOURCE_INDEX.md)
+- [EXTERNAL_INSPIRATIONS.md](EXTERNAL_INSPIRATIONS.md)
+- [EXTERNAL_TERMINAL_LIBRARIES.md](EXTERNAL_TERMINAL_LIBRARIES.md)
+- [EXTERNAL_TUI_TOOLKITS.md](EXTERNAL_TUI_TOOLKITS.md)
+- [EXTERNAL_ASCII_ART.md](EXTERNAL_ASCII_ART.md)
+- [EXTERNAL_COMPARISON_TABLE.md](EXTERNAL_COMPARISON_TABLE.md)
+- [EXTERNAL_BINDINGS_AND_FRAMEWORKS.md](EXTERNAL_BINDINGS_AND_FRAMEWORKS.md)
+- [EXTERNAL_YAM_SHOULD_COPY.md](EXTERNAL_YAM_SHOULD_COPY.md)
+- [TERMINAL_RENDERING.md](TERMINAL_RENDERING.md)
+- [PALETTE_DITHERING.md](PALETTE_DITHERING.md)
+- [WORKFLOW_REPLAY.md](WORKFLOW_REPLAY.md)
+
+Terminology note:
+
+- this document predates the current nomenclature normalization
+- places that say `trunk_mask` are referring to the present-day support-mask / scaffold-guidance concept
 
 ---
 
@@ -280,7 +303,190 @@ Next evolution:
 
 ---
 
-# 16. CODEX-INGESTIBLE IMPLEMENTATION REPORT
+# 16. TERMINAL VISUAL ECOSYSTEM SURVEY
+
+This section records the broader ANSI / terminal-visual tooling takeaways from the external research note.
+
+## 16.1 Core ecosystem pattern
+
+Most terminal image tools follow the same broad pipeline:
+
+```text
+input -> preprocess -> resize/color reduce -> glyph map -> ANSI output
+```
+
+The important conclusion is that visual quality is decided mostly before ANSI emission. Rendering matters, but preprocessing, palette choice, symbol choice, and thresholding matter more.
+
+## 16.2 Chafa is a signal-compression system
+
+Chafa is not just a renderer. It is a compression step that turns a source image or frame into a constrained terminal signal.
+
+Useful control axes:
+
+- symbol set selection
+- truecolor vs palette-constrained output
+- perceptual color space choice
+- dithering mode
+- preprocessing and thresholding
+- background handling
+
+Practical implication for YAM:
+
+- hero quality should be tuned at the source/conversion layer
+- layout and masking should not try to compensate for a bad hero footprint
+- the renderer should be treated as the last stage of a larger visual pipeline
+
+## 16.3 Glyph density matters more than glyph identity
+
+The useful glyph spectrum is:
+
+```text
+ASCII -> block -> braille
+```
+
+Tradeoff:
+
+- ASCII: readable, low fidelity
+- block: stronger color fill, coarser detail
+- braille: highest density, best for terminal-native detail
+
+Useful synthesis:
+
+- treat glyphs as density carriers
+- map continuous fields to discrete glyphs
+- mix glyph classes when structure, fill, and detail need different treatments
+
+## 16.4 Dithering is visual style, not just correction
+
+Dithering affects:
+
+- texture
+- perceived density
+- stability over time
+- directional artifacts
+
+Useful models:
+
+- Floyd–Steinberg for detail
+- Atkinson for softer diffusion
+- Bayer / ordered dithering for predictable structure
+- serpentine diffusion to reduce directional bias
+
+Practical implication for YAM:
+
+- dithering choices should be scene-specific
+- debug and presentation modes may want different style profiles
+- noise is not always a defect; it can be part of the look
+
+## 16.5 Palette and color space are first-class design decisions
+
+Useful palette sources:
+
+- curated palettes
+- sampled palettes
+- manual palettes
+
+Useful color-space lesson:
+
+- perceptual spaces matter
+- RGB distance is not always what the eye sees
+
+Practical implication for YAM:
+
+- if color becomes a major part of the scene language, add explicit palette and perceptual tuning hooks
+- do not assume raw RGB matching is enough for good terminal output
+
+## 16.6 The terminal is a constrained display, not a neutral canvas
+
+Constraints to keep in mind:
+
+- character cells are not square
+- glyph appearance depends on font support
+- ANSI escape overhead can become a performance factor
+- truecolor support is terminal-dependent
+- gamma and brightness differ by terminal
+
+Practical implication for YAM:
+
+- test against the real baseline terminal
+- do not treat output as device-independent
+- build for readable structure first, then refine density
+
+## 16.7 The ecosystem is fragmented
+
+The survey reinforces that the ANSI ecosystem is split across:
+
+- converters
+- editors
+- viewers
+- TUI frameworks
+- recording/replay tools
+
+What is still missing is a unified scene system that combines:
+
+- authoring
+- preprocessing
+- compositing
+- procedural behavior
+- runtime rendering
+
+Practical implication for YAM:
+
+- YAM’s architectural direction remains valid
+- the project should continue emphasizing scene composition, mask/field logic, and runtime behavior instead of trying to become a generic converter
+
+## 16.8 Authoring and replay are valuable abstractions
+
+Notable workflow patterns from the wider ecosystem:
+
+- named presets and saved configurations
+- frame-by-frame preview
+- deterministic replay
+- structured session recording
+- TUI-based live tweaking
+
+Practical implication for YAM:
+
+- recipe presets are worth keeping
+- seeded replay and golden snapshots are good next tooling targets
+- if something cannot be reproduced, it is too hard to tune
+
+## 16.9 Organic visuals usually mix rules and randomness
+
+Useful external pattern:
+
+- deterministic structure gives coherence
+- stochastic variation gives life
+
+This shows up in:
+
+- growth systems
+- noise-driven placement
+- procedural branching
+- cellular and rule-based evolution
+
+Practical implication for YAM:
+
+- support/routing logic should stay structured
+- ornament and branch variation can stay probabilistic
+- the system should not collapse into pure randomness or pure geometry
+
+## 16.10 Actionable takeaways for YAM
+
+The research supports the following priorities:
+
+1. field-driven rendering
+2. soft masks and distance fields
+3. glyph-density mapping
+4. reproducible presets and replay
+5. debug/introspection overlays
+6. palette and density tuning as explicit controls
+
+These are better investments than trying to over-optimize the ANSI emission step itself.
+
+---
+
+# 17. CODEX-INGESTIBLE IMPLEMENTATION REPORT
 
 ## Purpose
 

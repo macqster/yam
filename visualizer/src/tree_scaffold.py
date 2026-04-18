@@ -40,8 +40,8 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
     if not scaffold_cfg.get("enabled", True):
         return TreeScaffold(cells=())
 
-    trunk_field = getattr(layout, "trunk_field", {})
-    if not trunk_field:
+    support_field = getattr(layout, "support_field", {})
+    if not support_field:
         return TreeScaffold(cells=())
 
     hero = layout.hero
@@ -78,7 +78,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
     corridor_y_window = max(4, trunk_height + upper_lift + 6)
 
     base_point = _choose_soft_point(
-        trunk_field=trunk_field,
+        trunk_field=support_field,
         bounds=bounds,
         allowed_points=allowed_points,
         preferred_points=preferred_points,
@@ -90,7 +90,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
     )
 
     trunk_points = _follow_soft_ridge(
-        trunk_field=trunk_field,
+        trunk_field=support_field,
         bounds=bounds,
         allowed_points=allowed_points,
         preferred_points=preferred_points,
@@ -107,7 +107,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
 
     branch_tip_y = fork_point[1] - max(1, upper_lift) - max(0, trunk_height // 4)
     left_tip = _choose_branch_tip(
-        trunk_field=trunk_field,
+        trunk_field=support_field,
         bounds=bounds,
         allowed_points=allowed_points,
         preferred_points=preferred_points,
@@ -118,7 +118,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
         max_soft_distance=max_soft_distance + 2,
     )
     right_tip = _choose_branch_tip(
-        trunk_field=trunk_field,
+        trunk_field=support_field,
         bounds=bounds,
         allowed_points=allowed_points,
         preferred_points=preferred_points,
@@ -133,7 +133,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
     _stamp_path(cells, trunk_points, DARK_BROWN, thickness=thickness, base_density=0.88)
 
     left_branch_points = _follow_soft_path(
-        trunk_field=trunk_field,
+        trunk_field=support_field,
         bounds=bounds,
         allowed_points=allowed_points,
         preferred_points=preferred_points,
@@ -146,7 +146,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
     _stamp_path(cells, left_branch_points, DARK_BROWN, thickness=max(1, thickness - 1), base_density=0.72)
 
     right_branch_points = _follow_soft_path(
-        trunk_field=trunk_field,
+        trunk_field=support_field,
         bounds=bounds,
         allowed_points=allowed_points,
         preferred_points=preferred_points,
@@ -160,7 +160,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
 
     seat_candidates = [
         point
-        for point in trunk_field
+        for point in support_field
         if abs(point[1] - (hero.y + hero.height - 7)) <= 2
         and abs(point[0] - hero_center_x) <= 10
     ]
@@ -173,7 +173,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
             ),
         )
         seat_branch = _follow_soft_path(
-            trunk_field=trunk_field,
+            trunk_field=support_field,
             bounds=bounds,
             allowed_points=allowed_points,
             preferred_points=preferred_points,

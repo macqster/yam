@@ -1,0 +1,14 @@
+{
+  "_summary": "Slow the scene down for a calmer presentation-friendly rhythm.",
+  "timing": {
+    "render_fps": 10,
+    "hero_fps": 6,
+    "vines_tick_seconds": 0.14
+  },
+  "vines": {
+    "debug": {
+      "enabled": false,
+      "stem_only_view": false
+    }
+  }
+}

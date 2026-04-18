@@ -24,6 +24,22 @@ The visualizer is composed of layered systems:
 
 Most config sections map to one of these layers.
 
+## Rendering Priorities
+
+When tuning the scene, the useful order is:
+
+1. source material quality
+2. preprocessing and thresholding
+3. palette and color-space choice
+4. glyph density / symbol set
+5. layout and masking
+6. growth behavior
+7. final rendering
+
+The main reason for this order is that terminal output quality is mostly decided before the final ANSI stream is emitted.
+
+For a shorter step-by-step version of the same tuning order, see [TUNING_CHECKLIST.md](TUNING_CHECKLIST.md).
+
 ## `chafa`
 
 Controls the hero animation source and how Chafa converts it into terminal symbols.
@@ -72,6 +88,9 @@ Effect:
 - fewer frames: calmer loop, less motion detail
 - more frames: smoother motion, more visual activity
 
+Practical note:
+- if motion feels noisy before the scene is even composed, reduce the frame count before changing layout or growth logic
+
 ### `width`
 
 Hero frame width in terminal cells.
@@ -87,6 +106,7 @@ Hero frame height in terminal rows.
 Effect:
 - one of the strongest composition controls
 - smaller height opens more crawl space for vines
+- if this changes, recheck the hero mask, support field, and scaffold route together
 
 Current baseline:
 - the active hero footprint is `72x36`
@@ -113,6 +133,7 @@ Chafa symbol set, currently `braille`.
 
 Effect:
 - affects texture density and perceived resolution
+- glyph density matters more than glyph identity, so `braille` is usually the best baseline when detail matters
 
 ### `fill`
 
@@ -163,6 +184,7 @@ Transparency / preprocessing threshold input to Chafa.
 Effect:
 - higher values usually reduce fringe noise
 - too high can erase subtle details
+- thresholding is part of preprocessing, so adjust it before blaming layout or growth
 
 ### `preprocess`
 
@@ -170,6 +192,7 @@ Enables Chafa preprocessing.
 
 Effect:
 - usually improves the stability of keyed or difficult source material
+- if the hero looks muddy or unstable, this is one of the first settings to revisit
 
 ### `dither`
 
@@ -177,6 +200,10 @@ Dithering mode.
 
 Effect:
 - `none` keeps the hero calmer and less noisy
+- dithering is a style choice as much as a correction step:
+  - `floyd-steinberg` for detail
+  - `atkinson` for softer diffusion
+  - ordered/Bayer-like patterns for stable texture when supported
 
 Note:
 - Chafa output is cached and may pass through additional preprocessing (e.g. dithering prepass)
@@ -212,6 +239,7 @@ How often the vines engine advances.
 Effect:
 - smaller values make vines growth faster and easier to inspect during development
 - larger values make vines feel ambient instead of aggressive
+- if the scene feels visually unstable, slow the growth cadence before changing geometry
 
 ### `info_refresh_seconds`
 
@@ -232,6 +260,39 @@ There are two different ideas in this section:
   - what area vines is forbidden from entering
 
 Those are related but not identical.
+
+Terminology note:
+
+- conceptually, the `trunk_mask_*` config surface is the support mask for scaffold guidance
+- the current runtime field derived from it is the support field
+- the config keys remain `trunk_mask_*` for compatibility with the current code
+- the runtime also accepts `support_mask_*` aliases for the same settings
+- the support mask should shape selection, not override structure; it is a guide, not the scaffold itself
+
+The broader spatial model is documented in [MASKS_AND_GUIDES.md](MASKS_AND_GUIDES.md).
+
+### Placement Contract
+
+For spatial elements, the intended baseline control model is:
+
+- `enabled`
+- `anchor`
+- `offset`
+
+Conceptually:
+
+1. choose a terminal anchor
+2. choose an element self-anchor
+3. align those points
+4. apply the offset
+
+This keeps placement resolution-independent and makes layout behavior easier to reuse across hero, scaffold, panel, overlays, and future spatial elements.
+
+Current config coverage is still mixed:
+
+- some elements use specialized placement keys today
+- future spatial elements should prefer the shared contract above where practical
+- debug mode should not become the master visibility switch for normal elements
 
 Hero collision uses the mask as the canonical geometry:
 
@@ -276,6 +337,10 @@ Expected values:
 - `left`
 - `center`
 - `right`
+
+Note:
+- this is the current specialized hero placement control
+- it is not yet the universal anchor schema used in the design notes
 
 ### `hero_offset_x`
 
@@ -353,13 +418,13 @@ Intent:
 
 ### `trunk_mask_path`
 
-Path to the trunk activity mask used for trunk scoring and debug overlays.
+Path to the support mask used for scaffold guidance and debug overlays.
 
 Effect:
-- white pixels define the active trunk growth zone
+- white pixels define the active support zone
 - the mask is loaded, scaled, and offset before it becomes part of layout geometry
-- debug mode draws trunk mask cells in cyan so you can see the active zone independently of the hero mask
-- the layout also derives a soft `trunk_field` distance map from these cells
+- debug mode draws support-mask cells in cyan so you can see the active zone independently of the hero mask
+- the layout also derives a soft support-field distance map from these cells
 - vines scoring and scaffold selection should prefer low-distance cells near the mask instead of treating the zone as a hard binary edge
 
 Current baseline:
@@ -367,7 +432,7 @@ Current baseline:
 
 ### `trunk_mask_threshold`
 
-Brightness threshold used to interpret the trunk mask.
+Brightness threshold used to interpret the support mask.
 
 Effect:
 - higher values block only brighter/whiter mask pixels
@@ -375,7 +440,7 @@ Effect:
 
 ### `trunk_mask_scale_x`
 
-Horizontal compensation applied before the trunk mask is rasterized onto the terminal grid.
+Horizontal compensation applied before the support mask is rasterized onto the terminal grid.
 
 Effect:
 - values below `1.0` compress the mask horizontally before per-cell sampling
@@ -383,7 +448,7 @@ Effect:
 
 ### `trunk_mask_scale_y`
 
-Vertical compensation applied before the trunk mask is rasterized onto the terminal grid.
+Vertical compensation applied before the support mask is rasterized onto the terminal grid.
 
 Effect:
 - values below `1.0` compress the mask vertically before per-cell sampling
@@ -391,7 +456,7 @@ Effect:
 
 ### `trunk_mask_offset_x`
 
-Signed horizontal shift applied after trunk mask scaling.
+Signed horizontal shift applied after support-mask scaling.
 
 Effect:
 - positive values move the mask right
@@ -399,7 +464,7 @@ Effect:
 
 ### `trunk_mask_offset_y`
 
-Signed vertical shift applied after trunk mask scaling.
+Signed vertical shift applied after support-mask scaling.
 
 Effect:
 - positive values move the mask down
@@ -473,16 +538,16 @@ Behavior:
 - `base_x` shifts the finished scaffold horizontally relative to the hero center
 - `base_y` shifts the finished scaffold vertically relative to the hero bottom band
 - `trunk_height` changes how far the main spine is allowed to climb before it forks and how strict the base selection is about vertical room under the hero
-- `left_reach` and `right_reach` change how far the side branches spread inside the allowed trunk mask
+- `left_reach` and `right_reach` change how far the side branches spread inside the allowed support mask
 - `upper_lift` changes how high the branch tips climb relative to the fork
 - `thickness` changes how wide the support structure reads
 
 Current implementation note:
-- the scaffold is selected from the trunk distance field, then rendered through a shared density field before hero/panel overlays are applied
+- the scaffold is selected from the support field, then rendered through a shared density field before hero/panel overlays are applied
 - the scaffold still avoids visible hero pixels and prefers the below-hero corridor instead of freehand geometry
 - positive `base_x` values move the scaffold toward the right side of the hero
 - positive `base_y` values move the scaffold farther below the hero
-- if a knob appears weak, check whether the trunk mask has enough room in the current hero layout and whether the below-hero corridor is narrow there
+- if a knob appears weak, check whether the support mask has enough room in the current hero layout and whether the below-hero corridor is narrow there
 
 ### `info_width`
 
@@ -513,6 +578,9 @@ Signed vertical offset for the info panel.
 
 Effect:
 - positive values move the panel lower
+
+Note:
+- panel placement is currently expressed through dedicated hero/info layout keys rather than the shared `anchor` / `offset` contract
 
 ### `info_collision_trim_left`
 

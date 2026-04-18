@@ -8,10 +8,21 @@ Dedicated terminal visualizer for macOS, currently tuned for Ghostty, with three
 
 This is separate from the repo's Fastfetch startup path. It is meant to be launched intentionally in its own terminal window, tab, or split.
 
+Start here:
+
+- [SOURCE_INDEX.md](SOURCE_INDEX.md)
+- [EXTERNAL_YAM_SHOULD_COPY.md](reference/EXTERNAL_YAM_SHOULD_COPY.md)
+- [TUNING_CHECKLIST.md](TUNING_CHECKLIST.md)
+
 Current maintenance snapshot:
 
 - [STATUS.md](STATUS.md)
 - [VOCABULARY.md](VOCABULARY.md)
+- [CONFIG.md](CONFIG.md)
+- [WORKFLOW.md](WORKFLOW.md)
+- [MASKS_AND_GUIDES.md](MASKS_AND_GUIDES.md)
+- [DEV_TOOLS.md](DEV_TOOLS.md)
+- [PROJECT_PROCESS.md](PROJECT_PROCESS.md)
 
 ## Requirements
 
@@ -37,6 +48,12 @@ From the repo root:
 ./visualizer/run_visualizer.sh
 ```
 
+For a named preset:
+
+```bash
+./visualizer/run_recipe.sh debug
+```
+
 Quit with `Ctrl+C`.
 
 After `./install.sh`, you can launch it from any shell with:
@@ -44,6 +61,8 @@ After `./install.sh`, you can launch it from any shell with:
 ```bash
 yam
 ```
+
+Use `yam --list-recipes` to print the available presets, or `yam --recipe debug` / `yam --recipe presentation` to start one.
 
 `yam` prefers the repo copy at `~/_git/yam/visualizer` when that repo exists locally. This is intentional so iteration does not depend on reinstalling the runtime bundle after every config change.
 The launcher resolves that repo copy through `YAM_REPO` when available, then falls back to `~/.local/share/yam-visualizer`.
@@ -57,6 +76,9 @@ There are now two documentation layers for config:
 
 - practical overview here in this README
 - full field-by-field manual in [CONFIG.md](CONFIG.md)
+
+Named config overlays live in [recipes/README.md](recipes/README.md).
+Lint the base config or recipe overlays with `./visualizer/lint_config.py`.
 
 The easiest things to tweak first are:
 
@@ -82,6 +104,8 @@ Start with these sections in order:
    Internally, scaffold and woody vine layers now accumulate through a shared
    density field before the hero and panel are stamped on top, which keeps
    overlapping structure more continuous.
+   The support-mask config surface still uses `trunk_mask_*` keys for compatibility.
+   The runtime also accepts `support_mask_*` aliases for the same settings.
    The most important collision controls are:
    - `hero_mask_path`
    - `hero_mask_threshold`
@@ -133,11 +157,11 @@ These settings have the biggest visible effect:
 - `layout.hero_mask_threshold`
   Controls how aggressively the hero silhouette mask blocks cells.
 - `layout.trunk_mask_scale_x`
-  Controls the trunk mask width used for debug and growth scoring.
+  Controls the support-mask width used for debug and growth scoring.
 - `layout.trunk_mask_offset_y`
-  Controls where the trunk mask sits in the scene.
+  Controls where the support mask sits in the scene.
 - `layout.trunk_field`
-  Not a config key, but the runtime distance field derived from the trunk mask.
+  Not a config key, but the runtime distance field derived from the support mask.
   It now shapes scaffold selection and vines scoring with smooth proximity instead
   of binary in/out behavior.
 - `layout.hero_safe_pad_x`
@@ -154,7 +178,7 @@ These settings have the biggest visible effect:
   Changes how far the scaffold is allowed to climb before splitting and how much vertical room the base selection expects.
 - `scaffold.upper_lift`
   Raises or lowers the branch tips relative to the fork.
-The scaffold is now selected from a trunk distance field and rendered through a
+The scaffold is now selected from a support field and rendered through a
 shared density field, so the knobs steer placement through a soft below-hero
 preference rather than snapping to a fragmented binary mask. The visible
 scaffold still avoids hero pixels.
@@ -225,6 +249,8 @@ The system is layered conceptually as follows:
 7. Debug Layer
    - overlays for layout, mask, and collision inspection
 
+The broader spatial model is documented in [MASKS_AND_GUIDES.md](MASKS_AND_GUIDES.md).
+
 - `src/main.py` owns the loop and screen lifecycle
 - `src/chafa_pipeline.py` creates or loads fixed-size cached Chafa frames
 - `src/layout.py` defines hero/info regions and vines no-go zones
@@ -269,10 +295,10 @@ Unspecified-future objectives worth preserving explicitly:
 
 Deferred design reference for future large-leaf work:
 
-- [LEAF_STUDY.md](LEAF_STUDY.md)
+- [archive/LEAF_STUDY.md](archive/LEAF_STUDY.md)
 
 Future architecture reference:
 
-- [RESEARCH.md](RESEARCH.md)
+- [reference/RESEARCH.md](reference/RESEARCH.md)
   - repository-wide rendering and architecture learnings
   - useful as a design reference, not a live runtime spec

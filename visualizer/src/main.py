@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -16,7 +17,14 @@ from layout import build_layout
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
 
-    config_path = repo_root / "config/visualizer.json"
+    config_path_env = os.environ.get("YAM_VISUALIZER_CONFIG_PATH", "").strip()
+    if config_path_env:
+        config_path = Path(config_path_env).expanduser()
+        if not config_path.is_absolute():
+            config_path = (repo_root / config_path).resolve()
+    else:
+        config_path = repo_root / "config/visualizer.json"
+
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config_mtime = config_path.stat().st_mtime
 

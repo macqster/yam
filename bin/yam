@@ -1,9 +1,99 @@
 #!/bin/zsh
 
 set -euo pipefail
+unsetopt xtrace 2>/dev/null || true
+setopt typesetsilent 2>/dev/null || true
 
 REPO_ROOT="${YAM_REPO:-$HOME/_git/yam}/visualizer"
 APP_ROOT="${YAM_VISUALIZER_ROOT:-}"
+RECIPE=""
+LIST_RECIPES=0
+FORWARDED_ARGS=()
+
+show_help() {
+  cat <<'EOF'
+usage: yam [--recipe NAME] [--list-recipes] [VISUALIZER_ARGS...]
+
+Launch the YAM visualizer.
+
+Options:
+  -r, --recipe NAME   Run the visualizer with a named recipe overlay.
+  -l, --list-recipes   Print the available recipe names and exit.
+  -h, --help          Show this help text.
+
+Examples:
+  yam
+  yam --recipe debug
+  yam --recipe presentation
+  yam --list-recipes
+  yam --recipe debug -- --help
+EOF
+}
+
+recipe_summary() {
+  sed -n 's/^  "_summary": "\(.*\)",$/\1/p' "$1" | head -n 1
+}
+
+list_recipes() {
+  recipe_dir="$1/recipes"
+
+  if [[ ! -d "$recipe_dir" ]]; then
+    echo "no recipe directory found at $recipe_dir" >&2
+    exit 1
+  fi
+
+  for recipe in "$recipe_dir"/*.json; do
+    [[ -e "$recipe" ]] || continue
+    name="$(basename "${recipe%.json}")"
+    summary="$(recipe_summary "$recipe" 2>/dev/null || true)"
+    if [[ -n "$summary" ]]; then
+      printf '%s - %s\n' "$name" "$summary"
+    else
+      printf '%s\n' "$name"
+    fi
+  done
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    -l|--list-recipes)
+      LIST_RECIPES=1
+      shift
+      ;;
+    -r|--recipe)
+      if [[ $# -lt 2 ]]; then
+        echo "yam: --recipe requires a name" >&2
+        exit 1
+      fi
+      RECIPE="$2"
+      shift 2
+      ;;
+    --recipe=*)
+      RECIPE="${1#*=}"
+      shift
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do
+        FORWARDED_ARGS+=("$1")
+        shift
+      done
+      ;;
+    *)
+      FORWARDED_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ "$LIST_RECIPES" -eq 1 ]]; then
+  list_recipes "$REPO_ROOT"
+  exit 0
+fi
 
 if [[ -z "$APP_ROOT" ]]; then
   if [[ -x "$REPO_ROOT/run_visualizer.sh" ]]; then
@@ -20,4 +110,13 @@ if [[ ! -x "$LAUNCHER" ]]; then
   exit 1
 fi
 
-exec "$LAUNCHER" "$@"
+if [[ -n "$RECIPE" ]]; then
+  RECIPE_LAUNCHER="$APP_ROOT/run_recipe.sh"
+  if [[ ! -x "$RECIPE_LAUNCHER" ]]; then
+    echo "yam recipe launcher not found at $RECIPE_LAUNCHER" >&2
+    exit 1
+  fi
+  exec "$RECIPE_LAUNCHER" "$RECIPE" "${FORWARDED_ARGS[@]}"
+fi
+
+exec "$LAUNCHER" "${FORWARDED_ARGS[@]}"

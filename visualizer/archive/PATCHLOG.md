@@ -1,6 +1,11 @@
 
 # Visualizer Patch Log
 
+Terminology note:
+
+- historical entries may still use `trunk_mask`
+- in current docs, that concept is normalized as the support mask / support field used for scaffold guidance
+
 ## System Phase Summary (Current)
 
 The visualizer has evolved through three broad phases:
@@ -274,7 +279,7 @@ Current focus:
 - Ingested external reference:
   - `/Users/maciejkuster/Desktop/study_leaf_monstera_report.md`
 - Added in-repo deferred design reference:
-  - [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)
+  - [archive/LEAF_STUDY.md](/Users/maciejkuster/_git/yam/visualizer/archive/LEAF_STUDY.md)
 - Recorded the future design baseline for large-leaf work:
   - silhouette first
   - bottom-origin upward growth
@@ -940,5 +945,5 @@ Status after this checkpoint:
 - If no trunk-path seed survives, the builder falls back to the largest connected component instead of an arbitrary fragment.
 
 ## 2026-04-18 Research Reference Recorded
-- Added [RESEARCH.md](/Users/maciejkuster/yam/visualizer/RESEARCH.md) as a future architecture reference.
+- Added [reference/RESEARCH.md](/Users/maciejkuster/_git/yam/visualizer/reference/RESEARCH.md) as a future architecture reference.
 - The document is kept as design context for field-first rendering and soft-mask ideas, but it is not treated as a live runtime spec.

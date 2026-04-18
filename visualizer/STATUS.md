@@ -4,6 +4,12 @@ This document is the maintenance snapshot for the current `visualizer/` work.
 
 It describes what exists now, what is stable, what is provisional, and where future integration work should attach.
 
+Primary working docs:
+
+- [SOURCE_INDEX.md](SOURCE_INDEX.md)
+- [reference/EXTERNAL_YAM_SHOULD_COPY.md](reference/EXTERNAL_YAM_SHOULD_COPY.md)
+- [TUNING_CHECKLIST.md](TUNING_CHECKLIST.md)
+
 ## Scope
 
 The visualizer is a standalone terminal scene inside `visualizer/`, currently tuned for Ghostty.
@@ -19,6 +25,18 @@ Current layers:
 Canonical dictionary:
 
 - [VOCABULARY.md](VOCABULARY.md)
+
+Tooling roadmap:
+
+- [DEV_TOOLS.md](DEV_TOOLS.md)
+
+Project process:
+
+- [PROJECT_PROCESS.md](PROJECT_PROCESS.md)
+
+Workflow:
+
+- [WORKFLOW.md](WORKFLOW.md)
 
 ## Stable Boundaries
 
@@ -92,13 +110,22 @@ Current major sections:
 - `timing`
   - render cadence, hero animation cadence, vines tick cadence, info refresh cadence
 - `layout`
-  - hero placement, panel placement, panel gap, exclusion padding, hero mask, trunk mask
+  - hero placement, panel placement, panel gap, exclusion padding, hero mask, support mask
 - `scaffold`
   - static woody support structure tuned from JSON
 - `vines`
   - current experimental vines parameters
 - `panel`
   - title and display settings
+
+Named tuning presets are available through:
+
+- `visualizer/recipes/`
+- `visualizer/run_recipe.sh`
+
+Config lint is available through:
+
+- `visualizer/lint_config.py`
 
 ## What Is Working
 
@@ -125,7 +152,7 @@ Current conclusion:
 
 Reference material to preserve for future architecture work:
 
-- [RESEARCH.md](RESEARCH.md)
+- [reference/RESEARCH.md](reference/RESEARCH.md)
   - useful summary of render-field, soft-mask, and layered-composition ideas
   - treat as a design reference, not a live spec
 - it still remains heuristic and experimental rather than a principled coverage planner
@@ -149,7 +176,7 @@ Reference material to preserve for future architecture work:
 The scene compositor is now also expected to honor:
 
 - `src/tree_scaffold.py`
-  - static scaffold built from config, guided by the trunk distance field, rendered through the shared density field, and softly preferred into the below-hero corridor while still avoiding visible hero pixels
+  - static scaffold built from config, guided by the support field, rendered through the shared density field, and softly preferred into the below-hero corridor while still avoiding visible hero pixels
 - `src/render_field.py`
   - intermediate density/priority field used to compose scaffold and woody vine glyphs before hero and panel overlays
 
@@ -233,4 +260,4 @@ These are intentionally deferred, but should remain visible in project scope:
 
 Related deferred design reference:
 
-- [LEAF_STUDY.md](LEAF_STUDY.md)
+- [archive/LEAF_STUDY.md](archive/LEAF_STUDY.md)

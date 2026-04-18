@@ -25,7 +25,8 @@ Use these names in code, config, docs, and patch notes.
 
 ## Layout
 - `hero_mask`: the hero silhouette mask used for collision and boundary guidance.
-- `trunk_mask`: the soft trunk-scoring mask used to shape scaffold and vine routing.
+- `support_mask`: the guide mask used to shape scaffold placement and routing. The current config keys still use `trunk_mask_*` for compatibility.
+- `support_field`: the soft distance field derived from `support_mask`. The current runtime name is `trunk_field`.
 - `region`: a named area of the scene such as above-hero, below-hero, left field, or right field.
 - `allowed cell`: a terminal cell where growth or ornament placement is permitted.
 - `no-go zone`: a blocked area that vines must not enter.
@@ -39,4 +40,5 @@ Use these names in code, config, docs, and patch notes.
 - Prefer `vines` over older project-specific names.
 - Prefer `leaf` and `leaves`; do not use `leafs`.
 - Prefer `spur` for short offshoots or stub-like fragments.
+- Prefer `support` for the mask/field that guides scaffold placement.
 - Prefer `trunk` for the main woody spine, `branch` for side splits, and `stem` for committed cells.

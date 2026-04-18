@@ -1,0 +1,13 @@
+{
+  "_summary": "Emphasize the hero art by increasing its footprint and nudging the info panel.",
+  "chafa": {
+    "height": 40
+  },
+  "timing": {
+    "hero_fps": 10
+  },
+  "layout": {
+    "hero_offset_y": 0,
+    "info_offset_y": 5
+  }
+}

@@ -76,9 +76,9 @@ def compose_scene(
     if debug_enabled:
         _stamp_mask_dots(rows, size, layout.hero_raw_mask_cells, DEBUG_MASK_BOX)
         # Debug: trunk mask visualization (bright cyan dots)
-        trunk_cells = getattr(layout, "trunk_mask_cells", None)
-        if trunk_cells:
-            _stamp_mask_dots(rows, size, trunk_cells, "\x1b[38;5;51m")
+        support_cells = getattr(layout, "support_mask_cells", None)
+        if support_cells:
+            _stamp_mask_dots(rows, size, support_cells, "\x1b[38;5;51m")
         _stamp_rect_frame(rows, size, layout.no_go_zones[1], DEBUG_MASK_BOX)
         _stamp_rect_frame(rows, size, layout.hero, DEBUG_VISIBLE_BOX)
         _stamp_rect_frame(rows, size, layout.info, DEBUG_VISIBLE_BOX)

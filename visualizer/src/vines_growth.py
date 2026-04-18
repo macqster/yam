@@ -113,8 +113,8 @@ def move_score(
     trunk_contact_bonus = float(config.get("trunk_contact_bonus", 0.0))
     trunk_core_bonus = float(config.get("trunk_core_bonus", 0.0))
 
-    candidate_distance = layout.trunk_field.get((x, y))
-    current_distance = layout.trunk_field.get((tip.x, tip.y))
+    candidate_distance = layout.support_field.get((x, y))
+    current_distance = layout.support_field.get((tip.x, tip.y))
     if candidate_distance is not None:
         soft_margin = max(1, int(config.get("collision_soft_margin", 3)))
         closeness = max(0.0, 1.0 - min(candidate_distance, soft_margin) / soft_margin)

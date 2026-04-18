@@ -62,12 +62,20 @@ class SceneLayout:
     hero_raw_mask_cells: frozenset[tuple[int, int]]
     hero_mask_boundary_cells: frozenset[tuple[int, int]]
     hero_mask_cells: frozenset[tuple[int, int]]
-    trunk_mask_cells: frozenset[tuple[int, int]]
-    trunk_field: dict[tuple[int, int], int]
+    support_mask_cells: frozenset[tuple[int, int]]
+    support_field: dict[tuple[int, int], int]
     allowed_cells: frozenset[tuple[int, int]]
     ornament_cells: frozenset[tuple[int, int]]
     region_cells: dict[str, frozenset[tuple[int, int]]]
     warning: str | None
+
+    @property
+    def trunk_mask_cells(self) -> frozenset[tuple[int, int]]:
+        return self.support_mask_cells
+
+    @property
+    def trunk_field(self) -> dict[tuple[int, int], int]:
+        return self.support_field
 
 
 def build_layout(
@@ -135,8 +143,8 @@ def build_layout(
         layout_cfg.get("info_collision_trim_bottom", 0),
     )
     hero_raw_mask_cells, hero_blocked_cells = _build_hero_blocked_cells(hero, hero_pad_x, hero_pad_y, layout_cfg)
-    trunk_mask_cells = _load_trunk_mask_cells(size, layout_cfg)
-    trunk_field = _build_distance_field(trunk_mask_cells, vines_bounds)
+    support_mask_cells = _load_trunk_mask_cells(size, layout_cfg)
+    support_field = _build_distance_field(support_mask_cells, vines_bounds)
     if hero_blocked_cells:
         hero_collision = _bounding_rect(hero_blocked_cells)
     else:
@@ -196,8 +204,8 @@ def build_layout(
         hero_raw_mask_cells=frozenset(hero_raw_mask_cells),
         hero_mask_boundary_cells=frozenset(_boundary_cells(hero_raw_mask_cells)),
         hero_mask_cells=frozenset(hero_blocked_cells),
-        trunk_mask_cells=frozenset(trunk_mask_cells),
-        trunk_field=trunk_field,
+        support_mask_cells=frozenset(support_mask_cells),
+        support_field=support_field,
         allowed_cells=frozenset(allowed_cells),
         ornament_cells=frozenset(ornament_cells),
         region_cells=region_cells,
@@ -208,7 +216,7 @@ def _load_trunk_mask_cells(
     size: TerminalSize,
     layout_cfg: dict,
 ) -> set[tuple[int, int]]:
-    trunk_path_value = layout_cfg.get("trunk_mask_path", "")
+    trunk_path_value = _layout_value(layout_cfg, "support_mask_path", "trunk_mask_path", "")
     if not trunk_path_value:
         return set()
 
@@ -216,11 +224,11 @@ def _load_trunk_mask_cells(
     if not trunk_path.exists():
         return set()
 
-    threshold = int(layout_cfg.get("trunk_mask_threshold", 200))
-    scale_x = float(layout_cfg.get("trunk_mask_scale_x", 1.0))
-    scale_y = float(layout_cfg.get("trunk_mask_scale_y", 1.0))
-    offset_x = int(layout_cfg.get("trunk_mask_offset_x", 0))
-    offset_y = int(layout_cfg.get("trunk_mask_offset_y", 0))
+    threshold = int(_layout_value(layout_cfg, "support_mask_threshold", "trunk_mask_threshold", 200))
+    scale_x = float(_layout_value(layout_cfg, "support_mask_scale_x", "trunk_mask_scale_x", 1.0))
+    scale_y = float(_layout_value(layout_cfg, "support_mask_scale_y", "trunk_mask_scale_y", 1.0))
+    offset_x = int(_layout_value(layout_cfg, "support_mask_offset_x", "trunk_mask_offset_x", 0))
+    offset_y = int(_layout_value(layout_cfg, "support_mask_offset_y", "trunk_mask_offset_y", 0))
     image = Image.open(trunk_path).convert("RGBA")
 
     scaled_width = max(1, int(round(image.width * scale_x)))
@@ -240,6 +248,14 @@ def _load_trunk_mask_cells(
                     cells.add((scene_x, scene_y))
 
     return cells
+
+
+def _layout_value(layout_cfg: dict, preferred_key: str, fallback_key: str, default: object) -> object:
+    if preferred_key in layout_cfg:
+        return layout_cfg[preferred_key]
+    if fallback_key in layout_cfg:
+        return layout_cfg[fallback_key]
+    return default
 
 
 def _build_distance_field(

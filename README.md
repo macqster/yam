@@ -9,7 +9,7 @@ The setup is intentionally macOS-specific and personal.
 
 ## Visualizer mode
 
-The repo now also includes a separate visualizer app under [visualizer/](/Users/maciejkuster/yam/visualizer).
+The repo now also includes a separate visualizer app under [visualizer/](visualizer).
 
 This is intentionally not part of shell startup. It is a standalone terminal scene that combines:
 
@@ -29,12 +29,34 @@ After `./install.sh`, launch it with:
 yam
 ```
 
-See [visualizer/README.md](/Users/maciejkuster/yam/visualizer/README.md) for setup and tuning details.
-See [visualizer/STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md) for the current maintenance snapshot and vines-engine status.
-See [visualizer/VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md) for the canonical visualizer dictionary.
+See [visualizer/README.md](visualizer/README.md) for setup and tuning details.
+See [visualizer/STATUS.md](visualizer/STATUS.md) for the current maintenance snapshot and vines-engine status.
+See [visualizer/VOCABULARY.md](visualizer/VOCABULARY.md) for the canonical visualizer dictionary.
 
 Current visualizer direction:
 - tuned for Ghostty
+
+## Ghostty organization
+
+Ghostty is split into two layers in this repo:
+
+- `ghostty/config` for behavior and shell integration
+- `ghostty/themes/yam-dark` for the color theme
+
+There is no Ghostty plugin layer here.
+Shell plugins and prompt behavior live in the shell profile, not in the Ghostty repo.
+tmux uses the terminal's raw `Ctrl+A` prefix directly; Ghostty should not synthesize a tmux prefix on top of it.
+Ghostty split actions are Cmd-based by default: `Cmd+D` and `Cmd+Shift+D` split panes, while the Ctrl/Option bindings are for navigation and resizing.
+
+## Fastfetch organization
+
+Fastfetch is split into two layers in this repo:
+
+- `fastfetch/config.jsonc` for the visible system panel
+- `fastfetch/startup.zsh` for the startup gate and invocation
+
+The startup hook runs from the shell profile when Ghostty starts an interactive shell.
+The repo also tracks the Fastfetch mapping in [docs/fastfetch-map.md](docs/fastfetch-map.md).
 
 ## What this repo is
 
@@ -55,11 +77,22 @@ Animation is for manual Chafa testing, not shell startup.
 
 - `ghostty/`
   - `config`
+  - `README.md`
+  - `themes/`
+    - `README.md`
+    - `yam-dark`
 - `fastfetch/`
   - `config.jsonc`
   - `startup.zsh`
+  - `README.md`
+- `docs/`
+  - `fastfetch-map.md`
+  - `startup-bridge.md`
+  - `chafa-map.md`
+  - `launcher-map.md`
 - `bin/`
   - `fastfetch-chafa`
+  - `yam`
 - `chafa/`
   - `chafa_lab.sh`
 - `assets/`
@@ -77,6 +110,7 @@ This section is the most important part of the repo.
 
 Owns:
 - Ghostty font
+- Ghostty theme selection
 - Ghostty padding
 - Ghostty opacity
 - Ghostty palette
@@ -86,10 +120,31 @@ Edit this file when you want to change:
 - the baseline Ghostty look and feel
 - the terminal environment that `yam` is tuned against
 
-Installed runtime path:
-- `~/.config/ghostty/config`
+Installed runtime path on macOS:
+- `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty`
 
-The installer now symlinks this file back to the repo copy.
+The installer now symlinks this file back to the repo copy through App Support on macOS.
+
+See also:
+- [ghostty/README.md](ghostty/README.md)
+- [ghostty/themes/README.md](ghostty/themes/README.md)
+
+### `ghostty/themes/yam-dark`
+
+Owns:
+- the terminal color palette
+- cursor color
+- selection colors
+- theme-level appearance values
+
+Edit this file when you want to change:
+- the baseline dark palette used by Ghostty
+- the color identity of the terminal
+
+Installed runtime path:
+- `~/.config/ghostty/themes/yam-dark`
+
+The base Ghostty config selects this theme by name.
 
 ### `fastfetch/config.jsonc`
 
@@ -111,6 +166,10 @@ Edit this file when you want to change:
 
 This is the main file for the visible startup panel on the right.
 
+See also:
+- [fastfetch/README.md](fastfetch/README.md)
+- [docs/fastfetch-map.md](docs/fastfetch-map.md)
+
 ### `fastfetch/startup.zsh`
 
 Owns:
@@ -126,6 +185,11 @@ Edit this file when you want to change:
 Do not put large rendering logic in `~/.zshrc`.
 Keep the logic here and source it from `.zshrc`.
 
+See also:
+- [fastfetch/README.md](fastfetch/README.md)
+- [docs/fastfetch-map.md](docs/fastfetch-map.md)
+- [docs/startup-bridge.md](docs/startup-bridge.md)
+
 ### `bin/fastfetch-chafa`
 
 Owns:
@@ -140,6 +204,26 @@ Edit this file when you want to change:
 - which Chafa script/path is used
 
 This is the file to edit when the startup portrait is too big or too small.
+
+See also:
+- [docs/chafa-map.md](docs/chafa-map.md)
+
+### `bin/yam`
+
+Owns:
+- launcher selection for the visualizer
+- repo-copy-first behavior for active iteration
+- fallback to the installed runtime bundle when the repo copy is unavailable
+
+Edit this file when you want to change:
+- how the `yam` command finds the visualizer
+- whether the repo copy or runtime bundle should win
+
+Installed runtime path:
+- `~/.local/bin/yam`
+
+See also:
+- [docs/launcher-map.md](docs/launcher-map.md)
 
 ### `chafa/chafa_lab.sh`
 
@@ -171,15 +255,19 @@ Edit or replace this file when you want to change:
 
 The installer installs files into these runtime locations:
 
-- `~/.config/ghostty/config` (symlink to repo file)
+- `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty` (symlink to repo file)
+- `~/.config/ghostty/themes/yam-dark` (symlink to repo file)
 - `~/.config/fastfetch/config.jsonc`
 - `~/.config/fastfetch/startup.zsh`
 - `~/.local/bin/fastfetch-chafa`
+- `~/.local/bin/yam`
 - `~/.local/share/fastfetch-chafa/chafa_lab.sh`
 - `~/.local/share/fastfetch-chafa/assets/ives_yam.png`
 
+The shell profile also sources `~/.config/fastfetch/startup.zsh`, which is what starts the Ghostty panel when an interactive shell opens.
+
 The repo remains the editable source of truth.
-The Ghostty config is repo-backed by symlink; the other runtime files are copies.
+The Ghostty config is repo-backed through macOS App Support and the Ghostty theme is repo-backed by symlink; the other runtime files are copies.
 
 ## Reference screenshot
 
@@ -229,8 +317,8 @@ These are already standard on macOS except the Nerd Font.
 1. Clone the repo:
 
 ```bash
-git clone <your-private-repo-url> ~/yam
-cd ~/yam
+git clone <your-private-repo-url> ~/_git/yam
+cd ~/_git/yam
 ```
 
 2. Install dependencies:
@@ -260,7 +348,7 @@ brew install ghostty fastfetch chafa
 
 `install.sh` does only a few things:
 
-- symlinks Ghostty config into `~/.config/ghostty/`
+- symlinks Ghostty config into `~/Library/Application Support/com.mitchellh.ghostty/`
 - copies Fastfetch config into `~/.config/fastfetch/`
 - copies the wrapper into `~/.local/bin/`
 - copies the Chafa script into `~/.local/share/fastfetch-chafa/`
@@ -326,6 +414,11 @@ printf '\n'
 Edit:
 - `ghostty/config`
 
+### Change Ghostty colors / palette
+
+Edit:
+- `ghostty/themes/yam-dark`
+
 ## Known design decisions
 
 - Startup logo is static, not animated.
@@ -348,7 +441,7 @@ Edit:
 
 There are two copies of this setup at any given time:
 
-- the repo copy in `~/yam`
+- the repo copy in `~/_git/yam`
 - the installed runtime copy under `~/.config` and `~/.local`
 
 The repo copy is the canonical one.
@@ -383,7 +476,7 @@ One specific expected difference is `chafa/chafa_lab.sh` asset resolution:
 Suggested next commands:
 
 ```bash
-cd ~/yam
+cd ~/_git/yam
 git branch -m main
 git remote add origin <your-private-repo-url>
 git push -u origin main

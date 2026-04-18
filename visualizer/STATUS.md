@@ -18,7 +18,7 @@ Current layers:
 
 Canonical dictionary:
 
-- [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md)
+- [VOCABULARY.md](VOCABULARY.md)
 
 ## Stable Boundaries
 
@@ -58,7 +58,7 @@ yam
 
 Important detail:
 
-- `yam` now prefers `~/yam/visualizer` when that repo exists.
+- `yam` now prefers `~/_git/yam/visualizer` when that repo exists.
 - If the repo copy is unavailable, it falls back to `~/.local/share/yam-visualizer`.
 
 This was done intentionally so visualizer iteration uses the repo source of truth immediately without needing reinstall for every tuning pass.
@@ -73,7 +73,7 @@ This was done intentionally so visualizer iteration uses the repo source of trut
 
 But for active development, the preferred editable source of truth is still:
 
-- `~/yam`
+- `~/_git/yam`
 
 ## Current Config Surface
 
@@ -125,7 +125,7 @@ Current conclusion:
 
 Reference material to preserve for future architecture work:
 
-- [RESEARCH.md](/Users/maciejkuster/yam/visualizer/RESEARCH.md)
+- [RESEARCH.md](RESEARCH.md)
   - useful summary of render-field, soft-mask, and layered-composition ideas
   - treat as a design reference, not a live spec
 - it still remains heuristic and experimental rather than a principled coverage planner
@@ -233,4 +233,4 @@ These are intentionally deferred, but should remain visible in project scope:
 
 Related deferred design reference:
 
-- [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)
+- [LEAF_STUDY.md](LEAF_STUDY.md)

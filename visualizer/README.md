@@ -10,8 +10,8 @@ This is separate from the repo's Fastfetch startup path. It is meant to be launc
 
 Current maintenance snapshot:
 
-- [STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md)
-- [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md)
+- [STATUS.md](STATUS.md)
+- [VOCABULARY.md](VOCABULARY.md)
 
 ## Requirements
 
@@ -45,17 +45,18 @@ After `./install.sh`, you can launch it from any shell with:
 yam
 ```
 
-`yam` prefers the repo copy at `~/yam/visualizer` when that repo exists locally. This is intentional so iteration does not depend on reinstalling the runtime bundle after every config change.
+`yam` prefers the repo copy at `~/_git/yam/visualizer` when that repo exists locally. This is intentional so iteration does not depend on reinstalling the runtime bundle after every config change.
+The launcher resolves that repo copy through `YAM_REPO` when available, then falls back to `~/.local/share/yam-visualizer`.
 
 ## Configuration
 
-Main settings live in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json).
+Main settings live in [visualizer.json](config/visualizer.json).
 The running app watches that file for changes and reloads it automatically, so scaffold, layout, and vines tweaks should be visible without restarting.
 
 There are now two documentation layers for config:
 
 - practical overview here in this README
-- full field-by-field manual in [CONFIG.md](/Users/maciejkuster/yam/visualizer/CONFIG.md)
+- full field-by-field manual in [CONFIG.md](CONFIG.md)
 
 The easiest things to tweak first are:
 
@@ -238,10 +239,10 @@ The system is layered conceptually as follows:
 
 ## Vocabulary
 
-The canonical naming dictionary lives in [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md).
+The canonical naming dictionary lives in [VOCABULARY.md](VOCABULARY.md).
 Use it for new config keys, code symbols, and documentation terms.
 
-For the current project status, known caveats, and future vines integration boundary, see [STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md).
+For the current project status, known caveats, and future vines integration boundary, see [STATUS.md](STATUS.md).
 
 ## Limitations
 
@@ -268,10 +269,10 @@ Unspecified-future objectives worth preserving explicitly:
 
 Deferred design reference for future large-leaf work:
 
-- [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)
+- [LEAF_STUDY.md](LEAF_STUDY.md)
 
 Future architecture reference:
 
-- [RESEARCH.md](/Users/maciejkuster/yam/visualizer/RESEARCH.md)
+- [RESEARCH.md](RESEARCH.md)
   - repository-wide rendering and architecture learnings
   - useful as a design reference, not a live runtime spec

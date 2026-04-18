@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-REPO_ROOT="$HOME/yam/visualizer"
+REPO_ROOT="${YAM_REPO:-$HOME/_git/yam}/visualizer"
 APP_ROOT="${YAM_VISUALIZER_ROOT:-}"
 
 if [[ -z "$APP_ROOT" ]]; then

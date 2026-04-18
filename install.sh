@@ -19,11 +19,20 @@ link_repo_config() {
   ln -s "$source" "$target"
 }
 
-mkdir -p "$HOME/.config/ghostty" "$HOME/.config/fastfetch" "$HOME/.local/bin" "$HOME/.local/share/fastfetch-chafa"
+mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty" \
+         "$HOME/.config/fastfetch" \
+         "$HOME/.config/ghostty/themes" \
+         "$HOME/.local/bin" \
+         "$HOME/.local/share/fastfetch-chafa"
 mkdir -p "$HOME/.local/share/fastfetch-chafa/assets"
 mkdir -p "$HOME/.local/share/yam-visualizer"
 
-link_repo_config "$ROOT/ghostty/config" "$HOME/.config/ghostty/config"
+# Ghostty on macOS loads App Support after XDG and prefers it when present.
+# Keep the macOS runtime config anchored there so we avoid loading the same
+# config twice from both XDG and App Support locations.
+rm -f "$HOME/.config/ghostty/config"
+link_repo_config "$ROOT/ghostty/config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
+link_repo_config "$ROOT/ghostty/themes/yam-dark" "$HOME/.config/ghostty/themes/yam-dark"
 cp "$ROOT/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 cp "$ROOT/fastfetch/startup.zsh" "$HOME/.config/fastfetch/startup.zsh"
 cp "$ROOT/bin/fastfetch-chafa" "$HOME/.local/bin/fastfetch-chafa"
@@ -65,8 +74,12 @@ Next steps:
   4. Reopen Ghostty.
   5. Launch the visualizer any time with:
      yam
-     By default this now prefers ~/yam/visualizer when that repo exists.
+     By default this now prefers ~/_git/yam/visualizer when that repo exists.
 
 Repo source of truth:
-  ~/yam
+  ~/_git/yam
+
+Fastfetch runtime files:
+  ~/.config/fastfetch/config.jsonc
+  ~/.config/fastfetch/startup.zsh
 EOF

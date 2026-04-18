@@ -45,8 +45,8 @@
 
   "layout": {
     "_about": "Screen placement and reserved-space rules for the hero and info panel. This also contains hero mask settings and older trim-based fallback controls.",
-    "min_terminal_columns": 100,
-    "min_terminal_rows": 28,
+    "min_terminal_columns": 124,
+    "min_terminal_rows": 36,
     "outer_margin_x": 3,
     "outer_margin_y": 3,
 
@@ -56,23 +56,23 @@
 
     "hero_mask_path": "assets/hero_mask.png",
     "hero_mask_threshold": 200,
-    "hero_mask_scale_x": 1.2,
-    "hero_mask_scale_y": 1.2,
-    "hero_mask_offset_x": 0,
+    "hero_mask_scale_x": 1.05,
+    "hero_mask_scale_y": 1.05,
+    "hero_mask_offset_x": -2,
     "hero_mask_offset_y": 0,
     "hero_mask_alignment_margin": 0,
 
     "trunk_mask_path": "assets/trunk_mask_scaled_96x48.png",
     "trunk_mask_threshold": 200,
-    "trunk_mask_scale_x": 0.78,
-    "trunk_mask_scale_y": 0.72,
-    "trunk_mask_offset_x": 12,
-    "trunk_mask_offset_y": 2,
+    "trunk_mask_scale_x": 0.75,
+    "trunk_mask_scale_y": 0.75,
+    "trunk_mask_offset_x": 30,
+    "trunk_mask_offset_y": 12,
 
     "hero_collision_trim_left": 0,
     "hero_collision_trim_top": 0,
     "hero_collision_trim_right": 0,
-    "hero_collision_trim_bottom": 1,
+    "hero_collision_trim_bottom": 0,
     "hero_collision_bleed_right": 0,
     "hero_corner_trim_top_left": 0,
     "hero_corner_trim_top_left_y": 0,
@@ -206,14 +206,14 @@
 
   "scaffold": {
     "_about": "Static woody support structure that sits under the hero and can be overgrown by vines.",
-    "enabled": false,
-    "base_x": 2,
-    "base_y": 2,
+    "enabled": true,
+    "base_x":  0,
+    "base_y": 0,
     "trunk_height": 2,
-    "fork_y": 2,
+    "fork_y": 2 ,
     "left_reach": 2,
     "right_reach": 2,
-    "upper_lift": 2
+    "upper_lift": 0
   },
 
   "panel": {

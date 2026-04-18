@@ -1,6 +1,6 @@
 # Visualizer Config Manual
 
-This document is the field manual for [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json).
+This document is the field manual for [visualizer.json](config/visualizer.json).
 
 It describes each setting by purpose, expected effect, and common tradeoffs.
 

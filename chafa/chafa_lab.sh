@@ -19,7 +19,7 @@ if [[ -z "${IMAGE_PATH:-}" ]]; then
     IMAGE_PATH="$REPO_ASSET_PATH"
   fi
 fi
-# IMAGE_PATH="${IMAGE_PATH:-/Users/maciejkuster/Desktop/calibration_palette.png}"
+# IMAGE_PATH="${IMAGE_PATH:-$HOME/Desktop/calibration_palette.png}"
 
 #########################
 ### output / playback ###

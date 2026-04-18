@@ -1,22 +1,28 @@
 # yam Ghostty baseline
 #
 # Source of truth:
-#   ~/yam/ghostty/config
+#   ~/_git/yam/ghostty/config
 #
 # This file is installed by symlink into:
-#   ~/.config/ghostty/config
+#   ~/Library/Application Support/com.mitchellh.ghostty/config.ghostty
 #
 # Keep this conservative. Only include settings that are stable and clearly
 # useful for the current macOS + Ghostty + yam visualizer workflow.
 
 font-family = "JetBrainsMono Nerd Font"
-font-feature = liga=0
-font-size = 13
+font-feature = liga=1
+font-size = 12
+theme = yam-dark
+macos-option-as-alt = true
 
 background-opacity = 0.95
 window-padding-x = 14
 window-padding-y = 12
 window-padding-balance = true
+ 
+# Default window size (columns x rows)
+window-width = 124
+window-height = 32
 window-save-state = never
 
 background-blur = 6
@@ -33,31 +39,6 @@ confirm-close-surface = false
 
 copy-on-select = clipboard
 quit-after-last-window-closed = false
-
-# Core palette aligned with the existing yam terminal look.
-background = #16181A
-foreground = #E2E5E3
-minimum-contrast = 1.1
-cursor-color = #4F8E6C
-selection-background = #355FA8
-selection-foreground = #ffffff
-
-palette = 0=#181A1D
-palette = 1=#A33A32
-palette = 2=#3E7357
-palette = 3=#C48A2C
-palette = 4=#2C4C8A
-palette = 5=#8A3B2E
-palette = 6=#4F8E6C
-palette = 7=#C5C8C6
-palette = 8=#373C41
-palette = 9=#B24E2E
-palette = 10=#69C090
-palette = 11=#D69827
-palette = 12=#355FA8
-palette = 13=#A67C34
-palette = 14=#2F5A45
-palette = 15=#FFFFFF
 
 # NOTE:
 # `initial-window` is not a valid Ghostty configuration option and will cause errors if used.

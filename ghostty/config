@@ -22,7 +22,7 @@ window-padding-balance = true
  
 # Default window size (columns x rows)
 window-width = 124
-window-height = 32
+window-height = 36
 window-save-state = never
 
 background-blur = 6

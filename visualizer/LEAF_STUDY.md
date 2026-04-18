@@ -76,7 +76,7 @@ Only after the shell reads correctly should later phases add:
 - optional internal structure
 - lifecycle stages
 
-## Relation To Current Ivy Work
+## Relation To Current Vines Work
 
 This study does not change the current trunk-routing priority.
 

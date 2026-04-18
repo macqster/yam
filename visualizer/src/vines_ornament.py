@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import random
 
-from ivy_state import IvyState
-from ivy_types import BROWN, DARK_BROWN, GREEN, LIGHT_GREEN, OLIVE, Point
+from vines_state import VinesState
+from vines_types import BROWN, DARK_BROWN, GREEN, LIGHT_GREEN, OLIVE, Point
 from layout import SceneLayout
 from terminal import RESET
 
@@ -20,7 +20,7 @@ LEAF_PATTERNS: list[list[tuple[int, int, str]]] = [
 ]
 
 
-def rebuild_leaf_stamps(state: IvyState, config: dict, layout: SceneLayout, rng: random.Random) -> None:
+def rebuild_leaf_stamps(state: VinesState, config: dict, layout: SceneLayout, rng: random.Random) -> None:
     state.leaf_stamps = {}
     if not state.active_leaf_positions:
         return
@@ -79,7 +79,7 @@ def rebuild_leaf_stamps(state: IvyState, config: dict, layout: SceneLayout, rng:
             break
 
 
-def rebuild_flower_stamps(state: IvyState, config: dict, layout: SceneLayout, rng: random.Random) -> None:
+def rebuild_flower_stamps(state: VinesState, config: dict, layout: SceneLayout, rng: random.Random) -> None:
     lifespan = int(config.get("flower_lifespan_frames", 32))
     maturity_threshold = int(config.get("flower_maturity_frames", 12))
     max_clusters = int(config.get("flower_max_clusters", 5))
@@ -215,7 +215,7 @@ def rebuild_flower_stamps(state: IvyState, config: dict, layout: SceneLayout, rn
     state.flower_parent = new_parent
 
 
-def rebuild_thickened_wood(state: IvyState, config: dict, layout: SceneLayout, rng: random.Random) -> None:
+def rebuild_thickened_wood(state: VinesState, config: dict, layout: SceneLayout, rng: random.Random) -> None:
     state.thickened_wood = {}
     min_age = int(config["thickening_min_age"])
     full_age = int(config["thickening_full_age"])
@@ -423,7 +423,7 @@ def rebuild_thickened_wood(state: IvyState, config: dict, layout: SceneLayout, r
 
 
 def stamp_death_cluster(
-    state: IvyState,
+    state: VinesState,
     center_x: int,
     center_y: int,
     dx: int,
@@ -479,7 +479,7 @@ def stamp_death_cluster(
         state.dead_leaf_stamps[(sx, sy)] = f"{color}{char}{RESET}"
 
 
-def trim_ornaments(state: IvyState, max_ornaments: int, rng: random.Random) -> None:
+def trim_ornaments(state: VinesState, max_ornaments: int, rng: random.Random) -> None:
     combined = list(state.leaf_stamps.items()) + list(state.dead_leaf_stamps.items()) + list(state.thickened_wood.items()) + list(state.flower_stamps.items())
     if len(combined) <= max_ornaments:
         return
@@ -497,7 +497,7 @@ def trim_ornaments(state: IvyState, max_ornaments: int, rng: random.Random) -> N
                 break
 
 
-def merge_segments(state: IvyState, debug_config: dict) -> dict[Point, str]:
+def merge_segments(state: VinesState, debug_config: dict) -> dict[Point, str]:
     merged: dict[Point, str] = {}
 
     for point in state.stems:
@@ -522,7 +522,7 @@ def merge_segments(state: IvyState, debug_config: dict) -> dict[Point, str]:
     return merged
 
 
-def update_debug_stats(state: IvyState, layout: SceneLayout) -> None:
+def update_debug_stats(state: VinesState, layout: SceneLayout) -> None:
     region_coverage: dict[str, dict[str, int]] = {}
     for name, cells in layout.region_cells.items():
         stem_count = sum(1 for point in state.stems if point in cells)
@@ -534,20 +534,20 @@ def update_debug_stats(state: IvyState, layout: SceneLayout) -> None:
     )
 
 
-def count_debug(state: IvyState, bucket: str, key: str) -> None:
+def count_debug(state: VinesState, bucket: str, key: str) -> None:
     counts = state.debug_stats.setdefault(bucket, {})
     if isinstance(counts, dict):
         counts[key] = int(counts.get(key, 0)) + 1
 
 
-def is_ornament_open(state: IvyState, x: int, y: int, layout: SceneLayout) -> bool:
+def is_ornament_open(state: VinesState, x: int, y: int, layout: SceneLayout) -> bool:
     ornament_cells = getattr(layout, "ornament_cells", layout.allowed_cells)
     if (x, y) not in ornament_cells:
         return False
     return (x, y) not in occupied_points(state, include_active=True)
 
 
-def occupied_points(state: IvyState, include_active: bool) -> set[Point]:
+def occupied_points(state: VinesState, include_active: bool) -> set[Point]:
     occupied = set(state.stems)
     occupied.update(state.leaf_stamps)
     occupied.update(state.dead_leaf_stamps)
@@ -591,7 +591,7 @@ def leaf_color_for_role(role: str, x: int, y: int) -> str:
     return stable_choice([LIGHT_GREEN, GREEN, LIGHT_GREEN, OLIVE], x, y, 533)
 
 
-def stamp_leaf(state: IvyState, center_x: int, center_y: int, pattern: list[tuple[int, int, str]], layout: SceneLayout) -> None:
+def stamp_leaf(state: VinesState, center_x: int, center_y: int, pattern: list[tuple[int, int, str]], layout: SceneLayout) -> None:
     candidates: list[tuple[int, int, str]] = []
     for dx, dy, role in pattern:
         sx = center_x + dx
@@ -678,7 +678,7 @@ def stamp_leaf(state: IvyState, center_x: int, center_y: int, pattern: list[tupl
 
 
 def stamp_oriented_leaf(
-    state: IvyState,
+    state: VinesState,
     center_x: int,
     center_y: int,
     dx: int,
@@ -717,7 +717,7 @@ def stamp_oriented_leaf(
     stamp_leaf(state, center_x, center_y, pattern, layout)
 
 
-def wood_char_for_cell(state: IvyState, x: int, y: int) -> str:
+def wood_char_for_cell(state: VinesState, x: int, y: int) -> str:
     left = (x - 1, y) in state.stems
     right = (x + 1, y) in state.stems
     up = (x, y - 1) in state.stems

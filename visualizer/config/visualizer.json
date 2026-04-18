@@ -4,9 +4,9 @@
   "_editing_guide": {
     "_about": "Quick orientation for new users.",
     "asset_paths": "Point to source files used by the visualizer, such as the hero GIF, fallback image, and hero mask files.",
-    "timing": "Controls how fast the screen redraws, how often the hero frame advances, and how quickly ivy updates.",
+    "timing": "Controls how fast the screen redraws, how often the hero frame advances, and how quickly vines updates.",
     "layout": "Controls where the hero and info panel sit on the screen, and how much space they reserve around themselves.",
-    "ivy": "Controls growth behavior, direction bias, collision handling, and ornament generation.",
+    "vines": "Controls growth behavior, direction bias, collision handling, and ornament generation.",
     "panel": "Controls the small info panel shown in the scene.",
     "warning": "If something looks wrong, first check file paths, then mask settings, then layout offsets."
   },
@@ -36,10 +36,10 @@
     "preprocess": "on"
   },
   "timing": {
-    "_about": "Animation/update speeds. Higher render_fps redraws the terminal more often. hero_fps changes hero frames. ivy_tick_seconds controls how often ivy logic advances.",
+    "_about": "Animation/update speeds. Higher render_fps redraws the terminal more often. hero_fps changes hero frames. vines_tick_seconds controls how often vines logic advances.",
     "render_fps": 12,
     "hero_fps": 8,
-    "ivy_tick_seconds": 0.1,
+    "vines_tick_seconds": 0.1,
     "info_refresh_seconds": 1.0
   },
 
@@ -52,7 +52,7 @@
 
     "hero_anchor": "center",
     "hero_offset_x": -16,
-    "hero_offset_y": 0,
+    "hero_offset_y": 2,
 
     "hero_mask_path": "assets/hero_mask.png",
     "hero_mask_threshold": 200,
@@ -96,8 +96,8 @@
     "info_safe_pad_y": 2
   },
 
-  "ivy": {
-    "_about": "Ivy growth, movement bias, collision pressure, and ornament generation. If ivy feels too aggressive or too timid, this is the main section to tune.",
+  "vines": {
+    "_about": "Vines growth, movement bias, collision pressure, and ornament generation. If vines feels too aggressive or too timid, this is the main section to tune.",
     "max_tips": 4,
     "max_structural_cells": 600,
     "max_ornament_cells": 5600,
@@ -205,15 +205,15 @@
   },
 
   "scaffold": {
-    "_about": "Static woody support structure that sits under the hero and can be overgrown by ivy.",
-    "enabled": true,
-    "base_x": -12,
-    "base_y": 6,
-    "trunk_height": 4,
-    "fork_y": 6,
-    "left_reach": 16,
-    "right_reach": 32,
-    "upper_lift": 8
+    "_about": "Static woody support structure that sits under the hero and can be overgrown by vines.",
+    "enabled": false,
+    "base_x": 2,
+    "base_y": 2,
+    "trunk_height": 2,
+    "fork_y": 2,
+    "left_reach": 2,
+    "right_reach": 2,
+    "upper_lift": 2
   },
 
   "panel": {

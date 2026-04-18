@@ -30,6 +30,7 @@ That dual-path behavior is expected and should not be “fixed” unless the ins
 The current maintenance snapshot for the visualizer lives in:
 
 - `visualizer/STATUS.md`
+- `visualizer/VOCABULARY.md`
 
 Current terminal target for the visualizer:
 
@@ -53,10 +54,10 @@ Treat these visualizer modules as stable unless there is a clear bug:
 - `visualizer/src/renderer.py`
 - `visualizer/src/terminal.py`
 
-Treat these as the future integration seam for outside ivy code:
+Treat these as the future integration seam for outside vines code:
 
 - `visualizer/src/layout.py`
-- `visualizer/src/ivy_engine.py`
+- `visualizer/src/vines_engine.py`
 
 ## Visualizer runtime rule
 

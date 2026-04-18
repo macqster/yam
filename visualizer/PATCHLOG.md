@@ -26,6 +26,15 @@ Current focus:
 - reducing ad-hoc tuning
 - preparing transition toward directional and entity-based foliage
 
+## 2026-04-18
+
+### Vocabulary Normalization
+
+- Renamed the visualizer sprawl vocabulary to `vines` across code, config, and docs
+- Renamed the runtime modules to the `vines_*` series so code, docs, and config now use one consistent vocabulary
+- Added [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md) as the canonical terminology dictionary
+- Updated the top-level and visualizer docs to link the glossary and use the new names consistently
+
 ## 2026-04-17
 
 ### Render Field and Soft Trunk Geometry
@@ -34,13 +43,13 @@ Current focus:
 - Scaffold and woody vine glyphs now accumulate through a shared render field before hero and panel overlays are stamped
 - Added `density_to_braille()` and density-aware woody glyph selection so scaffold output can read as continuous density instead of only symbolic strokes
 - Added `trunk_field` to [layout.py](/Users/maciejkuster/yam/visualizer/src/layout.py) as a soft distance map derived from trunk mask cells
-- Updated ivy scoring to use the trunk distance field instead of only binary trunk-mask membership
+- Updated vines scoring to use the trunk distance field instead of only binary trunk-mask membership
 - This keeps the trunk mask authoritative while giving scaffold and growth a smoother gradient to follow
 
 ### Visualizer Config Hot Reload
 
 - Added mtime-based reload in [main.py](/Users/maciejkuster/yam/visualizer/src/main.py) so edits to [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json) are applied while the app is running
-- Reloading now refreshes the Chafa pipeline, hero frames, ivy engine, info panel text, and layout on config change
+- Reloading now refreshes the Chafa pipeline, hero frames, vines engine, info panel text, and layout on config change
 - Updated [README.md](/Users/maciejkuster/yam/visualizer/README.md) and [CONFIG.md](/Users/maciejkuster/yam/visualizer/CONFIG.md) to document the live-reload contract
 
 ### Scaffold Config Activation
@@ -114,7 +123,7 @@ Current focus:
 ### Runtime Helper Tracking
 
 - The particle helper used by [main.py](/Users/maciejkuster/yam/visualizer/src/main.py) is part of the actual runtime path:
-  - [ivy_particles.py](/Users/maciejkuster/yam/visualizer/src/ivy_particles.py)
+  - [vines_particles.py](/Users/maciejkuster/yam/visualizer/src/vines_particles.py)
 - It should be treated as source-of-truth runtime code, not a scratch experiment
 
 ## 2026-04-16
@@ -176,7 +185,7 @@ Current focus:
   - added `hero_mask_threshold`
   - clarified that `hero_collision_trim_*` is fallback/secondary when mask collision is active
 - Updated [STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md)
-  - now reflects the split ivy engine structure
+  - now reflects the split vines engine structure
   - no longer describes the current engine as the original single-file wandering prototype
 
 ### Config Surface
@@ -238,7 +247,7 @@ Current focus:
 
 ### Hero Mask as Real Sprawl Boundary
 
-- Updated [ivy_growth.py](/Users/maciejkuster/yam/visualizer/src/ivy_growth.py)
+- Updated [vines_growth.py](/Users/maciejkuster/yam/visualizer/src/vines_growth.py)
 - Hero contour-follow and hero proximity pressure now use the actual hero mask boundary instead of the rectangular hero guide
 - Deliberate split:
   - large-scale route heuristics still use the visible hero frame
@@ -278,12 +287,12 @@ Current focus:
 
 ### Trunk Route Refinement
 
-- Updated [ivy_growth.py](/Users/maciejkuster/yam/visualizer/src/ivy_growth.py) so the trunk no longer treats the right-side staging / panel corridor as a neutral holding area
+- Updated [vines_growth.py](/Users/maciejkuster/yam/visualizer/src/vines_growth.py) so the trunk no longer treats the right-side staging / panel corridor as a neutral holding area
 - Added stronger pre-contact approach behavior:
   - leftward reward before hero contact
   - up-left reward before hero contact
   - panel-corridor loitering penalty
-- Updated [ivy_engine.py](/Users/maciejkuster/yam/visualizer/src/ivy_engine.py) to suppress branch spawning while the trunk is still far to the right of the hero
+- Updated [vines_engine.py](/Users/maciejkuster/yam/visualizer/src/vines_engine.py) to suppress branch spawning while the trunk is still far to the right of the hero
 - Added config controls in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json):
   - `hero_contact_margin`
   - `hero_approach_left_bonus`
@@ -299,14 +308,14 @@ Current focus:
 
 ### Trunk Route Phase
 
-- Replaced the weak top-band commit flag with an explicit trunk route phase in [ivy_state.py](/Users/maciejkuster/yam/visualizer/src/ivy_state.py):
+- Replaced the weak top-band commit flag with an explicit trunk route phase in [vines_state.py](/Users/maciejkuster/yam/visualizer/src/vines_state.py):
   - `approach`
   - `hero_top`
   - `post_top`
-- Updated [ivy_engine.py](/Users/maciejkuster/yam/visualizer/src/ivy_engine.py) to advance that state from trunk movement rather than from loose proximity checks
-- Updated [ivy_growth.py](/Users/maciejkuster/yam/visualizer/src/ivy_growth.py) so `hero_top` applies a stronger leftward persistence bias and stronger anti-drop behavior
+- Updated [vines_engine.py](/Users/maciejkuster/yam/visualizer/src/vines_engine.py) to advance that state from trunk movement rather than from loose proximity checks
+- Updated [vines_growth.py](/Users/maciejkuster/yam/visualizer/src/vines_growth.py) so `hero_top` applies a stronger leftward persistence bias and stronger anti-drop behavior
 - Suppressed trunk branching during `hero_top` using:
-  - `ivy.hero_top_branch_factor`
+  - `vines.hero_top_branch_factor`
 - Validation snapshot after 180 ticks across seeds `7`, `11`, and `19`:
   - all runs entered `hero_top` and then progressed to `post_top`
   - phase dwell times:
@@ -316,11 +325,11 @@ Current focus:
 
 ### Trunk Thickening Pass
 
-- Fixed stem aging so revisiting an existing stem cell no longer resets its birth frame in [ivy_engine.py](/Users/maciejkuster/yam/visualizer/src/ivy_engine.py)
-- Added explicit trunk-lineage tracking in [ivy_state.py](/Users/maciejkuster/yam/visualizer/src/ivy_state.py):
+- Fixed stem aging so revisiting an existing stem cell no longer resets its birth frame in [vines_engine.py](/Users/maciejkuster/yam/visualizer/src/vines_engine.py)
+- Added explicit trunk-lineage tracking in [vines_state.py](/Users/maciejkuster/yam/visualizer/src/vines_state.py):
   - `trunk_cells`
   - `trunk_birth`
-- Updated [ivy_ornament.py](/Users/maciejkuster/yam/visualizer/src/ivy_ornament.py) so thickened wood now distinguishes:
+- Updated [vines_ornament.py](/Users/maciejkuster/yam/visualizer/src/vines_ornament.py) so thickened wood now distinguishes:
   - ordinary aged stem thickening
   - stronger, earlier thickening on mature main-trunk cells
 - Main-trunk thickening is now biased toward the older route from the origin up to roughly the info-panel corridor, instead of fattening the whole plant uniformly
@@ -336,12 +345,12 @@ Current focus:
   - `approach` → `hero_top` → `post_top`
   to:
   - `approach` → `hero_top` → `hero_exit` → `post_top`
-- Updated [ivy_engine.py](/Users/maciejkuster/yam/visualizer/src/ivy_engine.py) so the trunk now enters a short explicit `hero_exit` phase after leaving the upper hero band
+- Updated [vines_engine.py](/Users/maciejkuster/yam/visualizer/src/vines_engine.py) so the trunk now enters a short explicit `hero_exit` phase after leaving the upper hero band
 - During `hero_exit`:
   - branching stays suppressed
   - the trunk is biased left and down-left
   - rightward and upward drift is penalized
-- Updated [ivy_growth.py](/Users/maciejkuster/yam/visualizer/src/ivy_growth.py) with dedicated route-phase scoring for `hero_exit`
+- Updated [vines_growth.py](/Users/maciejkuster/yam/visualizer/src/vines_growth.py) with dedicated route-phase scoring for `hero_exit`
 - Added config controls in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json):
   - `hero_exit_margin`
   - `hero_exit_left_bonus`
@@ -419,11 +428,11 @@ Implemented early spatial field logic (engine-side), forming the basis of a futu
 #### Engine vs Ornament Responsibility Split (Reinforced)
 
 - Reinforced strict separation between behavior and rendering layers:
-  - `ivy_engine.py`:
+  - `vines_engine.py`:
     - owns spatial decisions
     - controls cluster spawning
     - defines density distribution
-  - `ivy_ornament.py`:
+  - `vines_ornament.py`:
     - renders clusters
     - applies glyph/style variation
 
@@ -451,7 +460,7 @@ Implemented early spatial field logic (engine-side), forming the basis of a futu
 - Goal:
   - avoid overly abstract "flower-like" symbolic noise
   - avoid overly soft "blob-like" dot-only canopy
-- Implemented in [ivy_ornament.py]:
+- Implemented in [vines_ornament.py]:
   - cluster renderer now selects from mixed glyph pools
   - glyph choice varies per cluster and per cell within cluster
 - Visual effect:
@@ -483,9 +492,9 @@ Implemented early spatial field logic (engine-side), forming the basis of a futu
     - silhouette templates (monstera-style, etc.)
 
 - Responsibility split (target architecture):
-  - `ivy_engine.py`:
+  - `vines_engine.py`:
     - decides *where*, *when*, and *orientation*
-  - `ivy_ornament.py`:
+  - `vines_ornament.py`:
     - renders full multi-cell leaf silhouettes
 
 - This will enable:
@@ -600,7 +609,7 @@ Current visualizer structure should be understood as layered:
 
 ### Stage 1 Engine Refactor Checkpoint (Behavior-Preserving)
 
-- Refactored `visualizer/src/ivy_engine.py` to make the engine’s conceptual phase structure explicit without intentionally changing behavior
+- Refactored `visualizer/src/vines_engine.py` to make the engine’s conceptual phase structure explicit without intentionally changing behavior
 - `tick()` now reads as a top-level phase pipeline:
   1. Structural Growth
   2. Foliage Host Discovery
@@ -635,7 +644,7 @@ Current visualizer structure should be understood as layered:
 
 ### Stage 2 Conceptual Cleanup Checkpoint (In Progress)
 
-- Began Stage 2 work in `visualizer/src/ivy_engine.py` with focus on:
+- Began Stage 2 work in `visualizer/src/vines_engine.py` with focus on:
   - direction-system unification
   - state-flow cleanup
   - spatial-field formalization
@@ -690,7 +699,7 @@ Current visualizer structure should be understood as layered:
 
 #### Remaining Stage 2 Follow-Up
 
-- helper spacing / formatting cleanup in `ivy_engine.py`
+- helper spacing / formatting cleanup in `vines_engine.py`
 - optional comment tightening so Phase 3 helper groups read as a cleaner policy stack
 - possible future consolidation of additional shaping heuristics into named policy helpers if needed
 
@@ -699,7 +708,7 @@ Current visualizer structure should be understood as layered:
 
 ### Chafa Hero Rendering Investigation — Constraint Mapping / Failure Boundary
 
-This session focused on the hero-rendering pipeline rather than the ivy engine. The goal was to determine whether the current hero GIF could be rendered in terminal with all of the following constraints active at once:
+This session focused on the hero-rendering pipeline rather than the vines engine. The goal was to determine whether the current hero GIF could be rendered in terminal with all of the following constraints active at once:
 - braille-only symbol rendering
 - no visible background painting by Chafa
 - no fill / no background-carried density cheats
@@ -899,7 +908,7 @@ Status after this checkpoint:
 ## 2026-04-17 Scaffold Plumbing Fix
 - Fixed a live runtime wiring bug in `main.py`: `renderer.compose_scene(...)` now receives the active `config` object.
 - This makes `config["scaffold"]` visible to the renderer again, so scaffold edits in `visualizer.json` no longer collapse to defaults.
-- Also rebuilt `layout` and reset ivy on config reload, so layout-bound settings like mask scale/offset now propagate without requiring a terminal resize.
+- Also rebuilt `layout` and reset vines on config reload, so layout-bound settings like mask scale/offset now propagate without requiring a terminal resize.
 
 ## 2026-04-17 Scaffold Hero-Relative Placement
 - Reworked scaffold base selection so `scaffold.base_x/base_y` now anchor relative to the hero footprint instead of the trunk-mask center.
@@ -910,8 +919,8 @@ Status after this checkpoint:
 - Relaxed the final render clip so the scaffold can actually move under the hero while still avoiding visible hero pixels.
 - Decoupled `fork_y` from the base height so the fork row now moves independently instead of flattening into the same bottom clamp.
 
-## 2026-04-18 Ivy Reset Regression
-- Fixed a runtime bug in `main.py` where Ivy was being reset every frame because terminal sizes were compared by identity instead of value.
+## 2026-04-18 Vines Reset Regression
+- Fixed a runtime bug in `main.py` where Vines was being reset every frame because terminal sizes were compared by identity instead of value.
 - The visualizer now compares `TerminalSize` objects by value, so the vine can continue growing across frames.
 - This restores the expected behavior in Ghostty and in the installed runtime bundle.
 
@@ -929,3 +938,7 @@ Status after this checkpoint:
 - The scaffold was still fragmenting because the retained component was anchored to the fork-side fragment instead of the main trunk path.
 - Connected-component retention now seeds from the first visible trunk-path point, with 8-neighbor adjacency so diagonal woody contact stays contiguous.
 - If no trunk-path seed survives, the builder falls back to the largest connected component instead of an arbitrary fragment.
+
+## 2026-04-18 Research Reference Recorded
+- Added [RESEARCH.md](/Users/maciejkuster/yam/visualizer/RESEARCH.md) as a future architecture reference.
+- The document is kept as design context for field-first rendering and soft-mask ideas, but it is not treated as a live runtime spec.

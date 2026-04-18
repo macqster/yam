@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import random
 
-from ivy_growth import (
+from vines_growth import (
     branch_direction,
     initial_trunk_seed,
     limit_tips,
     select_move,
 )
-from ivy_ornament import (
+from vines_ornament import (
     count_debug,
     merge_segments,
     rebuild_flower_stamps,
@@ -18,19 +18,19 @@ from ivy_ornament import (
     trim_ornaments,
     update_debug_stats,
 )
-from ivy_state import IvyState
-from ivy_types import GrowthTip
+from vines_state import VinesState
+from vines_types import GrowthTip
 from layout import SceneLayout
 
 
-class IvyEngine:
+class VinesEngine:
     def __init__(self, config: dict, seed: int = 7) -> None:
-        self.config = config["ivy"]
+        self.config = config["vines"]
         self.debug_config = self.config.get("debug", {})
         self.rng = random.Random(seed)
         self.size = None
         self.layout: SceneLayout | None = None
-        self.state = IvyState()
+        self.state = VinesState()
 
     @property
     def stems(self):
@@ -39,7 +39,7 @@ class IvyEngine:
     def reset(self, size, layout: SceneLayout) -> None:
         self.size = size
         self.layout = layout
-        self.state = IvyState()
+        self.state = VinesState()
         self.state.trunk_route_phase = "approach"
 
         origin = initial_trunk_seed(self.config, layout, self.rng, self.state)

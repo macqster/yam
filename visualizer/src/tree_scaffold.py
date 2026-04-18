@@ -46,7 +46,7 @@ def build_tree_scaffold(layout: SceneLayout, config: dict) -> TreeScaffold:
 
     hero = layout.hero
     hero_mask = layout.hero_raw_mask_cells
-    bounds = layout.ivy_bounds
+    bounds = layout.vines_bounds
     scaffold_region = layout.region_cells.get("below_hero", layout.allowed_cells)
     if not scaffold_region:
         scaffold_region = layout.allowed_cells

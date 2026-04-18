@@ -36,7 +36,7 @@ def compose_scene(
 ) -> str:
     field = RenderField(size.columns, size.rows)
 
-    # Static scaffold layer (wood structure) – rendered before vines so ivy can overgrow it
+    # Static scaffold layer (wood structure) – rendered before vines so vines can overgrow it
     scaffold_config = config or {}
     scaffold = build_tree_scaffold(layout, scaffold_config)
     hero_mask = layout.hero_raw_mask_cells

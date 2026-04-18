@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass
 
 from terminal import RESET
-from ivy_ornament import GREEN, LIGHT_GREEN, OLIVE, DARK_BROWN
+from vines_ornament import GREEN, LIGHT_GREEN, OLIVE, DARK_BROWN
 
 
 @dataclass

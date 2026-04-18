@@ -57,7 +57,7 @@ class SceneLayout:
     info: Rect
     hero_guide: Rect
     info_guide: Rect
-    ivy_bounds: Rect
+    vines_bounds: Rect
     no_go_zones: tuple[Rect, ...]
     hero_raw_mask_cells: frozenset[tuple[int, int]]
     hero_mask_boundary_cells: frozenset[tuple[int, int]]
@@ -118,7 +118,7 @@ def build_layout(
         height=info_height,
     )
 
-    ivy_bounds = Rect(
+    vines_bounds = Rect(
         x=0,
         y=0,
         width=max(1, size.columns),
@@ -136,7 +136,7 @@ def build_layout(
     )
     hero_raw_mask_cells, hero_blocked_cells = _build_hero_blocked_cells(hero, hero_pad_x, hero_pad_y, layout_cfg)
     trunk_mask_cells = _load_trunk_mask_cells(size, layout_cfg)
-    trunk_field = _build_distance_field(trunk_mask_cells, ivy_bounds)
+    trunk_field = _build_distance_field(trunk_mask_cells, vines_bounds)
     if hero_blocked_cells:
         hero_collision = _bounding_rect(hero_blocked_cells)
     else:
@@ -156,8 +156,8 @@ def build_layout(
     ornament_cells: set[tuple[int, int]] = set()
     info_zone = no_go_zones[1]
     hero_raw_zone = hero_raw_mask_cells if hero_raw_mask_cells else set()
-    for y in range(1, max(1, ivy_bounds.height - 1)):
-        for x in range(1, max(1, ivy_bounds.width - 1)):
+    for y in range(1, max(1, vines_bounds.height - 1)):
+        for x in range(1, max(1, vines_bounds.width - 1)):
             if info_zone.contains(x, y):
                 continue
 
@@ -184,14 +184,14 @@ def build_layout(
     if hero_raw_mask_cells:
         hero_guide = _bounding_rect(set(hero_raw_mask_cells))
 
-    region_cells = _build_region_cells(allowed_cells, ivy_bounds, hero_guide)
+    region_cells = _build_region_cells(allowed_cells, vines_bounds, hero_guide)
 
     return SceneLayout(
         hero=hero,
         info=info,
         hero_guide=hero_guide,
         info_guide=info,
-        ivy_bounds=ivy_bounds,
+        vines_bounds=vines_bounds,
         no_go_zones=no_go_zones,
         hero_raw_mask_cells=frozenset(hero_raw_mask_cells),
         hero_mask_boundary_cells=frozenset(_boundary_cells(hero_raw_mask_cells)),

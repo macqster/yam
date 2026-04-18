@@ -7,9 +7,9 @@ from pathlib import Path
 import info_panel
 import renderer
 import terminal
-from ivy_particles import update_falling_leaves, render_falling_leaves
+from vines_particles import update_falling_leaves, render_falling_leaves
 from chafa_pipeline import ChafaPipeline
-from ivy_engine import IvyEngine
+from vines_engine import VinesEngine
 from layout import build_layout
 
 
@@ -25,7 +25,7 @@ def main() -> int:
         list[list[str]],
         int,
         int,
-        IvyEngine,
+        VinesEngine,
         list[str],
         float,
         float,
@@ -35,7 +35,7 @@ def main() -> int:
         timing = current_config.get("timing", {})
         render_fps = float(timing.get("render_fps", 12))
         hero_fps = float(timing.get("hero_fps", 0.5))
-        ivy_tick_seconds = float(timing.get("ivy_tick_seconds", 3.0))
+        vines_tick_seconds = float(timing.get("vines_tick_seconds", 3.0))
         info_refresh_seconds = float(timing.get("info_refresh_seconds", 1.0))
 
         pipeline = ChafaPipeline(repo_root, current_config)
@@ -44,18 +44,18 @@ def main() -> int:
         hero_height = current_config["chafa"]["height"]
         if not hero_frames:
             hero_frames = [[" " * hero_width for _ in range(hero_height)]]
-        ivy = IvyEngine(current_config)
+        vines = VinesEngine(current_config)
         panel_lines = info_panel.build_panel_lines(current_config)
         return (
             pipeline,
             hero_frames,
             hero_width,
             hero_height,
-            ivy,
+            vines,
             panel_lines,
             render_fps,
             hero_fps,
-            ivy_tick_seconds,
+            vines_tick_seconds,
             info_refresh_seconds,
         )
 
@@ -64,15 +64,15 @@ def main() -> int:
         hero_frames,
         hero_width,
         hero_height,
-        ivy,
+        vines,
         panel_lines,
         render_fps,
         hero_fps,
-        ivy_tick_seconds,
+        vines_tick_seconds,
         info_refresh_seconds,
     ) = refresh_runtime_state(config)
 
-    last_ivy_tick = 0.0
+    last_vines_tick = 0.0
     last_info_tick = 0.0
     last_hero_tick = 0.0
 
@@ -93,15 +93,15 @@ def main() -> int:
                     hero_frames,
                     hero_width,
                     hero_height,
-                    ivy,
+                    vines,
                     panel_lines,
                     render_fps,
                     hero_fps,
-                    ivy_tick_seconds,
+                    vines_tick_seconds,
                     info_refresh_seconds,
                 ) = refresh_runtime_state(config)
                 frame_index = 0
-                last_ivy_tick = 0.0
+                last_vines_tick = 0.0
                 last_info_tick = 0.0
                 last_hero_tick = 0.0
                 config_changed = True
@@ -110,7 +110,7 @@ def main() -> int:
 
             if previous_size != size or config_changed:
                 scene_layout = build_layout(size, config, hero_width, hero_height)
-                ivy.reset(size, scene_layout)
+                vines.reset(size, scene_layout)
                 previous_size = size
                 config_changed = False
 
@@ -118,12 +118,12 @@ def main() -> int:
 
             now = time.time()
 
-            if now - last_ivy_tick >= ivy_tick_seconds:
-                ivy.tick(scene_layout)
-                last_ivy_tick = now
+            if now - last_vines_tick >= vines_tick_seconds:
+                vines.tick(scene_layout)
+                last_vines_tick = now
 
             # update particles every frame
-            update_falling_leaves(ivy.state, scene_layout, ivy.rng)
+            update_falling_leaves(vines.state, scene_layout, vines.rng)
 
             if now - last_info_tick >= info_refresh_seconds:
                 panel_lines = info_panel.build_panel_lines(config)
@@ -138,11 +138,11 @@ def main() -> int:
                 size=size,
                 layout=scene_layout,
                 hero_lines=hero_frames[frame_index],
-                vine_segments=ivy.get_segments(),
+                vine_segments=vines.get_segments(),
                 panel_lines=panel_lines,
                 config=config,
-                falling_leaf_segments=render_falling_leaves(ivy.state, scene_layout),
-                debug_enabled=bool(config.get("ivy", {}).get("debug", {}).get("enabled")),
+                falling_leaf_segments=render_falling_leaves(vines.state, scene_layout),
+                debug_enabled=bool(config.get("vines", {}).get("debug", {}).get("enabled")),
             )
 
             terminal.move_home()

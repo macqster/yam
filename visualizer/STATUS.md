@@ -13,8 +13,12 @@ It is separate from the repo's Fastfetch startup path.
 Current layers:
 
 - Chafa-rendered hero animation from a GIF
-- procedural ivy layer
+- procedural vines layer
 - compact time/date info panel
+
+Canonical dictionary:
+
+- [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md)
 
 ## Stable Boundaries
 
@@ -27,14 +31,14 @@ These parts are considered stable enough to build on:
 - `src/info_panel.py`
   - renders the time/date card
 - `src/renderer.py`
-  - composes hero art, ivy cells, and panel into one terminal scene
+  - composes hero art, vines cells, and panel into one terminal scene
 - `src/terminal.py`
   - alt-screen and cursor control
 
-These parts are the correct integration seam for future ivy work:
+These parts are the correct integration seam for future vines work:
 
 - `src/layout.py`
-- `src/ivy_engine.py`
+- `src/vines_engine.py`
 
 ## Current Launcher Behavior
 
@@ -86,13 +90,13 @@ Current major sections:
 - `chafa`
   - source GIF, render size, Chafa symbol/color options
 - `timing`
-  - render cadence, hero animation cadence, ivy tick cadence, info refresh cadence
+  - render cadence, hero animation cadence, vines tick cadence, info refresh cadence
 - `layout`
   - hero placement, panel placement, panel gap, exclusion padding, hero mask, trunk mask
 - `scaffold`
   - static woody support structure tuned from JSON
-- `ivy`
-  - current experimental ivy parameters
+- `vines`
+  - current experimental vines parameters
 - `panel`
   - title and display settings
 
@@ -107,7 +111,7 @@ Current major sections:
 
 ## What Is Not Resolved
 
-The current ivy system is not considered solved.
+The current vines system is not considered solved.
 
 Specifically:
 
@@ -118,22 +122,28 @@ Specifically:
 Current conclusion:
 
 - the engine is now beyond the original `VineHead` prototype and is split into state/growth/ornament modules
+
+Reference material to preserve for future architecture work:
+
+- [RESEARCH.md](/Users/maciejkuster/yam/visualizer/RESEARCH.md)
+  - useful summary of render-field, soft-mask, and layered-composition ideas
+  - treat as a design reference, not a live spec
 - it still remains heuristic and experimental rather than a principled coverage planner
 - future work should favor stronger route/state logic over more scalar penalty stacking
 
-## Current Ivy Engine Status
+## Current Vines Engine Status
 
-`src/ivy_engine.py` remains provisional, but the current ivy stack is now:
+`src/vines_engine.py` remains provisional, but the current vines stack is now:
 
-- `src/ivy_engine.py`
+- `src/vines_engine.py`
   - orchestration and public API
-- `src/ivy_growth.py`
+- `src/vines_growth.py`
   - trunk/branch guidance and route heuristics
-- `src/ivy_ornament.py`
+- `src/vines_ornament.py`
   - leaves, wood thickening, death clusters, flowers, merge logic
-- `src/ivy_state.py`
+- `src/vines_state.py`
   - mutable runtime state
-- `src/ivy_types.py`
+- `src/vines_types.py`
   - shared types and palette constants
 
 The scene compositor is now also expected to honor:
@@ -147,11 +157,11 @@ This is maintainable enough to keep iterating on, but it is not yet the final be
 
 ## Recommended Future Integration Direction
 
-When ingesting external Python ivy-sprawl code, the target architecture should be:
+When ingesting external Python vines-sprawl code, the target architecture should be:
 
 - `layout.py`
   - provide explicit geometry and allowed-space information
-- new ivy engine
+- new vines engine
   - own scaffold growth
   - separate stems from ornaments
   - track coverage by region
@@ -171,7 +181,7 @@ That keeps `main.py` and `renderer.py` stable while allowing a full engine repla
 
 ## Known Technical Debt
 
-- `visualizer/README.md` originally described the ivy layer more optimistically than current results justify
+- `visualizer/README.md` originally described the vines layer more optimistically than current results justify
 - `layout.py` now provides allowed-cell and region masks, but hero collision only recently pivoted to silhouette-mask-first behavior
 - `layout.py` now distinguishes between:
   - blocked hero collision geometry derived from the silhouette mask
@@ -191,11 +201,11 @@ That keeps `main.py` and `renderer.py` stable while allowing a full engine repla
 - avoid further ad hoc tuning of the current `VineHead` model unless the goal is strictly temporary experimentation
 - document launcher/runtime behavior whenever install behavior changes
 - keep repo-local iteration behavior explicit in docs
-- prefer replacing the ivy engine over mutating it further without a new global coverage model
+- prefer replacing the vines engine over mutating it further without a new global coverage model
 
 ## Practical Next Step
 
-Before ingesting more ivy code:
+Before ingesting more vines code:
 
 1. keep current visualizer launch/install behavior as-is
 2. preserve the existing engine interface

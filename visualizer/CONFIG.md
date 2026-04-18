@@ -10,7 +10,7 @@ The visualizer is still under active development, so some settings are more stab
 
 - `chafa` and `timing` are straightforward
 - `layout` is powerful but can create accidental collisions
-- `ivy` is the most experimental section
+- `vines` is the most experimental section
 
 ## System Model (Conceptual)
 
@@ -78,7 +78,7 @@ Hero frame width in terminal cells.
 
 Effect:
 - directly determines hero footprint
-- also changes layout pressure on ivy and panel
+- also changes layout pressure on vines and panel
 
 ### `height`
 
@@ -86,7 +86,7 @@ Hero frame height in terminal rows.
 
 Effect:
 - one of the strongest composition controls
-- smaller height opens more crawl space for ivy
+- smaller height opens more crawl space for vines
 
 Current baseline:
 - the active hero footprint is `72x36`
@@ -205,13 +205,13 @@ Effect:
 - independent from `render_fps`
 - lower values make the hero feel calm and intentional
 
-### `ivy_tick_seconds`
+### `vines_tick_seconds`
 
-How often the ivy engine advances.
+How often the vines engine advances.
 
 Effect:
-- smaller values make ivy growth faster and easier to inspect during development
-- larger values make ivy feel ambient instead of aggressive
+- smaller values make vines growth faster and easier to inspect during development
+- larger values make vines feel ambient instead of aggressive
 
 ### `info_refresh_seconds`
 
@@ -229,7 +229,7 @@ There are two different ideas in this section:
 - placement:
   - where the hero and panel are drawn
 - collision:
-  - what area ivy is forbidden from entering
+  - what area vines is forbidden from entering
 
 Those are related but not identical.
 
@@ -360,7 +360,7 @@ Effect:
 - the mask is loaded, scaled, and offset before it becomes part of layout geometry
 - debug mode draws trunk mask cells in cyan so you can see the active zone independently of the hero mask
 - the layout also derives a soft `trunk_field` distance map from these cells
-- ivy scoring and scaffold selection should prefer low-distance cells near the mask instead of treating the zone as a hard binary edge
+- vines scoring and scaffold selection should prefer low-distance cells near the mask instead of treating the zone as a hard binary edge
 
 Current baseline:
 - points to `assets/trunk_mask_scaled_96x48.png`
@@ -411,7 +411,7 @@ How much of the left side of the hero frame is excluded from the collision mask 
 
 Effect:
 - primarily fallback/secondary when mask-based collision is active
-- larger value means ivy can legally come closer to the left visual edge of the hero
+- larger value means vines can legally come closer to the left visual edge of the hero
 
 ### `hero_collision_trim_top`
 
@@ -442,7 +442,7 @@ Effect:
 Extra horizontal safety padding added after collision trimming.
 
 Effect:
-- larger values keep ivy farther from visible hero pixels
+- larger values keep vines farther from visible hero pixels
 
 ### `hero_safe_pad_y`
 
@@ -453,7 +453,7 @@ Effect:
 
 ### `scaffold`
 
-Static woody support structure rendered beneath the hero and before ivy.
+Static woody support structure rendered beneath the hero and before vines.
 
 Important fields:
 - `enabled`
@@ -467,7 +467,7 @@ Important fields:
 - `thickness`
 
 Behavior:
-- scaffold is rendered before ivy so vines can overgrow it
+- scaffold is rendered before vines so vines can overgrow it
 - scaffold is clipped against visible hero pixels
 - changing `fork_y` should visibly change where the scaffold splits below the hero
 - `base_x` shifts the finished scaffold horizontally relative to the hero center
@@ -519,7 +519,7 @@ Effect:
 Left trim of the panel collision mask before padding.
 
 Use carefully:
-- if too large, ivy can appear to push panel text
+- if too large, vines can appear to push panel text
 
 ### `info_collision_trim_top`
 
@@ -538,7 +538,7 @@ Bottom trim of the panel collision mask.
 Extra horizontal panel protection after trims.
 
 Effect:
-- larger values are the main tool for preventing ivy from visually pushing text
+- larger values are the main tool for preventing vines from visually pushing text
 
 ### `info_safe_pad_y`
 
@@ -547,7 +547,7 @@ Extra vertical panel protection after trims.
 Effect:
 - useful when vines visually crowd the title or timezone rows
 
-## `ivy`
+## `vines`
 
 Controls the procedural organism.
 
@@ -558,7 +558,7 @@ Important:
 - ornament/rendering should not be used to compensate for weak growth behavior
 
 Conceptually:
-- many ivy parameters act as spatial “forces” influencing movement decisions
+- many vines parameters act as spatial “forces” influencing movement decisions
 - trunk routing is now also phase/state-driven, not just weight-driven
 
 Current trunk route sequence:
@@ -872,26 +872,26 @@ Current note:
 
 ## Practical Tuning Guidance
 
-If the ivy feels too aggressive:
+If the vines feels too aggressive:
 
 - lower `branch_chance`
 - lower `leaf_stamp_chance`
 - lower `hero_contour_attraction`
 - lower `support_wrap_bonus`
 
-If the ivy feels too stiff:
+If the vines feels too stiff:
 
 - lower `forward_bonus`
 - lower `turn_penalty`
 - increase `organic_variation`
 
-If the ivy crowds the hero:
+If the vines crowds the hero:
 
 - increase `hero_safe_pad_x`
 - increase `hero_safe_pad_y`
 - reduce `hero_collision_trim_*` aggressiveness
 
-If the ivy crowds the info panel:
+If the vines crowds the info panel:
 
 - increase `info_safe_pad_x`
 - increase `info_safe_pad_y`

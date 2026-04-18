@@ -3,7 +3,7 @@
 # Refactor Guardrails
 
 Date: 2026-04-16
-Scope: `visualizer/src/ivy_engine.py`
+Scope: `visualizer/src/vines_engine.py`
 Purpose: constrain refactor work so behavior remains stable and changes are explainable
 
 ---

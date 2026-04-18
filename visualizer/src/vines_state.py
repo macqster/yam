@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ivy_types import Direction, GrowthTip, Point
+from vines_types import Direction, GrowthTip, Point
 
 
 @dataclass
-class IvyState:
+class VinesState:
     frame: int = 0
     stems: set[Point] = field(default_factory=set)
     stem_birth: dict[Point, int] = field(default_factory=dict)

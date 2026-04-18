@@ -1,9 +1,9 @@
 
 
-# Ivy Engine Specification
+# Vines Engine Specification
 
 Date: 2026-04-16
-Scope: `visualizer/src/ivy_engine.py`
+Scope: `visualizer/src/vines_engine.py`
 Purpose: define **phase contracts** and **allowed responsibilities** for the engine without changing current behavior
 
 ---
@@ -225,4 +225,4 @@ No behavioral change should occur during this step.
 
 # One-Sentence Definition
 
-The ivy engine is a phase-structured system that grows vine structure, derives foliage hosts, shapes canopy distribution through spatial rules, and reconstructs terminal glyph output.
+The vines engine is a phase-structured system that grows vine structure, derives foliage hosts, shapes canopy distribution through spatial rules, and reconstructs terminal glyph output.

@@ -1,9 +1,9 @@
 
 
-# Ivy Engine State Model
+# Vines Engine State Model
 
 Date: 2026-04-16
-Scope: `visualizer/src/ivy_engine.py`
+Scope: `visualizer/src/vines_engine.py`
 Purpose: document the engine’s main runtime data structures, ownership, and update lifecycle
 
 ---

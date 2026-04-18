@@ -14,7 +14,7 @@ The repo now also includes a separate visualizer app under [visualizer/](/Users/
 This is intentionally not part of shell startup. It is a standalone terminal scene that combines:
 
 - cached Chafa hero animation from a GIF
-- slow procedural ivy ornament
+- slow procedural vines ornament
 - compact time/date info panel
 
 Run it from the repo root with:
@@ -30,7 +30,8 @@ yam
 ```
 
 See [visualizer/README.md](/Users/maciejkuster/yam/visualizer/README.md) for setup and tuning details.
-See [visualizer/STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md) for the current maintenance snapshot and ivy-engine status.
+See [visualizer/STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md) for the current maintenance snapshot and vines-engine status.
+See [visualizer/VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md) for the canonical visualizer dictionary.
 
 Current visualizer direction:
 - tuned for Ghostty

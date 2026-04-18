@@ -3,7 +3,7 @@
 Dedicated terminal visualizer for macOS, currently tuned for Ghostty, with three coordinated layers:
 
 - Chafa-rendered hero animation from a GIF
-- state-driven ivy growth system with a procedural ornament layer
+- state-driven vines growth system with a procedural ornament layer
 - compact time/date panel
 
 This is separate from the repo's Fastfetch startup path. It is meant to be launched intentionally in its own terminal window, tab, or split.
@@ -11,6 +11,7 @@ This is separate from the repo's Fastfetch startup path. It is meant to be launc
 Current maintenance snapshot:
 
 - [STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md)
+- [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md)
 
 ## Requirements
 
@@ -49,7 +50,7 @@ yam
 ## Configuration
 
 Main settings live in [visualizer.json](/Users/maciejkuster/yam/visualizer/config/visualizer.json).
-The running app watches that file for changes and reloads it automatically, so scaffold, layout, and ivy tweaks should be visible without restarting.
+The running app watches that file for changes and reloads it automatically, so scaffold, layout, and vines tweaks should be visible without restarting.
 
 There are now two documentation layers for config:
 
@@ -59,9 +60,9 @@ There are now two documentation layers for config:
 The easiest things to tweak first are:
 
 - Chafa frame count, size, symbol mode, palette, and alpha handling
-- renderer cadence for hero and ivy motion
+- renderer cadence for hero and vines motion
 - info panel dimensions and placement
-- ivy experiment settings and glyph/color vocabulary
+- vines experiment settings and glyph/color vocabulary
 
 ### Practical Config Guide
 
@@ -72,7 +73,7 @@ Start with these sections in order:
    The single most important composition knob here is `height`.
 
 2. `layout`
-   Use this to place the hero and panel and define how close ivy is allowed to get.
+   Use this to place the hero and panel and define how close vines is allowed to get.
    Hero collision now prefers the silhouette mask asset and only falls back to trim logic if the mask is unavailable.
    The current working assumption is:
    - the cleaned hero mask is the real temporary sprawl boundary
@@ -95,15 +96,15 @@ Start with these sections in order:
    - `hero_safe_pad_*`
    - `info_collision_trim_*`
    - `info_safe_pad_*`
-   The static scaffold is configured separately under `scaffold` and is rendered before vines so ivy can overgrow it.
+   The static scaffold is configured separately under `scaffold` and is rendered before vines so vines can overgrow it.
 
 3. `timing`
    Use this to switch between development/debug cadence and calmer presentation cadence.
    Typical pattern:
-   - development: higher `render_fps`, faster `ivy_tick_seconds`
-   - presentation: slower hero and ivy cadence
+   - development: higher `render_fps`, faster `vines_tick_seconds`
+   - presentation: slower hero and vines cadence
 
-4. `ivy`
+4. `vines`
    Use this last.
    This is the most experimental section and the easiest place to create aggressive or awkward growth if multiple values are pushed at once.
 
@@ -115,7 +116,7 @@ When the scene looks wrong, change things in this order:
 2. panel position
 3. collision trims and safe padding
 4. timing cadence
-5. ivy growth pressure
+5. vines growth pressure
 6. ornament density
 
 This avoids using growth tuning to solve what is really a layout problem.
@@ -136,12 +137,12 @@ These settings have the biggest visible effect:
   Controls where the trunk mask sits in the scene.
 - `layout.trunk_field`
   Not a config key, but the runtime distance field derived from the trunk mask.
-  It now shapes scaffold selection and ivy scoring with smooth proximity instead
+  It now shapes scaffold selection and vines scoring with smooth proximity instead
   of binary in/out behavior.
 - `layout.hero_safe_pad_x`
-  Controls how tightly ivy can frame the hero.
+  Controls how tightly vines can frame the hero.
 - `layout.info_safe_pad_x`
-  Controls how tightly ivy can approach the panel text.
+  Controls how tightly vines can approach the panel text.
 - `scaffold.fork_y`
   Controls where the scaffold splits below the hero.
 - `scaffold.base_x`
@@ -156,15 +157,15 @@ The scaffold is now selected from a trunk distance field and rendered through a
 shared density field, so the knobs steer placement through a soft below-hero
 preference rather than snapping to a fragmented binary mask. The visible
 scaffold still avoids hero pixels.
-- `ivy.forward_bonus`
+- `vines.forward_bonus`
   Too high makes scaffold-like rails.
-- `ivy.support_wrap_bonus`
+- `vines.support_wrap_bonus`
   Too high makes the vine orbit obstacle edges.
-- `ivy.hero_contour_attraction`
+- `vines.hero_contour_attraction`
   Too high makes the vine feel pushy around hero/panel boundaries.
-- `ivy.leaf_stamp_chance`
+- `vines.leaf_stamp_chance`
   Controls how quickly the plant becomes visually busy.
-- `timing.ivy_tick_seconds`
+- `timing.vines_tick_seconds`
   Strongly affects perceived aggressiveness.
 
 ### Debug vs Presentation
@@ -172,7 +173,7 @@ scaffold still avoids hero pixels.
 Two common operating modes:
 
 - Debug mode
-  Use faster redraw and faster ivy stepping so growth behavior is easy to inspect.
+  Use faster redraw and faster vines stepping so growth behavior is easy to inspect.
 - Presentation mode
   Use calmer cadence so the scene feels atmospheric rather than mechanical.
 
@@ -225,27 +226,32 @@ The system is layered conceptually as follows:
 
 - `src/main.py` owns the loop and screen lifecycle
 - `src/chafa_pipeline.py` creates or loads fixed-size cached Chafa frames
-- `src/layout.py` defines hero/info regions and ivy no-go zones
-- `src/ivy_engine.py` is the public ivy engine adapter
-- `src/ivy_growth.py` holds movement, guidance, support, and contour-follow logic
-- `src/ivy_ornament.py` holds leaf stamps, death clusters, thickening, and segment merge logic
-- `src/ivy_state.py` holds mutable ivy state
-- `src/ivy_types.py` holds shared types and palette constants
+- `src/layout.py` defines hero/info regions and vines no-go zones
+- `src/vines_engine.py` is the public vines engine adapter
+- `src/vines_growth.py` holds movement, guidance, support, and contour-follow logic
+- `src/vines_ornament.py` holds leaf stamps, death clusters, thickening, and segment merge logic
+- `src/vines_state.py` holds mutable vines state
+- `src/vines_types.py` holds shared types and palette constants
 - `src/info_panel.py` renders the quiet time/date card
 - `src/renderer.py` composes the terminal scene in one process
 - `src/terminal.py` handles alt-screen and cursor cleanup
 
-For the current project status, known caveats, and future ivy integration boundary, see [STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md).
+## Vocabulary
+
+The canonical naming dictionary lives in [VOCABULARY.md](/Users/maciejkuster/yam/visualizer/VOCABULARY.md).
+Use it for new config keys, code symbols, and documentation terms.
+
+For the current project status, known caveats, and future vines integration boundary, see [STATUS.md](/Users/maciejkuster/yam/visualizer/STATUS.md).
 
 ## Limitations
 
 - Weather is intentionally not implemented yet
-- The renderer assumes the hero art and info panel do not overlap ivy because composition stays terminal-text-native and avoids raster stacking
+- The renderer assumes the hero art and info panel do not overlap vines because composition stays terminal-text-native and avoids raster stacking
 - Hero collision uses `visualizer/assets/hero_mask.png` as the primary collision geometry (source of truth), with trim-based collision kept only as fallback behavior
 - The current hero baseline is `72x36`, and mask tuning should be understood relative to that footprint
 - Layout is tuned for a roomy Ghostty window, not tiny terminals
 - The fallback GIF is a generated stand-in, not bespoke animation art
-- The current ivy engine is still experimental and not yet considered the final model for reliable full-scene sprawl
+- The current vines engine is still experimental and not yet considered the final model for reliable full-scene sprawl
 
 ## Future Objectives
 
@@ -263,3 +269,9 @@ Unspecified-future objectives worth preserving explicitly:
 Deferred design reference for future large-leaf work:
 
 - [LEAF_STUDY.md](/Users/maciejkuster/yam/visualizer/LEAF_STUDY.md)
+
+Future architecture reference:
+
+- [RESEARCH.md](/Users/maciejkuster/yam/visualizer/RESEARCH.md)
+  - repository-wide rendering and architecture learnings
+  - useful as a design reference, not a live runtime spec

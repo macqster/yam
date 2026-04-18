@@ -2,24 +2,24 @@ from __future__ import annotations
 
 import random
 
-from ivy_ornament import count_debug
-from ivy_state import IvyState
-from ivy_types import Direction, GrowthTip, NEIGHBORS_4, Point
+from vines_ornament import count_debug
+from vines_state import VinesState
+from vines_types import Direction, GrowthTip, NEIGHBORS_4, Point
 from layout import SceneLayout
 
 
 
-def initial_trunk_seed(config: dict, layout: SceneLayout, rng: random.Random, state: IvyState) -> Point | None:
+def initial_trunk_seed(config: dict, layout: SceneLayout, rng: random.Random, state: VinesState) -> Point | None:
     hero_zone = layout.hero_guide
     hero_right = _effective_hero_right(layout)
-    target_x = min(layout.ivy_bounds.width - 2, hero_right + int(config["trunk_seed_offset_x"]))
-    start_y = layout.ivy_bounds.height - max(3, int(config["trunk_seed_bottom_margin"]))
+    target_x = min(layout.vines_bounds.width - 2, hero_right + int(config["trunk_seed_offset_x"]))
+    start_y = layout.vines_bounds.height - max(3, int(config["trunk_seed_bottom_margin"]))
     end_y = 1
 
     best: Point | None = None
     best_distance = 10**9
     for y in range(start_y, end_y - 1, -1):
-        for dx in range(0, max(2, layout.ivy_bounds.width // 3)):
+        for dx in range(0, max(2, layout.vines_bounds.width // 3)):
             for candidate_x in (target_x - dx, target_x + dx):
                 point = (candidate_x, y)
                 if point not in layout.allowed_cells:
@@ -47,7 +47,7 @@ def _effective_hero_right(layout: SceneLayout) -> int:
 
 def select_move(
     tip: GrowthTip,
-    state: IvyState,
+    state: VinesState,
     config: dict,
     layout: SceneLayout,
     rng: random.Random,
@@ -89,7 +89,7 @@ def candidate_moves(tip: GrowthTip) -> list[Direction]:
 
 def move_score(
     tip: GrowthTip,
-    state: IvyState,
+    state: VinesState,
     config: dict,
     x: int,
     y: int,
@@ -135,7 +135,7 @@ def move_score(
 
 def trunk_guidance_score(
     tip: GrowthTip,
-    state: IvyState,
+    state: VinesState,
     config: dict,
     x: int,
     y: int,
@@ -362,7 +362,7 @@ def branch_guidance_score(config: dict, x: int, y: int, dx: int, dy: int, layout
 
 def branch_direction(config: dict, x: int, y: int, dy: int, layout: SceneLayout) -> Direction | None:
     if dy != 0:
-        midpoint = layout.ivy_bounds.width // 2
+        midpoint = layout.vines_bounds.width // 2
         branch_dx, branch_dy = ((1, 0) if x > midpoint else (-1, 0))
     else:
         branch_dx, branch_dy = (0, 1)
@@ -380,21 +380,21 @@ def support_geometry(config: dict, layout: SceneLayout) -> tuple[int, int, int, 
     hero_right = _effective_hero_right(layout)
     band_height = int(config["support_band_height"])
     above_gap = max(0, hero_zone.y - 1)
-    below_gap = max(0, layout.ivy_bounds.height - hero_zone.bottom - 2)
+    below_gap = max(0, layout.vines_bounds.height - hero_zone.bottom - 2)
     min_headroom = int(config["support_min_headroom"])
 
     if above_gap >= band_height + min_headroom:
         support_top = max(1, hero_zone.y - int(config["support_band_above"]))
         support_bottom = max(support_top, support_top + band_height - 1)
     elif below_gap >= band_height:
-        support_top = min(layout.ivy_bounds.height - 2, hero_zone.bottom + 1)
-        support_bottom = min(layout.ivy_bounds.height - 2, support_top + band_height - 1)
+        support_top = min(layout.vines_bounds.height - 2, hero_zone.bottom + 1)
+        support_bottom = min(layout.vines_bounds.height - 2, support_top + band_height - 1)
     else:
-        support_top = max(1, min(layout.ivy_bounds.height - 2, hero_zone.y + band_height))
-        support_bottom = min(layout.ivy_bounds.height - 2, max(support_top, hero_zone.bottom - 2))
+        support_top = max(1, min(layout.vines_bounds.height - 2, hero_zone.y + band_height))
+        support_bottom = min(layout.vines_bounds.height - 2, max(support_top, hero_zone.bottom - 2))
 
     support_left = max(1, hero_zone.x - int(config["support_span_left"]))
-    support_right = min(layout.ivy_bounds.width - 2, hero_right + int(config["support_span_right"]))
+    support_right = min(layout.vines_bounds.width - 2, hero_right + int(config["support_span_right"]))
     return support_top, support_bottom, support_left, support_right
 
 
@@ -574,7 +574,7 @@ def floor_avoidance_score(
     if band_height <= 0:
         return 0.0
 
-    floor_start = layout.ivy_bounds.height - 1 - band_height
+    floor_start = layout.vines_bounds.height - 1 - band_height
     if y < floor_start:
         return 0.0
 
@@ -608,7 +608,7 @@ def is_open(x: int, y: int, layout: SceneLayout) -> bool:
     return (x, y) in layout.allowed_cells
 
 
-def distance_to_structure(state: IvyState, x: int, y: int) -> int:
+def distance_to_structure(state: VinesState, x: int, y: int) -> int:
     nearest = 4
     for ox, oy in ((1, 0), (-1, 0), (0, 1), (0, -1), (2, 0), (-2, 0), (0, 2), (0, -2)):
         if (x + ox, y + oy) in state.stems:
@@ -616,10 +616,10 @@ def distance_to_structure(state: IvyState, x: int, y: int) -> int:
     return nearest
 
 
-def record_failed_move(state: IvyState, x: int, y: int, layout: SceneLayout, debug_config: dict) -> None:
+def record_failed_move(state: VinesState, x: int, y: int, layout: SceneLayout, debug_config: dict) -> None:
     if debug_config.get("enabled") is not True:
         return
-    if x <= 0 or y <= 0 or x >= layout.ivy_bounds.width - 1 or y >= layout.ivy_bounds.height - 1:
+    if x <= 0 or y <= 0 or x >= layout.vines_bounds.width - 1 or y >= layout.vines_bounds.height - 1:
         reason = "bounds"
     elif (x, y) in state.stems:
         reason = "stem"

@@ -1,14 +1,14 @@
 
 
-# Ivy Engine Audit
+# Vines Engine Audit
 
 Date: 2026-04-16
-Scope: `visualizer/src/ivy_engine.py`
+Scope: `visualizer/src/vines_engine.py`
 Status: analytical audit only — no behavior changes proposed in this document
 
 ## Executive Summary
 
-`ivy_engine.py` is no longer a narrow growth routine. It currently acts as a combined:
+`vines_engine.py` is no longer a narrow growth routine. It currently acts as a combined:
 
 1. simulation stepper
 2. branch / trunk lifecycle manager
@@ -92,7 +92,7 @@ It is the first clear sign that foliage is beginning to respond to structural or
 
 ### The engine has become a behavior landfill
 
-`ivy_engine.py` now contains multiple kinds of logic that are all valid individually, but not all of the same conceptual type.
+`vines_engine.py` now contains multiple kinds of logic that are all valid individually, but not all of the same conceptual type.
 
 Examples currently coexisting in one place:
 
@@ -369,7 +369,7 @@ Even if the behavior remained unchanged, a refactor like this would make the eng
 
 ## Documentation-Ready One-Sentence Summary
 
-`ivy_engine.py` currently orchestrates structural vine growth, stateful trunk routing, foliage-host derivation, and multiple spatial art-direction passes that shape canopy density and readability before ornament reconstruction.
+`vines_engine.py` currently orchestrates structural vine growth, stateful trunk routing, foliage-host derivation, and multiple spatial art-direction passes that shape canopy density and readability before ornament reconstruction.
 
 ---
 

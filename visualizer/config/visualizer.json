@@ -206,7 +206,7 @@
 
   "scaffold": {
     "_about": "Static woody support structure that sits under the hero and can be overgrown by vines.",
-    "enabled": true,
+    "enabled": false,
     "base_x":  0,
     "base_y": 0,
     "trunk_height": 2,

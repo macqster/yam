@@ -44,6 +44,7 @@ Use this whenever you need to point to the underlying sources, external inspirat
 | <https://github.com/GuardKenzie/chafa.py> | Readable Python bindings around Chafa |
 | <https://github.com/hectorm/chafa-wasm> | Shared Chafa core adapted to multiple runtimes |
 | <https://github.com/ploMP4/chafa-go> | Low-friction Go bindings without CGO |
+| <https://github.com/gdt050579/AppCUI> | Cross-platform TUI/CUI framework with explicit widgets, themes, and selectable frontends |
 | <https://github.com/salt-die/batgrl> | Terminal graphics runtime with app/widget framing |
 | <https://github.com/wojciech-graj/TermGL> | Terminal graphics engine with 2D/3D demos and feature flags |
 | <https://github.com/gdt050579/AppCUI-rs> | Cross-platform CUI/TUI framework with strong layout and galleries |

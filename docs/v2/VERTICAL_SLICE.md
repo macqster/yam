@@ -22,10 +22,10 @@ The demo frame is intentionally small and fixed:
 ## Constraints
 
 - no dependence on the existing `visualizer/` runtime
-- the initial slice predates the Bubble Tea default runtime and remains a historical baseline
+- the initial slice is historical context now that Bubble Tea is the default runtime
 - no TUI behavior beyond the minimal scaffold
 - no filesystem side effects
 
 ## Intent
 
-The vertical slice exists to prove the v2 tree can render a deterministic frame before any larger engine work starts.
+The vertical slice exists to preserve the smallest deterministic frame proof that preceded the Bubble Tea runtime shell.

@@ -85,6 +85,7 @@ This is the running log for the v2 rebuild.
 - cross-linked the launcher contract and dependency matrix so the runtime policy is discoverable from both docs
 - linked the spec index and source map to the dependency matrix for first-stop adoption guidance
 - pruned remaining default-path wording from the runtime-loop, GIF, and vertical-slice docs so Bubble Tea reads as the primary path
+- split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules
 

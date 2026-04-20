@@ -22,7 +22,7 @@ This document maps the Python fallback scaffold to a Bubble Tea-first runtime.
 1. keep Bubble Tea as the default `Init`, `Update`, and `View` path
 2. keep `TickMsg`, resize handling, and key routing in Bubble Tea messages
 3. keep engine, morphology, and render composition as downstream packages
-4. preserve the file-backed scene config and GIF/clock scene surface
+4. preserve the file-backed scene config and clock observer surface
 5. keep v1 launcher compatibility until v2 is stable
 6. keep the Python runtime isolated as fallback-only while Bubble Tea remains default
 

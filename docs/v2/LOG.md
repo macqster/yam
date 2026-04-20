@@ -32,7 +32,7 @@ This is the running log for the v2 rebuild.
 - validated `python3 -m v2.check_golden`
 - added a basic GIF renderer and runtime clock overlay for the minimal scene target
 - added `docs/v2/GIF_AND_CLOCK.md`
-- validated `python3 -m v2.app --steps 1` with the GIF and clock scene
+- validated `python3 -m v2.app --steps 1` with the clock scene
 - validated `python3 -m v2.check_golden` after updating the fixed-clock snapshot
 - switched `bin/yam` default launch mode to v2 with a v1 compatibility flag
 - validated `./bin/yam --version v2 --steps 1` and `./bin/yam --version v1 --help`
@@ -86,6 +86,10 @@ This is the running log for the v2 rebuild.
 - linked the spec index and source map to the dependency matrix for first-stop adoption guidance
 - pruned remaining default-path wording from the runtime-loop, GIF, and vertical-slice docs so Bubble Tea reads as the primary path
 - reworded `VERTICAL_SLICE.md` so the historical slice is clearly archival context under the Bubble Tea default runtime
+- switched the Bubble Tea default scene to a FIGlet clock using Gothic.flf and day-name/hour-only observer text
+- verified the default Bubble Tea scene renders the Gothic FIGlet hour and day label in a PTY launch
+- replaced the FIGlet clock with a native Bream-Deco grid renderer and updated the default scene to full day name plus `HH:MM`
+- refreshed `GOLDEN_FRAME.md` to match the native Bream-Deco clock baseline
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules

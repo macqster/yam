@@ -1,5 +1,7 @@
 {
+  "clock_font_path": "v2/assets/fonts/Gothic.flf",
   "clock_format": "%H:%M",
+  "day_format": "%A",
   "gif_path": "visualizer/assets/source.gif",
   "theme_name": "btas_dark_deco"
 }

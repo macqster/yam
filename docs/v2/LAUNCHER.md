@@ -10,7 +10,7 @@ yam
 
 Launches the v2 scaffold.
 
-The default v2 scaffold now uses the Go Bubble Tea runtime shell and redraws the live GIF-plus-clock scene.
+The default v2 scaffold now uses the Go Bubble Tea runtime shell and redraws the live Bream-Deco clock scene.
 The live scene uses the terminal alternate screen and hides the cursor until exit.
 
 ## Runtime Selection
@@ -55,5 +55,6 @@ These commands operate on `v2/scene_config.json`.
 - the Python entrypoint is retained as a fallback and uses `python3 -m v2.app`
 - the Bubble Tea entrypoint uses `go run ./cmd/yamv2` from `v2/`
 - scene config tuning is exposed through launcher subcommands
+- the default scene is the day-plus-hour Bream-Deco clock
 - `--scene-set` updates one supported key at a time
 - see [`DEPENDENCY_MATRIX.md`](DEPENDENCY_MATRIX.md) for the approved upstream tool categories behind this launcher contract

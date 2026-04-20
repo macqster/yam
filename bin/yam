@@ -197,7 +197,12 @@ import sys
 from v2.config import SceneConfig, dump_scene_config
 
 dump_scene_config(
-    SceneConfig(gif_path=Path("visualizer/assets/source.gif")),
+    SceneConfig(
+        clock_font_path=Path("v2/assets/fonts/Gothic.flf"),
+        day_format="%A",
+        clock_format="%H:%M",
+        gif_path=Path("visualizer/assets/source.gif"),
+    ),
     Path(sys.argv[1]),
 )
 PY

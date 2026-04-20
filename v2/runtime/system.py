@@ -8,8 +8,8 @@ from pathlib import Path
 
 from v2.engine.ecosystem import Ecosystem, Organism
 from v2.config import SceneConfig
-from v2.render.gif_renderer import GifRenderer
 from v2.render.composer import compose_frame
+from v2.render.clock_font import render_clock
 from v2.render.text_overlay import TextOverlay
 from v2.runtime.messages import KeyMsg, ResizeMsg, TickMsg
 from v2.runtime.model import RuntimeModel
@@ -59,7 +59,8 @@ def handle_message(
 def render_frame(model: RuntimeModel, ecosystem: Ecosystem, ui: UIModel | None = None) -> str:
     """Render the current ecosystem state into a text frame."""
     default_scene = SceneConfig(
-        gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif"
+        clock_font_path=Path(__file__).resolve().parents[2] / "v2" / "assets" / "fonts" / "Gothic.flf",
+        gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif",
     )
     return render_frame_with_clock(model, ecosystem, ui, default_scene)
 
@@ -73,15 +74,23 @@ def render_frame_with_clock(
 ) -> str:
     """Render the current ecosystem state into a text frame with an optional clock override."""
     scene = scene or SceneConfig(
-        gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif"
+        clock_font_path=Path(__file__).resolve().parents[2] / "v2" / "assets" / "fonts" / "Gothic.flf",
+        gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif",
     )
     theme_by_name(scene.theme_name)
-    gif_shapes = GifRenderer(scene.gif_path, model.width, model.height).render(model.tick)
     clock_value = clock_text or datetime.now().strftime(scene.clock_format)
-    clock = TextOverlay(x=max(0, model.width - 8), y=0, text=clock_value).shapes()
+    clock_text_block = render_clock(clock_value)
+    clock_width = max((len(line) for line in clock_text_block.splitlines()), default=0)
+    clock_y = max(0, (model.height // 2) - 4)
+    clock_x = max(0, (model.width - clock_width) // 2)
+    clock = []
+    for idx, line in enumerate(clock_text_block.splitlines()):
+        clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
+    day_value = datetime.now().strftime(scene.day_format)
+    day = TextOverlay(x=max(0, (model.width - len(day_value)) // 2), y=clock_y + 8, text=day_value).shapes()
     ui_shapes = ui_overlay_shapes(ui) if ui is not None else []
     return compose_frame(
         model.width,
         model.height,
-        [*gif_shapes, *build_shapes(ecosystem.organisms), *ui_shapes, *clock],
+        [*build_shapes(ecosystem.organisms), *ui_shapes, *clock, *day],
     )

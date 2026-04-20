@@ -1,20 +1,16 @@
-# YAM v2 GIF and Clock
+# YAM v2 Clock Scene
 
-This document records the minimal working scene target for v2.
+This document records the minimal working default scene target for v2.
 
-## GIF Render
+## Clock Render
 
-- a basic GIF frame is rendered into shapes
-- the current source asset is `visualizer/assets/source.gif`
-- GIF output is composited into the v2 render pipeline
-- the source path, clock format, and theme name are now explicit file-backed scene config inputs
-
-## Clock
-
-- a simple clock is overlaid in the top-right corner
+- the default scene now renders only an ASCII-art clock and a full day-name label
+- the clock uses the repo-tracked Bream-Deco grid font
+- the hour is rendered as deterministic grid output
+- the day name is rendered beneath the clock in plain text
 - the clock is runtime-driven and not part of engine state
 - verification uses a fixed clock string so the snapshot remains stable
-- the runtime clock format is configurable through the scene config file
+- the runtime clock and day formats are configurable through the scene config file
 
 ## Live Behavior
 
@@ -25,6 +21,6 @@ This document records the minimal working scene target for v2.
 
 ## Constraints
 
-- keep the GIF renderer minimal
+- keep the grid clock minimal
 - keep the clock outside the engine
 - do not couple this scene target to the legacy visualizer runtime

@@ -10,6 +10,7 @@ These are the default dependencies for the Bubble Tea path:
 - [`charmbracelet/lipgloss`](https://github.com/charmbracelet/lipgloss)
 - [`charmbracelet/bubbles`](https://github.com/charmbracelet/bubbles)
 - [`charmbracelet/vhs`](https://github.com/charmbracelet/vhs)
+- [`common-nighthawk/go-figure`](https://github.com/common-nighthawk/go-figure)
 
 ## Optional Extensions
 
@@ -28,6 +29,7 @@ These can inform design or migration ideas, but should not be treated as direct 
 ## Notes
 
 - Prefer Charm-maintained libraries first.
+- Use `go-figure` for FIGlet-based observer instrumentation when the scene needs ASCII typography.
 - Keep third-party additions explicit in the roadmap and log before adoption.
 - Do not expand the dependency set unless it improves a concrete `yam` capability.
 - See [`LAUNCHER.md`](LAUNCHER.md) for how these categories map to the default runtime path and fallback path.

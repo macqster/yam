@@ -7,6 +7,22 @@ small enough to reinstall and modify without reverse-engineering it later.
 
 The setup is intentionally macOS-specific and personal.
 
+## Version Split
+
+This repo is now managed as two tracks:
+
+- [`v1/`](v1/) for the current baseline stack
+- [`v2/`](v2/) for the rebuild source tree
+
+For the documented boundary between them, see [docs/VERSION_MAP.md](docs/VERSION_MAP.md).
+
+Current launcher default:
+
+- `yam` launches v2
+- `yam --version v1` launches the legacy visualizer
+- `yam` uses the Go Bubble Tea shell by default for v2
+- `yam --version v2 --runtime python` launches the Python fallback
+
 ## Visualizer mode
 
 The repo now also includes a separate visualizer app under [visualizer/](visualizer).
@@ -28,6 +44,8 @@ After `./install.sh`, launch it with:
 ```bash
 yam
 ```
+
+That command now resolves to the v2 Bubble Tea runtime.
 
 See [visualizer/README.md](visualizer/README.md) for setup and tuning details.
 See [visualizer/STATUS.md](visualizer/STATUS.md) for the current maintenance snapshot and vines-engine status.

@@ -4,28 +4,46 @@ set -euo pipefail
 unsetopt xtrace 2>/dev/null || true
 setopt typesetsilent 2>/dev/null || true
 
-REPO_ROOT="${YAM_REPO:-$HOME/_git/yam}/visualizer"
+REPO_ROOT="${YAM_REPO:-$HOME/_git/yam}"
 APP_ROOT="${YAM_VISUALIZER_ROOT:-}"
+MODE="${YAM_VERSION:-v2}"
+RUNTIME="${YAM_RUNTIME:-bubbletea}"
 RECIPE=""
 LIST_RECIPES=0
+SCENE_ACTION=""
+SCENE_SET=""
 FORWARDED_ARGS=()
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 show_help() {
   cat <<'EOF'
-usage: yam [--recipe NAME] [--list-recipes] [VISUALIZER_ARGS...]
+usage: yam [--version v1|v2] [--runtime python|bubbletea] [--recipe NAME] [--list-recipes] [ARGS...]
 
-Launch the YAM visualizer.
+Launch YAM.
 
 Options:
+  --version MODE      Select v1 (legacy visualizer) or v2 (native scaffold).
+  --runtime MODE      Select python or bubbletea runtime for v2.
   -r, --recipe NAME   Run the visualizer with a named recipe overlay.
   -l, --list-recipes   Print the available recipe names and exit.
+  --scene-config ACT   Show, edit, or reset the repo-tracked scene config.
+  --scene-set KEY=VAL  Update one supported scene config key.
   -h, --help          Show this help text.
 
 Examples:
   yam
+  yam --version v2
+  yam --version v1
+  yam --runtime bubbletea
   yam --recipe debug
   yam --recipe presentation
   yam --list-recipes
+  yam --scene-config show
+  yam --scene-config edit
+  yam --scene-config reset
+  yam --scene-set theme_name=monochrome
   yam --recipe debug -- --help
 EOF
 }
@@ -64,6 +82,54 @@ while [[ $# -gt 0 ]]; do
       LIST_RECIPES=1
       shift
       ;;
+    --scene-config)
+      if [[ $# -lt 2 ]]; then
+        echo "yam: --scene-config requires show, edit, or reset" >&2
+        exit 1
+      fi
+      SCENE_ACTION="$2"
+      shift 2
+      ;;
+    --scene-config=*)
+      SCENE_ACTION="${1#*=}"
+      shift
+      ;;
+    --scene-set)
+      if [[ $# -lt 2 ]]; then
+        echo "yam: --scene-set requires KEY=VALUE" >&2
+        exit 1
+      fi
+      SCENE_SET="$2"
+      shift 2
+      ;;
+    --scene-set=*)
+      SCENE_SET="${1#*=}"
+      shift
+      ;;
+    --version)
+      if [[ $# -lt 2 ]]; then
+        echo "yam: --version requires v1 or v2" >&2
+        exit 1
+      fi
+      MODE="$2"
+      shift 2
+      ;;
+    --version=*)
+      MODE="${1#*=}"
+      shift
+      ;;
+    --runtime)
+      if [[ $# -lt 2 ]]; then
+        echo "yam: --runtime requires python or bubbletea" >&2
+        exit 1
+      fi
+      RUNTIME="$2"
+      shift 2
+      ;;
+    --runtime=*)
+      RUNTIME="${1#*=}"
+      shift
+      ;;
     -r|--recipe)
       if [[ $# -lt 2 ]]; then
         echo "yam: --recipe requires a name" >&2
@@ -91,32 +157,106 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "$LIST_RECIPES" -eq 1 ]]; then
-  list_recipes "$REPO_ROOT"
+  list_recipes "$REPO_ROOT/visualizer"
   exit 0
 fi
 
-if [[ -z "$APP_ROOT" ]]; then
-  if [[ -x "$REPO_ROOT/run_visualizer.sh" ]]; then
-    APP_ROOT="$REPO_ROOT"
-  else
-    APP_ROOT="$HOME/.local/share/yam-visualizer"
-  fi
+SCENE_CONFIG_PATH="$REPO_ROOT/v2/scene_config.json"
+if [[ -n "$SCENE_SET" ]]; then
+  python3 - "$SCENE_CONFIG_PATH" "$SCENE_SET" <<'PY'
+from pathlib import Path
+import sys
+
+from v2.config import update_scene_config_value
+
+path = Path(sys.argv[1])
+pair = sys.argv[2]
+if "=" not in pair:
+    raise SystemExit("yam: --scene-set requires KEY=VALUE")
+key, value = pair.split("=", 1)
+update_scene_config_value(path, key, value)
+PY
+  exit 0
 fi
 
-LAUNCHER="$APP_ROOT/run_visualizer.sh"
+if [[ -n "$SCENE_ACTION" ]]; then
+  case "$SCENE_ACTION" in
+    show)
+      cat "$SCENE_CONFIG_PATH"
+      exit 0
+      ;;
+    edit)
+      editor="${EDITOR:-${VISUAL:-nano}}"
+      exec "$editor" "$SCENE_CONFIG_PATH"
+      ;;
+    reset)
+      python3 - "$SCENE_CONFIG_PATH" <<'PY'
+from pathlib import Path
+import sys
 
-if [[ ! -x "$LAUNCHER" ]]; then
-  echo "yam visualizer launcher not found at $LAUNCHER" >&2
-  exit 1
+from v2.config import SceneConfig, dump_scene_config
+
+dump_scene_config(
+    SceneConfig(gif_path=Path("visualizer/assets/source.gif")),
+    Path(sys.argv[1]),
+)
+PY
+      exit 0
+      ;;
+    *)
+      echo "yam: unknown scene-config action '$SCENE_ACTION' (expected show, edit, or reset)" >&2
+      exit 1
+      ;;
+  esac
 fi
 
-if [[ -n "$RECIPE" ]]; then
-  RECIPE_LAUNCHER="$APP_ROOT/run_recipe.sh"
-  if [[ ! -x "$RECIPE_LAUNCHER" ]]; then
-    echo "yam recipe launcher not found at $RECIPE_LAUNCHER" >&2
+case "$MODE" in
+  v2)
+    cd "$REPO_ROOT"
+    case "$RUNTIME" in
+      python)
+        exec python3 -m v2.app "${FORWARDED_ARGS[@]}"
+        ;;
+      bubbletea)
+        cd "$REPO_ROOT/v2"
+        exec go run ./cmd/yamv2 "${FORWARDED_ARGS[@]}"
+        ;;
+      *)
+        echo "yam: unknown runtime '$RUNTIME' (expected python or bubbletea)" >&2
+        exit 1
+        ;;
+    esac
+    ;;
+  v1)
+    if [[ -z "$APP_ROOT" ]]; then
+      if [[ -x "$REPO_ROOT/visualizer/run_visualizer.sh" ]]; then
+        APP_ROOT="$REPO_ROOT/visualizer"
+      else
+        APP_ROOT="$HOME/.local/share/yam-visualizer"
+      fi
+    fi
+
+    LAUNCHER="$APP_ROOT/run_visualizer.sh"
+
+    if [[ ! -x "$LAUNCHER" ]]; then
+      echo "yam visualizer launcher not found at $LAUNCHER" >&2
+      exit 1
+    fi
+
+    if [[ -n "$RECIPE" ]]; then
+      RECIPE_LAUNCHER="$APP_ROOT/run_recipe.sh"
+      if [[ ! -x "$RECIPE_LAUNCHER" ]]; then
+        echo "yam recipe launcher not found at $RECIPE_LAUNCHER" >&2
+        exit 1
+      fi
+      exec "$RECIPE_LAUNCHER" "$RECIPE" "${FORWARDED_ARGS[@]}"
+    fi
+
+    cd "$REPO_ROOT/visualizer"
+    exec "$LAUNCHER" "${FORWARDED_ARGS[@]}"
+    ;;
+  *)
+    echo "yam: unknown version '$MODE' (expected v1 or v2)" >&2
     exit 1
-  fi
-  exec "$RECIPE_LAUNCHER" "$RECIPE" "${FORWARDED_ARGS[@]}"
-fi
-
-exec "$LAUNCHER" "${FORWARDED_ARGS[@]}"
+    ;;
+esac

@@ -1,0 +1,94 @@
+# YAM v2 Log
+
+This is the running log for the v2 rebuild.
+
+## 2026-04-20
+
+- created branch `v2`
+- imported preliminary markdown notes into `docs/v2/`
+- added `docs/v2/README.md` as the spec index
+- added `docs/v2/ROADMAP.md` to track the rebuild
+- added `docs/v2/HYGIENE.md` for repo discipline
+- added `docs/v2/AUDIT.md` as the first repo-state mapping
+- created the native `v2/` source tree scaffold
+- added `docs/v2/SOURCE_MAP.md` for package boundaries
+- implemented the first deterministic v2 vertical slice
+- added `docs/v2/VERTICAL_SLICE.md`
+- introduced a `v1/` landing page and repo version map
+- added top-level version routing in `README.md`
+- removed generated `v2/__pycache__` artifacts
+- added a runtime dispatcher and tick loop for the v2 scaffold
+- added `docs/v2/RUNTIME_LOOP.md`
+- validated `python3 -m v2.app --steps 2 --spawn`
+- implemented deterministic engine state objects and ecosystem step logic
+- added `docs/v2/ENGINE_MODEL.md`
+- added morphology and shape translation from organisms to renderable forms
+- added `docs/v2/MORPHOLOGY_AND_SHAPES.md`
+- split the render path into layers, masks, and a composer
+- added `docs/v2/RENDER_PIPELINE.md`
+- validated `python3 -m v2.app --steps 2 --spawn` after the render split
+- added the first golden frame snapshot in `docs/v2/GOLDEN_FRAME.md`
+- added `v2/check_golden.py` and `docs/v2/VERIFICATION.md`
+- validated `python3 -m v2.check_golden`
+- added a basic GIF renderer and runtime clock overlay for the minimal scene target
+- added `docs/v2/GIF_AND_CLOCK.md`
+- validated `python3 -m v2.app --steps 1` with the GIF and clock scene
+- validated `python3 -m v2.check_golden` after updating the fixed-clock snapshot
+- switched `bin/yam` default launch mode to v2 with a v1 compatibility flag
+- validated `./bin/yam --version v2 --steps 1` and `./bin/yam --version v1 --help`
+- fixed `bin/yam` repo-root resolution for the v2 Python module path
+- changed the v2 app default to a live redraw loop so `yam` stays visible
+- validated bounded live-loop launch behavior for `python3 -m v2.app` and `./bin/yam --version v2`
+- added alternate-screen terminal session handling for the v2 live loop
+- validated bounded v2 live-loop launch with alternate-screen terminal handling
+- fixed `v2/app.py` module entrypoint so `python3 -m v2.app` actually runs `main()`
+- validated `python3 -m v2.app` and `./bin/yam --version v2` now produce output
+- hardened render composition order between GIF world content and clock overlay
+- added `docs/v2/RENDER_HARDENING.md`
+- validated `python3 -m v2.check_golden` after render hardening
+- added explicit UI state, router, and overlay separation under `v2/ui`
+- added `docs/v2/UI_INPUT.md`
+- validated `python3 -m v2.check_golden` after UI separation
+- added a minimal theme contract and glyph policy
+- added `docs/v2/THEME_AND_GLYPHS.md`
+- refreshed the golden baseline to the sparse glyph policy output
+- validated `python3 -m v2.check_golden` after theme and glyph policy update
+- added an explicit scene config surface for GIF path, clock format, and theme name
+- added `docs/v2/SCENE_CONFIG.md`
+- validated `python3 -m v2.check_golden` after scene config wiring
+- validated `./bin/yam --version v2 --theme monochrome`
+- added repo-tracked `v2/scene_config.json` and default file-backed loading
+- validated `python3 -m v2.check_golden` after file-backed scene config
+- added live reload for `v2/scene_config.json` in the v2 live loop
+- validated `python3 -m v2.check_golden` after live scene-config reload wiring
+- added `yam --scene-config` helper commands for show/edit/reset
+- validated `yam --scene-config show` and `yam --scene-config reset`
+- added constrained `yam --scene-set key=value` updates for scene config
+- validated `yam --scene-set theme_name=monochrome`
+- restored `v2/scene_config.json` to the default btas_dark_deco baseline
+- added `docs/v2/BUBBLETEA_MIGRATION.md`
+- added a Go Bubble Tea runtime shell under `v2/cmd/yamv2`
+- added `v2/go.mod` and Bubble Tea dependency pinning
+- exposed `yam --version v2 --runtime bubbletea`
+- validated `go build ./cmd/yamv2`
+- validated `./bin/yam --version v2 --runtime bubbletea`
+- upgraded the Bubble Tea shell to render a direct frame using repo scene config
+- translated the repo `%H:%M` clock format into a Go layout for the Bubble Tea path
+- validated the Bubble Tea frame render and removed generated `v2/__pycache__` artifacts
+- switched the v2 launcher default runtime to Bubble Tea
+- tightened the repo-facing launcher docs to mark Python as fallback only
+- updated runtime and scene-config docs to reflect Bubble Tea as the default v2 path
+- reclassified remaining v2 Python references as fallback-only in the migration and audit docs
+- added `docs/v2/DEPENDENCY_MATRIX.md` for core, optional, and reference-only upstream tools
+- added roadmap notes tying panels, styling, and demos to the approved upstream tool categories
+- added source-map and UI-input notes that keep Bubble Tea core and optional widget usage explicit
+- cross-linked the launcher contract and dependency matrix so the runtime policy is discoverable from both docs
+- linked the spec index and source map to the dependency matrix for first-stop adoption guidance
+- pruned remaining default-path wording from the runtime-loop, GIF, and vertical-slice docs so Bubble Tea reads as the primary path
+
+## Log Rules
+
+- append entries in date order
+- keep entries factual and short
+- record only decisions, file moves, and implementation milestones
+- do not use this file for speculative design notes

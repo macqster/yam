@@ -1,0 +1,59 @@
+# YAM v2 Bubble Tea Migration
+
+This document maps the Python fallback scaffold to a Bubble Tea-first runtime.
+
+## Why Bubble Tea
+
+- it fits the existing message-driven runtime model
+- it gives a real terminal app loop instead of a custom redraw shell
+- it aligns with the docs already imported from the v2 notes
+
+## Current State
+
+- the Python scaffold remains available as a fallback implementation
+- the live loop, frame composition, and config handling already exist in the fallback path
+- the default runtime uses Bubble Tea rather than the custom terminal loop
+- a separate Bubble Tea runtime shell now exists in `v2/cmd/yamv2`
+- Bubble Tea is the default v2 runtime shell
+- Python is retained only as a fallback path
+
+## Migration Order
+
+1. keep Bubble Tea as the default `Init`, `Update`, and `View` path
+2. keep `TickMsg`, resize handling, and key routing in Bubble Tea messages
+3. keep engine, morphology, and render composition as downstream packages
+4. preserve the file-backed scene config and GIF/clock scene surface
+5. keep v1 launcher compatibility until v2 is stable
+6. keep the Python runtime isolated as fallback-only while Bubble Tea remains default
+
+## Package Mapping
+
+### Runtime
+
+- `v2/runtime/system.py` becomes the Bubble Tea update bridge
+- `v2/runtime/messages.py` becomes the message vocabulary
+- `v2/runtime/model.py` becomes the Bubble Tea model state
+- `v2/cmd/yamv2/main.go` is the first Go runtime shell
+
+### UI
+
+- `v2/ui/router.py` becomes the key routing and mode layer
+- `v2/ui/model.py` becomes UI-only state
+- `v2/ui/overlay.py` continues to generate overlay shapes
+
+### Render
+
+- the current GIF, clock, and theme pipeline stays in place
+- Bubble Tea should eventually call into the existing render composer
+
+## Non-Goals
+
+- do not rewrite engine logic during the runtime swap
+- do not redesign the render stack while swapping runtimes
+- do not drop the file-backed scene config
+
+## Constraints
+
+- keep the migration incremental
+- keep v1 launch compatibility
+- keep the repo-tracked logs and docs current

@@ -1,0 +1,15 @@
+"""UI overlay generation for the v2 scaffold."""
+
+from __future__ import annotations
+
+from v2.shape.model import ShapeInstance
+from v2.ui.model import UIModel
+
+
+def ui_overlay_shapes(ui: UIModel) -> list[ShapeInstance]:
+    """Convert UI state into overlay shapes."""
+    shapes: list[ShapeInstance] = []
+    if ui.status:
+        for offset, char in enumerate(ui.status):
+            shapes.append(ShapeInstance(x=1 + offset, y=1, glyph=char, z=1000))
+    return shapes

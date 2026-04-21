@@ -97,6 +97,7 @@ This is the running log for the v2 rebuild.
 - synced the Go Bubble Tea clock renderer to the simplified grid glyph map used by the Python verifier and refreshed the golden frame baseline
 - moved the clock font into `v2/render/fonts/go_deco.txt` and wired both Go and Python renderers to load the shared font file
 - refreshed the golden frame baseline to the current renderer output after loading the shared font file
+- reclassified Python clock rendering as snapshot-only while keeping Go as the canonical runtime source of truth
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules

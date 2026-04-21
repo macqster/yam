@@ -1,4 +1,8 @@
-"""Deterministic grid clock glyphs for the YAM observer layer."""
+"""Deterministic grid clock glyphs for YAM snapshot checks.
+
+The live runtime is Go-canonical; this module only mirrors the shared
+renderer font file for verification and golden-frame checks.
+"""
 
 from __future__ import annotations
 

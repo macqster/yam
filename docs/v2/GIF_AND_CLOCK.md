@@ -12,7 +12,7 @@ This document records the minimal working default scene target for v2.
 - the clock is runtime-driven and not part of engine state
 - verification uses a fixed clock string so the snapshot remains stable
 - the runtime clock and day formats are configurable through the scene config file
-- the live Go Bubble Tea renderer and the Python verifier both use the same glyph map
+- the live Go Bubble Tea renderer owns the clock output; the Python helper mirrors the shared font file for verification only
 
 ## Live Behavior
 

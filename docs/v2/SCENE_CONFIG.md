@@ -44,7 +44,7 @@ This document records the explicit file-backed scene-level configuration surface
 - keep config explicit rather than implicit in runtime code
 - the launcher loads the repo-tracked JSON file by default
 - the live v2 scene reloads the config file when it changes
-- both the Bubble Tea default and the Python fallback read the same file-backed JSON
-- `clock_font_path` is retained for compatibility and future typography work, but the current default clock scene uses the native grid renderer in both Go and Python paths
+- both the Bubble Tea default and the Python snapshot helper read the same file-backed JSON
+- `clock_font_path` is retained for compatibility and future typography work, but the current default clock scene is Go-canonical and the Python path only mirrors the shared font file for verification
 - `gif_path` and `theme_name` remain for fallback compatibility and future scene expansion, but they do not affect the current default clock scene
 - the start screen also prints a plain `0 1 2 3 4 5 6 7 8 9` control row under the day label

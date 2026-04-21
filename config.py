@@ -33,7 +33,7 @@ def load_scene_config(path: Path) -> SceneConfig:
     if not path.exists():
         return SceneConfig(
             clock_font_name="Fender",
-            gif_path=Path("v2/hero/assets/hero_go.gif"),
+            gif_path=Path("hero/assets/hero_go.gif"),
             hero_anchor="left",
             hero_width=10,
             hero_height=6,
@@ -46,7 +46,7 @@ def load_scene_config(path: Path) -> SceneConfig:
     clock_font_name = str(data.get("clock_font_name", "Fender"))
     day_format = str(data.get("day_format", "%A, %d %B"))
     clock_format = str(data.get("clock_format", "%H:%M"))
-    gif_path = Path(data.get("gif_path", "v2/hero/assets/hero_go.gif"))
+    gif_path = Path(data.get("gif_path", "hero/assets/hero_go.gif"))
     hero_anchor = str(data.get("hero_anchor", "left"))
     hero_width = int(data.get("hero_width", 10))
     hero_height = int(data.get("hero_height", 6))

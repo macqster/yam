@@ -19,7 +19,7 @@ The live scene uses the terminal alternate screen and hides the cursor until exi
 yam --version v2 --runtime bubbletea
 ```
 
-Launches the Go Bubble Tea runtime shell inside `v2/`.
+Launches the Go Bubble Tea runtime shell from the repository root.
 
 ```bash
 yam --version v2 --runtime python
@@ -53,7 +53,7 @@ These commands operate on `scene_config.json`.
 - the v2 launcher can choose `python` or `bubbletea`
 - the default v2 runtime is `bubbletea`
 - the Python entrypoint is retained as a fallback verifier and uses `python3 -m app`
-- the Bubble Tea entrypoint uses `go run ./cmd/yamv2` from `v2/`
+- the Bubble Tea entrypoint uses `go run ./cmd/yamv2` from the repository root
 - scene config tuning is exposed through launcher subcommands
 - the default scene is the day-plus-hour FIGlet clock
 - `--scene-set` updates one supported key at a time

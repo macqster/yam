@@ -32,5 +32,5 @@ This note records the path from the current versioned tree to a single root runt
 ## Current Status
 
 - Batch 1 is complete: the Python entrypoints and scene config now live at the repository root.
-- The remaining Go support packages stay under `v2/` for now.
-- Resume flattening only when you are ready for the larger Go/package move.
+- Batch 2 is complete: the live Go support packages now live in root-level package directories.
+- The old `v2/` source tree is now historical documentation only.

@@ -7,7 +7,6 @@ The baseline uses a fixed clock value so the output stays comparable.
 ## Generation Command
 
 ```bash
-cd ../../v2
 go run ./cmd/yamv2 --once --width 40 --height 20 --clock 12:34 --day "wtorek, 21 kwietnia"
 ```
 

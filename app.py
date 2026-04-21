@@ -7,13 +7,13 @@ import sys
 import time
 from pathlib import Path
 
-from v2.config import SceneConfig, default_scene_config_path, load_scene_config
-from v2.engine.ecosystem import Ecosystem, Organism
-from v2.runtime.messages import KeyMsg, TickMsg
-from v2.runtime.terminal import live_session
-from v2.runtime.system import handle_message, render_frame_with_clock
-from v2.runtime.model import RuntimeModel
-from v2.ui.model import UIModel
+from config import SceneConfig, default_scene_config_path, load_scene_config
+from engine.ecosystem import Ecosystem, Organism
+from runtime.messages import KeyMsg, TickMsg
+from runtime.terminal import live_session
+from runtime.system import handle_message, render_frame_with_clock
+from runtime.model import RuntimeModel
+from ui.model import UIModel
 
 
 def build_demo_model(width: int = 40, height: int = 20) -> RuntimeModel:
@@ -31,7 +31,7 @@ def main() -> int:
     parser.add_argument("--width", type=int, default=40, help="demo width")
     parser.add_argument("--height", type=int, default=12, help="demo height")
     parser.add_argument("--fps", type=float, default=6.0, help="live loop frame rate")
-    parser.add_argument("--gif", default="v2/hero/assets/hero_go.gif", help="gif asset path")
+    parser.add_argument("--gif", default="hero/assets/hero_go.gif", help="gif asset path")
     parser.add_argument("--clock-format", default="%H:%M", help="clock format")
     parser.add_argument("--day-format", default="%A, %d %B", help="day format")
     parser.add_argument("--theme", default="btas_dark_deco", help="theme name")
@@ -42,10 +42,10 @@ def main() -> int:
     model = build_demo_model(args.width, args.height)
     ecosystem = build_demo_ecosystem()
     ui = UIModel()
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parent
     scene_path = Path(args.config) if args.config else default_scene_config_path(repo_root)
     scene = load_scene_config(scene_path)
-    if args.gif != "v2/hero/assets/hero_go.gif" or args.clock_format != "%H:%M" or args.day_format != "%A, %d %B" or args.theme != "btas_dark_deco":
+    if args.gif != "hero/assets/hero_go.gif" or args.clock_format != "%H:%M" or args.day_format != "%A, %d %B" or args.theme != "btas_dark_deco":
         scene = SceneConfig(
             clock_font_name="Fender",
             gif_path=Path(args.gif),

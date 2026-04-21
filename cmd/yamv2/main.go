@@ -71,7 +71,7 @@ func defaultConfig() sceneConfig {
 		ClockFontName: "Fender",
 		DayFormat:     "%A, %d %B",
 		ClockFormat:   "%H:%M",
-		GifPath:       "v2/hero/assets/hero_go.gif",
+		GifPath:       "hero/assets/hero_go.gif",
 		HeroAnchor:    "left",
 		HeroWidth:     10,
 		HeroHeight:    6,
@@ -384,7 +384,7 @@ func main() {
 		repoRoot = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "..", ".."))
 	}
 	if cfgPath == "" {
-		cfgPath = filepath.Join(repoRoot, "v2", "scene_config.json")
+		cfgPath = filepath.Join(repoRoot, "scene_config.json")
 	}
 
 	state, err := loadConfig(repoRoot, cfgPath)

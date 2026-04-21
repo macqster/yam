@@ -7,7 +7,7 @@ This document records the minimal working default scene target for v2.
 - the default scene now renders only a FIGlet clock and a full day-name label
 - the live clock is rendered by the Go FIGlet engine using `clock_font_name`
 - the hero GIF is rendered separately through the Chafa renderer and placed as a world-layer image block
-- the canonical hero asset is repo-tracked at `v2/hero/assets/hero_go.gif`
+- the canonical hero asset is repo-tracked at `hero/assets/hero_go.gif`
 - the default clock font is `Fender`
 - the live FIGlet renderer uses full-width mode so digits retain visible separation
 - the clock block is anchored near x = 3/4 of terminal width and y = 1/4 of terminal height

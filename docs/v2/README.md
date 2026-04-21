@@ -35,7 +35,7 @@ This directory contains the preliminary documentation import for the YAM v2 rebu
 
 ## Purpose
 
-These files form the working specification for the v2 branch:
+These files form the working specification that guided the flattening into the root runtime:
 
 - system identity and architecture
 - engine, simulation, and ecology

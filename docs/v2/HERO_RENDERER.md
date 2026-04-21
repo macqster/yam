@@ -13,7 +13,7 @@ This note tracks the first implementation slice for the hero GIF pipeline.
 
 - Use the `chafa` CLI as the first implementation backend.
 - Keep the Go runtime as the integration point.
-- The canonical hero asset is repo-tracked at `v2/hero/assets/hero_go.gif`.
+- The canonical hero asset is repo-tracked at `hero/assets/hero_go.gif`.
 
 ## Boundary
 

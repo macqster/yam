@@ -45,7 +45,7 @@ def main() -> int:
             "--day",
             "wtorek, 21 kwietnia",
         ],
-        cwd=repo_root / "v2",
+        cwd=repo_root,
         check=True,
         capture_output=True,
         text=True,

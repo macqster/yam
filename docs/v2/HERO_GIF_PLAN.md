@@ -21,7 +21,7 @@ Render the hero as a terminal image layer in the v2 scene while keeping the cloc
 ## Proposed Rollout
 
 1. Add a dedicated hero source field to the v2 scene config if needed.
-2. Add a hero renderer module in `v2/` that converts GIF frames into terminal art.
+2. Add a hero renderer module in `hero/` that converts GIF frames into terminal art.
 3. Cache rendered frames by terminal size and render settings.
 4. Compose the hero layer into the existing v2 scene using the current layering rules.
 5. Keep hero cadence separate from clock cadence.

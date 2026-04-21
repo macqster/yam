@@ -1,4 +1,4 @@
-# YAM v2 Scene Config
+# YAM Scene Config
 
 This document records the explicit file-backed scene-level configuration surface.
 
@@ -44,7 +44,7 @@ This document records the explicit file-backed scene-level configuration surface
 - `clock_font_name`: `Fender`
 - `day_format`: `%A, %d %B`
 - `clock_format`: `%H:%M`
-- `gif_path`: `v2/hero/assets/hero_go.gif`
+- `gif_path`: `hero/assets/hero_go.gif`
 - `hero_anchor`: `left`
 - `hero_width`: `10`
 - `hero_height`: `6`
@@ -58,7 +58,7 @@ This document records the explicit file-backed scene-level configuration surface
 - the scene config still sits above engine and below launcher
 - keep config explicit rather than implicit in runtime code
 - the launcher loads the repo-tracked JSON file by default
-- the live v2 scene reloads the config file when it changes
+- the live scene reloads the config file when it changes
 - the Bubble Tea runtime is canonical; the helper path is verification-only
 - `clock_font_name` selects the live FIGlet clock font used by the Go runtime
 - `clock_font_path` is only a legacy compatibility alias

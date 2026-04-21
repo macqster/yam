@@ -167,7 +167,7 @@ if [[ -n "$SCENE_SET" ]]; then
 from pathlib import Path
 import sys
 
-from v2.config import update_scene_config_value
+from config import update_scene_config_value
 
 path = Path(sys.argv[1])
 pair = sys.argv[2]
@@ -190,18 +190,18 @@ if [[ -n "$SCENE_ACTION" ]]; then
       exec "$editor" "$SCENE_CONFIG_PATH"
       ;;
     reset)
-    python3 - "$SCENE_CONFIG_PATH" <<'PY'
+      python3 - "$SCENE_CONFIG_PATH" <<'PY'
 from pathlib import Path
 import sys
 
-from v2.config import SceneConfig, dump_scene_config
+from config import SceneConfig, dump_scene_config
 
 dump_scene_config(
     SceneConfig(
         clock_font_name="Fender",
         day_format="%A, %d %B",
         clock_format="%H:%M",
-        gif_path=Path("v2/hero/assets/hero_go.gif"),
+        gif_path=Path("hero/assets/hero_go.gif"),
         hero_anchor="left",
         hero_width=10,
         hero_height=6,
@@ -221,15 +221,15 @@ PY
   esac
 fi
 
+cd "$REPO_ROOT"
+
 case "$MODE" in
   v2)
-  cd "$REPO_ROOT"
     case "$RUNTIME" in
       python)
         exec python3 -m app "${FORWARDED_ARGS[@]}"
         ;;
       bubbletea)
-        cd "$REPO_ROOT/v2"
         exec go run ./cmd/yamv2 "${FORWARDED_ARGS[@]}"
         ;;
       *)

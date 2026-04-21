@@ -36,5 +36,5 @@ func renderClockLineWidth(text, fontDir, fontName string) int {
 }
 
 func figletFontDir(repoRoot string) string {
-	return filepath.Join(repoRoot, "v2", "render", "fonts")
+	return filepath.Join(repoRoot, "render", "fonts")
 }

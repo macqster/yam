@@ -5,10 +5,10 @@
 ## Current focus
 
 - `bin/yam` is the launcher
-- the runtime is being flattened into the repository root
-- `app.py`, `config.py`, and `check_golden.py` are already at the root
-- `v2/` still holds the supporting packages during the flattening pass
-- `docs/v2/` is the working specification and tracking area
+- the runtime now lives at the repository root
+- `app.py`, `config.py`, `check_golden.py`, and `scene_config.json` are rooted
+- the Go runtime packages have been moved out of the versioned tree
+- `docs/v2/` is the historical spec and tracking area
 - the legacy visualizer remains available only as a compatibility path
 - [`docs/RELEASE_MODEL.md`](docs/RELEASE_MODEL.md) records the stable/experimental branch policy
 - [`docs/FLATTENING_PLAN.md`](docs/FLATTENING_PLAN.md) records the move toward one canonical root runtime tree

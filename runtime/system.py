@@ -7,23 +7,23 @@ from datetime import datetime
 import subprocess
 from pathlib import Path
 
-from v2.engine.ecosystem import Ecosystem, Organism
-from v2.config import SceneConfig
-from v2.render.composer import compose_frame
-from v2.render.clock_font import render_clock
-from v2.render.text_overlay import TextOverlay
-from v2.hero.renderer import ChafaRenderer
-from v2.runtime.messages import KeyMsg, ResizeMsg, TickMsg
-from v2.runtime.model import RuntimeModel
-from v2.shape.model import build_shapes
-from v2.ui.model import UIModel
-from v2.ui.overlay import ui_overlay_shapes
-from v2.ui.router import UIRouter
-from v2.theme.model import theme_by_name
+from engine.ecosystem import Ecosystem, Organism
+from config import SceneConfig
+from render.composer import compose_frame
+from render.clock_font import render_clock
+from render.text_overlay import TextOverlay
+from hero.renderer import ChafaRenderer
+from runtime.messages import KeyMsg, ResizeMsg, TickMsg
+from runtime.model import RuntimeModel
+from shape.model import build_shapes
+from ui.model import UIModel
+from ui.overlay import ui_overlay_shapes
+from ui.router import UIRouter
+from theme.model import theme_by_name
 
 
 def _render_go_frame(width: int, height: int, clock_value: str, day_value: str) -> str:
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[1]
     return subprocess.run(
         [
             "go",
@@ -39,7 +39,7 @@ def _render_go_frame(width: int, height: int, clock_value: str, day_value: str) 
             "--day",
             day_value,
         ],
-        cwd=repo_root / "v2",
+        cwd=repo_root,
         check=True,
         capture_output=True,
         text=True,
@@ -123,7 +123,7 @@ def render_frame(model: RuntimeModel, ecosystem: Ecosystem, ui: UIModel | None =
     """Render the current ecosystem state into a text frame."""
     default_scene = SceneConfig(
         clock_font_name="Fender",
-        gif_path=Path(__file__).resolve().parents[2] / "v2" / "hero" / "assets" / "hero_go.gif",
+        gif_path=Path(__file__).resolve().parents[1] / "hero" / "assets" / "hero_go.gif",
         hero_anchor="left",
         hero_width=10,
         hero_height=6,
@@ -143,7 +143,7 @@ def render_frame_with_clock(
     """Render the current ecosystem state into a text frame with an optional clock override."""
     scene = scene or SceneConfig(
         clock_font_name="Fender",
-        gif_path=Path(__file__).resolve().parents[2] / "v2" / "hero" / "assets" / "hero_go.gif",
+        gif_path=Path(__file__).resolve().parents[1] / "hero" / "assets" / "hero_go.gif",
         hero_anchor="left",
         hero_width=10,
         hero_height=6,

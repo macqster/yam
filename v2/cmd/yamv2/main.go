@@ -274,6 +274,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "yamv2: load config: %v\n", err)
 		os.Exit(1)
 	}
+	if err := loadBreamDecoFont(repoRoot); err != nil {
+		fmt.Fprintf(os.Stderr, "yamv2: load clock font: %v\n", err)
+		os.Exit(1)
+	}
 
 	m := model{
 		repoRoot: repoRoot,

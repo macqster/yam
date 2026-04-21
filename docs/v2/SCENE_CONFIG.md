@@ -31,7 +31,7 @@ This document records the explicit file-backed scene-level configuration surface
 
 ## Defaults
 
-- `clock_font_path`: `v2/assets/fonts/Gothic.flf`
+- `clock_font_path`: `v2/render/fonts/go_deco.txt`
 - `day_format`: `%A`
 - `clock_format`: `%H:%M`
 - `gif_path`: `visualizer/assets/source.gif`

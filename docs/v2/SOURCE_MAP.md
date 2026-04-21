@@ -25,6 +25,8 @@ v2/
     model.py
   render/
     clock_font.py
+    fonts/
+      go_deco.txt
     framebuffer.py
     layers.py
     masks.py
@@ -46,3 +48,4 @@ v2/
 - Prefer Bubble Tea core types in the runtime shell; only add optional upstream widgets when a module has a concrete need.
 - Keep styling and layout primitives aligned with the dependency matrix instead of adding ad hoc third-party helpers.
 - Consult [`DEPENDENCY_MATRIX.md`](DEPENDENCY_MATRIX.md) before introducing any new upstream UI package into the source tree.
+- The clock font source lives under `v2/render/fonts/` and is shared between the Go runtime and Python verifier.

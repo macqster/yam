@@ -95,6 +95,8 @@ This is the running log for the v2 rebuild.
 - placed the control digit row beneath the weekday label in the default start screen
 - switched the control reference row to the native deco digit strip and pinned it to the bottom center of the start screen
 - synced the Go Bubble Tea clock renderer to the simplified grid glyph map used by the Python verifier and refreshed the golden frame baseline
+- moved the clock font into `v2/render/fonts/go_deco.txt` and wired both Go and Python renderers to load the shared font file
+- refreshed the golden frame baseline to the current renderer output after loading the shared font file
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules

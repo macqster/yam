@@ -69,6 +69,7 @@ These files form the working specification for the v2 branch:
 - Read [`BUBBLETEA_MIGRATION.md`](BUBBLETEA_MIGRATION.md) for the runtime migration plan.
 - Read [`DEPENDENCY_MATRIX.md`](DEPENDENCY_MATRIX.md) for the upstream tool availability and adoption policy.
 - Read [`FIGLET_TOOLING.md`](FIGLET_TOOLING.md) for the FIGlet library review and current clock-font decision.
+- Read [`HERO_GIF_PLAN.md`](HERO_GIF_PLAN.md) for the preliminary hero image pipeline plan.
 - The dependency matrix is the first stop for deciding whether a third-party Bubble Tea library is core, optional, or reference-only.
 - The default scene config is stored in [`../../v2/scene_config.json`](../../v2/scene_config.json).
 - Use `yam --scene-config show|edit|reset` to inspect or tune the file-backed config.

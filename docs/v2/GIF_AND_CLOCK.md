@@ -13,7 +13,7 @@ This document records the minimal working default scene target for v2.
 - verification uses a fixed clock string so the snapshot remains stable
 - the runtime clock and day formats are configurable through the scene config file
 - the live Go Bubble Tea renderer owns the clock output; the Python helper mirrors the shared font file for verification only
-- the current glyph set is intentionally wider and more legible than the earlier narrow draft
+- the current glyph set is the restored narrow 5x7 working contract, kept for deterministic readability testing
 
 ## Live Behavior
 

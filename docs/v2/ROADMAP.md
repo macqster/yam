@@ -144,6 +144,12 @@ This file tracks the rebuild at a high level.
 - keep Chafa as the first candidate for terminal image rendering
 - record the best moment to switch into Codex planning mode before implementation
 
+### M19. Hero renderer scaffold
+
+- add a dedicated Go hero renderer boundary
+- start with a Chafa CLI adapter
+- document the first hero implementation slice in `HERO_RENDERER.md`
+
 ## Working Rules
 
 - no hidden state changes

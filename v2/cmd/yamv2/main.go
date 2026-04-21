@@ -13,6 +13,8 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-runewidth"
+
+	heropkg "yamv2/hero"
 )
 
 type sceneConfig struct {
@@ -20,6 +22,11 @@ type sceneConfig struct {
 	DayFormat     string `json:"day_format"`
 	ClockFormat   string `json:"clock_format"`
 	GifPath       string `json:"gif_path"`
+	HeroAnchor    string `json:"hero_anchor"`
+	HeroWidth     int    `json:"hero_width"`
+	HeroHeight    int    `json:"hero_height"`
+	HeroOffsetX   int    `json:"hero_offset_x"`
+	HeroOffsetY   int    `json:"hero_offset_y"`
 	ThemeName     string `json:"theme_name"`
 }
 
@@ -65,6 +72,11 @@ func defaultConfig() sceneConfig {
 		DayFormat:     "%A, %d %B",
 		ClockFormat:   "%H:%M",
 		GifPath:       "visualizer/assets/source.gif",
+		HeroAnchor:    "left",
+		HeroWidth:     10,
+		HeroHeight:    6,
+		HeroOffsetX:   0,
+		HeroOffsetY:   0,
 		ThemeName:     "btas_dark_deco",
 	}
 }
@@ -101,6 +113,21 @@ func loadConfig(repoRoot, path string) (configState, error) {
 	}
 	if state.cfg.ClockFontName == "" {
 		state.cfg.ClockFontName = "Fender"
+	}
+	if state.cfg.HeroAnchor == "" {
+		state.cfg.HeroAnchor = "left"
+	}
+	if state.cfg.HeroWidth <= 0 {
+		state.cfg.HeroWidth = 10
+	}
+	if state.cfg.HeroHeight <= 0 {
+		state.cfg.HeroHeight = 6
+	}
+	if state.cfg.HeroOffsetX == 0 {
+		state.cfg.HeroOffsetX = 0
+	}
+	if state.cfg.HeroOffsetY == 0 {
+		state.cfg.HeroOffsetY = 0
 	}
 	state.mod = info.ModTime()
 	return state, nil
@@ -195,7 +222,7 @@ func (m model) View() string {
 	}
 
 	footer := m.help.View(m.keys)
-	return renderScene(width, height, clock, day, footer, m.state.cfg.ClockFontName, m.repoRoot)
+	return renderScene(width, height, clock, day, footer, m.state.cfg, m.repoRoot)
 }
 
 func polishDayLabel(t time.Time) string {
@@ -225,7 +252,7 @@ func polishDayLabel(t time.Time) string {
 	return fmt.Sprintf("%s, %d %s", weekday, t.Day(), month)
 }
 
-func renderScene(width, height int, clock, day, footer, fontName, repoRoot string) string {
+func renderScene(width, height int, clock, day, footer string, cfg sceneConfig, repoRoot string) string {
 	if width < 24 {
 		width = 24
 	}
@@ -257,10 +284,13 @@ func renderScene(width, height int, clock, day, footer, fontName, repoRoot strin
 	}
 
 	fontDir := figletFontDir(repoRoot)
-	clockArt := renderFigletBlock(clock, fontDir, fontName)
-	clockWidth := renderClockLineWidth(clock, fontDir, fontName)
+	clockArt := renderFigletBlock(clock, fontDir, cfg.ClockFontName)
+	clockWidth := renderClockLineWidth(clock, fontDir, cfg.ClockFontName)
 	clockX := max(0, (width*3)/4-clockWidth/2)
 	clockY := max(0, height/4)
+	heroArt, heroWidth, heroHeight := renderHeroAsset(repoRoot, cfg, width, height)
+	heroX, heroY := heroPlacement(width, height, heroWidth, heroHeight, cfg.HeroAnchor, cfg.HeroOffsetX, cfg.HeroOffsetY)
+	placeBlock(heroX, heroY, heroArt)
 	placeBlock(clockX, clockY, clockArt)
 
 	dayY := clockY + 6
@@ -277,6 +307,40 @@ func renderScene(width, height int, clock, day, footer, fontName, repoRoot strin
 		b.WriteByte('\n')
 	}
 	return strings.TrimRight(b.String(), "\n")
+}
+
+func renderHeroAsset(repoRoot string, cfg sceneConfig, width, height int) (string, int, int) {
+	heroWidth := cfg.HeroWidth
+	if heroWidth <= 0 {
+		heroWidth = max(10, width/5)
+	}
+	heroHeight := cfg.HeroHeight
+	if heroHeight <= 0 {
+		heroHeight = max(6, height/4)
+	}
+	renderer := heropkg.ChafaRenderer{}
+	gifPath := resolveRelative(repoRoot, cfg.GifPath)
+	block, err := renderer.RenderFrame(gifPath, heroWidth, heroHeight)
+	if err != nil {
+		return "", heroWidth, heroHeight
+	}
+	return block, heroWidth, heroHeight
+}
+
+func heroPlacement(width, height, heroWidth, heroHeight int, anchor string, offsetX, offsetY int) (int, int) {
+	baseX := 2
+	switch anchor {
+	case "center":
+		baseX = max(0, (width-heroWidth)/2)
+	case "right":
+		baseX = max(0, width-heroWidth-2)
+	case "center-left":
+		baseX = max(0, width/4-heroWidth/2)
+	default:
+		baseX = 2
+	}
+	baseY := 0
+	return baseX + offsetX, baseY + offsetY
 }
 
 func translateClockFormat(layout string) string {

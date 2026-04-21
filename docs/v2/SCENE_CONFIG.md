@@ -7,6 +7,11 @@ This document records the explicit file-backed scene-level configuration surface
 - `clock_font_name`
 - `day_format`
 - `gif_path`
+- `hero_anchor`
+- `hero_width`
+- `hero_height`
+- `hero_offset_x`
+- `hero_offset_y`
 - `clock_format`
 - `theme_name`
 
@@ -26,6 +31,11 @@ This document records the explicit file-backed scene-level configuration surface
 - `clock_font_name`
 - `day_format`
 - `gif_path`
+- `hero_anchor`
+- `hero_width`
+- `hero_height`
+- `hero_offset_x`
+- `hero_offset_y`
 - `clock_format`
 - `theme_name`
 
@@ -35,6 +45,11 @@ This document records the explicit file-backed scene-level configuration surface
 - `day_format`: `%A, %d %B`
 - `clock_format`: `%H:%M`
 - `gif_path`: `visualizer/assets/source.gif`
+- `hero_anchor`: `left`
+- `hero_width`: `10`
+- `hero_height`: `6`
+- `hero_offset_x`: `0`
+- `hero_offset_y`: `0`
 - `theme_name`: `btas_dark_deco`
 
 ## Notes
@@ -48,4 +63,5 @@ This document records the explicit file-backed scene-level configuration surface
 - `clock_font_name` selects the live FIGlet clock font used by the Go runtime
 - `clock_font_path` is only a legacy compatibility alias
 - `gif_path` and `theme_name` remain for fallback compatibility and future scene expansion
+- `hero_anchor` and the hero size/offset fields control the explicit hero placement contract for the live scene
 - the live day label is rendered in Polish date form by default: `wtorek, 21 kwietnia`

@@ -12,6 +12,7 @@ from v2.config import SceneConfig
 from v2.render.composer import compose_frame
 from v2.render.clock_font import render_clock
 from v2.render.text_overlay import TextOverlay
+from v2.hero.renderer import ChafaRenderer
 from v2.runtime.messages import KeyMsg, ResizeMsg, TickMsg
 from v2.runtime.model import RuntimeModel
 from v2.shape.model import build_shapes
@@ -72,6 +73,16 @@ def _polish_day_label(now: datetime) -> str:
     return f"{weekdays[now.weekday()]}, {now.day} {months[now.month]}"
 
 
+def _hero_anchor_x(anchor: str, width: int, hero_width: int, offset_x: int) -> int:
+    if anchor == "center":
+        return max(0, (width - hero_width) // 2 + offset_x)
+    if anchor == "right":
+        return max(0, width - hero_width - 2 + offset_x)
+    if anchor == "center-left":
+        return max(0, width // 4 - hero_width // 2 + offset_x)
+    return max(0, 2 + offset_x)
+
+
 def handle_message(
     model: RuntimeModel,
     ecosystem: Ecosystem,
@@ -113,6 +124,11 @@ def render_frame(model: RuntimeModel, ecosystem: Ecosystem, ui: UIModel | None =
     default_scene = SceneConfig(
         clock_font_name="Fender",
         gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif",
+        hero_anchor="left",
+        hero_width=10,
+        hero_height=6,
+        hero_offset_x=0,
+        hero_offset_y=0,
     )
     return render_frame_with_clock(model, ecosystem, ui, default_scene)
 
@@ -128,6 +144,11 @@ def render_frame_with_clock(
     scene = scene or SceneConfig(
         clock_font_name="Fender",
         gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif",
+        hero_anchor="left",
+        hero_width=10,
+        hero_height=6,
+        hero_offset_x=0,
+        hero_offset_y=0,
     )
     theme_by_name(scene.theme_name)
     clock_value = clock_text or datetime.now().strftime(scene.clock_format)
@@ -139,6 +160,19 @@ def render_frame_with_clock(
         clock_width = max((len(line) for line in clock_text_block.splitlines()), default=0)
         clock_y = max(0, model.height // 4)
         clock_x = max(0, (model.width * 3) // 4 - clock_width // 2)
+        hero_width = scene.hero_width if scene.hero_width > 0 else max(10, model.width // 5)
+        hero_height = scene.hero_height if scene.hero_height > 0 else max(6, model.height // 4)
+        hero_x = _hero_anchor_x(scene.hero_anchor, model.width, hero_width, scene.hero_offset_x)
+        hero_y = max(0, scene.hero_offset_y)
+        hero_renderer = ChafaRenderer()
+        hero_block = ""
+        try:
+            hero_block = hero_renderer.render_frame(str(scene.gif_path), hero_width, hero_height)
+        except Exception:
+            hero_block = ""
+        hero = []
+        for idx, line in enumerate(hero_block.splitlines()):
+            hero.extend(TextOverlay(x=hero_x, y=hero_y + idx, text=line).shapes())
         clock = []
         for idx, line in enumerate(clock_text_block.splitlines()):
             clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
@@ -150,5 +184,5 @@ def render_frame_with_clock(
         return compose_frame(
             model.width,
             model.height,
-            [*build_shapes(ecosystem.organisms), *ui_shapes, *clock, *day, *footer],
+            [*build_shapes(ecosystem.organisms), *ui_shapes, *hero, *clock, *day, *footer],
         )

@@ -190,7 +190,7 @@ if [[ -n "$SCENE_ACTION" ]]; then
       exec "$editor" "$SCENE_CONFIG_PATH"
       ;;
     reset)
-      python3 - "$SCENE_CONFIG_PATH" <<'PY'
+    python3 - "$SCENE_CONFIG_PATH" <<'PY'
 from pathlib import Path
 import sys
 
@@ -202,6 +202,11 @@ dump_scene_config(
         day_format="%A",
         clock_format="%H:%M",
         gif_path=Path("visualizer/assets/source.gif"),
+        hero_anchor="left",
+        hero_width=10,
+        hero_height=6,
+        hero_offset_x=0,
+        hero_offset_y=0,
         theme_name="btas_dark_deco",
     ),
     Path(sys.argv[1]),

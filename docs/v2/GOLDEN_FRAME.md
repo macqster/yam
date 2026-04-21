@@ -15,10 +15,10 @@ go run ./cmd/yamv2 --once --width 40 --height 20 --clock 12:34 --day "wtorek, 21
 
 ```text
                                         
-                                        
-                                        
-                                        
-                                        
+     ▃  ▂  ▃  ▎                         
+     ▅  ▆  ▛  ▊                         
+      █  ▇  ▁                           
+   ▃  ▃  ▟  █  █  █  █  ▌               
                 ||   ''|,    ,'''|,    /
                '||  '  || ||     ||  // 
                 ||    .|'     '''|| //..
@@ -38,6 +38,6 @@ go run ./cmd/yamv2 --once --width 40 --height 20 --clock 12:34 --day "wtorek, 21
 
 ## Notes
 
-- this is the current FIGlet baseline for the v2 scaffold
+- this is the current FIGlet + hero baseline for the v2 scaffold
 - update this file only when the intended baseline output changes
 - keep it aligned with the Go one-shot FIGlet renderer and the Python check harness

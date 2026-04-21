@@ -14,6 +14,9 @@ func (r ChafaRenderer) RenderFrame(gifPath string, width int, height int) (strin
 	args := []string{
 		"--format=symbols",
 		"--symbols=block",
+		"--colors=none",
+		"--animate=off",
+		"--fg-only",
 		"--size", fmt.Sprintf("%dx%d", width, height),
 		gifPath,
 	}

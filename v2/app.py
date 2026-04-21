@@ -49,6 +49,11 @@ def main() -> int:
         scene = SceneConfig(
             clock_font_name="Fender",
             gif_path=Path(args.gif),
+            hero_anchor="left",
+            hero_width=max(10, args.width // 5),
+            hero_height=max(6, args.height // 4),
+            hero_offset_x=0,
+            hero_offset_y=0,
             clock_format=args.clock_format,
             day_format=args.day_format,
             theme_name=args.theme,

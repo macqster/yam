@@ -11,7 +11,7 @@ func renderFigletBlock(text, fontDir, fontName string) string {
 	out, err := figlet.Render(text,
 		figlet.WithFontDir(fontDir),
 		figlet.WithFont(fontName),
-		figlet.WithSmushing(),
+		figlet.WithFullWidth(),
 		figlet.WithWidth(0),
 	)
 	if err == nil {

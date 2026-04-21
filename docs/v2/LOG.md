@@ -135,3 +135,4 @@ This is the running log for the v2 rebuild.
 - flattened the remaining live Go runtime packages and launcher support into root-level directories
 - moved the Go module root to the repository root and updated the root launcher, scene config, and golden checker to use the flattened layout
 - updated the hero asset path, clock font path, and docs so the live root runtime and verifier share the same canonical source tree
+- removed the obsolete top-level `v2/` source stub after the root runtime flattening was completed

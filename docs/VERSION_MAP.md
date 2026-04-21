@@ -14,16 +14,16 @@ This repo now treats the codebase as a two-track system.
 - native rebuild source tree
 - explicit layer separation
 - documented by `docs/v2/`
-- documented by [`v2/README.md`](../v2/README.md)
+- documented by [`docs/v2/README.md`](v2/README.md)
 
 ## Working Rule
 
-- keep v1 stable while v2 is reconstructed
-- add new work to v2 unless it is explicitly compatibility-related
-- do not blur the two tracks in the same module tree
+- keep release history in branches/tags, not in source directory names
+- add new work to the canonical root runtime tree
+- do not blur the root runtime and the legacy visualizer in the same module tree
 
 ## Launcher Rule
 
-- default `yam` to v2
+- default `yam` to the root runtime
 - use `yam --version v1` for the legacy visualizer
-- preserve the v1 recipe path as the compatibility fallback
+- preserve the visualizer recipe path as the compatibility fallback

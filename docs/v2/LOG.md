@@ -104,6 +104,7 @@ This is the running log for the v2 rebuild.
 - restored the original narrow 5x7 Bream-Deco clock contract and resynced the golden frame baseline
 - removed the extra inter-glyph separator column from the clock renderer so the authored font geometry is rendered without added horizontal stretch
 - resynced the golden frame to the tighter no-extra-separator renderer output
+- added an explicit pass-through clock contract so spacing changes belong in the font file, not the renderer
 - hardened `bin/yam` so the default launch ignores stale env overrides and resets to the canonical Go font path
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 

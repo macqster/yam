@@ -43,7 +43,7 @@ Examples:
   yam --scene-config show
   yam --scene-config edit
   yam --scene-config reset
-  yam --scene-set clock_font_name=slant
+  yam --scene-set clock_font_name=Fender
   yam --recipe debug -- --help
 EOF
 }
@@ -198,7 +198,7 @@ from v2.config import SceneConfig, dump_scene_config
 
 dump_scene_config(
     SceneConfig(
-        clock_font_name="slant",
+        clock_font_name="Fender",
         day_format="%A",
         clock_format="%H:%M",
         gif_path=Path("visualizer/assets/source.gif"),

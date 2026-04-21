@@ -1,13 +1,19 @@
 package main
 
 import (
+	"path/filepath"
 	"strings"
 
 	figlet "github.com/lsferreira42/figlet-go/figlet"
 )
 
-func renderFigletBlock(text, fontName string) string {
-	out, err := figlet.RenderWithFont(text, fontName)
+func renderFigletBlock(text, fontDir, fontName string) string {
+	out, err := figlet.Render(text,
+		figlet.WithFontDir(fontDir),
+		figlet.WithFont(fontName),
+		figlet.WithSmushing(),
+		figlet.WithWidth(0),
+	)
 	if err == nil {
 		return out
 	}
@@ -18,8 +24,8 @@ func renderFigletBlock(text, fontName string) string {
 	return text
 }
 
-func renderClockLineWidth(text, fontName string) int {
-	block := renderFigletBlock(text, fontName)
+func renderClockLineWidth(text, fontDir, fontName string) int {
+	block := renderFigletBlock(text, fontDir, fontName)
 	width := 0
 	for _, line := range strings.Split(block, "\n") {
 		if len(line) > width {
@@ -27,4 +33,8 @@ func renderClockLineWidth(text, fontName string) int {
 		}
 	}
 	return width
+}
+
+func figletFontDir(repoRoot string) string {
+	return filepath.Join(repoRoot, "v2", "render", "fonts")
 }

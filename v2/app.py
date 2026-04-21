@@ -46,7 +46,7 @@ def main() -> int:
     scene = load_scene_config(scene_path)
     if args.gif != "visualizer/assets/source.gif" or args.clock_format != "%H:%M" or args.theme != "btas_dark_deco":
         scene = SceneConfig(
-            clock_font_name="slant",
+            clock_font_name="Fender",
             gif_path=Path(args.gif),
             clock_format=args.clock_format,
             theme_name=args.theme,

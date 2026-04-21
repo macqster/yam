@@ -6,7 +6,7 @@ This document records the minimal working default scene target for v2.
 
 - the default scene now renders only a FIGlet clock and a full day-name label
 - the live clock is rendered by the Go FIGlet engine using `clock_font_name`
-- the default clock font is `slant`
+- the default clock font is `Fender`
 - the day name is rendered beneath the clock in plain text
 - a digit reference row is rendered below the day label using the same FIGlet engine
 - the clock is runtime-driven and not part of engine state

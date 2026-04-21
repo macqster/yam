@@ -43,7 +43,7 @@ type model struct {
 
 func defaultConfig() sceneConfig {
 	return sceneConfig{
-		ClockFontName: "slant",
+		ClockFontName: "Fender",
 		DayFormat:     "%A",
 		ClockFormat:   "%H:%M",
 		GifPath:       "visualizer/assets/source.gif",
@@ -82,7 +82,7 @@ func loadConfig(repoRoot, path string) (configState, error) {
 		state.cfg.ClockFormat = "%H:%M"
 	}
 	if state.cfg.ClockFontName == "" {
-		state.cfg.ClockFontName = "slant"
+		state.cfg.ClockFontName = "Fender"
 	}
 	state.mod = info.ModTime()
 	return state, nil
@@ -174,10 +174,10 @@ func (m model) View() string {
 		day = time.Now().Format(dayLayout)
 	}
 
-	return renderScene(width, height, clock, day, m.state.cfg.ClockFontName)
+	return renderScene(width, height, clock, day, m.state.cfg.ClockFontName, m.repoRoot)
 }
 
-func renderScene(width, height int, clock, day, fontName string) string {
+func renderScene(width, height int, clock, day, fontName, repoRoot string) string {
 	if width < 24 {
 		width = 24
 	}
@@ -208,8 +208,9 @@ func renderScene(width, height int, clock, day, fontName string) string {
 		}
 	}
 
-	clockArt := renderFigletBlock(clock, fontName)
-	clockWidth := renderClockLineWidth(clock, fontName)
+	fontDir := figletFontDir(repoRoot)
+	clockArt := renderFigletBlock(clock, fontDir, fontName)
+	clockWidth := renderClockLineWidth(clock, fontDir, fontName)
 	clockX := max(0, (width-clockWidth)/2)
 	clockY := max(2, height/6)
 	placeBlock(clockX, clockY, clockArt)
@@ -217,8 +218,8 @@ func renderScene(width, height int, clock, day, fontName string) string {
 	dayX := max(0, (width-len(day))/2)
 	placeBlock(dayX, clockY+8, day)
 
-	controlsArt := renderFigletBlock("0123456789", fontName)
-	controlsWidth := renderClockLineWidth("0123456789", fontName)
+	controlsArt := renderFigletBlock("0123456789", fontDir, fontName)
+	controlsWidth := renderClockLineWidth("0123456789", fontDir, fontName)
 	controlsX := max(0, (width-controlsWidth)/2)
 	controlsY := max(0, height-8)
 	placeBlock(controlsX, controlsY, controlsArt)

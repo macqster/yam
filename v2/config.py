@@ -27,13 +27,13 @@ def load_scene_config(path: Path) -> SceneConfig:
     """Load scene config from JSON, falling back to defaults if absent."""
     if not path.exists():
         return SceneConfig(
-            clock_font_name="slant",
+            clock_font_name="Fender",
             gif_path=Path("visualizer/assets/source.gif"),
             day_format="%A",
         )
 
     data = json.loads(path.read_text(encoding="utf-8"))
-    clock_font_name = str(data.get("clock_font_name", "slant"))
+    clock_font_name = str(data.get("clock_font_name", "Fender"))
     day_format = str(data.get("day_format", "%A"))
     clock_format = str(data.get("clock_format", "%H:%M"))
     gif_path = Path(data.get("gif_path", "visualizer/assets/source.gif"))

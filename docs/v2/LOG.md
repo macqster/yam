@@ -111,6 +111,8 @@ This is the running log for the v2 rebuild.
 - made the Python golden-frame check shell out to the Go one-shot FIGlet renderer instead of acting as a second live clock renderer
 - updated the scene config, launcher, source map, and clock contracts to document FIGlet as the live clock path and Python as verification-only
 - refreshed the golden frame baseline to the Go FIGlet `12:34` / `Tuesday` one-shot render
+- switched the default live FIGlet font from `slant` to the repo-local `Fender.flf` asset
+- updated the live clock docs and source map to treat `Fender.flf` as the canonical default font and `go_deco.txt` as legacy only
 
 ## Log Rules
 

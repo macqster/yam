@@ -51,5 +51,6 @@ v2/
 - Consult [`DEPENDENCY_MATRIX.md`](DEPENDENCY_MATRIX.md) before introducing any new upstream UI package into the source tree.
 - The live clock is rendered by the Go FIGlet engine in `v2/cmd/yamv2`.
 - `clock_font_name` in `v2/scene_config.json` selects the live FIGlet font.
+- The default live font is `Fender`, loaded from `v2/render/fonts/Fender.flf`.
 - The Python helper is snapshot-only and should not define a second live clock renderer.
-- `v2/render/fonts/go_deco.txt` is now a legacy compatibility asset, not the live clock contract.
+- `v2/render/fonts/go_deco.txt` remains a legacy compatibility asset only.

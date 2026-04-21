@@ -31,7 +31,7 @@ This document records the explicit file-backed scene-level configuration surface
 
 ## Defaults
 
-- `clock_font_name`: `slant`
+- `clock_font_name`: `Fender`
 - `day_format`: `%A`
 - `clock_format`: `%H:%M`
 - `gif_path`: `visualizer/assets/source.gif`

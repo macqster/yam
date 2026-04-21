@@ -16,17 +16,12 @@ from v2.runtime.model import RuntimeModel
 from v2.ui.model import UIModel
 
 
-def build_demo_model(width: int = 40, height: int = 12) -> RuntimeModel:
+def build_demo_model(width: int = 40, height: int = 20) -> RuntimeModel:
     return RuntimeModel(width=width, height=height, tick=0, seed=7)
 
 
 def build_demo_ecosystem() -> Ecosystem:
-    return Ecosystem(
-        organisms=[
-            Organism(name="hero", x=20, y=5, glyph="◉"),
-            Organism(name="seed", x=18, y=7, glyph="·"),
-        ]
-    )
+    return Ecosystem(organisms=[])
 
 
 def main() -> int:

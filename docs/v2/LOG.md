@@ -90,6 +90,11 @@ This is the running log for the v2 rebuild.
 - verified the default Bubble Tea scene renders the Gothic FIGlet hour and day label in a PTY launch
 - replaced the FIGlet clock with a native Bream-Deco grid renderer and updated the default scene to full day name plus `HH:MM`
 - refreshed `GOLDEN_FRAME.md` to match the native Bream-Deco clock baseline
+- balanced the `1` glyph so its visual height matches the other clock digits more closely
+- added a plain `0 1 2 3 4 5 6 7 8 9` control row under the default clock scene
+- placed the control digit row beneath the weekday label in the default start screen
+- switched the control reference row to the native deco digit strip and pinned it to the bottom center of the start screen
+- synced the Go Bubble Tea clock renderer to the simplified grid glyph map used by the Python verifier and refreshed the golden frame baseline
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules

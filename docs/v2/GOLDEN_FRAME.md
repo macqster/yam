@@ -21,20 +21,28 @@ PY
 ```text
                                         
                                         
-       │    ╭─╮         ╭─╮   │ │       
-       │      │    │      │   │ │       
-       │      │           │   │ │       
-       │    ╭─╯          ─┤   ╰─┤       
-       │    │      │      │     │       
-       │    │             │     │       
-       │    ╰─╯         ╰─╯     │       
                                         
-                 Monday                 
+       |    ---         ---  |   |      
+       |       |   |       | |   |      
+       |       |           | |   |      
+       |    ---         ---   ---       
+       |   |       |       |     |      
+       |   |               |     |      
+       |    ---         ---      |      
+                                        
+                Tuesday                 
+ ---    |    ---   ---  |   |  ---   ---
+|   |   |       |     | |   | |     |   
+|   |   |       |     | |   | |     |   
+|   |   |    ---   ---   ---   ---   ---
+|   |   |   |         |     |     | |   
+|   |   |   |         |     |     | |   
+ ---    |    ---   ---      |  ---   ---
                                         
 ```
 
 ## Notes
 
-- this is the first visual contract for the v2 scaffold
+- this is the current visual contract for the v2 scaffold
 - update this file only when the intended baseline output changes
-- keep it aligned with the current deterministic demo state
+- keep it aligned with the current deterministic demo state and renderer

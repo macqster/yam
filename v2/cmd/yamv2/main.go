@@ -10,7 +10,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type sceneConfig struct {
@@ -167,15 +166,73 @@ func (m model) View() string {
 		day = time.Now().Format(dayLayout)
 	}
 
+	return renderScene(width, height, clock, day)
+}
+
+func renderScene(width, height int, clock, day string) string {
+	if width < 24 {
+		width = 24
+	}
+	if height < 16 {
+		height = 16
+	}
+
+	rows := make([][]rune, height)
+	for y := range rows {
+		rows[y] = make([]rune, width)
+		for x := range rows[y] {
+			rows[y][x] = ' '
+		}
+	}
+
+	placeBlock := func(x, y int, block string) {
+		lines := strings.Split(block, "\n")
+		for dy, line := range lines {
+			if y+dy < 0 || y+dy >= height {
+				continue
+			}
+			for dx, r := range line {
+				if x+dx < 0 || x+dx >= width {
+					continue
+				}
+				rows[y+dy][x+dx] = r
+			}
+		}
+	}
+
 	clockArt := renderBreamDecoClock(clock)
-	content := lipgloss.JoinVertical(lipgloss.Center, clockArt, day)
-	panel := lipgloss.NewStyle().
-		Width(width).
-		Height(height).
-		Align(lipgloss.Center).
-		AlignVertical(lipgloss.Center).
-		Render(content)
-	return panel
+	clockLines := strings.Split(clockArt, "\n")
+	clockWidth := 0
+	for _, line := range clockLines {
+		if len(line) > clockWidth {
+			clockWidth = len(line)
+		}
+	}
+	clockX := max(0, (width-clockWidth)/2)
+	clockY := max(2, height/6)
+	placeBlock(clockX, clockY, clockArt)
+
+	dayX := max(0, (width-len(day))/2)
+	placeBlock(dayX, clockY+8, day)
+
+	controlsArt := renderBreamDecoClock("0123456789")
+	controlLines := strings.Split(controlsArt, "\n")
+	controlsWidth := 0
+	for _, line := range controlLines {
+		if len(line) > controlsWidth {
+			controlsWidth = len(line)
+		}
+	}
+	controlsX := max(0, (width-controlsWidth)/2)
+	controlsY := max(0, height-8)
+	placeBlock(controlsX, controlsY, controlsArt)
+
+	var b strings.Builder
+	for _, row := range rows {
+		b.WriteString(string(row))
+		b.WriteByte('\n')
+	}
+	return strings.TrimRight(b.String(), "\n")
 }
 
 func translateClockFormat(layout string) string {

@@ -81,16 +81,24 @@ def render_frame_with_clock(
     clock_value = clock_text or datetime.now().strftime(scene.clock_format)
     clock_text_block = render_clock(clock_value)
     clock_width = max((len(line) for line in clock_text_block.splitlines()), default=0)
-    clock_y = max(0, (model.height // 2) - 4)
+    clock_y = max(2, model.height // 6)
     clock_x = max(0, (model.width - clock_width) // 2)
     clock = []
     for idx, line in enumerate(clock_text_block.splitlines()):
         clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
     day_value = datetime.now().strftime(scene.day_format)
     day = TextOverlay(x=max(0, (model.width - len(day_value)) // 2), y=clock_y + 8, text=day_value).shapes()
+    controls_value = "0123456789"
+    controls_block = render_clock(controls_value)
+    controls_width = max((len(line) for line in controls_block.splitlines()), default=0)
+    controls_y = max(0, model.height - 8)
+    controls_x = max(0, (model.width - controls_width) // 2)
+    controls = []
+    for idx, line in enumerate(controls_block.splitlines()):
+        controls.extend(TextOverlay(x=controls_x, y=controls_y + idx, text=line).shapes())
     ui_shapes = ui_overlay_shapes(ui) if ui is not None else []
     return compose_frame(
         model.width,
         model.height,
-        [*build_shapes(ecosystem.organisms), *ui_shapes, *clock, *day],
+        [*build_shapes(ecosystem.organisms), *ui_shapes, *clock, *day, *controls],
     )

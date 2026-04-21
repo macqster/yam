@@ -5,12 +5,14 @@ This document records the minimal working default scene target for v2.
 ## Clock Render
 
 - the default scene now renders only an ASCII-art clock and a full day-name label
-- the clock uses the repo-tracked Bream-Deco grid font
+- the clock uses the repo-tracked Bream-Deco ASCII grid font
 - the hour is rendered as deterministic grid output
 - the day name is rendered beneath the clock in plain text
+- a digit reference row `0 1 2 3 4 5 6 7 8 9` is rendered below the day label
 - the clock is runtime-driven and not part of engine state
 - verification uses a fixed clock string so the snapshot remains stable
 - the runtime clock and day formats are configurable through the scene config file
+- the live Go Bubble Tea renderer and the Python verifier both use the same glyph map
 
 ## Live Behavior
 

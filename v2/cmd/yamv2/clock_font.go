@@ -57,7 +57,7 @@ func renderBreamDecoClock(text string) string {
 			continue
 		}
 		for i := 0; i < 7; i++ {
-			rows[i] += glyph[i] + " "
+			rows[i] += glyph[i]
 		}
 	}
 	return strings.Join(rows, "\n")

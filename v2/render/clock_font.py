@@ -43,5 +43,5 @@ def render_clock(text: str) -> str:
         if glyph is None:
             continue
         for i in range(7):
-            rows[i] += glyph[i] + " "
+            rows[i] += glyph[i]
     return "\n".join(rows)

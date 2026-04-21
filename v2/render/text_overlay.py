@@ -1,4 +1,4 @@
-"""Text overlay helpers for the v2 scaffold."""
+"""Text overlay helpers for the current YAM runtime."""
 
 from __future__ import annotations
 

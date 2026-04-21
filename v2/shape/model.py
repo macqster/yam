@@ -1,4 +1,4 @@
-"""Shape instance for the v2 scaffold."""
+"""Shape instance for the current YAM runtime."""
 
 from __future__ import annotations
 

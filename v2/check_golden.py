@@ -1,4 +1,4 @@
-"""Golden frame verification for the v2 scaffold."""
+"""Golden frame verification for the current YAM clock baseline."""
 
 from __future__ import annotations
 

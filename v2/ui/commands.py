@@ -1,4 +1,4 @@
-"""Command system for the v2 scaffold."""
+"""Command system for the current YAM runtime."""
 
 from __future__ import annotations
 

@@ -59,7 +59,7 @@ This document records the explicit file-backed scene-level configuration surface
 - keep config explicit rather than implicit in runtime code
 - the launcher loads the repo-tracked JSON file by default
 - the live v2 scene reloads the config file when it changes
-- the Bubble Tea default is canonical; Python is a thin verification helper
+- the Bubble Tea runtime is canonical; the helper path is verification-only
 - `clock_font_name` selects the live FIGlet clock font used by the Go runtime
 - `clock_font_path` is only a legacy compatibility alias
 - `gif_path` and `theme_name` remain for fallback compatibility and future scene expansion

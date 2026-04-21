@@ -1,4 +1,4 @@
-"""Environment state for the v2 scaffold."""
+"""Environment state for the current YAM runtime."""
 
 from __future__ import annotations
 

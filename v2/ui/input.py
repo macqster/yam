@@ -1,4 +1,4 @@
-"""Input routing for the v2 scaffold."""
+"""Input routing for the current YAM runtime."""
 
 from __future__ import annotations
 

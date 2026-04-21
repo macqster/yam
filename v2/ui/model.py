@@ -1,4 +1,4 @@
-"""UI state model for the v2 scaffold."""
+"""UI state model for the current YAM runtime."""
 
 from __future__ import annotations
 

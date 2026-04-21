@@ -1,4 +1,4 @@
-"""Glyph policy for the v2 scaffold."""
+"""Glyph policy for the current YAM runtime."""
 
 from __future__ import annotations
 

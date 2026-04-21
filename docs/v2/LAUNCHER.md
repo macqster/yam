@@ -8,9 +8,9 @@ This document records the current launch contract.
 yam
 ```
 
-Launches the v2 scaffold.
+Launches the canonical YAM runtime.
 
-The default v2 scaffold now uses the Go Bubble Tea runtime shell and redraws the live FIGlet clock scene.
+The default runtime uses the Go Bubble Tea shell and redraws the live FIGlet clock scene.
 The live scene uses the terminal alternate screen and hides the cursor until exit.
 
 ## Runtime Selection
@@ -25,7 +25,7 @@ Launches the Go Bubble Tea runtime shell inside `v2/`.
 yam --version v2 --runtime python
 ```
 
-Launches the legacy Python fallback path, which is retained only as a thin verification helper.
+Launches the thin verification helper path, which shells out to the Go renderer for checks.
 
 ## Compatibility
 

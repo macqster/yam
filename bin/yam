@@ -24,7 +24,7 @@ usage: yam [--version v1|v2] [--runtime python|bubbletea] [--recipe NAME] [--lis
 Launch YAM.
 
 Options:
-  --version MODE      Select v1 (legacy visualizer) or v2 (native scaffold).
+  --version MODE      Select the legacy visualizer or the current runtime.
   --runtime MODE      Select python or bubbletea runtime for v2.
   -r, --recipe NAME   Run the visualizer with a named recipe overlay.
   -l, --list-recipes   Print the available recipe names and exit.

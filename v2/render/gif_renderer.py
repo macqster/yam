@@ -1,4 +1,4 @@
-"""Basic GIF-to-shape renderer for the v2 scaffold."""
+"""Basic GIF-to-shape renderer for the current YAM runtime."""
 
 from __future__ import annotations
 

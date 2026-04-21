@@ -17,7 +17,7 @@ This document records the minimal working default scene target for v2.
 - the clock is runtime-driven and not part of engine state
 - verification uses a fixed clock string and day string so the snapshot remains stable
 - the runtime clock and day formats are configurable through the scene config file
-- the live Go Bubble Tea renderer owns the clock output; the Python helper shells out to the Go one-shot renderer for verification only
+- the live Go Bubble Tea renderer owns the clock output; the helper path shells out to the Go one-shot renderer for verification only
 - the hero renderer uses the explicit hero anchor and size fields from the scene config, with the current stable default at `10x6` and zero offsets
 - the FIGlet engine owns spacing and smushing; do not reintroduce grid-style per-glyph composition for the live clock
 

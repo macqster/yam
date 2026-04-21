@@ -1,12 +1,6 @@
-# YAM v2 Source Tree
+# YAM Runtime Tree
 
-This directory is the native source layout for the YAM v2 rebuild.
-
-## Status
-
-This tree is a scaffold only.
-
-It exists to define package boundaries, ownership, and the intended flow of data before implementation starts.
+This directory contains the live runtime modules and support code for the current YAM terminal scene.
 
 ## Layer Map
 
@@ -26,4 +20,4 @@ Do not add behavior here unless it belongs to one of the declared layers.
 
 ## Verification
 
-Use `python3 -m v2.check_golden` to compare the live scaffold output against the documented golden frame.
+Use `python3 -m v2.check_golden` to compare the live output against the documented golden frame.

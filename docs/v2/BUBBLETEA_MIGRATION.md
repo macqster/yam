@@ -1,6 +1,6 @@
 # YAM v2 Bubble Tea Migration
 
-This document maps the Python fallback scaffold to a Bubble Tea-first runtime.
+This document records the move to a Bubble Tea-first runtime.
 
 ## Why Bubble Tea
 
@@ -10,7 +10,7 @@ This document maps the Python fallback scaffold to a Bubble Tea-first runtime.
 
 ## Current State
 
-- the Python scaffold remains available as a fallback verification helper
+- the helper path remains available only as a verification harness
 - the live loop, frame composition, and config handling now live in the Go Bubble Tea path
 - the default runtime uses Bubble Tea rather than the custom terminal loop
 - a separate Bubble Tea runtime shell now exists in `v2/cmd/yamv2`
@@ -24,13 +24,13 @@ This document maps the Python fallback scaffold to a Bubble Tea-first runtime.
 3. keep engine, morphology, and render composition as downstream packages
 4. preserve the file-backed scene config and clock observer surface
 5. keep v1 launcher compatibility until v2 is stable
-6. keep the Python helper isolated as verification-only while Bubble Tea remains default
+6. keep the helper path isolated as verification-only while Bubble Tea remains default
 
 ## Package Mapping
 
 ### Runtime
 
-- `v2/runtime/system.py` is legacy verifier scaffolding, not the live bridge
+- `v2/runtime/system.py` is verifier scaffolding, not the live bridge
 - `v2/runtime/messages.py` becomes the message vocabulary
 - `v2/runtime/model.py` becomes the Bubble Tea model state
 - `v2/cmd/yamv2/main.go` is the first Go runtime shell

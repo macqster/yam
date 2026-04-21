@@ -1,4 +1,4 @@
-"""Legacy Python verification scaffolding for the v2 clock snapshot path."""
+"""Verification path for the v2 clock snapshot helper."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Panel helpers for the v2 scaffold."""
+"""Panel helpers for the current YAM runtime."""
 
 from __future__ import annotations
 

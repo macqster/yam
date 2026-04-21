@@ -1,4 +1,4 @@
-"""Theme model for the v2 scaffold."""
+"""Theme model for the current YAM runtime."""
 
 from __future__ import annotations
 

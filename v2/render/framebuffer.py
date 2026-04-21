@@ -1,4 +1,4 @@
-"""Framebuffer implementation for the v2 scaffold."""
+"""Framebuffer implementation for the current YAM runtime."""
 
 from __future__ import annotations
 

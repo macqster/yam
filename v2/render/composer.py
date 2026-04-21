@@ -1,4 +1,4 @@
-"""Render composition for the v2 scaffold."""
+"""Render composition for the current YAM runtime."""
 
 from __future__ import annotations
 

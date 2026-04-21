@@ -1,4 +1,4 @@
-"""Balance rules for the v2 scaffold."""
+"""Balance rules for the current YAM runtime."""
 
 from __future__ import annotations
 

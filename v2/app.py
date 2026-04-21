@@ -1,4 +1,4 @@
-"""Top-level v2 application entrypoint."""
+"""Top-level YAM application entrypoint."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def build_demo_ecosystem() -> Ecosystem:
 
 
 def main() -> int:
-    """Run the v2 application scaffold."""
+    """Run the current YAM application."""
     parser = argparse.ArgumentParser(prog="yam-v2")
     parser.add_argument("--steps", type=int, default=0, help="number of tick steps to run; 0 means live loop")
     parser.add_argument("--width", type=int, default=40, help="demo width")

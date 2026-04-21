@@ -19,7 +19,7 @@ This note records the current contract for the default clock scene.
 - if the clock looks cramped or airy, adjust the FIGlet font selection or FIGlet options
 - do not reintroduce per-glyph grid rendering for the live clock
 - do not duplicate clock geometry in a second live implementation path
-- keep Python as a thin verification harness, not an alternate renderer
+- keep the helper path as a thin verification harness, not an alternate renderer
 
 ## Baseline
 

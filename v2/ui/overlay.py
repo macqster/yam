@@ -1,4 +1,4 @@
-"""UI overlay generation for the v2 scaffold."""
+"""UI overlay generation for the current YAM runtime."""
 
 from __future__ import annotations
 

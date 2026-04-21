@@ -1,4 +1,4 @@
-"""UI router for the v2 scaffold."""
+"""UI router for the current YAM runtime."""
 
 from __future__ import annotations
 

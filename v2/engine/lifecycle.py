@@ -1,4 +1,4 @@
-"""Lifecycle state machine for the v2 scaffold."""
+"""Lifecycle state machine for the current YAM runtime."""
 
 from __future__ import annotations
 

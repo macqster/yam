@@ -14,7 +14,7 @@ python3 -m v2.check_golden
 - the check should exit non-zero if the frame drifts
 - this is a minimal verification path, not the final test suite
 - the verification run uses a fixed clock string and day string so the snapshot remains stable
-- the Python helper shells out to the Go runtime for the canonical frame
+- the helper path shells out to the Go runtime for the canonical frame
 - the scene config file stays separate from the fixed golden test path
 
 ## Notes

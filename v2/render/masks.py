@@ -1,4 +1,4 @@
-"""Mask model for the v2 scaffold."""
+"""Mask model for the current YAM runtime."""
 
 from __future__ import annotations
 

@@ -41,7 +41,7 @@ type model struct {
 
 func defaultConfig() sceneConfig {
 	return sceneConfig{
-		ClockFontPath: "v2/assets/fonts/Gothic.flf",
+		ClockFontPath: "v2/render/fonts/go_deco.txt",
 		DayFormat:     "%A",
 		ClockFormat:   "%H:%M",
 		GifPath:       "visualizer/assets/source.gif",
@@ -80,7 +80,7 @@ func loadConfig(repoRoot, path string) (configState, error) {
 		state.cfg.ClockFormat = "%H:%M"
 	}
 	if state.cfg.ClockFontPath == "" {
-		state.cfg.ClockFontPath = "v2/assets/fonts/Gothic.flf"
+		state.cfg.ClockFontPath = "v2/render/fonts/go_deco.txt"
 	}
 	state.mod = info.ModTime()
 	return state, nil

@@ -7,9 +7,6 @@ This document maps the new v2 source tree to the spec layers.
 ```text
 v2/
   app.py
-  assets/
-    fonts/
-      Gothic.flf
   runtime/
     model.py
     messages.py

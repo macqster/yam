@@ -165,6 +165,9 @@ func (m model) View() string {
 	if clock == "" {
 		clock = time.Now().Format(clockLayout)
 	}
+	if m.clockOverride == "" && m.now.Second()%2 == 1 {
+		clock = strings.ReplaceAll(clock, ":", " ")
+	}
 	day := m.dayOverride
 	if day == "" {
 		day = polishDayLabel(m.now)

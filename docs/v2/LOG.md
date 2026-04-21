@@ -122,3 +122,4 @@ This is the running log for the v2 rebuild.
 - keep entries factual and short
 - record only decisions, file moves, and implementation milestones
 - do not use this file for speculative design notes
+- made the live FIGlet clock colon blink once per second on odd seconds while leaving one-shot verification stable

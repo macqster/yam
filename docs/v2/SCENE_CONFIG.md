@@ -44,7 +44,7 @@ This document records the explicit file-backed scene-level configuration surface
 - `clock_font_name`: `Fender`
 - `day_format`: `%A, %d %B`
 - `clock_format`: `%H:%M`
-- `gif_path`: `visualizer/assets/source.gif`
+- `gif_path`: `v2/hero/assets/hero_go.gif`
 - `hero_anchor`: `left`
 - `hero_width`: `10`
 - `hero_height`: `6`

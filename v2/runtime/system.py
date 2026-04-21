@@ -123,7 +123,7 @@ def render_frame(model: RuntimeModel, ecosystem: Ecosystem, ui: UIModel | None =
     """Render the current ecosystem state into a text frame."""
     default_scene = SceneConfig(
         clock_font_name="Fender",
-        gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif",
+        gif_path=Path(__file__).resolve().parents[2] / "v2" / "hero" / "assets" / "hero_go.gif",
         hero_anchor="left",
         hero_width=10,
         hero_height=6,
@@ -143,7 +143,7 @@ def render_frame_with_clock(
     """Render the current ecosystem state into a text frame with an optional clock override."""
     scene = scene or SceneConfig(
         clock_font_name="Fender",
-        gif_path=Path(__file__).resolve().parents[2] / "visualizer" / "assets" / "source.gif",
+        gif_path=Path(__file__).resolve().parents[2] / "v2" / "hero" / "assets" / "hero_go.gif",
         hero_anchor="left",
         hero_width=10,
         hero_height=6,

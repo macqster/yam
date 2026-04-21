@@ -127,3 +127,4 @@ This is the running log for the v2 rebuild.
 - added a preliminary hero GIF pipeline plan that keeps Chafa as the first tool candidate and marks the right moment to switch into Codex planning mode before implementation
 - added a Go hero renderer scaffold with a Chafa CLI adapter and documented the first implementation slice in `HERO_RENDERER.md`
 - synced the hero placement defaults to the small left-anchored baseline so the clock stays clear in the live scene
+- imported the real hero GIF as `v2/hero/assets/hero_go.gif` and retargeted the repo-tracked scene defaults to that asset

@@ -71,7 +71,7 @@ func defaultConfig() sceneConfig {
 		ClockFontName: "Fender",
 		DayFormat:     "%A, %d %B",
 		ClockFormat:   "%H:%M",
-		GifPath:       "visualizer/assets/source.gif",
+		GifPath:       "v2/hero/assets/hero_go.gif",
 		HeroAnchor:    "left",
 		HeroWidth:     10,
 		HeroHeight:    6,

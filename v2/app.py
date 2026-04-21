@@ -31,7 +31,7 @@ def main() -> int:
     parser.add_argument("--width", type=int, default=40, help="demo width")
     parser.add_argument("--height", type=int, default=12, help="demo height")
     parser.add_argument("--fps", type=float, default=6.0, help="live loop frame rate")
-    parser.add_argument("--gif", default="visualizer/assets/source.gif", help="gif asset path")
+    parser.add_argument("--gif", default="v2/hero/assets/hero_go.gif", help="gif asset path")
     parser.add_argument("--clock-format", default="%H:%M", help="clock format")
     parser.add_argument("--day-format", default="%A, %d %B", help="day format")
     parser.add_argument("--theme", default="btas_dark_deco", help="theme name")
@@ -45,7 +45,7 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
     scene_path = Path(args.config) if args.config else default_scene_config_path(repo_root)
     scene = load_scene_config(scene_path)
-    if args.gif != "visualizer/assets/source.gif" or args.clock_format != "%H:%M" or args.day_format != "%A, %d %B" or args.theme != "btas_dark_deco":
+    if args.gif != "v2/hero/assets/hero_go.gif" or args.clock_format != "%H:%M" or args.day_format != "%A, %d %B" or args.theme != "btas_dark_deco":
         scene = SceneConfig(
             clock_font_name="Fender",
             gif_path=Path(args.gif),

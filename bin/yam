@@ -201,7 +201,7 @@ dump_scene_config(
         clock_font_name="Fender",
         day_format="%A",
         clock_format="%H:%M",
-        gif_path=Path("visualizer/assets/source.gif"),
+        gif_path=Path("v2/hero/assets/hero_go.gif"),
         hero_anchor="left",
         hero_width=10,
         hero_height=6,

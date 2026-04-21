@@ -1,7 +1,7 @@
-"""Deterministic grid clock glyphs for YAM snapshot checks.
+"""Legacy Python clock helper for YAM snapshot checks.
 
-The live runtime is Go-canonical; this module only mirrors the shared
-renderer font file for verification and golden-frame checks.
+The live runtime is Go-canonical and uses FIGlet. This module remains only
+as a thin helper for historical compatibility and local inspection.
 """
 
 from __future__ import annotations

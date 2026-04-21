@@ -1,5 +1,5 @@
 {
-  "clock_font_path": "v2/render/fonts/go_deco.txt",
+  "clock_font_name": "slant",
   "clock_format": "%H:%M",
   "day_format": "%A",
   "gif_path": "visualizer/assets/source.gif",

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
-
-from v2.app import build_demo_ecosystem, build_demo_model
-from v2.runtime.system import render_frame_with_clock
 
 
 def load_golden_frame() -> str:
@@ -31,7 +29,27 @@ def load_golden_frame() -> str:
 
 def main() -> int:
     """Exit with a non-zero status when the frame drifts."""
-    current = render_frame_with_clock(build_demo_model(), build_demo_ecosystem(), clock_text="12:34")
+    repo_root = Path(__file__).resolve().parents[1]
+    current = subprocess.run(
+        [
+            "go",
+            "run",
+            "./cmd/yamv2",
+            "--once",
+            "--width",
+            "40",
+            "--height",
+            "20",
+            "--clock",
+            "12:34",
+            "--day",
+            "Tuesday",
+        ],
+        cwd=repo_root / "v2",
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.rstrip("\n")
     expected = load_golden_frame()
     if current != expected:
         print("golden frame mismatch")

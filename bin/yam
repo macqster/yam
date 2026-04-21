@@ -43,7 +43,7 @@ Examples:
   yam --scene-config show
   yam --scene-config edit
   yam --scene-config reset
-  yam --scene-set theme_name=monochrome
+  yam --scene-set clock_font_name=slant
   yam --recipe debug -- --help
 EOF
 }
@@ -198,10 +198,11 @@ from v2.config import SceneConfig, dump_scene_config
 
 dump_scene_config(
     SceneConfig(
-        clock_font_path=Path("v2/render/fonts/go_deco.txt"),
+        clock_font_name="slant",
         day_format="%A",
         clock_format="%H:%M",
         gif_path=Path("visualizer/assets/source.gif"),
+        theme_name="btas_dark_deco",
     ),
     Path(sys.argv[1]),
 )

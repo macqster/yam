@@ -60,7 +60,7 @@ These files form the working specification for the v2 branch:
 - Read [`GOLDEN_FRAME.md`](GOLDEN_FRAME.md) for the current baseline frame.
 - Read [`VERIFICATION.md`](VERIFICATION.md) for the current snapshot check command.
 - Read [`GIF_AND_CLOCK.md`](GIF_AND_CLOCK.md) for the minimal working scene target.
-- Read [`CLOCK_CONTRACT.md`](CLOCK_CONTRACT.md) for the pass-through clock font contract.
+- Read [`CLOCK_CONTRACT.md`](CLOCK_CONTRACT.md) for the FIGlet clock contract.
 - Read [`LAUNCHER.md`](LAUNCHER.md) for the current launch contract.
 - Read [`RENDER_HARDENING.md`](RENDER_HARDENING.md) for the current z-band and overlay contract.
 - Read [`UI_INPUT.md`](UI_INPUT.md) for the current UI separation boundary.

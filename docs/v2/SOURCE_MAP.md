@@ -28,6 +28,10 @@ v2/
     layers.py
     masks.py
     emitter.py
+  cmd/
+    yamv2/
+      main.go
+      figlet_clock.go
   ui/
     panels.py
     input.py
@@ -45,5 +49,7 @@ v2/
 - Prefer Bubble Tea core types in the runtime shell; only add optional upstream widgets when a module has a concrete need.
 - Keep styling and layout primitives aligned with the dependency matrix instead of adding ad hoc third-party helpers.
 - Consult [`DEPENDENCY_MATRIX.md`](DEPENDENCY_MATRIX.md) before introducing any new upstream UI package into the source tree.
-- The clock font source lives under `v2/render/fonts/` and is canonical for the Go runtime; the Python verifier mirrors it for snapshot checks only.
-- The clock renderer is pass-through: do not add renderer-side inter-glyph spacing when working on the clock font.
+- The live clock is rendered by the Go FIGlet engine in `v2/cmd/yamv2`.
+- `clock_font_name` in `v2/scene_config.json` selects the live FIGlet font.
+- The Python helper is snapshot-only and should not define a second live clock renderer.
+- `v2/render/fonts/go_deco.txt` is now a legacy compatibility asset, not the live clock contract.

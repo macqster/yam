@@ -13,7 +13,7 @@ import (
 )
 
 type sceneConfig struct {
-	ClockFontPath string `json:"clock_font_path"`
+	ClockFontName string `json:"clock_font_name"`
 	DayFormat     string `json:"day_format"`
 	ClockFormat   string `json:"clock_format"`
 	GifPath       string `json:"gif_path"`
@@ -21,27 +21,29 @@ type sceneConfig struct {
 }
 
 type configState struct {
-	path    string
-	mod     time.Time
-	cfg     sceneConfig
+	path string
+	mod  time.Time
+	cfg  sceneConfig
 }
 
 type tickMsg time.Time
 type reloadMsg struct{}
 
 type model struct {
-	repoRoot string
-	cfgPath  string
-	state    configState
-	now      time.Time
-	width    int
-	height   int
-	paused   bool
+	repoRoot      string
+	cfgPath       string
+	state         configState
+	now           time.Time
+	width         int
+	height        int
+	paused        bool
+	clockOverride string
+	dayOverride   string
 }
 
 func defaultConfig() sceneConfig {
 	return sceneConfig{
-		ClockFontPath: "v2/render/fonts/go_deco.txt",
+		ClockFontName: "slant",
 		DayFormat:     "%A",
 		ClockFormat:   "%H:%M",
 		GifPath:       "visualizer/assets/source.gif",
@@ -79,8 +81,8 @@ func loadConfig(repoRoot, path string) (configState, error) {
 	if state.cfg.ClockFormat == "" {
 		state.cfg.ClockFormat = "%H:%M"
 	}
-	if state.cfg.ClockFontPath == "" {
-		state.cfg.ClockFontPath = "v2/render/fonts/go_deco.txt"
+	if state.cfg.ClockFontName == "" {
+		state.cfg.ClockFontName = "slant"
 	}
 	state.mod = info.ModTime()
 	return state, nil
@@ -157,19 +159,25 @@ func (m model) View() string {
 
 	clockLayout := translateClockFormat(m.state.cfg.ClockFormat)
 	dayLayout := translateClockFormat(m.state.cfg.DayFormat)
-	clock := m.now.Format(clockLayout)
+	clock := m.clockOverride
+	if clock == "" {
+		clock = m.now.Format(clockLayout)
+	}
 	if clock == "" {
 		clock = time.Now().Format(clockLayout)
 	}
-	day := m.now.Format(dayLayout)
+	day := m.dayOverride
+	if day == "" {
+		day = m.now.Format(dayLayout)
+	}
 	if day == "" {
 		day = time.Now().Format(dayLayout)
 	}
 
-	return renderScene(width, height, clock, day)
+	return renderScene(width, height, clock, day, m.state.cfg.ClockFontName)
 }
 
-func renderScene(width, height int, clock, day string) string {
+func renderScene(width, height int, clock, day, fontName string) string {
 	if width < 24 {
 		width = 24
 	}
@@ -200,14 +208,8 @@ func renderScene(width, height int, clock, day string) string {
 		}
 	}
 
-	clockArt := renderBreamDecoClock(clock)
-	clockLines := strings.Split(clockArt, "\n")
-	clockWidth := 0
-	for _, line := range clockLines {
-		if len(line) > clockWidth {
-			clockWidth = len(line)
-		}
-	}
+	clockArt := renderFigletBlock(clock, fontName)
+	clockWidth := renderClockLineWidth(clock, fontName)
 	clockX := max(0, (width-clockWidth)/2)
 	clockY := max(2, height/6)
 	placeBlock(clockX, clockY, clockArt)
@@ -215,14 +217,8 @@ func renderScene(width, height int, clock, day string) string {
 	dayX := max(0, (width-len(day))/2)
 	placeBlock(dayX, clockY+8, day)
 
-	controlsArt := renderBreamDecoClock("0123456789")
-	controlLines := strings.Split(controlsArt, "\n")
-	controlsWidth := 0
-	for _, line := range controlLines {
-		if len(line) > controlsWidth {
-			controlsWidth = len(line)
-		}
-	}
+	controlsArt := renderFigletBlock("0123456789", fontName)
+	controlsWidth := renderClockLineWidth("0123456789", fontName)
 	controlsX := max(0, (width-controlsWidth)/2)
 	controlsY := max(0, height-8)
 	placeBlock(controlsX, controlsY, controlsArt)
@@ -258,7 +254,17 @@ func translateClockFormat(layout string) string {
 
 func main() {
 	var cfgPath string
+	var width int
+	var height int
+	var once bool
+	var clockOverride string
+	var dayOverride string
 	flag.StringVar(&cfgPath, "config", "", "scene config json path")
+	flag.IntVar(&width, "width", 40, "render width for one-shot mode")
+	flag.IntVar(&height, "height", 20, "render height for one-shot mode")
+	flag.BoolVar(&once, "once", false, "render a single frame and exit")
+	flag.StringVar(&clockOverride, "clock", "", "override clock text for one-shot rendering")
+	flag.StringVar(&dayOverride, "day", "", "override day text for one-shot rendering")
 	flag.Parse()
 
 	repoRoot := os.Getenv("YAM_REPO")
@@ -274,16 +280,20 @@ func main() {
 		fmt.Fprintf(os.Stderr, "yamv2: load config: %v\n", err)
 		os.Exit(1)
 	}
-	if err := loadBreamDecoFont(repoRoot); err != nil {
-		fmt.Fprintf(os.Stderr, "yamv2: load clock font: %v\n", err)
-		os.Exit(1)
+	m := model{
+		repoRoot:      repoRoot,
+		cfgPath:       cfgPath,
+		state:         state,
+		now:           time.Now(),
+		width:         width,
+		height:        height,
+		clockOverride: clockOverride,
+		dayOverride:   dayOverride,
 	}
 
-	m := model{
-		repoRoot: repoRoot,
-		cfgPath:  cfgPath,
-		state:    state,
-		now:      time.Now(),
+	if once {
+		fmt.Print(m.View())
+		return
 	}
 
 	p := tea.NewProgram(m, tea.WithAltScreen())

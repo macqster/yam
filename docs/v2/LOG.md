@@ -107,6 +107,10 @@ This is the running log for the v2 rebuild.
 - added an explicit pass-through clock contract so spacing changes belong in the font file, not the renderer
 - hardened `bin/yam` so the default launch ignores stale env overrides and resets to the canonical Go font path
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
+- switched the live clock to the Go FIGlet engine and moved the canonical font selector to `clock_font_name`
+- made the Python golden-frame check shell out to the Go one-shot FIGlet renderer instead of acting as a second live clock renderer
+- updated the scene config, launcher, source map, and clock contracts to document FIGlet as the live clock path and Python as verification-only
+- refreshed the golden frame baseline to the Go FIGlet `12:34` / `Tuesday` one-shot render
 
 ## Log Rules
 

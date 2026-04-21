@@ -4,20 +4,20 @@ This note records the current contract for the default clock scene.
 
 ## Contract
 
-- `v2/render/fonts/go_deco.txt` is the authoritative clock font file.
-- The runtime renders that file as-is.
-- The renderer does not add extra inter-glyph padding.
-- The font file itself is responsible for internal spacing and shape.
-- The live Go Bubble Tea runtime is canonical.
-- The Python helper is snapshot-only and mirrors the same file for verification.
+- The live clock is rendered by the Go FIGlet engine in `v2/cmd/yamv2`.
+- The canonical live font is selected by `clock_font_name` in `v2/scene_config.json`.
+- The default font is `slant`.
+- The live runtime renders FIGlet output as a block and centers that block in the scene.
+- The Python layer is snapshot/check only and should not define a second live clock renderer.
 
 ## What This Means
 
-- if the clock looks cramped or airy, the font file is the thing to adjust
-- do not reintroduce renderer-side spacing fixes unless the contract changes
-- do not duplicate clock geometry in a second implementation path
+- if the clock looks cramped or airy, adjust the FIGlet font selection or FIGlet options
+- do not reintroduce per-glyph grid rendering for the live clock
+- do not duplicate clock geometry in a second live implementation path
+- keep Python as a thin verification harness, not an alternate renderer
 
 ## Baseline
 
 - use this contract when changing the clock font or its baseline snapshot
-- keep the live renderer and the verifier aligned on the same source file
+- keep the live renderer and the verifier aligned on the same FIGlet engine output

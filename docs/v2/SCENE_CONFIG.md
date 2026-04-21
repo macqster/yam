@@ -4,7 +4,7 @@ This document records the explicit file-backed scene-level configuration surface
 
 ## Fields
 
-- `clock_font_path`
+- `clock_font_name`
 - `day_format`
 - `gif_path`
 - `clock_format`
@@ -23,7 +23,7 @@ This document records the explicit file-backed scene-level configuration surface
 
 ## Supported Updates
 
-- `clock_font_path`
+- `clock_font_name`
 - `day_format`
 - `gif_path`
 - `clock_format`
@@ -31,7 +31,7 @@ This document records the explicit file-backed scene-level configuration surface
 
 ## Defaults
 
-- `clock_font_path`: `v2/render/fonts/go_deco.txt`
+- `clock_font_name`: `slant`
 - `day_format`: `%A`
 - `clock_format`: `%H:%M`
 - `gif_path`: `visualizer/assets/source.gif`
@@ -44,7 +44,7 @@ This document records the explicit file-backed scene-level configuration surface
 - keep config explicit rather than implicit in runtime code
 - the launcher loads the repo-tracked JSON file by default
 - the live v2 scene reloads the config file when it changes
-- both the Bubble Tea default and the Python snapshot helper read the same file-backed JSON
-- `clock_font_path` is retained for compatibility and future typography work, but the current default clock scene is Go-canonical and the Python path only mirrors the shared font file for verification
-- `gif_path` and `theme_name` remain for fallback compatibility and future scene expansion, but they do not affect the current default clock scene
-- the start screen also prints a plain `0 1 2 3 4 5 6 7 8 9` control row under the day label
+- the Bubble Tea default is canonical; Python is a thin verification helper
+- `clock_font_name` selects the live FIGlet clock font used by the Go runtime
+- `clock_font_path` is only a legacy compatibility alias
+- `gif_path` and `theme_name` remain for fallback compatibility and future scene expansion

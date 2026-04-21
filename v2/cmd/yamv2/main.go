@@ -9,7 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mattn/go-runewidth"
 )
 
 type sceneConfig struct {
@@ -39,6 +42,21 @@ type model struct {
 	paused        bool
 	clockOverride string
 	dayOverride   string
+	help          help.Model
+	keys          keyMap
+}
+
+type keyMap struct {
+	Quit  key.Binding
+	Pause key.Binding
+}
+
+func (k keyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Quit, k.Pause}
+}
+
+func (k keyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{{k.Quit, k.Pause}}
 }
 
 func defaultConfig() sceneConfig {
@@ -176,7 +194,8 @@ func (m model) View() string {
 		day = polishDayLabel(time.Now())
 	}
 
-	return renderScene(width, height, clock, day, m.state.cfg.ClockFontName, m.repoRoot)
+	footer := m.help.View(m.keys)
+	return renderScene(width, height, clock, day, footer, m.state.cfg.ClockFontName, m.repoRoot)
 }
 
 func polishDayLabel(t time.Time) string {
@@ -206,7 +225,7 @@ func polishDayLabel(t time.Time) string {
 	return fmt.Sprintf("%s, %d %s", weekday, t.Day(), month)
 }
 
-func renderScene(width, height int, clock, day, fontName, repoRoot string) string {
+func renderScene(width, height int, clock, day, footer, fontName, repoRoot string) string {
 	if width < 24 {
 		width = 24
 	}
@@ -248,11 +267,9 @@ func renderScene(width, height int, clock, day, fontName, repoRoot string) strin
 	dayX := max(0, clockX+(clockWidth-len(day))/2)
 	placeBlock(dayX, dayY, day)
 
-	controlsArt := renderFigletBlock("0123456789", fontDir, fontName)
-	controlsWidth := renderClockLineWidth("0123456789", fontDir, fontName)
-	controlsX := max(0, (width-controlsWidth)/2)
-	controlsY := max(0, height-8)
-	placeBlock(controlsX, controlsY, controlsArt)
+	footerY := max(0, height-2)
+	footerX := max(0, (width-runewidth.StringWidth(footer))/2)
+	placeBlock(footerX, footerY, footer)
 
 	var b strings.Builder
 	for _, row := range rows {
@@ -320,6 +337,11 @@ func main() {
 		height:        height,
 		clockOverride: clockOverride,
 		dayOverride:   dayOverride,
+		help:          help.New(),
+		keys: keyMap{
+			Quit:  key.NewBinding(key.WithKeys("q", "ctrl+c", "esc"), key.WithHelp("q", "quit")),
+			Pause: key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "pause")),
+		},
 	}
 
 	if once {

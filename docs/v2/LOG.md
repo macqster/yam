@@ -123,3 +123,4 @@ This is the running log for the v2 rebuild.
 - record only decisions, file moves, and implementation milestones
 - do not use this file for speculative design notes
 - made the live FIGlet clock colon blink once per second on odd seconds while leaving one-shot verification stable
+- replaced the bottom digit reference row with a Bubble Tea `bubbles/help` footer that shows simple quit/pause keybindings

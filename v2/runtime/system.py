@@ -143,17 +143,12 @@ def render_frame_with_clock(
         for idx, line in enumerate(clock_text_block.splitlines()):
             clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
         day = TextOverlay(x=max(0, clock_x + (clock_width - len(day_value)) // 2), y=clock_y + 6, text=day_value).shapes()
-        controls_value = "0123456789"
-        controls_block = render_clock(controls_value)
-        controls_width = max((len(line) for line in controls_block.splitlines()), default=0)
-        controls_y = max(0, model.height - 8)
-        controls_x = max(0, (model.width - controls_width) // 2)
-        controls = []
-        for idx, line in enumerate(controls_block.splitlines()):
-            controls.extend(TextOverlay(x=controls_x, y=controls_y + idx, text=line).shapes())
+        footer_text = "q quit •   space pause"
+        footer_x = max(0, (model.width - len(footer_text)) // 2)
+        footer = TextOverlay(x=footer_x, y=max(0, model.height - 2), text=footer_text).shapes()
         ui_shapes = ui_overlay_shapes(ui) if ui is not None else []
         return compose_frame(
             model.width,
             model.height,
-            [*build_shapes(ecosystem.organisms), *ui_shapes, *clock, *day, *controls],
+            [*build_shapes(ecosystem.organisms), *ui_shapes, *clock, *day, *footer],
         )

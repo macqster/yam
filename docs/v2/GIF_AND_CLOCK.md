@@ -26,7 +26,7 @@ This document records the minimal working default scene target for v2.
 - the default `yam` launch stays alive and redraws continuously through the Bubble Tea runtime
 - use `--once` with `--clock` and `--day` for finite one-shot output during debugging
 - the runtime enters the alternate screen and restores the terminal on exit
-- changes to `v2/scene_config.json` are reloaded live
+- changes to `scene_config.json` are reloaded live
 
 ## Constraints
 

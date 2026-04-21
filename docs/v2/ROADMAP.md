@@ -30,7 +30,7 @@ This file tracks the rebuild at a high level.
 - build a minimal runnable simulation loop
 - render one organism to the framebuffer
 - emit one deterministic terminal frame
-- wire `v2/app.py` to the runtime model and message flow
+- wire `app.py` to the runtime model and message flow
 - document the slice in `VERTICAL_SLICE.md`
 - add runtime tick and input message handling
 - document the loop in `RUNTIME_LOOP.md`
@@ -106,12 +106,12 @@ This file tracks the rebuild at a high level.
 
 ### M12. File-backed scene config
 
-- add `v2/scene_config.json`
+- add `scene_config.json`
 - load scene config from the repo-tracked JSON file by default
 
 ### M13. Scene config live reload
 
-- reload `v2/scene_config.json` during the live loop
+- reload `scene_config.json` during the live loop
 - document the reload contract in `SCENE_CONFIG.md`
 
 ### M14. Scene config command

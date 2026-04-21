@@ -14,18 +14,18 @@ class SceneConfig:
     clock_font_name: str
     gif_path: Path
     hero_anchor: str = "left"
-    hero_width: int = 12
-    hero_height: int = 8
-    hero_offset_x: int = 2
-    hero_offset_y: int = 1
-    day_format: str = "%A"
+    hero_width: int = 10
+    hero_height: int = 6
+    hero_offset_x: int = 0
+    hero_offset_y: int = 0
+    day_format: str = "%A, %d %B"
     clock_format: str = "%H:%M"
     theme_name: str = "btas_dark_deco"
 
 
 def default_scene_config_path(repo_root: Path) -> Path:
     """Return the repo-tracked default scene config path."""
-    return repo_root / "v2" / "scene_config.json"
+    return repo_root / "scene_config.json"
 
 
 def load_scene_config(path: Path) -> SceneConfig:

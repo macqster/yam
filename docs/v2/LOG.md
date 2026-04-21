@@ -130,3 +130,4 @@ This is the running log for the v2 rebuild.
 - imported the real hero GIF as `v2/hero/assets/hero_go.gif` and retargeted the repo-tracked scene defaults to that asset
 - removed the empty `v1/` stub and normalized repo wording so the current runtime reads as the canonical app path
 - added branch/release policy documentation and a root-tree flattening plan for the eventual removal of versioned source directories
+- moved the Python entrypoints and scene config to the repository root as the first flattening batch

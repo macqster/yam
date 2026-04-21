@@ -161,7 +161,7 @@ if [[ "$LIST_RECIPES" -eq 1 ]]; then
   exit 0
 fi
 
-SCENE_CONFIG_PATH="$REPO_ROOT/v2/scene_config.json"
+SCENE_CONFIG_PATH="$REPO_ROOT/scene_config.json"
 if [[ -n "$SCENE_SET" ]]; then
   python3 - "$SCENE_CONFIG_PATH" "$SCENE_SET" <<'PY'
 from pathlib import Path
@@ -199,7 +199,7 @@ from v2.config import SceneConfig, dump_scene_config
 dump_scene_config(
     SceneConfig(
         clock_font_name="Fender",
-        day_format="%A",
+        day_format="%A, %d %B",
         clock_format="%H:%M",
         gif_path=Path("v2/hero/assets/hero_go.gif"),
         hero_anchor="left",
@@ -223,10 +223,10 @@ fi
 
 case "$MODE" in
   v2)
-    cd "$REPO_ROOT"
+  cd "$REPO_ROOT"
     case "$RUNTIME" in
       python)
-        exec python3 -m v2.app "${FORWARDED_ARGS[@]}"
+        exec python3 -m app "${FORWARDED_ARGS[@]}"
         ;;
       bubbletea)
         cd "$REPO_ROOT/v2"

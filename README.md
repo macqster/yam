@@ -5,7 +5,9 @@
 ## Current focus
 
 - `bin/yam` is the launcher
-- `v2/` contains the live runtime and support code
+- the runtime is being flattened into the repository root
+- `app.py`, `config.py`, and `check_golden.py` are already at the root
+- `v2/` still holds the supporting packages during the flattening pass
 - `docs/v2/` is the working specification and tracking area
 - the legacy visualizer remains available only as a compatibility path
 - [`docs/RELEASE_MODEL.md`](docs/RELEASE_MODEL.md) records the stable/experimental branch policy

@@ -72,7 +72,7 @@ These files form the working specification for the v2 branch:
 - Read [`HERO_GIF_PLAN.md`](HERO_GIF_PLAN.md) for the preliminary hero image pipeline plan.
 - Read [`HERO_RENDERER.md`](HERO_RENDERER.md) for the first hero implementation slice.
 - The dependency matrix is the first stop for deciding whether a third-party Bubble Tea library is core, optional, or reference-only.
-- The default scene config is stored in [`../../v2/scene_config.json`](../../v2/scene_config.json).
+- The default scene config is stored in [`../../scene_config.json`](../../scene_config.json).
 - Use `yam --scene-config show|edit|reset` to inspect or tune the file-backed config.
 - Use `yam --scene-set key=value` for one-key scene updates.
 - The live app uses a real clock; the snapshot check uses a fixed one.

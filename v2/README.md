@@ -1,6 +1,6 @@
 # YAM Runtime Tree
 
-This directory contains the live runtime modules and support code for the current YAM terminal scene.
+This directory contains the supporting runtime packages while the repo is flattened toward the root.
 
 ## Layer Map
 
@@ -20,4 +20,4 @@ Do not add behavior here unless it belongs to one of the declared layers.
 
 ## Verification
 
-Use `python3 -m v2.check_golden` to compare the live output against the documented golden frame.
+Use `python3 -m check_golden` to compare the live output against the documented golden frame.

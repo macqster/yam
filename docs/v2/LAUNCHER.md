@@ -44,7 +44,7 @@ yam --scene-config reset
 yam --scene-set theme_name=monochrome
 ```
 
-These commands operate on `v2/scene_config.json`.
+These commands operate on `scene_config.json`.
 
 ## Notes
 
@@ -52,7 +52,7 @@ These commands operate on `v2/scene_config.json`.
 - v1 recipe handling remains available behind the compatibility flag
 - the v2 launcher can choose `python` or `bubbletea`
 - the default v2 runtime is `bubbletea`
-- the Python entrypoint is retained as a fallback verifier and uses `python3 -m v2.app`
+- the Python entrypoint is retained as a fallback verifier and uses `python3 -m app`
 - the Bubble Tea entrypoint uses `go run ./cmd/yamv2` from `v2/`
 - scene config tuning is exposed through launcher subcommands
 - the default scene is the day-plus-hour FIGlet clock

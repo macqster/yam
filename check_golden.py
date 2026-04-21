@@ -8,7 +8,7 @@ from pathlib import Path
 
 def load_golden_frame() -> str:
     """Load the canonical golden frame from docs."""
-    docs_path = Path(__file__).resolve().parents[1] / "docs" / "v2" / "GOLDEN_FRAME.md"
+    docs_path = Path(__file__).resolve().parent / "docs" / "v2" / "GOLDEN_FRAME.md"
     content = docs_path.read_text(encoding="utf-8")
     lines: list[str] = []
     in_frame = False
@@ -29,7 +29,7 @@ def load_golden_frame() -> str:
 
 def main() -> int:
     """Exit with a non-zero status when the frame drifts."""
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parent
     current = subprocess.run(
         [
             "go",

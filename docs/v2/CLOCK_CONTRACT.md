@@ -5,7 +5,7 @@ This note records the current contract for the default clock scene.
 ## Contract
 
 - The live clock is rendered by the Go FIGlet engine in `v2/cmd/yamv2`.
-- The canonical live font is selected by `clock_font_name` in `v2/scene_config.json`.
+- The canonical live font is selected by `clock_font_name` in `scene_config.json`.
 - The default font is `Fender`.
 - The live renderer uses FIGlet full-width mode so adjacent digits do not smush together.
 - The live runtime renders FIGlet output as a block and anchors that block around x = 3/4 width and y = 1/4 height from the top-left corner.

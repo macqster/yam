@@ -5,7 +5,7 @@ This document records the current golden-frame verification path.
 ## Command
 
 ```bash
-python3 -m v2.check_golden
+python3 -m check_golden
 ```
 
 ## Contract

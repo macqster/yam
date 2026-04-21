@@ -17,7 +17,7 @@ This document records the explicit file-backed scene-level configuration surface
 
 ## File
 
-- `v2/scene_config.json`
+- `scene_config.json`
 
 ## Commands
 

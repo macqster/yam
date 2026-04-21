@@ -8,6 +8,7 @@ This document records the minimal working default scene target for v2.
 - the live clock is rendered by the Go FIGlet engine using `clock_font_name`
 - the default clock font is `Fender`
 - the live FIGlet renderer uses full-width mode so digits retain visible separation
+- the clock block is anchored near x = 3/4 of terminal width and y = 1/4 of terminal height
 - the day name is rendered beneath the clock in plain text
 - a digit reference row is rendered below the day label using the same FIGlet engine
 - the clock is runtime-driven and not part of engine state

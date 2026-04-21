@@ -8,7 +8,7 @@ This note records the current contract for the default clock scene.
 - The canonical live font is selected by `clock_font_name` in `v2/scene_config.json`.
 - The default font is `Fender`.
 - The live renderer uses FIGlet full-width mode so adjacent digits do not smush together.
-- The live runtime renders FIGlet output as a block and centers that block in the scene.
+- The live runtime renders FIGlet output as a block and anchors that block around x = 3/4 width and y = 1/4 height from the top-left corner.
 - The Python layer is snapshot/check only and should not define a second live clock renderer.
 
 ## What This Means

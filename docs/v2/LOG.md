@@ -113,6 +113,7 @@ This is the running log for the v2 rebuild.
 - refreshed the golden frame baseline to the Go FIGlet `12:34` / `Tuesday` one-shot render
 - switched the default live FIGlet font from `slant` to the repo-local `Fender.flf` asset
 - updated the live clock docs and source map to treat `Fender.flf` as the canonical default font and `go_deco.txt` as legacy only
+- moved the live FIGlet clock anchor to approximately x = 3/4 and y = 1/4 of terminal size from the top-left corner
 
 ## Log Rules
 

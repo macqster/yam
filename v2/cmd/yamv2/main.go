@@ -211,11 +211,11 @@ func renderScene(width, height int, clock, day, fontName, repoRoot string) strin
 	fontDir := figletFontDir(repoRoot)
 	clockArt := renderFigletBlock(clock, fontDir, fontName)
 	clockWidth := renderClockLineWidth(clock, fontDir, fontName)
-	clockX := max(0, (width-clockWidth)/2)
-	clockY := max(2, height/6)
+	clockX := max(0, (width*3)/4-clockWidth/2)
+	clockY := max(0, height/4)
 	placeBlock(clockX, clockY, clockArt)
 
-	dayX := max(0, (width-len(day))/2)
+	dayX := max(0, clockX+(clockWidth-len(day))/2)
 	placeBlock(dayX, clockY+8, day)
 
 	controlsArt := renderFigletBlock("0123456789", fontDir, fontName)

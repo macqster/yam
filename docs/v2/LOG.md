@@ -99,6 +99,7 @@ This is the running log for the v2 rebuild.
 - refreshed the golden frame baseline to the current renderer output after loading the shared font file
 - reclassified Python clock rendering as snapshot-only while keeping Go as the canonical runtime source of truth
 - removed the stale Gothic clock fallback and pointed all default scene config fallbacks at `v2/render/fonts/go_deco.txt`
+- added a FIGlet tooling review covering `go-figure`, `figlet4go`, `lsferreira42/figlet-go`, and `mattn/go-figlet`
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules

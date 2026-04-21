@@ -132,3 +132,6 @@ This is the running log for the v2 rebuild.
 - added branch/release policy documentation and a root-tree flattening plan for the eventual removal of versioned source directories
 - moved the Python entrypoints and scene config to the repository root as the first flattening batch
 - paused the flattening after batch 1 so the remaining Go support packages can stay under `v2/` until the next deliberate refactor
+- flattened the remaining live Go runtime packages and launcher support into root-level directories
+- moved the Go module root to the repository root and updated the root launcher, scene config, and golden checker to use the flattened layout
+- updated the hero asset path, clock font path, and docs so the live root runtime and verifier share the same canonical source tree

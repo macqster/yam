@@ -28,3 +28,9 @@ This note records the path from the current versioned tree to a single root runt
 - `yam` launches from one canonical source tree.
 - The repo no longer needs `v1/` or `v2/` directory names for active development.
 - Stable releases are described by branch/tag/version policy, not by folder names.
+
+## Current Status
+
+- Batch 1 is complete: the Python entrypoints and scene config now live at the repository root.
+- The remaining Go support packages stay under `v2/` for now.
+- Resume flattening only when you are ready for the larger Go/package move.

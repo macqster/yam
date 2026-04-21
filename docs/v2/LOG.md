@@ -131,3 +131,4 @@ This is the running log for the v2 rebuild.
 - removed the empty `v1/` stub and normalized repo wording so the current runtime reads as the canonical app path
 - added branch/release policy documentation and a root-tree flattening plan for the eventual removal of versioned source directories
 - moved the Python entrypoints and scene config to the repository root as the first flattening batch
+- paused the flattening after batch 1 so the remaining Go support packages can stay under `v2/` until the next deliberate refactor

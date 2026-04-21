@@ -114,6 +114,7 @@ This is the running log for the v2 rebuild.
 - switched the default live FIGlet font from `slant` to the repo-local `Fender.flf` asset
 - updated the live clock docs and source map to treat `Fender.flf` as the canonical default font and `go_deco.txt` as legacy only
 - moved the live FIGlet clock anchor to approximately x = 3/4 and y = 1/4 of terminal size from the top-left corner
+- moved the day label closer to the clock and switched the default day label to Polish date form
 
 ## Log Rules
 

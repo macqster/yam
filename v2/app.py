@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--fps", type=float, default=6.0, help="live loop frame rate")
     parser.add_argument("--gif", default="visualizer/assets/source.gif", help="gif asset path")
     parser.add_argument("--clock-format", default="%H:%M", help="clock format")
+    parser.add_argument("--day-format", default="%A, %d %B", help="day format")
     parser.add_argument("--theme", default="btas_dark_deco", help="theme name")
     parser.add_argument("--config", default="", help="scene config JSON path")
     parser.add_argument("--spawn", action="store_true", help="inject a deterministic seed via input path")
@@ -44,11 +45,12 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
     scene_path = Path(args.config) if args.config else default_scene_config_path(repo_root)
     scene = load_scene_config(scene_path)
-    if args.gif != "visualizer/assets/source.gif" or args.clock_format != "%H:%M" or args.theme != "btas_dark_deco":
+    if args.gif != "visualizer/assets/source.gif" or args.clock_format != "%H:%M" or args.day_format != "%A, %d %B" or args.theme != "btas_dark_deco":
         scene = SceneConfig(
             clock_font_name="Fender",
             gif_path=Path(args.gif),
             clock_format=args.clock_format,
+            day_format=args.day_format,
             theme_name=args.theme,
         )
     if args.spawn:

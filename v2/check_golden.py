@@ -43,7 +43,7 @@ def main() -> int:
             "--clock",
             "12:34",
             "--day",
-            "Tuesday",
+            "wtorek, 21 kwietnia",
         ],
         cwd=repo_root / "v2",
         check=True,

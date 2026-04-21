@@ -32,7 +32,7 @@ This document records the explicit file-backed scene-level configuration surface
 ## Defaults
 
 - `clock_font_name`: `Fender`
-- `day_format`: `%A`
+- `day_format`: `%A, %d %B`
 - `clock_format`: `%H:%M`
 - `gif_path`: `visualizer/assets/source.gif`
 - `theme_name`: `btas_dark_deco`
@@ -48,3 +48,4 @@ This document records the explicit file-backed scene-level configuration surface
 - `clock_font_name` selects the live FIGlet clock font used by the Go runtime
 - `clock_font_path` is only a legacy compatibility alias
 - `gif_path` and `theme_name` remain for fallback compatibility and future scene expansion
+- the live day label is rendered in Polish date form by default: `wtorek, 21 kwietnia`

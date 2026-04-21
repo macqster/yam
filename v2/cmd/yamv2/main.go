@@ -44,7 +44,7 @@ type model struct {
 func defaultConfig() sceneConfig {
 	return sceneConfig{
 		ClockFontName: "Fender",
-		DayFormat:     "%A",
+		DayFormat:     "%A, %d %B",
 		ClockFormat:   "%H:%M",
 		GifPath:       "visualizer/assets/source.gif",
 		ThemeName:     "btas_dark_deco",
@@ -76,7 +76,7 @@ func loadConfig(repoRoot, path string) (configState, error) {
 		return state, err
 	}
 	if state.cfg.DayFormat == "" {
-		state.cfg.DayFormat = "%A"
+		state.cfg.DayFormat = "%A, %d %B"
 	}
 	if state.cfg.ClockFormat == "" {
 		state.cfg.ClockFormat = "%H:%M"
@@ -158,7 +158,6 @@ func (m model) View() string {
 	}
 
 	clockLayout := translateClockFormat(m.state.cfg.ClockFormat)
-	dayLayout := translateClockFormat(m.state.cfg.DayFormat)
 	clock := m.clockOverride
 	if clock == "" {
 		clock = m.now.Format(clockLayout)
@@ -168,13 +167,40 @@ func (m model) View() string {
 	}
 	day := m.dayOverride
 	if day == "" {
-		day = m.now.Format(dayLayout)
+		day = polishDayLabel(m.now)
 	}
 	if day == "" {
-		day = time.Now().Format(dayLayout)
+		day = polishDayLabel(time.Now())
 	}
 
 	return renderScene(width, height, clock, day, m.state.cfg.ClockFontName, m.repoRoot)
+}
+
+func polishDayLabel(t time.Time) string {
+	weekday := map[time.Weekday]string{
+		time.Monday:    "poniedziałek",
+		time.Tuesday:   "wtorek",
+		time.Wednesday: "środa",
+		time.Thursday:  "czwartek",
+		time.Friday:    "piątek",
+		time.Saturday:  "sobota",
+		time.Sunday:    "niedziela",
+	}[t.Weekday()]
+	month := map[time.Month]string{
+		time.January:   "stycznia",
+		time.February:  "lutego",
+		time.March:     "marca",
+		time.April:     "kwietnia",
+		time.May:       "maja",
+		time.June:      "czerwca",
+		time.July:      "lipca",
+		time.August:    "sierpnia",
+		time.September: "września",
+		time.October:   "października",
+		time.November:  "listopada",
+		time.December:  "grudnia",
+	}[t.Month()]
+	return fmt.Sprintf("%s, %d %s", weekday, t.Day(), month)
 }
 
 func renderScene(width, height int, clock, day, fontName, repoRoot string) string {
@@ -215,8 +241,9 @@ func renderScene(width, height int, clock, day, fontName, repoRoot string) strin
 	clockY := max(0, height/4)
 	placeBlock(clockX, clockY, clockArt)
 
+	dayY := clockY + 6
 	dayX := max(0, clockX+(clockWidth-len(day))/2)
-	placeBlock(dayX, clockY+8, day)
+	placeBlock(dayX, dayY, day)
 
 	controlsArt := renderFigletBlock("0123456789", fontDir, fontName)
 	controlsWidth := renderClockLineWidth("0123456789", fontDir, fontName)

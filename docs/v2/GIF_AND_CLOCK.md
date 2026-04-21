@@ -9,7 +9,7 @@ This document records the minimal working default scene target for v2.
 - the default clock font is `Fender`
 - the live FIGlet renderer uses full-width mode so digits retain visible separation
 - the clock block is anchored near x = 3/4 of terminal width and y = 1/4 of terminal height
-- the day name is rendered beneath the clock in plain text
+- the day label is rendered beneath the clock in Polish date form, e.g. `wtorek, 21 kwietnia`
 - a digit reference row is rendered below the day label using the same FIGlet engine
 - the clock is runtime-driven and not part of engine state
 - verification uses a fixed clock string and day string so the snapshot remains stable

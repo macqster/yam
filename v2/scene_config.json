@@ -1,7 +1,7 @@
 {
   "clock_font_name": "Fender",
   "clock_format": "%H:%M",
-  "day_format": "%A",
+  "day_format": "%A, %d %B",
   "gif_path": "visualizer/assets/source.gif",
   "theme_name": "btas_dark_deco"
 }

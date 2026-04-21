@@ -45,6 +45,33 @@ def _render_go_frame(width: int, height: int, clock_value: str, day_value: str) 
     ).stdout.rstrip("\n")
 
 
+def _polish_day_label(now: datetime) -> str:
+    weekdays = {
+        0: "poniedziałek",
+        1: "wtorek",
+        2: "środa",
+        3: "czwartek",
+        4: "piątek",
+        5: "sobota",
+        6: "niedziela",
+    }
+    months = {
+        1: "stycznia",
+        2: "lutego",
+        3: "marca",
+        4: "kwietnia",
+        5: "maja",
+        6: "czerwca",
+        7: "lipca",
+        8: "sierpnia",
+        9: "września",
+        10: "października",
+        11: "listopada",
+        12: "grudnia",
+    }
+    return f"{weekdays[now.weekday()]}, {now.day} {months[now.month]}"
+
+
 def handle_message(
     model: RuntimeModel,
     ecosystem: Ecosystem,
@@ -104,7 +131,7 @@ def render_frame_with_clock(
     )
     theme_by_name(scene.theme_name)
     clock_value = clock_text or datetime.now().strftime(scene.clock_format)
-    day_value = datetime.now().strftime(scene.day_format)
+    day_value = _polish_day_label(datetime.now())
     try:
         return _render_go_frame(model.width, model.height, clock_value, day_value)
     except Exception:
@@ -115,7 +142,7 @@ def render_frame_with_clock(
         clock = []
         for idx, line in enumerate(clock_text_block.splitlines()):
             clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
-        day = TextOverlay(x=max(0, clock_x + (clock_width - len(day_value)) // 2), y=clock_y + 8, text=day_value).shapes()
+        day = TextOverlay(x=max(0, clock_x + (clock_width - len(day_value)) // 2), y=clock_y + 6, text=day_value).shapes()
         controls_value = "0123456789"
         controls_block = render_clock(controls_value)
         controls_width = max((len(line) for line in controls_block.splitlines()), default=0)

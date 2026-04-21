@@ -129,3 +129,4 @@ This is the running log for the v2 rebuild.
 - synced the hero placement defaults to the small left-anchored baseline so the clock stays clear in the live scene
 - imported the real hero GIF as `v2/hero/assets/hero_go.gif` and retargeted the repo-tracked scene defaults to that asset
 - removed the empty `v1/` stub and normalized repo wording so the current runtime reads as the canonical app path
+- added branch/release policy documentation and a root-tree flattening plan for the eventual removal of versioned source directories

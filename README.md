@@ -8,6 +8,8 @@
 - `v2/` contains the live runtime and support code
 - `docs/v2/` is the working specification and tracking area
 - the legacy visualizer remains available only as a compatibility path
+- [`docs/RELEASE_MODEL.md`](docs/RELEASE_MODEL.md) records the stable/experimental branch policy
+- [`docs/FLATTENING_PLAN.md`](docs/FLATTENING_PLAN.md) records the move toward one canonical root runtime tree
 
 ## What moved out
 

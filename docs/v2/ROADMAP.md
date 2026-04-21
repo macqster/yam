@@ -157,3 +157,5 @@ This file tracks the rebuild at a high level.
 - no undocumented file moves
 - no broad refactors without a logged reason
 - every meaningful change gets a note in `docs/v2/LOG.md`
+- the branch and release policy live in `docs/RELEASE_MODEL.md`
+- the source-tree flattening path lives in `docs/FLATTENING_PLAN.md`

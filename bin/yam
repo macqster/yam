@@ -6,8 +6,8 @@ setopt typesetsilent 2>/dev/null || true
 
 REPO_ROOT="${YAM_REPO:-$HOME/_git/yam}"
 APP_ROOT="${YAM_VISUALIZER_ROOT:-}"
-MODE="${YAM_VERSION:-v2}"
-RUNTIME="${YAM_RUNTIME:-bubbletea}"
+MODE="v2"
+RUNTIME="bubbletea"
 RECIPE=""
 LIST_RECIPES=0
 SCENE_ACTION=""
@@ -198,7 +198,7 @@ from v2.config import SceneConfig, dump_scene_config
 
 dump_scene_config(
     SceneConfig(
-        clock_font_path=Path("v2/assets/fonts/Gothic.flf"),
+        clock_font_path=Path("v2/render/fonts/go_deco.txt"),
         day_format="%A",
         clock_format="%H:%M",
         gif_path=Path("visualizer/assets/source.gif"),

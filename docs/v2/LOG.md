@@ -102,6 +102,7 @@ This is the running log for the v2 rebuild.
 - added a FIGlet tooling review covering `go-figure`, `figlet4go`, `lsferreira42/figlet-go`, and `mattn/go-figlet`
 - widened the canonical clock font to a more legible box-drawing alphabet and refreshed the golden frame baseline
 - restored the original narrow 5x7 Bream-Deco clock contract and resynced the golden frame baseline
+- hardened `bin/yam` so the default launch ignores stale env overrides and resets to the canonical Go font path
 - split terminal startup assets out of the repo and replaced the top-level README with a yam-only overview
 
 ## Log Rules

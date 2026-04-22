@@ -213,7 +213,7 @@ func renderScene(width, height int, clock, day string, cfg sceneConfig, repoRoot
 			if y+dy < 0 || y+dy >= height {
 				continue
 			}
-			for dx, r := range line {
+			for dx, r := range []rune(line) {
 				if x+dx < 0 || x+dx >= width {
 					continue
 				}

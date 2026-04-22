@@ -8,6 +8,7 @@ This is the running log for the v2 rebuild.
 - removed the hero block and help footer from the active scene and helper fallback paths
 - pruned the active scene contract docs so they describe the clock/date-only baseline
 - fixed weekday centering so Polish labels use display width instead of raw byte length
+- fixed the Go text placer to use rune indexing so accented weekday names like `środa` no longer split into `ś roda`
 
 ## 2026-04-20
 

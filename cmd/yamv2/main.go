@@ -10,6 +10,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mattn/go-runewidth"
 )
 
 type sceneConfig struct {
@@ -229,7 +230,7 @@ func renderScene(width, height int, clock, day string, cfg sceneConfig, repoRoot
 	placeBlock(clockX, clockY, clockArt)
 
 	dayY := clockY + 6
-	dayX := max(0, clockX+(clockWidth-len(day))/2)
+	dayX := max(0, clockX+(clockWidth-runewidth.StringWidth(day))/2)
 	placeBlock(dayX, dayY, day)
 
 	var b strings.Builder

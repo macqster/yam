@@ -7,6 +7,7 @@ This is the running log for the v2 rebuild.
 - simplified the live Go visualizer to show only the FIGlet clock and Polish date label
 - removed the hero block and help footer from the active scene and helper fallback paths
 - pruned the active scene contract docs so they describe the clock/date-only baseline
+- fixed weekday centering so Polish labels use display width instead of raw byte length
 
 ## 2026-04-20
 

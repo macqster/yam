@@ -17,6 +17,7 @@ from runtime.model import RuntimeModel
 from ui.model import UIModel
 from ui.router import UIRouter
 from theme.model import theme_by_name
+from wcwidth import wcswidth
 
 
 def _render_go_frame(width: int, height: int, clock_value: str, day_value: str) -> str:
@@ -138,7 +139,7 @@ def render_frame_with_clock(
         clock = []
         for idx, line in enumerate(clock_text_block.splitlines()):
             clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
-        day = TextOverlay(x=max(0, clock_x + (clock_width - len(day_value)) // 2), y=clock_y + 6, text=day_value).shapes()
+        day = TextOverlay(x=max(0, clock_x + (clock_width - max(0, wcswidth(day_value))) // 2), y=clock_y + 6, text=day_value).shapes()
         return compose_frame(
             model.width,
             model.height,

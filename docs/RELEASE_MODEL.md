@@ -1,25 +1,25 @@
 # YAM Release Model
 
-This repository uses two branches and continuous versioning.
+This repository uses a stable release branch, a current Go development branch, and continuous versioning.
 
 ## Branches
 
 - `stable` holds the last released version of `yam-go`.
-- `experimental` holds the next `yam-go` release in progress.
+- `yam-go` is the current Go development branch.
 - `yam-rust` is the separate experimental track for the engine-first rewrite.
 
 ## Versioning
 
 - Releases advance monotonically: `0.2`, `0.3`, `0.4`, and so on.
 - `stable` always corresponds to the latest released version.
-- `experimental` always corresponds to the next version under active development.
+- `yam-go` always corresponds to the next version under active development.
 
 ## Workflow
 
-1. Cut a stable release from `experimental`.
+1. Cut a stable release from `yam-go`.
 2. Tag the release.
 3. Merge or fast-forward the result into `stable`.
-4. Continue development in `experimental` for the next version.
+4. Continue development in `yam-go` for the next version.
 
 ## Repo Shape Goal
 

@@ -4,8 +4,9 @@ This repository uses two branches and continuous versioning.
 
 ## Branches
 
-- `stable` holds the last released version.
-- `experimental` holds the next release in progress.
+- `stable` holds the last released version of `yam-go`.
+- `experimental` holds the next `yam-go` release in progress.
+- `yam-rust` is the separate experimental track for the engine-first rewrite.
 
 ## Versioning
 
@@ -22,6 +23,7 @@ This repository uses two branches and continuous versioning.
 
 ## Repo Shape Goal
 
-- Keep one canonical runtime tree in the repository root.
+- Keep one canonical runtime tree in the repository root for `yam-go`.
 - Avoid version-number directory splits once the codebase is flattened.
 - Keep old branch context in tags, logs, and release notes, not in directory names.
+- Keep the Rust rework isolated to the `yam-rust` branch until it proves its own value.

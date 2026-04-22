@@ -6,6 +6,8 @@ This note records the path from the current versioned tree to a single root runt
 
 - Keep one runtime source tree at the repository root.
 - Keep the release model separate from the source tree layout.
+- Keep `yam-go` scoped to a clock-only visualizer.
+- Keep `yam-rust` separate for the engine-first biological simulation experiment.
 
 ## Steps
 
@@ -34,3 +36,4 @@ This note records the path from the current versioned tree to a single root runt
 - Batch 1 is complete: the Python entrypoints and scene config now live at the repository root.
 - Batch 2 is complete: the live Go support packages now live in root-level package directories.
 - The old `v2/` source tree has been removed.
+- The Go runtime is now the clock-only visualizer baseline.

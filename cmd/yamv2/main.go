@@ -9,24 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mattn/go-runewidth"
-
-	heropkg "yamv2/hero"
 )
 
 type sceneConfig struct {
 	ClockFontName string `json:"clock_font_name"`
 	DayFormat     string `json:"day_format"`
 	ClockFormat   string `json:"clock_format"`
-	GifPath       string `json:"gif_path"`
-	HeroAnchor    string `json:"hero_anchor"`
-	HeroWidth     int    `json:"hero_width"`
-	HeroHeight    int    `json:"hero_height"`
-	HeroOffsetX   int    `json:"hero_offset_x"`
-	HeroOffsetY   int    `json:"hero_offset_y"`
 	ThemeName     string `json:"theme_name"`
 }
 
@@ -46,24 +35,8 @@ type model struct {
 	now           time.Time
 	width         int
 	height        int
-	paused        bool
 	clockOverride string
 	dayOverride   string
-	help          help.Model
-	keys          keyMap
-}
-
-type keyMap struct {
-	Quit  key.Binding
-	Pause key.Binding
-}
-
-func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Quit, k.Pause}
-}
-
-func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.Quit, k.Pause}}
 }
 
 func defaultConfig() sceneConfig {
@@ -71,21 +44,8 @@ func defaultConfig() sceneConfig {
 		ClockFontName: "Fender",
 		DayFormat:     "%A, %d %B",
 		ClockFormat:   "%H:%M",
-		GifPath:       "hero/assets/hero_go.gif",
-		HeroAnchor:    "left",
-		HeroWidth:     10,
-		HeroHeight:    6,
-		HeroOffsetX:   0,
-		HeroOffsetY:   0,
 		ThemeName:     "btas_dark_deco",
 	}
-}
-
-func resolveRelative(root, value string) string {
-	if filepath.IsAbs(value) {
-		return value
-	}
-	return filepath.Join(root, value)
 }
 
 func loadConfig(repoRoot, path string) (configState, error) {
@@ -113,21 +73,6 @@ func loadConfig(repoRoot, path string) (configState, error) {
 	}
 	if state.cfg.ClockFontName == "" {
 		state.cfg.ClockFontName = "Fender"
-	}
-	if state.cfg.HeroAnchor == "" {
-		state.cfg.HeroAnchor = "left"
-	}
-	if state.cfg.HeroWidth <= 0 {
-		state.cfg.HeroWidth = 10
-	}
-	if state.cfg.HeroHeight <= 0 {
-		state.cfg.HeroHeight = 6
-	}
-	if state.cfg.HeroOffsetX == 0 {
-		state.cfg.HeroOffsetX = 0
-	}
-	if state.cfg.HeroOffsetY == 0 {
-		state.cfg.HeroOffsetY = 0
 	}
 	state.mod = info.ModTime()
 	return state, nil
@@ -166,9 +111,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c", "esc":
 			return m, tea.Quit
-		case " ":
-			m.paused = !m.paused
-			return m, nil
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -176,9 +118,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tickMsg:
 		m.now = time.Time(msg)
-		if m.paused {
-			return m, tickCmd()
-		}
 		reloaded, reloadCmd := maybeReload(m.repoRoot, m.cfgPath, m.state)
 		m.state = reloaded
 		return m, tea.Batch(tickCmd(), reloadCmd)
@@ -221,8 +160,7 @@ func (m model) View() string {
 		day = polishDayLabel(time.Now())
 	}
 
-	footer := m.help.View(m.keys)
-	return renderScene(width, height, clock, day, footer, m.state.cfg, m.repoRoot)
+	return renderScene(width, height, clock, day, m.state.cfg, m.repoRoot)
 }
 
 func polishDayLabel(t time.Time) string {
@@ -252,7 +190,7 @@ func polishDayLabel(t time.Time) string {
 	return fmt.Sprintf("%s, %d %s", weekday, t.Day(), month)
 }
 
-func renderScene(width, height int, clock, day, footer string, cfg sceneConfig, repoRoot string) string {
+func renderScene(width, height int, clock, day string, cfg sceneConfig, repoRoot string) string {
 	if width < 24 {
 		width = 24
 	}
@@ -288,18 +226,11 @@ func renderScene(width, height int, clock, day, footer string, cfg sceneConfig, 
 	clockWidth := renderClockLineWidth(clock, fontDir, cfg.ClockFontName)
 	clockX := max(0, (width*3)/4-clockWidth/2)
 	clockY := max(0, height/4)
-	heroArt, heroWidth, heroHeight := renderHeroAsset(repoRoot, cfg, width, height)
-	heroX, heroY := heroPlacement(width, height, heroWidth, heroHeight, cfg.HeroAnchor, cfg.HeroOffsetX, cfg.HeroOffsetY)
-	placeBlock(heroX, heroY, heroArt)
 	placeBlock(clockX, clockY, clockArt)
 
 	dayY := clockY + 6
 	dayX := max(0, clockX+(clockWidth-len(day))/2)
 	placeBlock(dayX, dayY, day)
-
-	footerY := max(0, height-2)
-	footerX := max(0, (width-runewidth.StringWidth(footer))/2)
-	placeBlock(footerX, footerY, footer)
 
 	var b strings.Builder
 	for _, row := range rows {
@@ -307,40 +238,6 @@ func renderScene(width, height int, clock, day, footer string, cfg sceneConfig, 
 		b.WriteByte('\n')
 	}
 	return strings.TrimRight(b.String(), "\n")
-}
-
-func renderHeroAsset(repoRoot string, cfg sceneConfig, width, height int) (string, int, int) {
-	heroWidth := cfg.HeroWidth
-	if heroWidth <= 0 {
-		heroWidth = max(10, width/5)
-	}
-	heroHeight := cfg.HeroHeight
-	if heroHeight <= 0 {
-		heroHeight = max(6, height/4)
-	}
-	renderer := heropkg.ChafaRenderer{}
-	gifPath := resolveRelative(repoRoot, cfg.GifPath)
-	block, err := renderer.RenderFrame(gifPath, heroWidth, heroHeight)
-	if err != nil {
-		return "", heroWidth, heroHeight
-	}
-	return block, heroWidth, heroHeight
-}
-
-func heroPlacement(width, height, heroWidth, heroHeight int, anchor string, offsetX, offsetY int) (int, int) {
-	baseX := 2
-	switch anchor {
-	case "center":
-		baseX = max(0, (width-heroWidth)/2)
-	case "right":
-		baseX = max(0, width-heroWidth-2)
-	case "center-left":
-		baseX = max(0, width/4-heroWidth/2)
-	default:
-		baseX = 2
-	}
-	baseY := 0
-	return baseX + offsetX, baseY + offsetY
 }
 
 func translateClockFormat(layout string) string {
@@ -401,11 +298,6 @@ func main() {
 		height:        height,
 		clockOverride: clockOverride,
 		dayOverride:   dayOverride,
-		help:          help.New(),
-		keys: keyMap{
-			Quit:  key.NewBinding(key.WithKeys("q", "ctrl+c", "esc"), key.WithHelp("q", "quit")),
-			Pause: key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "pause")),
-		},
 	}
 
 	if once {

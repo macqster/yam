@@ -12,12 +12,6 @@ class SceneConfig:
     """Small explicit scene config surface."""
 
     clock_font_name: str
-    gif_path: Path
-    hero_anchor: str = "left"
-    hero_width: int = 10
-    hero_height: int = 6
-    hero_offset_x: int = 0
-    hero_offset_y: int = 0
     day_format: str = "%A, %d %B"
     clock_format: str = "%H:%M"
     theme_name: str = "btas_dark_deco"
@@ -33,12 +27,6 @@ def load_scene_config(path: Path) -> SceneConfig:
     if not path.exists():
         return SceneConfig(
             clock_font_name="Fender",
-            gif_path=Path("hero/assets/hero_go.gif"),
-            hero_anchor="left",
-            hero_width=10,
-            hero_height=6,
-            hero_offset_x=0,
-            hero_offset_y=0,
             day_format="%A, %d %B",
         )
 
@@ -46,23 +34,11 @@ def load_scene_config(path: Path) -> SceneConfig:
     clock_font_name = str(data.get("clock_font_name", "Fender"))
     day_format = str(data.get("day_format", "%A, %d %B"))
     clock_format = str(data.get("clock_format", "%H:%M"))
-    gif_path = Path(data.get("gif_path", "hero/assets/hero_go.gif"))
-    hero_anchor = str(data.get("hero_anchor", "left"))
-    hero_width = int(data.get("hero_width", 10))
-    hero_height = int(data.get("hero_height", 6))
-    hero_offset_x = int(data.get("hero_offset_x", 0))
-    hero_offset_y = int(data.get("hero_offset_y", 0))
     theme_name = str(data.get("theme_name", "btas_dark_deco"))
     return SceneConfig(
         clock_font_name=clock_font_name,
         day_format=day_format,
         clock_format=clock_format,
-        gif_path=gif_path,
-        hero_anchor=hero_anchor,
-        hero_width=hero_width,
-        hero_height=hero_height,
-        hero_offset_x=hero_offset_x,
-        hero_offset_y=hero_offset_y,
         theme_name=theme_name,
     )
 
@@ -72,12 +48,6 @@ def dump_scene_config(config: SceneConfig, path: Path) -> None:
     payload = {
         "clock_font_name": config.clock_font_name,
         "day_format": config.day_format,
-        "gif_path": str(config.gif_path),
-        "hero_anchor": config.hero_anchor,
-        "hero_width": config.hero_width,
-        "hero_height": config.hero_height,
-        "hero_offset_x": config.hero_offset_x,
-        "hero_offset_y": config.hero_offset_y,
         "clock_format": config.clock_format,
         "theme_name": config.theme_name,
     }
@@ -87,19 +57,7 @@ def dump_scene_config(config: SceneConfig, path: Path) -> None:
 def update_scene_config_value(path: Path, key: str, value: str) -> SceneConfig:
     """Update one supported scene config key and persist the file."""
     config = load_scene_config(path)
-    if key == "gif_path":
-        config.gif_path = Path(value)
-    elif key == "hero_anchor":
-        config.hero_anchor = value
-    elif key == "hero_width":
-        config.hero_width = int(value)
-    elif key == "hero_height":
-        config.hero_height = int(value)
-    elif key == "hero_offset_x":
-        config.hero_offset_x = int(value)
-    elif key == "hero_offset_y":
-        config.hero_offset_y = int(value)
-    elif key in {"clock_font_name", "clock_font_path"}:
+    if key == "clock_font_name":
         config.clock_font_name = value
     elif key == "day_format":
         config.day_format = value

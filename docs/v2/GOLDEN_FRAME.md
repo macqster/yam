@@ -13,11 +13,11 @@ go run ./cmd/yamv2 --once --width 40 --height 20 --clock 12:34 --day "wtorek, 21
 ## Frame
 
 ```text
-          ▟                             
-    ▄  ▃                                
-  ▕  ▄  █  ▌                            
-   ▀  █  █     ▗  ▃  ▁                  
-    ▝  ▔      ▔                         
+                                        
+                                        
+                                        
+                                        
+                                        
                 ||   ''|,    ,'''|,    /
                '||  '  || ||     ||  // 
                 ||    .|'     '''|| //..
@@ -31,12 +31,12 @@ go run ./cmd/yamv2 --once --width 40 --height 20 --clock 12:34 --day "wtorek, 21
                                         
                                         
                                         
-          q quit •   space pause        
+                                        
                                         
 ```
 
 ## Notes
 
-- this is the current FIGlet + hero baseline for the current runtime
+- this is the current FIGlet clock baseline for the current runtime
 - update this file only when the intended baseline output changes
 - keep it aligned with the Go one-shot FIGlet renderer and the Python check harness

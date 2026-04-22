@@ -2,6 +2,12 @@
 
 This is the running log for the v2 rebuild.
 
+## 2026-04-22
+
+- simplified the live Go visualizer to show only the FIGlet clock and Polish date label
+- removed the hero block and help footer from the active scene and helper fallback paths
+- pruned the active scene contract docs so they describe the clock/date-only baseline
+
 ## 2026-04-20
 
 - created branch `v2`

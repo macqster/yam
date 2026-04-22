@@ -2,11 +2,5 @@
   "clock_font_name": "Fender",
   "clock_format": "%H:%M",
   "day_format": "%A, %d %B",
-  "gif_path": "hero/assets/hero_go.gif",
-  "hero_anchor": "left",
-  "hero_height": 6,
-  "hero_offset_x": 0,
-  "hero_offset_y": 0,
-  "hero_width": 10,
   "theme_name": "btas_dark_deco"
 }

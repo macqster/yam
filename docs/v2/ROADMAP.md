@@ -75,11 +75,10 @@ This file tracks the rebuild at a high level.
 
 ### M7. Minimal working scene
 
-- render a basic GIF frame
-- overlay a runtime clock
+- render a basic clock frame
+- overlay the day label
 - document the scene target in `GIF_AND_CLOCK.md`
 - keep VHS available for recording and shareable terminal demos
-- plan the hero GIF pipeline in `HERO_GIF_PLAN.md`
 
 ### M8. Launcher migration
 
@@ -138,17 +137,10 @@ This file tracks the rebuild at a high level.
 - document which upstream terminal UI libraries are core, optional, or reference-only
 - keep the adoption policy explicit in `DEPENDENCY_MATRIX.md`
 
-### M18. Hero GIF plan
+### M18. Archived scene notes
 
-- document the hero GIF pipeline choice and implementation order
-- keep Chafa as the first candidate for terminal image rendering
-- record the best moment to switch into Codex planning mode before implementation
-
-### M19. Hero renderer scaffold
-
-- add a dedicated Go hero renderer boundary
-- start with a Chafa CLI adapter
-- document the first hero implementation slice in `HERO_RENDERER.md`
+- retired from the current clock-only visualizer baseline
+- keep the archived implementation notes available for historical reference only
 
 ## Working Rules
 

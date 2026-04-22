@@ -11,7 +11,6 @@ This note records the current contract for the default clock scene.
 - The live runtime renders FIGlet output as a block and anchors that block around x = 3/4 width and y = 1/4 height from the top-left corner.
 - The day label uses a Polish date format: `wtorek, 21 kwietnia`.
 - The live clock colon blinks on odd seconds by replacing `:` with a blank in the rendered clock text.
-- A Bubble Tea help footer is rendered at the bottom using `bubbles/help` with simple keys for quit and pause.
 - The Python layer is snapshot/check only and should not define a second live clock renderer.
 
 ## What This Means

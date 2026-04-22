@@ -7,9 +7,9 @@ from pathlib import Path
 
 from PIL import Image
 
-from v2.shape.model import ShapeInstance
-from v2.shape.policy import policy_glyph
-from v2.theme.model import Theme
+from shape.model import ShapeInstance
+from shape.policy import policy_glyph
+from theme.model import Theme
 
 SHADE_GLYPHS = " .:-=+*#%@"
 

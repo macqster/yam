@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from v2.runtime.messages import KeyMsg
-from v2.ui.model import UIModel
+from runtime.messages import KeyMsg
+from ui.model import UIModel
 
 
 class InputRouter:

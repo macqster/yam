@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from v2.shape.model import ShapeInstance
-from v2.ui.model import UIModel
+from shape.model import ShapeInstance
+from ui.model import UIModel
 
 
 def ui_overlay_shapes(ui: UIModel) -> list[ShapeInstance]:

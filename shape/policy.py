@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from v2.theme.model import Theme
+from theme.model import Theme
 
 
 def policy_glyph(glyph: str, theme: Theme) -> str:

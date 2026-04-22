@@ -2,17 +2,17 @@
 
 Date: 2026-04-20
 
-This document maps the current repo against the v2 spec and records the initial reconstruction stance.
+This document maps the historical repo state against the v2 spec and records the initial reconstruction stance.
 
 ## Summary
 
-The current repository is still organized around the existing `visualizer/` stack and shell startup integration.
+The historical repository used to be organized around the existing `visualizer/` stack and shell startup integration.
 
-There is not yet a native v2 code layout in the repo.
+There is not yet a native v2 code layout in this archival audit note.
 
 The practical path is:
 
-- preserve the current repo as the v1 baseline
+- preserve the historical repo snapshot as the baseline for reconstruction notes
 - add v2 code alongside it in a clearly separated layout
 - replace the visualizer stack only where the v2 architecture demands it
 
@@ -20,7 +20,6 @@ The practical path is:
 
 These parts are useful and can remain as-is until v2 code replaces them:
 
-- `v1/`
 - `ghostty/`
 - `fastfetch/`
 - `chafa/`
@@ -50,7 +49,7 @@ These parts may be reused conceptually or partially, but they need review before
 
 These areas are incompatible with the intended v2 spec and should be treated as provisional implementation details:
 
-- the current Python visualizer as a compatibility baseline, not the v2 default
+- the current Python visualizer as a compatibility baseline during the archival notes
 - ad hoc vines heuristics as the long-term engine model
 - renderer logic that mixes composition, fallback behavior, and visual policy in one place
 - any implicit coupling between layout, growth, and draw order
@@ -59,8 +58,8 @@ These areas are incompatible with the intended v2 spec and should be treated as 
 
 The repo currently lacks:
 
-- a native `v2` source tree
-- a dedicated v1 landing page
+- a native root source tree
+
 - a tracked package/module layout matching the v2 layers
 - engine/simulation primitives named in the v2 docs
 - explicit framebuffer, morphology, and emitter packages for v2
@@ -69,9 +68,9 @@ The repo currently lacks:
 
 ## Risk Notes
 
-- Reusing too much of `visualizer/` would collapse the separation between the old stack and the v2 spec.
-- Keeping the old visualizer as the main implementation path would make it harder to enforce the forward-only architecture.
-- The new work should be added in a separate v2 tree rather than buried in the current visualizer modules.
+- Reusing too much of `visualizer/` would have collapsed the separation between the old stack and the v2 spec.
+- Keeping the old visualizer as the main implementation path would have made it harder to enforce the forward-only architecture.
+- The new work was added in a separate root tree rather than buried in the current visualizer modules.
 
 ## Next Actions
 

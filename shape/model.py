@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from v2.engine.ecosystem import Organism
-from v2.morphology.model import Morphology, Node, build_morphology
-from v2.shape.policy import policy_glyph
-from v2.theme.model import Theme, glyph_for_kind
+from engine.ecosystem import Organism
+from morphology.model import Morphology, Node, build_morphology
+from shape.policy import policy_glyph
+from theme.model import Theme, glyph_for_kind
 
 
 @dataclass(slots=True)

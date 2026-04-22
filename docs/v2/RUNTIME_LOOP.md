@@ -25,10 +25,10 @@ print frame
 - `ResizeMsg` updates the model dimensions
 - `KeyMsg(key="spawn")` appends a deterministic seed organism
 - the Bubble Tea runtime shell is the default launch path
-- the Python loop remains available as a compatibility fallback
+- the Python helper loop remains available for verification only
 
 ## Constraints
 
 - keep the loop deterministic
-- do not touch the legacy visualizer runtime
+- do not introduce a second live runtime path
 - keep the runtime dispatcher small and explicit

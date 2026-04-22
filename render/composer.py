@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from v2.render.emitter import Emitter
-from v2.render.framebuffer import Framebuffer
-from v2.render.layers import default_layers
-from v2.render.masks import Mask, empty_mask
-from v2.shape.model import ShapeInstance
+from render.emitter import Emitter
+from render.framebuffer import Framebuffer
+from render.layers import default_layers
+from render.masks import Mask, empty_mask
+from shape.model import ShapeInstance
 
 
 def compose_frame(

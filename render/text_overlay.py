@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from v2.shape.model import ShapeInstance
+from shape.model import ShapeInstance
 
 
 @dataclass(slots=True)

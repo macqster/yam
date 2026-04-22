@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from v2.engine.balance import Balance
-from v2.engine.environment import Environment
-from v2.engine.lifecycle import Lifecycle
-from v2.engine.species import Species
+from engine.balance import Balance
+from engine.environment import Environment
+from engine.lifecycle import Lifecycle
+from engine.species import Species
 
 
 @dataclass(slots=True)

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from v2.runtime.messages import KeyMsg
-from v2.ui.input import InputRouter
-from v2.ui.model import UIModel
+from runtime.messages import KeyMsg
+from ui.input import InputRouter
+from ui.model import UIModel
 
 
 class UIRouter:

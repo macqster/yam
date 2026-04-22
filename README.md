@@ -6,10 +6,9 @@
 
 - `bin/yam` is the launcher
 - the runtime now lives at the repository root
-- `app.py`, `config.py`, `check_golden.py`, and `scene_config.json` are rooted
-- the Go runtime packages have been moved out of the versioned tree
+- `check_golden.py` and `scene_config.json` are rooted
+- the Go runtime packages live at the repository root
 - `docs/v2/` is the historical spec and tracking area
-- the legacy visualizer remains available only as a compatibility path
 - [`docs/RELEASE_MODEL.md`](docs/RELEASE_MODEL.md) records the stable/experimental branch policy
 - [`docs/FLATTENING_PLAN.md`](docs/FLATTENING_PLAN.md) records the move toward one canonical root runtime tree
 

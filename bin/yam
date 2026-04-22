@@ -5,11 +5,6 @@ unsetopt xtrace 2>/dev/null || true
 setopt typesetsilent 2>/dev/null || true
 
 REPO_ROOT="${YAM_REPO:-$HOME/_git/yam}"
-APP_ROOT="${YAM_VISUALIZER_ROOT:-}"
-MODE="v2"
-RUNTIME="bubbletea"
-RECIPE=""
-LIST_RECIPES=0
 SCENE_ACTION=""
 SCENE_SET=""
 FORWARDED_ARGS=()
@@ -19,57 +14,22 @@ export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 show_help() {
   cat <<'EOF'
-usage: yam [--version v1|v2] [--runtime python|bubbletea] [--recipe NAME] [--list-recipes] [ARGS...]
+usage: yam [ARGS...]
 
 Launch YAM.
 
 Options:
-  --version MODE      Select the legacy visualizer or the current runtime.
-  --runtime MODE      Select python or bubbletea runtime for v2.
-  -r, --recipe NAME   Run the visualizer with a named recipe overlay.
-  -l, --list-recipes   Print the available recipe names and exit.
   --scene-config ACT   Show, edit, or reset the repo-tracked scene config.
   --scene-set KEY=VAL  Update one supported scene config key.
   -h, --help          Show this help text.
 
 Examples:
   yam
-  yam --version v2
-  yam --version v1
-  yam --runtime bubbletea
-  yam --recipe debug
-  yam --recipe presentation
-  yam --list-recipes
   yam --scene-config show
   yam --scene-config edit
   yam --scene-config reset
   yam --scene-set clock_font_name=Fender
-  yam --recipe debug -- --help
 EOF
-}
-
-recipe_summary() {
-  sed -n 's/^  "_summary": "\(.*\)",$/\1/p' "$1" | head -n 1
-}
-
-list_recipes() {
-  recipe_dir="$1/recipes"
-
-  if [[ ! -d "$recipe_dir" ]]; then
-    echo "no recipe directory found at $recipe_dir" >&2
-    exit 1
-  fi
-
-  for recipe in "$recipe_dir"/*.json; do
-    [[ -e "$recipe" ]] || continue
-    name="$(basename "${recipe%.json}")"
-    summary="$(recipe_summary "$recipe" 2>/dev/null || true)"
-    if [[ -n "$summary" ]]; then
-      printf '%s - %s\n' "$name" "$summary"
-    else
-      printf '%s\n' "$name"
-    fi
-  done
 }
 
 while [[ $# -gt 0 ]]; do
@@ -77,10 +37,6 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       show_help
       exit 0
-      ;;
-    -l|--list-recipes)
-      LIST_RECIPES=1
-      shift
       ;;
     --scene-config)
       if [[ $# -lt 2 ]]; then
@@ -106,42 +62,6 @@ while [[ $# -gt 0 ]]; do
       SCENE_SET="${1#*=}"
       shift
       ;;
-    --version)
-      if [[ $# -lt 2 ]]; then
-        echo "yam: --version requires v1 or v2" >&2
-        exit 1
-      fi
-      MODE="$2"
-      shift 2
-      ;;
-    --version=*)
-      MODE="${1#*=}"
-      shift
-      ;;
-    --runtime)
-      if [[ $# -lt 2 ]]; then
-        echo "yam: --runtime requires python or bubbletea" >&2
-        exit 1
-      fi
-      RUNTIME="$2"
-      shift 2
-      ;;
-    --runtime=*)
-      RUNTIME="${1#*=}"
-      shift
-      ;;
-    -r|--recipe)
-      if [[ $# -lt 2 ]]; then
-        echo "yam: --recipe requires a name" >&2
-        exit 1
-      fi
-      RECIPE="$2"
-      shift 2
-      ;;
-    --recipe=*)
-      RECIPE="${1#*=}"
-      shift
-      ;;
     --)
       shift
       while [[ $# -gt 0 ]]; do
@@ -155,11 +75,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ "$LIST_RECIPES" -eq 1 ]]; then
-  list_recipes "$REPO_ROOT/visualizer"
-  exit 0
-fi
 
 SCENE_CONFIG_PATH="$REPO_ROOT/scene_config.json"
 if [[ -n "$SCENE_SET" ]]; then
@@ -222,52 +137,4 @@ PY
 fi
 
 cd "$REPO_ROOT"
-
-case "$MODE" in
-  v2)
-    case "$RUNTIME" in
-      python)
-        exec python3 -m app "${FORWARDED_ARGS[@]}"
-        ;;
-      bubbletea)
-        exec go run ./cmd/yamv2 "${FORWARDED_ARGS[@]}"
-        ;;
-      *)
-        echo "yam: unknown runtime '$RUNTIME' (expected python or bubbletea)" >&2
-        exit 1
-        ;;
-    esac
-    ;;
-  v1)
-    if [[ -z "$APP_ROOT" ]]; then
-      if [[ -x "$REPO_ROOT/visualizer/run_visualizer.sh" ]]; then
-        APP_ROOT="$REPO_ROOT/visualizer"
-      else
-        APP_ROOT="$HOME/.local/share/yam-visualizer"
-      fi
-    fi
-
-    LAUNCHER="$APP_ROOT/run_visualizer.sh"
-
-    if [[ ! -x "$LAUNCHER" ]]; then
-      echo "yam visualizer launcher not found at $LAUNCHER" >&2
-      exit 1
-    fi
-
-    if [[ -n "$RECIPE" ]]; then
-      RECIPE_LAUNCHER="$APP_ROOT/run_recipe.sh"
-      if [[ ! -x "$RECIPE_LAUNCHER" ]]; then
-        echo "yam recipe launcher not found at $RECIPE_LAUNCHER" >&2
-        exit 1
-      fi
-      exec "$RECIPE_LAUNCHER" "$RECIPE" "${FORWARDED_ARGS[@]}"
-    fi
-
-    cd "$REPO_ROOT/visualizer"
-    exec "$LAUNCHER" "${FORWARDED_ARGS[@]}"
-    ;;
-  *)
-    echo "yam: unknown version '$MODE' (expected v1 or v2)" >&2
-    exit 1
-    ;;
-esac
+exec go run ./cmd/yamv2 "${FORWARDED_ARGS[@]}"

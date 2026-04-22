@@ -23,7 +23,7 @@ This document records the move to a Bubble Tea-first runtime.
 2. keep `TickMsg`, resize handling, and key routing in Bubble Tea messages
 3. keep engine, morphology, and render composition as downstream packages
 4. preserve the file-backed scene config and clock observer surface
-5. keep v1 launcher compatibility until v2 is stable
+5. keep the Go launcher path as the only live launch path
 6. keep the helper path isolated as verification-only while Bubble Tea remains default
 
 ## Package Mapping
@@ -55,5 +55,5 @@ This document records the move to a Bubble Tea-first runtime.
 ## Constraints
 
 - keep the migration incremental
-- keep v1 launch compatibility
+- keep the Go launcher path as the only live launch path
 - keep the repo-tracked logs and docs current

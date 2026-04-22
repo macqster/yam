@@ -25,4 +25,4 @@ shape list
 
 - this is a minimal structural split, not the final visual system
 - the composer remains deterministic
-- the legacy visualizer render path is untouched
+- the retired visualizer stack is no longer part of the active repo

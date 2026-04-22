@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from v2.engine.ecosystem import Organism
+from engine.ecosystem import Organism
 
 
 @dataclass(slots=True)

@@ -32,4 +32,4 @@ This document records the minimal working default scene target for v2.
 
 - keep the FIGlet clock readable and compact
 - keep the clock outside the engine
-- do not couple this scene target to the legacy visualizer runtime
+- keep this scene target isolated from retired runtime experiments

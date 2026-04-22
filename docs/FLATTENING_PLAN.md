@@ -12,7 +12,7 @@ This note records the path from the current versioned tree to a single root runt
 1. Lock the branch policy and release numbering.
 2. Move the live runtime modules from `v2/` to the repository root.
 3. Update the launcher to target the flattened tree.
-4. Keep the compatibility helper only where it is still useful for verification.
+4. Keep only the helper modules that are still useful for verification.
 5. Prune obsolete version-specific directory references from docs and scripts.
 6. Preserve history in git rather than in directory names.
 
@@ -33,4 +33,4 @@ This note records the path from the current versioned tree to a single root runt
 
 - Batch 1 is complete: the Python entrypoints and scene config now live at the repository root.
 - Batch 2 is complete: the live Go support packages now live in root-level package directories.
-- The old `v2/` source tree is now historical documentation only.
+- The old `v2/` source tree has been removed.

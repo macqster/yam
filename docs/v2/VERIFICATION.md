@@ -20,5 +20,4 @@ python3 -m check_golden
 ## Notes
 
 - keep the check deterministic
-- keep it local to the v2 tree
-- do not couple it to the legacy visualizer
+- keep it local to the repo root helper path

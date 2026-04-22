@@ -23,7 +23,7 @@ This file tracks the rebuild at a high level.
 - identify keep / adapt / replace candidates
 - list hard blockers and coupling risks
 - define a native v2 source tree
-- keep the old visualizer implementation separate
+- keep the old visualizer implementation archived and out of the active runtime
 
 ### M2. Vertical slice
 
@@ -84,7 +84,7 @@ This file tracks the rebuild at a high level.
 ### M8. Launcher migration
 
 - switch the default launcher to v2
-- keep v1 behind an explicit compatibility flag
+- keep only the Go launcher path as the live runtime path
 - document the launcher contract in `LAUNCHER.md`
 
 ### M9. UI separation

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from v2.render.masks import Mask
+from render.masks import Mask
 
 
 @dataclass(slots=True)

@@ -1,6 +1,6 @@
 # YAM v2 Spec Index
 
-This directory contains the preliminary documentation import for the YAM v2 rebuild.
+This directory contains the preliminary documentation import for the YAM rebuild history.
 
 ## Reading order
 
@@ -49,7 +49,7 @@ These files form the working specification that guided the flattening into the r
 - This is the imported draft spec, not yet the final canonical documentation set.
 - Files are kept close to the source notes so we can refactor them into implementation docs later.
 - Track rebuild progress in [`ROADMAP.md`](ROADMAP.md) and [`LOG.md`](LOG.md).
-- Follow [`HYGIENE.md`](HYGIENE.md) for repo discipline while v2 is under active reconstruction.
+- Follow [`HYGIENE.md`](HYGIENE.md) for repo discipline while the reconstruction notes remain in review.
 - Read [`AUDIT.md`](AUDIT.md) before starting implementation work.
 - Use [`SOURCE_MAP.md`](SOURCE_MAP.md) when adding new source files.
 - Read [`VERTICAL_SLICE.md`](VERTICAL_SLICE.md) for the current runnable demo contract.
@@ -77,4 +77,4 @@ These files form the working specification that guided the flattening into the r
 - Use `yam --scene-set key=value` for one-key scene updates.
 - The live app uses a real clock; the snapshot check uses a fixed one.
 - The live app enters the terminal alternate screen and restores on exit.
-- See [`../VERSION_MAP.md`](../VERSION_MAP.md) for the v1/v2 repo split.
+- See [`../VERSION_MAP.md`](../VERSION_MAP.md) for the current root-runtime repo shape.

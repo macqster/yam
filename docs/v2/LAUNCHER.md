@@ -13,28 +13,6 @@ Launches the canonical YAM runtime.
 The default runtime uses the Go Bubble Tea shell and redraws the live FIGlet clock scene.
 The live scene uses the terminal alternate screen and hides the cursor until exit.
 
-## Runtime Selection
-
-```bash
-yam --version v2 --runtime bubbletea
-```
-
-Launches the Go Bubble Tea runtime shell from the repository root.
-
-```bash
-yam --version v2 --runtime python
-```
-
-Launches the thin verification helper path, which shells out to the Go renderer for checks.
-
-## Compatibility
-
-```bash
-yam --version v1
-```
-
-Launches the legacy visualizer stack.
-
 ## Scene Config Commands
 
 ```bash
@@ -48,11 +26,8 @@ These commands operate on `scene_config.json`.
 
 ## Notes
 
-- the launcher is versioned explicitly
-- v1 recipe handling remains available behind the compatibility flag
-- the v2 launcher can choose `python` or `bubbletea`
-- the default v2 runtime is `bubbletea`
-- the Python entrypoint is retained as a fallback verifier and uses `python3 -m app`
+- the launcher targets the Go Bubble Tea runtime directly
+- the Python helper modules remain for verification and documentation, not live launch
 - the Bubble Tea entrypoint uses `go run ./cmd/yamv2` from the repository root
 - scene config tuning is exposed through launcher subcommands
 - the default scene is the day-plus-hour FIGlet clock

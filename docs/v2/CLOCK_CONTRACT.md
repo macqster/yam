@@ -8,7 +8,7 @@ This note records the current contract for the default clock scene.
 - The canonical live font is selected by `clock_font_name` in `scene_config.json`.
 - The default font is `Fender`.
 - The live renderer uses FIGlet full-width mode so adjacent digits do not smush together.
-- The live runtime renders FIGlet output as a block and anchors that block around x = 3/4 width and y = 1/4 height from the top-left corner.
+- The live runtime renders FIGlet output as a block and anchors that block at the center of the terminal.
 - The day label uses a Polish date format: `wtorek, 21 kwietnia`.
 - The day label is centered with display width, not byte length, so accented weekday names stay aligned.
 - The live clock colon blinks on odd seconds by replacing `:` with a blank in the rendered clock text.

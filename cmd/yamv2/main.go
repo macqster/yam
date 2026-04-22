@@ -225,11 +225,12 @@ func renderScene(width, height int, clock, day string, cfg sceneConfig, repoRoot
 	fontDir := figletFontDir(repoRoot)
 	clockArt := renderFigletBlock(clock, fontDir, cfg.ClockFontName)
 	clockWidth := renderClockLineWidth(clock, fontDir, cfg.ClockFontName)
-	clockX := max(0, (width*3)/4-clockWidth/2)
-	clockY := max(0, height/4)
+	clockHeight := len(strings.Split(clockArt, "\n"))
+	clockX := max(0, width/2-clockWidth/2)
+	clockY := max(0, height/2-clockHeight/2-1)
 	placeBlock(clockX, clockY, clockArt)
 
-	dayY := clockY + 6
+	dayY := clockY + clockHeight
 	dayX := max(0, clockX+(clockWidth-runewidth.StringWidth(day))/2)
 	placeBlock(dayX, dayY, day)
 

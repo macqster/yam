@@ -134,12 +134,13 @@ def render_frame_with_clock(
     except Exception:
         clock_text_block = render_clock(clock_value)
         clock_width = max((len(line) for line in clock_text_block.splitlines()), default=0)
-        clock_y = max(0, model.height // 4)
-        clock_x = max(0, (model.width * 3) // 4 - clock_width // 2)
+        clock_height = len(clock_text_block.splitlines())
+        clock_y = max(0, model.height // 2 - clock_height // 2 - 1)
+        clock_x = max(0, model.width // 2 - clock_width // 2)
         clock = []
         for idx, line in enumerate(clock_text_block.splitlines()):
             clock.extend(TextOverlay(x=clock_x, y=clock_y + idx, text=line).shapes())
-        day = TextOverlay(x=max(0, clock_x + (clock_width - max(0, wcswidth(day_value))) // 2), y=clock_y + 6, text=day_value).shapes()
+        day = TextOverlay(x=max(0, clock_x + (clock_width - max(0, wcswidth(day_value))) // 2), y=clock_y + clock_height, text=day_value).shapes()
         return compose_frame(
             model.width,
             model.height,

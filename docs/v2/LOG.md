@@ -9,6 +9,8 @@ This is the running log for the v2 rebuild.
 - pruned the active scene contract docs so they describe the clock/date-only baseline
 - fixed weekday centering so Polish labels use display width instead of raw byte length
 - fixed the Go text placer to use rune indexing so accented weekday names like `środa` no longer split into `ś roda`
+- moved the live FIGlet clock block from the upper-right quadrant to the exact terminal center
+- aligned the clock/date golden frame with the 40x20 one-shot verifier geometry after centering the live block
 
 ## 2026-04-20
 

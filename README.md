@@ -8,7 +8,7 @@
 - the runtime now lives at the repository root
 - `check_golden.py` and `scene_config.json` are rooted
 - the Go runtime packages live at the repository root
-- `yam-go` is the stable clock-only visualizer line
+- `yam-go` is the stable, feature-complete clock-only visualizer line
 - `yam-rust` is the experimental engine-first line
 - `docs/v2/` is the historical spec and tracking area
 - [`docs/RELEASE_MODEL.md`](docs/RELEASE_MODEL.md) records the stable/experimental branch policy

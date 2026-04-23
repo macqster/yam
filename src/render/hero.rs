@@ -4,7 +4,6 @@ use ratatui::{
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
-use std::collections::VecDeque;
 use std::sync::mpsc::Receiver;
 
 pub struct Hero {
@@ -12,10 +11,10 @@ pub struct Hero {
     pub y: i32,
     pub width: u16,
     pub height: u16,
-    pub current_frame: Vec<Line<'static>>,
+    pub frames: Vec<Vec<Line<'static>>>,
+    pub current_frame: usize,
+    pub playing: bool,
     pub rx: Receiver<Vec<Line<'static>>>,
-    pending_frames: VecDeque<Vec<Line<'static>>>,
-    pub paused: bool,
     step_once: bool,
 }
 
@@ -37,53 +36,57 @@ impl Hero {
             y: (world_height / 2) as i32,
             width,
             height,
-            current_frame: frame,
+            frames: vec![frame],
+            current_frame: 0,
+            playing: true,
             rx,
-            pending_frames: VecDeque::new(),
-            paused: false,
             step_once: false,
         }
     }
 
     pub fn frame(&self) -> &Vec<Line<'static>> {
-        &self.current_frame
+        self.frames
+            .get(self.current_frame)
+            .or_else(|| self.frames.first())
+            .expect("hero always has at least one frame")
     }
 
     pub fn tick(&mut self) {
         while let Ok(frame) = self.rx.try_recv() {
-            self.pending_frames.push_back(frame);
-            if self.pending_frames.len() > 64 {
-                self.pending_frames.pop_front();
+            self.height = frame.len() as u16;
+            self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
+            self.frames.push(frame);
+            if self.frames.len() > 128 {
+                self.frames.remove(0);
+                if self.current_frame > 0 {
+                    self.current_frame -= 1;
+                }
             }
         }
 
-        if self.paused {
-            if self.step_once {
-                if let Some(frame) = self.pending_frames.pop_front() {
-                    self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
-                    self.height = frame.len() as u16;
-                    self.current_frame = frame;
-                }
-                self.step_once = false;
-            }
+        if self.frames.is_empty() {
             return;
         }
 
-        if let Some(frame) = self.pending_frames.pop_back() {
-            self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
-            self.height = frame.len() as u16;
-            self.current_frame = frame;
-            self.pending_frames.clear();
+        if self.playing {
+            self.current_frame = (self.current_frame + 1) % self.frames.len();
+        } else {
+            if self.step_once {
+                if self.current_frame + 1 < self.frames.len() {
+                    self.current_frame += 1;
+                }
+                self.step_once = false;
+            }
         }
     }
 
     pub fn toggle_animation(&mut self) {
-        self.paused = !self.paused;
+        self.playing = !self.playing;
         self.step_once = false;
     }
 
     pub fn step_animation(&mut self) {
-        if self.paused {
+        if !self.playing {
             self.step_once = true;
         }
     }
@@ -209,6 +212,15 @@ pub fn draw_hero_debug(
         .title(Line::from(title))
         .style(Style::default().fg(Color::Cyan));
     frame.render_widget(block, rect);
+
+    let overlay = Paragraph::new(format!(
+        "Frame: {} / {}\nPlaying: {}",
+        hero.current_frame,
+        hero.frames.len(),
+        hero.playing
+    ))
+    .style(Style::default().fg(Color::Gray).bg(Color::Black));
+    frame.render_widget(overlay, Rect::new(0, 0, 28, 2));
 
     // Keep a subtle marker on the border where the hero center sits.
     let center_x = (hero.x - viewport.x).max(0) as u16;

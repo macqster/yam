@@ -11,8 +11,7 @@ pub struct Hero {
     pub y: i32,
     pub width: u16,
     pub height: u16,
-    pub frames: Vec<Vec<Line<'static>>>,
-    pub current: usize,
+    pub current_frame: Vec<Line<'static>>,
     pub rx: Receiver<Vec<Line<'static>>>,
 }
 
@@ -34,30 +33,20 @@ impl Hero {
             y: (world_height / 2) as i32,
             width,
             height,
-            frames: vec![frame],
-            current: 0,
+            current_frame: frame,
             rx,
         }
     }
 
     pub fn frame(&self) -> &Vec<Line<'static>> {
-        &self.frames[self.current]
+        &self.current_frame
     }
 
-    pub fn update(&mut self) {
+    pub fn tick(&mut self) {
         while let Ok(frame) = self.rx.try_recv() {
             self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
             self.height = frame.len() as u16;
-            self.frames.push(frame);
-            self.current = self.frames.len().saturating_sub(1);
-            if self.frames.len() > 64 {
-                self.frames.remove(0);
-                self.current = self.frames.len().saturating_sub(1);
-            }
-        }
-
-        if !self.frames.is_empty() {
-            self.current = (self.current + 1) % self.frames.len();
+            self.current_frame = frame;
         }
     }
 

@@ -7,7 +7,7 @@ use ratatui::{
     layout::Alignment,
     layout::{Constraint, Direction, Layout},
     prelude::*,
-    widgets::Paragraph,
+    widgets::{Block, Paragraph},
 };
 
 pub struct StatusBarPanel;
@@ -22,6 +22,10 @@ impl Panel for StatusBarPanel {
         _fonts: &FontRegistry,
         _viewport: &Viewport,
     ) {
+        let footer_bg =
+            Block::default().style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray));
+        frame.render_widget(footer_bg, area);
+
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Min(1), Constraint::Length(12)])
@@ -31,10 +35,13 @@ impl Panel for StatusBarPanel {
             "q - quit   •   d - debug   •   {{ or }} clock font – {}",
             crate::render::fonts::FontRegistry::display_name(ui.clock_font)
         ))
+        .style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray))
         .alignment(Alignment::Left);
         frame.render_widget(left, chunks[0]);
 
-        let right = Paragraph::new("yam-rust 0.3").alignment(Alignment::Right);
+        let right = Paragraph::new("yam-rust 0.3")
+            .style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray))
+            .alignment(Alignment::Right);
         frame.render_widget(right, chunks[1]);
     }
 }

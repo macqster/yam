@@ -12,6 +12,7 @@ const HERO_GIF_PATH: &str = "/Users/maciejkuster/Desktop/hero_gif_1.gif";
 
 pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
     let size_arg = format!("{}x{}", width, height);
+    // NOTE: snapshot helper MUST be static; animation is handled by the streaming pipeline
     let output = Command::new("chafa")
         .arg(path)
         .arg("--size")
@@ -22,8 +23,9 @@ pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
         .arg("--color-space=din99d")
         .arg("--color-extractor=median")
         .arg("--dither=diffusion")
-        .arg("--animate=off")
+        .arg("--fg-only")
         .arg("--bg=#100100")
+        .arg("--animate=off")
         .output()
         .unwrap_or_else(|err| panic!("failed to run chafa: {err}"));
 
@@ -90,17 +92,24 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
                 let segment = pending[..marker].to_string();
                 if !segment.trim().is_empty() {
                     frame.push_str(&segment);
-                    if let Some(lines) = frame_to_lines(&frame) {
-                        let _ = tx.send(lines);
-                    }
+                }
+
+                if let Some(lines) = frame_to_lines(&frame) {
+                    let _ = tx.send(lines);
                 }
 
                 frame.clear();
                 pending.drain(..marker + marker_len(&pending[marker..]));
             }
 
-            frame.push_str(&pending);
+            if !pending.is_empty() {
+                frame.push_str(&pending);
+            }
             pending.clear();
+        }
+
+        if let Some(lines) = frame_to_lines(&frame) {
+            let _ = tx.send(lines);
         }
 
         let _ = child.wait();
@@ -118,8 +127,29 @@ pub fn hero_stream_initial_frame(width: u16, height: u16) -> Vec<Line<'static>> 
 }
 
 fn frame_to_lines(frame: &str) -> Option<Vec<Line<'static>>> {
-    let text = frame.to_string().into_text().ok()?;
-    Some(text.lines)
+    let sanitized = sanitize_for_text(frame);
+    if !looks_like_frame(&sanitized) {
+        return None;
+    }
+    let text = sanitized.into_text().ok()?;
+    let lines: Vec<Line<'static>> = text
+        .lines
+        .into_iter()
+        .filter(|line| {
+            let s = line
+                .spans
+                .iter()
+                .map(|span| span.content.as_ref())
+                .collect::<String>();
+            let trimmed = s.trim();
+            !trimmed.is_empty() && !looks_like_noise(trimmed)
+        })
+        .collect();
+    if lines.is_empty() {
+        None
+    } else {
+        Some(lines)
+    }
 }
 
 fn next_marker_index(text: &str) -> Option<usize> {
@@ -141,4 +171,71 @@ fn marker_len(rest: &str) -> usize {
     } else {
         0
     }
+}
+
+fn looks_like_frame(frame: &str) -> bool {
+    let visible = frame.chars().filter(|c| !c.is_control()).count();
+    visible >= 8
+}
+
+fn looks_like_noise(text: &str) -> bool {
+    let chars: Vec<char> = text.chars().filter(|c| !c.is_whitespace()).collect();
+    if chars.len() < 8 {
+        return false;
+    }
+
+    let mut counts = std::collections::BTreeMap::new();
+    for ch in chars {
+        *counts.entry(ch).or_insert(0usize) += 1;
+    }
+
+    let max = counts.values().copied().max().unwrap_or(0);
+    max.saturating_mul(5) > counts.values().copied().sum::<usize>() * 4
+}
+
+fn sanitize_for_text(frame: &str) -> String {
+    let mut out = String::with_capacity(frame.len());
+    let mut chars = frame.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch != '\u{1b}' {
+            out.push(ch);
+            continue;
+        }
+
+        let Some(next) = chars.next() else {
+            break;
+        };
+
+        match next {
+            '[' => {
+                let mut seq = String::from("\u{1b}[");
+                for c in chars.by_ref() {
+                    seq.push(c);
+                    if ('@'..='~').contains(&c) {
+                        if c == 'm' {
+                            out.push_str(&seq);
+                        }
+                        break;
+                    }
+                }
+            }
+            ']' => {
+                while let Some(c) = chars.next() {
+                    if c == '\u{7}' {
+                        break;
+                    }
+                    if c == '\u{1b}' {
+                        if matches!(chars.peek(), Some('\\')) {
+                            chars.next();
+                        }
+                        break;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    out
 }

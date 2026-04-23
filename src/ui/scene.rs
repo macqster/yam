@@ -55,12 +55,13 @@ pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: 
         ui.hero_offset_y,
     );
     clock.render(frame, viewport_rect, world, ui, fonts, &viewport);
-    status.render(frame, layout.bottom_bar, world, ui, fonts, &viewport);
     draw_scrollbars(frame, viewport_rect, &viewport, world);
 
     if ui.debug_layout {
         draw_layout_debug(frame, &layout);
     }
+
+    status.render(frame, layout.bottom_bar, world, ui, fonts, &viewport);
 }
 
 fn draw_scrollbars(

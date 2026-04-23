@@ -38,22 +38,8 @@ pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: 
     let status = StatusBarPanel;
 
     field.render(frame, viewport_rect, world, ui, fonts, &viewport);
-    draw_hero_debug(
-        frame,
-        hero,
-        &viewport,
-        viewport_rect,
-        ui.hero_offset_x,
-        ui.hero_offset_y,
-    );
-    draw_hero(
-        frame,
-        hero,
-        &viewport,
-        viewport_rect,
-        ui.hero_offset_x,
-        ui.hero_offset_y,
-    );
+    draw_hero_debug(frame, hero, &viewport, ui.hero_offset_x, ui.hero_offset_y);
+    draw_hero(frame, hero, &viewport, ui.hero_offset_x, ui.hero_offset_y);
     clock.render(frame, viewport_rect, world, ui, fonts, &viewport);
     draw_scrollbars(frame, viewport_rect, &viewport, world);
 

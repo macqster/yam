@@ -61,27 +61,27 @@ pub fn draw_hero(
     frame: &mut Frame,
     hero: &Hero,
     viewport: &Viewport,
-    viewport_rect: Rect,
     offset_x: i32,
     offset_y: i32,
 ) {
     let screen_x = hero.x - viewport.x;
     let screen_y = hero.y - viewport.y;
-    let start_x = viewport_rect.x as i32 + screen_x - (hero.width as i32 / 2) + offset_x;
-    let start_y = viewport_rect.y as i32 + screen_y - (hero.height as i32 / 2) + offset_y;
+    let start_x = screen_x - (hero.width as i32 / 2) + offset_x;
+    let start_y = screen_y - (hero.height as i32 / 2) + offset_y;
+    let area = frame.area();
 
-    if start_x >= viewport_rect.right() as i32
-        || start_y >= viewport_rect.bottom() as i32
-        || start_x + hero.width as i32 <= viewport_rect.x as i32
-        || start_y + hero.height as i32 <= viewport_rect.y as i32
+    if start_x >= area.right() as i32
+        || start_y >= area.bottom() as i32
+        || start_x + hero.width as i32 <= area.x as i32
+        || start_y + hero.height as i32 <= area.y as i32
     {
         return;
     }
 
-    let skip_cols = (viewport_rect.x as i32 - start_x).max(0) as usize;
-    let skip_rows = (viewport_rect.y as i32 - start_y).max(0) as usize;
-    let start_x = start_x.max(viewport_rect.x as i32) as u16;
-    let start_y = start_y.max(viewport_rect.y as i32) as u16;
+    let skip_cols = (area.x as i32 - start_x).max(0) as usize;
+    let skip_rows = (area.y as i32 - start_y).max(0) as usize;
+    let start_x = start_x.max(area.x as i32) as u16;
+    let start_y = start_y.max(area.y as i32) as u16;
     render_lines_clipped(frame, hero.frame(), start_x, start_y, skip_cols, skip_rows);
 }
 
@@ -120,7 +120,6 @@ pub fn draw_hero_debug(
     frame: &mut Frame,
     hero: &Hero,
     viewport: &Viewport,
-    viewport_rect: Rect,
     offset_x: i32,
     offset_y: i32,
 ) {
@@ -142,8 +141,8 @@ pub fn draw_hero_debug(
             let wx = hx + dx as i32 + offset_x;
             let wy = hy + dy as i32 + offset_y;
             if let Some((vx, vy)) = viewport.world_to_view(wx, wy) {
-                let tx = viewport_rect.x + vx;
-                let ty = viewport_rect.y + vy;
+                let tx = vx;
+                let ty = vy;
                 if tx < frame.area().width && ty < frame.area().height {
                     visible_left = Some(visible_left.map_or(tx, |v: u16| v.min(tx)));
                     visible_top = Some(visible_top.map_or(ty, |v: u16| v.min(ty)));
@@ -174,8 +173,8 @@ pub fn draw_hero_debug(
     frame.render_widget(block, rect);
 
     // Keep a subtle marker on the border where the hero center sits.
-    let center_x = viewport_rect.x + ((hero.x - viewport.x).max(0) as u16);
-    let center_y = viewport_rect.y + ((hero.y - viewport.y).max(0) as u16);
+    let center_x = (hero.x - viewport.x).max(0) as u16;
+    let center_y = (hero.y - viewport.y).max(0) as u16;
     if center_x < frame.area().width && center_y < frame.area().height {
         if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
             cell.set_symbol("·").set_fg(Color::Yellow);

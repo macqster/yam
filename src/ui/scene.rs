@@ -24,7 +24,7 @@ use ratatui::prelude::*;
 pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: &FontRegistry) {
     let full = frame.area();
     let layout = compute_layout(full);
-    let hero = Hero::dummy(world.grid.width as usize, world.grid.height as usize);
+    let hero = Hero::new(world.grid.width as usize, world.grid.height as usize);
     let tier = select_viewport_tier(full.width, full.height);
     let (viewport_width, viewport_height) = tier.size();
     let mut camera = ui.camera;

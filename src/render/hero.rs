@@ -14,20 +14,22 @@ pub struct Hero {
 }
 
 impl Hero {
-    pub fn dummy(world_width: usize, world_height: usize) -> Self {
-        let frame = vec![
-            "  ██  ".to_string(),
-            " ████ ".to_string(),
-            "██  ██".to_string(),
-            " ████ ".to_string(),
-            "  ██  ".to_string(),
-        ];
+    pub fn new(world_width: usize, world_height: usize) -> Self {
+        let frame = crate::render::chafa::hero_frame(96, 48);
+        let frame = if frame.is_empty() {
+            vec!["chafa unavailable".to_string()]
+        } else {
+            frame
+        };
+
+        let width = frame.iter().map(|line| line.len()).max().unwrap_or(0) as u16;
+        let height = frame.len() as u16;
 
         Self {
             x: (world_width / 2) as i32,
             y: (world_height / 2) as i32,
-            width: frame[0].len() as u16,
-            height: frame.len() as u16,
+            width,
+            height,
             frames: vec![frame],
             current: 0,
         }

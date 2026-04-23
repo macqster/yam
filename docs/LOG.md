@@ -12,6 +12,7 @@
 - added architecture contract docs, module headers, and a strict repo check script
 - enforced the module boundary contract and verified `scripts/check.sh`
 - added the render layer contract and scene-level render order header
+- integrated a cached chafa-backed hero frame path with escape-sequence stripping
 
 ## Log Rules
 

@@ -6,65 +6,54 @@ This document maps the historical repo state against the v2 spec and records the
 
 ## Summary
 
-The historical repository used to be organized around the existing `visualizer/` stack and shell startup integration.
+The repository now has a native Rust baseline in `/src` with a persistent world, UI stack, render stack, and system scaffold.
 
-There is not yet a native v2 code layout in this archival audit note.
+The older Go-era root artifacts were pruned from the tracked baseline.
 
-The practical path is:
+The practical path is now:
 
-- preserve the historical repo snapshot as the baseline for reconstruction notes
-- add v2 code alongside it in a clearly separated layout
-- replace the visualizer stack only where the v2 architecture demands it
+- keep the Rust rewrite as the canonical implementation tree
+- record every material change in `docs/v2/LOG.md`
+- keep the old architecture only in historical notes and migration docs
 
 ## Keep
 
-These parts are useful and can remain as-is until v2 code replaces them:
+These parts are useful and should remain tracked:
 
-- `ghostty/`
-- `fastfetch/`
-- `chafa/`
-- `bin/fastfetch-chafa`
-- `bin/yam`
-- `docs/` maps for the current setup
-- `visualizer/README.md`, `STATUS.md`, and process docs as historical context
+- `Cargo.toml`
+- `Cargo.lock`
+- `src/`
+- `assets/`
+- `README.md`
+- `docs/v2/`
 
 ## Adapt
 
-These parts may be reused conceptually or partially, but they need review before any direct carryover:
+These areas still require review before major extension:
 
-- `visualizer/src/main.py`
-  - runtime loop and config reload flow
-- `visualizer/src/renderer.py`
-  - scene composition patterns
-- `visualizer/src/layout.py`
-  - geometry and collision model
-- `visualizer/src/vines_engine.py`
-  - phase-structured engine ideas
-- `visualizer/src/render_field.py`
-  - intermediate field composition
-- `visualizer/src/tree_scaffold.py`
-  - scaffold layering behavior
+- `src/ui/`
+  - composition and interaction layers
+- `src/render/`
+  - debug overlays and figure rendering
+- `src/systems/`
+  - future simulation behavior
 
 ## Replace
 
-These areas are incompatible with the intended v2 spec and should be treated as provisional implementation details:
+These areas remain provisional and should be revised when they start to accumulate special cases:
 
-- the current Python visualizer as a compatibility baseline during the archival notes
-- ad hoc vines heuristics as the long-term engine model
-- renderer logic that mixes composition, fallback behavior, and visual policy in one place
-- any implicit coupling between layout, growth, and draw order
+- hard-coded offsets or coordinate hacks in rendering
+- ad hoc debug overlays that do not have a documented contract
+- any coupling between world state and view-only calibration
 
 ## Gaps
 
-The repo currently lacks:
+Current follow-up gaps:
 
-- a native root source tree
-
-- a tracked package/module layout matching the v2 layers
-- engine/simulation primitives named in the v2 docs
-- explicit framebuffer, morphology, and emitter packages for v2
-- a test harness for deterministic frame output
-- a v2 migration log tied to implementation steps
+- a formal test harness for deterministic frame output
+- a documented camera and viewport contract for all scene layers
+- a stable hero/chafa ingestion boundary
+- release notes for the Rust binary and installer commands
 
 ## Risk Notes
 
@@ -74,7 +63,6 @@ The repo currently lacks:
 
 ## Next Actions
 
-1. create a dedicated v2 source tree
-2. define module/package boundaries from the v2 layer model
-3. add a minimal vertical slice
-4. log every structural change in `docs/v2/LOG.md`
+1. keep logging structural changes in `docs/v2/LOG.md`
+2. keep pruning build output before commits
+3. extend the render-layer contract only when the current baseline is stable

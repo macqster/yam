@@ -2,6 +2,12 @@
 
 This file defines the working discipline for the v2 branch.
 
+## Current Baseline
+
+- the Rust rewrite in `/src` is the active implementation tree
+- Go-era root artifacts have been pruned from the repo baseline
+- `Cargo.toml`, `Cargo.lock`, `src/`, `assets/`, and docs are the canonical tracked surface
+
 ## Source of Truth
 
 - `docs/v2/` is the v2 spec anchor
@@ -39,3 +45,4 @@ This file defines the working discipline for the v2 branch.
 - no unlogged branch churn
 - no undocumented file moves
 - no hidden coupling between engine, render, and UI layers
+- remove build output before committing unless it is intentionally tracked

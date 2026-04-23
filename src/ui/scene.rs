@@ -1,3 +1,13 @@
+//! SCENE COMPOSITION
+//!
+//! Render order (STRICT):
+//! 1. World (field)
+//! 2. Hero
+//! 3. UI (clock, panels)
+//! 4. Debug
+//!
+//! DO NOT reorder without updating docs/RENDERING.md
+
 use crate::core::world::WorldState;
 use crate::render::fonts::FontRegistry;
 use crate::render::hero::{draw_hero, draw_hero_debug, Hero};

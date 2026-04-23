@@ -8,6 +8,7 @@
 - updated the root README and hygiene notes for the Rust baseline
 - committed the Rust baseline and the documentation hygiene refresh
 - removed dead `visualizer/` ignore entries and normalized the repo hygiene wording
+- verified `cargo clippy -- -D warnings` and `cargo run -- --version` on the Rust baseline
 
 ## Log Rules
 

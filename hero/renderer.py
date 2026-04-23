@@ -15,9 +15,10 @@ class ChafaRenderer:
             [
                 "chafa",
                 "--format=symbols",
-                "--symbols=block",
+                "--symbols=braille",
                 "--colors=none",
                 "--animate=off",
+                "--bg=#101010",
                 "--fg-only",
                 "--size",
                 f"{width}x{height}",

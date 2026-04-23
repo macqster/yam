@@ -1,20 +1,17 @@
-# YAM Version Map
-
-This repo treats the root Go/Bubble Tea runtime as canonical.
+# Version Map
 
 ## Canonical Runtime
 
-- Go Bubble Tea launcher at the repository root
-- root-level Python verification helpers
-- root-level `scene_config.json`
-- `docs/v2/` remains the historical and implementation-tracking archive from the reconstruction
+- Rust terminal scene engine in `src/`
+- `Cargo.toml` and `Cargo.lock` define the executable
+- `docs/` is the active docs tree
 
 ## Working Rule
 
-- keep release history in branches/tags, not in source directory names
-- add new work to the canonical root runtime tree
+- keep release history in git history, not directory names
+- keep the root tree canonical and small
 
 ## Launcher Rule
 
-- default `yam` to the root runtime
-- keep the launcher aligned with the Go/Bubble Tea path
+- `yam-rust` is the active binary
+- keep launcher notes aligned with the Rust baseline

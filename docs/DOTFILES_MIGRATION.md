@@ -13,16 +13,16 @@ The terminal-startup assets that used to live in this repo have been moved out o
 
 ## Why
 
-- keep `yam` focused on the Go/Bubble Tea application and its docs
+- keep `yam` focused on the current Rust application and its docs
 - keep shell, terminal, and startup customization in a dedicated dotfiles repository
 - reduce cross-coupling between app development and workstation bootstrap assets
 
 ## What remains here
 
-- `bin/yam`
+- `yam-rust`
+- `yam-install`
 - the runtime helper modules
-- `docs/v2/`
-- `docs/v2/`
+- `docs/`
 
 ## Notes
 

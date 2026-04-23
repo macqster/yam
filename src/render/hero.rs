@@ -1,5 +1,8 @@
 use crate::ui::viewport::Viewport;
-use ratatui::{prelude::*, widgets::{Block, BorderType, Borders, Paragraph}};
+use ratatui::{
+    prelude::*,
+    widgets::{Block, BorderType, Borders, Paragraph},
+};
 
 pub struct Hero {
     pub x: i32,
@@ -86,10 +89,7 @@ pub fn draw_hero_debug(
     offset_y: i32,
 ) {
     let (hx, hy, hw, hh) = hero.debug_rect();
-    let title = format!(
-        " hero box, x={:+}, y={:+} ",
-        offset_x, offset_y
-    );
+    let title = format!(" hero box, x={:+}, y={:+} ", offset_x, offset_y);
 
     let mut visible_left = None;
     let mut visible_top = None;

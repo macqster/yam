@@ -9,6 +9,8 @@
 - committed the Rust baseline and the documentation hygiene refresh
 - removed dead `visualizer/` ignore entries and normalized the repo hygiene wording
 - verified `cargo clippy -- -D warnings` and `cargo run -- --version` on the Rust baseline
+- added architecture contract docs, module headers, and a strict repo check script
+- enforced the module boundary contract and verified `scripts/check.sh`
 
 ## Log Rules
 

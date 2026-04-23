@@ -1,3 +1,11 @@
+//! RUNTIME
+//!
+//! Rules:
+//! - Event loop only
+//! - Input handling
+//! - Calls systems + render
+//! - No layout logic
+
 use std::{
     io,
     time::{Duration, Instant},

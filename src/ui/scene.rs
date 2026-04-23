@@ -53,7 +53,12 @@ pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: 
     }
 }
 
-fn draw_scrollbars(frame: &mut Frame, viewport_rect: Rect, viewport: &Viewport, world: &WorldState) {
+fn draw_scrollbars(
+    frame: &mut Frame,
+    viewport_rect: Rect,
+    viewport: &Viewport,
+    world: &WorldState,
+) {
     if viewport_rect.width == 0 || viewport_rect.height == 0 {
         return;
     }
@@ -63,8 +68,10 @@ fn draw_scrollbars(frame: &mut Frame, viewport_rect: Rect, viewport: &Viewport, 
     let ratio_x = (viewport.x.max(0) as f32 / max_x).clamp(0.0, 1.0);
     let ratio_y = (viewport.y.max(0) as f32 / max_y).clamp(0.0, 1.0);
 
-    let thumb_x = viewport_rect.x + ((viewport_rect.width.saturating_sub(1)) as f32 * ratio_x) as u16;
-    let thumb_y = viewport_rect.y + ((viewport_rect.height.saturating_sub(1)) as f32 * ratio_y) as u16;
+    let thumb_x =
+        viewport_rect.x + ((viewport_rect.width.saturating_sub(1)) as f32 * ratio_x) as u16;
+    let thumb_y =
+        viewport_rect.y + ((viewport_rect.height.saturating_sub(1)) as f32 * ratio_y) as u16;
     let right_x = viewport_rect.x + viewport_rect.width.saturating_sub(1);
     let bottom_y = viewport_rect.y + viewport_rect.height.saturating_sub(1);
 

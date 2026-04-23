@@ -5,9 +5,9 @@ use crate::ui::state::UiState;
 use crate::ui::viewport::Viewport;
 use ratatui::{
     layout::Alignment,
+    layout::{Constraint, Direction, Layout},
     prelude::*,
     widgets::Paragraph,
-    layout::{Constraint, Direction, Layout},
 };
 
 pub struct StatusBarPanel;

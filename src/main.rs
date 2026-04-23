@@ -1,8 +1,8 @@
 mod core;
-mod systems;
-mod ui;
 mod render;
 mod runtime;
+mod systems;
+mod ui;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if std::env::args().any(|a| a == "--version") {

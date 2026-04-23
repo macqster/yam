@@ -1,3 +1,10 @@
+//! UI MODULE
+//!
+//! Rules:
+//! - Scene composition only
+//! - Handles viewport + camera
+//! - Does NOT mutate world
+
 pub mod anchor;
 pub mod camera;
 pub mod debug;

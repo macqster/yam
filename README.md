@@ -25,3 +25,8 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 - keep changes logged in `docs/LOG.md`
 - keep build output out of the repository
 - avoid reintroducing old runtime artifacts unless explicitly needed
+
+## Maintenance
+
+- run `scripts/check.sh` before committing
+- `cargo clippy -- -D warnings` must pass without warnings

@@ -1,14 +1,15 @@
 use std::{
     io::{BufReader, Read},
-    process::{Command, Stdio},
+    process::Command,
     sync::mpsc::{self, Receiver},
     thread,
 };
 
 use ansi_to_tui::IntoText;
+use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use ratatui::text::Line;
 
-const HERO_GIF_PATH: &str = "/Users/maciejkuster/Desktop/hero_gif_1.gif";
+const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 
 pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
     let size_arg = format!("{}x{}", width, height);
@@ -47,37 +48,53 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
 
     thread::spawn(move || {
         let size_arg = format!("{}x{}", width, height);
-        let mut child = Command::new("chafa")
-            .arg(&path)
-            .args([
-                "--size",
-                &size_arg,
-                "--format=symbols",
-                "--symbols=braille",
-                "--colors=full",
-                "--color-space=din99d",
-                "--color-extractor=median",
-                "--dither=diffusion",
-                "--animate=on",
-                "--speed=0.5",
-                "--duration=inf",
-                "--bg=#100100",
-                "--clear",
-            ])
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap_or_else(|err| panic!("failed to spawn chafa: {err}"));
+        let pty_system = native_pty_system();
+        let pair = pty_system
+            .openpty(PtySize {
+                rows: height,
+                cols: width,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .unwrap_or_else(|err| panic!("failed to open pty: {err}"));
 
-        let Some(stdout) = child.stdout.take() else {
-            let _ = child.wait();
-            return;
-        };
+        let mut cmd = CommandBuilder::new("chafa");
+        cmd.env("TERM", "xterm-256color");
+        cmd.env("COLORTERM", "truecolor");
+        cmd.arg("--probe=off");
+        cmd.arg(&path);
+        cmd.arg("--size");
+        cmd.arg(&size_arg);
+        cmd.arg("--format=symbols");
+        cmd.arg("--symbols=braille");
+        cmd.arg("--colors=full");
+        cmd.arg("--color-space=din99d");
+        cmd.arg("--color-extractor=median");
+        cmd.arg("--dither=diffusion");
+        cmd.arg("--animate=on");
+        cmd.arg("--speed=0.2");
+        cmd.arg("--duration=inf");
+        cmd.arg("--bg=#100100");
+        cmd.arg("--clear");
+        cmd.arg("--passthrough=screen");
+        cmd.arg("--optimize=0");
+        cmd.arg("--relative=off");
+
+        let mut child = pair
+            .slave
+            .spawn_command(cmd)
+            .unwrap_or_else(|err| panic!("failed to spawn chafa in pty: {err}"));
+        drop(pair.slave);
+
+        let stdout = pair
+            .master
+            .try_clone_reader()
+            .unwrap_or_else(|err| panic!("failed to clone pty reader: {err}"));
 
         let mut reader = BufReader::new(stdout);
         let mut buf = [0_u8; 4096];
         let mut pending = String::new();
-        let mut frame = String::new();
+        let mut last_signature = String::new();
 
         loop {
             let read = match reader.read(&mut buf) {
@@ -85,30 +102,22 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
                 Ok(n) => n,
                 Err(_) => break,
             };
-
             pending.push_str(&String::from_utf8_lossy(&buf[..read]));
 
-            while let Some(marker) = next_marker_index(&pending) {
-                let segment = pending[..marker].to_string();
-                if !segment.trim().is_empty() {
-                    frame.push_str(&segment);
-                }
+            if pending.len() > 65_536 {
+                trim_pending(&mut pending, 32_768);
+            }
 
-                if let Some(lines) = frame_to_lines(&frame) {
+            if let Some(lines) = frame_from_stream(&pending, height) {
+                let signature = frame_signature(&lines);
+                if signature != last_signature {
                     let _ = tx.send(lines);
+                    last_signature = signature;
                 }
-
-                frame.clear();
-                pending.drain(..marker + marker_len(&pending[marker..]));
             }
-
-            if !pending.is_empty() {
-                frame.push_str(&pending);
-            }
-            pending.clear();
         }
 
-        if let Some(lines) = frame_to_lines(&frame) {
+        if let Some(lines) = frame_from_stream(&pending, height) {
             let _ = tx.send(lines);
         }
 
@@ -126,10 +135,10 @@ pub fn hero_stream_initial_frame(width: u16, height: u16) -> Vec<Line<'static>> 
     render_frame(HERO_GIF_PATH, width, height)
 }
 
-fn frame_to_lines(frame: &str) -> Option<Vec<Line<'static>>> {
-    let sanitized = sanitize_for_text(frame);
+fn frame_from_stream(stream: &str, height: u16) -> Option<Vec<Line<'static>>> {
+    let sanitized = sanitize_for_text(stream);
     let text = sanitized.into_text().ok()?;
-    let lines: Vec<Line<'static>> = text
+    let mut lines: Vec<Line<'static>> = text
         .lines
         .into_iter()
         .filter(|line| {
@@ -141,32 +150,39 @@ fn frame_to_lines(frame: &str) -> Option<Vec<Line<'static>>> {
             !s.trim().is_empty()
         })
         .collect();
-    if lines.is_empty() {
+    let needed = height as usize;
+    if lines.len() < needed {
         None
     } else {
+        lines = lines.split_off(lines.len() - needed);
         Some(lines)
     }
 }
 
-fn next_marker_index(text: &str) -> Option<usize> {
-    let a = text.find("\u{1b}[H");
-    let b = text.find("\u{1b}[2J");
-    match (a, b) {
-        (Some(x), Some(y)) => Some(x.min(y)),
-        (Some(x), None) => Some(x),
-        (None, Some(y)) => Some(y),
-        (None, None) => None,
-    }
+fn frame_signature(lines: &[Line<'static>]) -> String {
+    lines
+        .iter()
+        .map(|line| {
+            line.spans
+                .iter()
+                .map(|span| span.content.as_ref())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
-fn marker_len(rest: &str) -> usize {
-    if rest.starts_with("\u{1b}[H") {
-        3
-    } else if rest.starts_with("\u{1b}[2J") {
-        4
-    } else {
-        0
+fn trim_pending(pending: &mut String, keep_chars: usize) {
+    if pending.len() <= keep_chars {
+        return;
     }
+    let drop = pending.len().saturating_sub(keep_chars);
+    let start = pending
+        .char_indices()
+        .find(|(idx, _)| *idx >= drop)
+        .map(|(idx, _)| idx)
+        .unwrap_or(0);
+    pending.drain(..start);
 }
 
 fn sanitize_for_text(frame: &str) -> String {

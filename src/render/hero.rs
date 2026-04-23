@@ -4,6 +4,7 @@ use ratatui::{
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
+use std::collections::VecDeque;
 use std::sync::mpsc::Receiver;
 
 pub struct Hero {
@@ -13,6 +14,9 @@ pub struct Hero {
     pub height: u16,
     pub current_frame: Vec<Line<'static>>,
     pub rx: Receiver<Vec<Line<'static>>>,
+    pending_frames: VecDeque<Vec<Line<'static>>>,
+    pub paused: bool,
+    step_once: bool,
 }
 
 impl Hero {
@@ -35,6 +39,9 @@ impl Hero {
             height,
             current_frame: frame,
             rx,
+            pending_frames: VecDeque::new(),
+            paused: false,
+            step_once: false,
         }
     }
 
@@ -44,9 +51,40 @@ impl Hero {
 
     pub fn tick(&mut self) {
         while let Ok(frame) = self.rx.try_recv() {
+            self.pending_frames.push_back(frame);
+            if self.pending_frames.len() > 64 {
+                self.pending_frames.pop_front();
+            }
+        }
+
+        if self.paused {
+            if self.step_once {
+                if let Some(frame) = self.pending_frames.pop_front() {
+                    self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
+                    self.height = frame.len() as u16;
+                    self.current_frame = frame;
+                }
+                self.step_once = false;
+            }
+            return;
+        }
+
+        if let Some(frame) = self.pending_frames.pop_back() {
             self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
             self.height = frame.len() as u16;
             self.current_frame = frame;
+            self.pending_frames.clear();
+        }
+    }
+
+    pub fn toggle_animation(&mut self) {
+        self.paused = !self.paused;
+        self.step_once = false;
+    }
+
+    pub fn step_animation(&mut self) {
+        if self.paused {
+            self.step_once = true;
         }
     }
 

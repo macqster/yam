@@ -50,6 +50,8 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Char('d') => ui_state.toggle_debug_layout(),
                     KeyCode::Char('c') => ui_state.toggle_clock_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
+                    KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
+                    KeyCode::Char('.') => ui_state.hero.step_animation(),
                     KeyCode::Left => ui_state.camera.move_by(-2, 0),
                     KeyCode::Right => ui_state.camera.move_by(2, 0),
                     KeyCode::Up => ui_state.camera.move_by(0, -1),

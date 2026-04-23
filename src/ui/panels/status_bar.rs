@@ -32,7 +32,7 @@ impl Panel for StatusBarPanel {
             .split(area);
 
         let left = Paragraph::new(format!(
-            "q - quit   •   d - debug   •   {{ or }} clock font – {}",
+            "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   {{ or }} clock font – {}",
             crate::render::fonts::FontRegistry::display_name(ui.clock_font)
         ))
         .style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray))

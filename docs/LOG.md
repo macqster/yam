@@ -7,6 +7,7 @@
 - removed the legacy `docs/v2/` tree
 - updated the root README and hygiene notes for the Rust baseline
 - committed the Rust baseline and the documentation hygiene refresh
+- removed dead `visualizer/` ignore entries and normalized the repo hygiene wording
 
 ## Log Rules
 

@@ -24,4 +24,4 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 
 - keep changes logged in `docs/LOG.md`
 - keep build output out of the repository
-- avoid reintroducing old Go-era root artifacts unless explicitly needed
+- avoid reintroducing old runtime artifacts unless explicitly needed

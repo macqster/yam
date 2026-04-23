@@ -6,7 +6,7 @@ Date: 2026-04-23
 
 The repository now tracks a Rust terminal scene engine as the active implementation.
 
-The old Go-era root artifacts and the `docs/v2/` archive tree have been removed from the active layout.
+The old runtime artifacts and the reconstruction archive tree have been removed from the active layout.
 
 ## Keep
 

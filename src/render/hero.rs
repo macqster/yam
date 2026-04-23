@@ -1,6 +1,7 @@
 use crate::ui::viewport::Viewport;
 use ratatui::{
     prelude::*,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -9,7 +10,7 @@ pub struct Hero {
     pub y: i32,
     pub width: u16,
     pub height: u16,
-    pub frames: Vec<Vec<String>>,
+    pub frames: Vec<Vec<Line<'static>>>,
     pub current: usize,
 }
 
@@ -17,12 +18,12 @@ impl Hero {
     pub fn new(world_width: usize, world_height: usize) -> Self {
         let frame = crate::render::chafa::hero_frame(96, 48);
         let frame = if frame.is_empty() {
-            vec!["chafa unavailable".to_string()]
+            vec![Line::from("chafa unavailable")]
         } else {
             frame
         };
 
-        let width = frame.iter().map(|line| line.len()).max().unwrap_or(0) as u16;
+        let width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
         let height = frame.len() as u16;
 
         Self {
@@ -35,21 +36,19 @@ impl Hero {
         }
     }
 
-    pub fn frame(&self) -> &Vec<String> {
+    pub fn frame(&self) -> &Vec<Line<'static>> {
         &self.frames[self.current]
     }
 
     pub fn debug_rect(&self) -> (i32, i32, u16, u16) {
-        let width: u16 = 72;
-        let height: u16 = 36;
-        let x = self.x - (width as i32 / 2);
-        let y = self.y - (height as i32 / 2);
-        (x, y, width, height)
+        let x = self.x - (self.width as i32 / 2);
+        let y = self.y - (self.height as i32 / 2);
+        (x, y, self.width, self.height)
     }
 }
 
-fn render_lines(frame: &mut Frame, lines: &[String], start_x: u16, start_y: u16) {
-    let width = lines.iter().map(|l| l.len()).max().unwrap_or(0) as u16;
+fn render_lines(frame: &mut Frame, lines: &[Line<'static>], start_x: u16, start_y: u16) {
+    let width = lines.iter().map(Line::width).max().unwrap_or(0) as u16;
     for (i, line) in lines.iter().enumerate() {
         frame.render_widget(
             Paragraph::new(line.clone()),

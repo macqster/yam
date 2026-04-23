@@ -1,25 +1,26 @@
-# yam
+# yam-rust
 
-`yam` is the application and runtime repo for the current terminal scene.
+Terminal scene engine in Rust.
 
-## Current focus
+## Status
 
-- `bin/yam` is the launcher
-- the runtime now lives at the repository root
-- `check_golden.py` and `scene_config.json` are rooted
-- the Go runtime packages live at the repository root
-- `docs/v2/` is the historical spec and tracking area
-- [`docs/RELEASE_MODEL.md`](docs/RELEASE_MODEL.md) records the stable/experimental branch policy
-- [`docs/FLATTENING_PLAN.md`](docs/FLATTENING_PLAN.md) records the move toward one canonical root runtime tree
+Active Rust rewrite with a persistent world, viewport camera, panel-based UI, anchor-based overlays, and a live terminal loop.
 
-## What moved out
+## Current layout
 
-Terminal startup assets such as Ghostty, Fastfetch, and Kitty live in the separate dotfiles repo.
+- `src/core/` - world, grid, cell, entity, fields
+- `src/systems/` - tick pipeline and empty system scaffolding
+- `src/render/` - clock, hero, fonts, and render helpers
+- `src/ui/` - layout, panels, camera, viewport, scene composition, and debug overlays
 
-See [`docs/DOTFILES_MIGRATION.md`](docs/DOTFILES_MIGRATION.md) for the split note.
+## Runtime
 
-## Working rules
+- `yam-rust` is the installed command
+- `yam-install` rebuilds and reinstalls the local binary
+- `q` exits
+
+## Hygiene
 
 - keep changes logged in `docs/v2/LOG.md`
-- keep the live runtime path explicit
-- do not reintroduce shell/bootstrap assets into this repo without a deliberate decision
+- keep `Cargo.toml`, `Cargo.lock`, `src/`, `assets/`, and docs under version control
+- avoid reintroducing Go-era root artifacts unless explicitly needed for comparison

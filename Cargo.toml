@@ -1,0 +1,14 @@
+[package]
+name = "yam-rust"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "yam-rust"
+path = "src/main.rs"
+
+[dependencies]
+ratatui = "0.30"
+crossterm = "0.27"
+chrono = "0.4"
+figlet-rs = "1.0"

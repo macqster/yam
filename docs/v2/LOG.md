@@ -138,3 +138,4 @@ This is the running log for the v2 rebuild.
 - removed the obsolete top-level `v2/` source stub after the root runtime flattening was completed
 - removed the legacy `visualizer/` runtime tree and simplified `bin/yam` to the Go/Bubble Tea launcher path only
 - normalized the root Python helper imports away from retired `v2.*` names
+- pruned Go-era root artifacts from the Rust rewrite and updated the root README to describe the current Rust baseline and hygiene rules

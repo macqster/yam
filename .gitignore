@@ -1,4 +1,8 @@
 .DS_Store
+target/
+**/*.rs.bk
+*.log
+*.tmp
 visualizer/.venv/
 visualizer/src/__pycache__/
 visualizer/src/omp.cache

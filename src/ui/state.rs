@@ -1,4 +1,5 @@
 use crate::render::fonts::ClockFont;
+use crate::render::hero::Hero;
 use crate::ui::camera::Camera;
 
 pub struct UiState {
@@ -8,6 +9,7 @@ pub struct UiState {
     pub hero_offset_x: i32,
     pub hero_offset_y: i32,
     pub camera: Camera,
+    pub hero: Hero,
 }
 
 impl UiState {
@@ -19,6 +21,7 @@ impl UiState {
             hero_offset_x: 0,
             hero_offset_y: 0,
             camera: Camera::new(),
+            hero: Hero::new(300, 120),
         }
     }
 

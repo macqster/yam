@@ -10,7 +10,7 @@
 
 use crate::core::world::WorldState;
 use crate::render::fonts::FontRegistry;
-use crate::render::hero::{draw_hero, draw_hero_debug, Hero};
+use crate::render::hero::{draw_hero, draw_hero_debug};
 use crate::ui::debug::draw_layout_debug;
 use crate::ui::layout::compute_layout;
 use crate::ui::panel::Panel;
@@ -24,7 +24,7 @@ use ratatui::prelude::*;
 pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: &FontRegistry) {
     let full = frame.area();
     let layout = compute_layout(full);
-    let hero = Hero::new(world.grid.width as usize, world.grid.height as usize);
+    let hero = &ui.hero;
     let tier = select_viewport_tier(full.width, full.height);
     let (viewport_width, viewport_height) = tier.size();
     let mut camera = ui.camera;
@@ -40,7 +40,7 @@ pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: 
     field.render(frame, viewport_rect, world, ui, fonts, &viewport);
     draw_hero_debug(
         frame,
-        &hero,
+        hero,
         &viewport,
         viewport_rect,
         ui.hero_offset_x,
@@ -48,7 +48,7 @@ pub fn render_scene(frame: &mut Frame, world: &WorldState, ui: &UiState, fonts: 
     );
     draw_hero(
         frame,
-        &hero,
+        hero,
         &viewport,
         viewport_rect,
         ui.hero_offset_x,

@@ -14,6 +14,7 @@
 - added the render layer contract and scene-level render order header
 - integrated a cached chafa-backed hero frame path with escape-sequence stripping
 - switched the hero frame path to ANSI-preserving ratatui text and derived hero bounds from the rendered frame size
+- replaced the hero snapshot path with a persistent chafa stream and UI-owned frame updates
 
 ## Log Rules
 

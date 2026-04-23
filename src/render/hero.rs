@@ -4,6 +4,7 @@ use ratatui::{
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
+use std::sync::mpsc::Receiver;
 
 pub struct Hero {
     pub x: i32,
@@ -12,11 +13,13 @@ pub struct Hero {
     pub height: u16,
     pub frames: Vec<Vec<Line<'static>>>,
     pub current: usize,
+    pub rx: Receiver<Vec<Line<'static>>>,
 }
 
 impl Hero {
     pub fn new(world_width: usize, world_height: usize) -> Self {
-        let frame = crate::render::chafa::hero_frame(96, 48);
+        let rx = crate::render::chafa::hero_stream(96, 48);
+        let frame = crate::render::chafa::hero_stream_initial_frame(96, 48);
         let frame = if frame.is_empty() {
             vec![Line::from("chafa unavailable")]
         } else {
@@ -33,11 +36,29 @@ impl Hero {
             height,
             frames: vec![frame],
             current: 0,
+            rx,
         }
     }
 
     pub fn frame(&self) -> &Vec<Line<'static>> {
         &self.frames[self.current]
+    }
+
+    pub fn update(&mut self) {
+        while let Ok(frame) = self.rx.try_recv() {
+            self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
+            self.height = frame.len() as u16;
+            self.frames.push(frame);
+            self.current = self.frames.len().saturating_sub(1);
+            if self.frames.len() > 64 {
+                self.frames.remove(0);
+                self.current = self.frames.len().saturating_sub(1);
+            }
+        }
+
+        if !self.frames.is_empty() {
+            self.current = (self.current + 1) % self.frames.len();
+        }
     }
 
     pub fn debug_rect(&self) -> (i32, i32, u16, u16) {

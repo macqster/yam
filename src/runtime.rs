@@ -38,6 +38,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         let start = Instant::now();
         tick(&mut world);
+        ui_state.hero.update();
         terminal.draw(|frame| {
             render_scene(frame, &world, &ui_state, &fonts);
         })?;

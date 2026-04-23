@@ -128,9 +128,6 @@ pub fn hero_stream_initial_frame(width: u16, height: u16) -> Vec<Line<'static>> 
 
 fn frame_to_lines(frame: &str) -> Option<Vec<Line<'static>>> {
     let sanitized = sanitize_for_text(frame);
-    if !looks_like_frame(&sanitized) {
-        return None;
-    }
     let text = sanitized.into_text().ok()?;
     let lines: Vec<Line<'static>> = text
         .lines
@@ -141,8 +138,7 @@ fn frame_to_lines(frame: &str) -> Option<Vec<Line<'static>>> {
                 .iter()
                 .map(|span| span.content.as_ref())
                 .collect::<String>();
-            let trimmed = s.trim();
-            !trimmed.is_empty() && !looks_like_noise(trimmed)
+            !s.trim().is_empty()
         })
         .collect();
     if lines.is_empty() {
@@ -171,26 +167,6 @@ fn marker_len(rest: &str) -> usize {
     } else {
         0
     }
-}
-
-fn looks_like_frame(frame: &str) -> bool {
-    let visible = frame.chars().filter(|c| !c.is_control()).count();
-    visible >= 8
-}
-
-fn looks_like_noise(text: &str) -> bool {
-    let chars: Vec<char> = text.chars().filter(|c| !c.is_whitespace()).collect();
-    if chars.len() < 8 {
-        return false;
-    }
-
-    let mut counts = std::collections::BTreeMap::new();
-    for ch in chars {
-        *counts.entry(ch).or_insert(0usize) += 1;
-    }
-
-    let max = counts.values().copied().max().unwrap_or(0);
-    max.saturating_mul(5) > counts.values().copied().sum::<usize>() * 4
 }
 
 fn sanitize_for_text(frame: &str) -> String {

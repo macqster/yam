@@ -57,16 +57,6 @@ impl Hero {
     }
 }
 
-fn render_lines(frame: &mut Frame, lines: &[Line<'static>], start_x: u16, start_y: u16) {
-    let width = lines.iter().map(Line::width).max().unwrap_or(0) as u16;
-    for (i, line) in lines.iter().enumerate() {
-        frame.render_widget(
-            Paragraph::new(line.clone()),
-            Rect::new(start_x, start_y + i as u16, width, 1),
-        );
-    }
-}
-
 pub fn draw_hero(
     frame: &mut Frame,
     hero: &Hero,
@@ -80,15 +70,50 @@ pub fn draw_hero(
     let start_x = viewport_rect.x as i32 + screen_x - (hero.width as i32 / 2) + offset_x;
     let start_y = viewport_rect.y as i32 + screen_y - (hero.height as i32 / 2) + offset_y;
 
-    if start_x + hero.width as i32 <= viewport_rect.x as i32
+    if start_x >= viewport_rect.right() as i32
+        || start_y >= viewport_rect.bottom() as i32
+        || start_x + hero.width as i32 <= viewport_rect.x as i32
         || start_y + hero.height as i32 <= viewport_rect.y as i32
     {
         return;
     }
 
+    let skip_cols = (viewport_rect.x as i32 - start_x).max(0) as usize;
+    let skip_rows = (viewport_rect.y as i32 - start_y).max(0) as usize;
     let start_x = start_x.max(viewport_rect.x as i32) as u16;
     let start_y = start_y.max(viewport_rect.y as i32) as u16;
-    render_lines(frame, hero.frame(), start_x, start_y);
+    render_lines_clipped(frame, hero.frame(), start_x, start_y, skip_cols, skip_rows);
+}
+
+fn render_lines_clipped(
+    frame: &mut Frame,
+    lines: &[Line<'static>],
+    start_x: u16,
+    start_y: u16,
+    skip_cols: usize,
+    skip_rows: usize,
+) {
+    let width = lines.iter().map(Line::width).max().unwrap_or(0) as u16;
+    for (i, line) in lines.iter().skip(skip_rows).enumerate() {
+        let text = line
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+        let clipped = text.chars().skip(skip_cols).collect::<String>();
+        if clipped.is_empty() {
+            continue;
+        }
+        frame.render_widget(
+            Paragraph::new(clipped),
+            Rect::new(
+                start_x,
+                start_y + i as u16,
+                width.saturating_sub(skip_cols as u16),
+                1,
+            ),
+        );
+    }
 }
 
 pub fn draw_hero_debug(

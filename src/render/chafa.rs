@@ -3,6 +3,7 @@ use std::{
     process::Command,
     sync::mpsc::{self, Receiver},
     thread,
+    time::{Duration, Instant},
 };
 
 use ansi_to_tui::IntoText;
@@ -63,22 +64,14 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
         cmd.env("COLORTERM", "truecolor");
         cmd.arg("--probe=off");
         cmd.arg(&path);
+        cmd.arg("--animate=on");
+        cmd.arg("--clear");
+        cmd.arg("--polite=off");
+        cmd.arg("--probe=off");
+        cmd.arg("--speed=1");
+        cmd.arg("--duration=0");
         cmd.arg("--size");
         cmd.arg(&size_arg);
-        cmd.arg("--format=symbols");
-        cmd.arg("--symbols=braille");
-        cmd.arg("--colors=full");
-        cmd.arg("--color-space=din99d");
-        cmd.arg("--color-extractor=median");
-        cmd.arg("--dither=diffusion");
-        cmd.arg("--animate=on");
-        cmd.arg("--speed=0.2");
-        cmd.arg("--duration=inf");
-        cmd.arg("--bg=#100100");
-        cmd.arg("--clear");
-        cmd.arg("--passthrough=screen");
-        cmd.arg("--optimize=0");
-        cmd.arg("--relative=off");
 
         let mut child = pair
             .slave
@@ -94,7 +87,7 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
         let mut reader = BufReader::new(stdout);
         let mut buf = [0_u8; 4096];
         let mut pending = String::new();
-        let mut current_frame = String::new();
+        let mut last_emit = Instant::now();
         let mut last_signature = String::new();
 
         loop {
@@ -109,25 +102,20 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
                 trim_pending(&mut pending, 32_768);
             }
 
-            while let Some((boundary_idx, boundary_len)) = next_frame_boundary(&pending) {
-                current_frame.push_str(&pending[..boundary_idx]);
-                pending.drain(..boundary_idx + boundary_len);
-                if let Some(lines) = frame_from_stream(&current_frame, height) {
+            if last_emit.elapsed() >= Duration::from_millis(100) {
+                if let Some(lines) = frame_from_stream(&pending, height) {
                     let signature = frame_signature(&lines);
                     if signature != last_signature {
                         let _ = tx.send(lines);
                         last_signature = signature;
                     }
                 }
-                current_frame.clear();
+                last_emit = Instant::now();
+                pending.clear();
             }
-
-            current_frame.push_str(&pending);
-            pending.clear();
         }
 
-        current_frame.push_str(&pending);
-        if let Some(lines) = frame_from_stream(&current_frame, height) {
+        if let Some(lines) = frame_from_stream(&pending, height) {
             let signature = frame_signature(&lines);
             if signature != last_signature {
                 let _ = tx.send(lines);
@@ -183,17 +171,6 @@ fn frame_signature(lines: &[Line<'static>]) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
-}
-
-fn next_frame_boundary(text: &str) -> Option<(usize, usize)> {
-    let home = text.find("\u{1b}[H").map(|idx| (idx, 3));
-    let clear = text.find("\u{1b}[2J").map(|idx| (idx, 4));
-    match (home, clear) {
-        (Some(a), Some(b)) => Some(if a.0 <= b.0 { a } else { b }),
-        (Some(a), None) => Some(a),
-        (None, Some(b)) => Some(b),
-        (None, None) => None,
-    }
 }
 
 fn trim_pending(pending: &mut String, keep_chars: usize) {

@@ -36,6 +36,7 @@
 - added `scripts/update.sh` and CLI update/check-update entrypoints
 - added build identity plumbing for runtime footer/version reporting
 - documented current coordinate/camera/rendering caveats in the repo audit and rendering docs
+- standardized the active camera/viewport path on top-left offset semantics and aligned the debug border mapping to it
 - verified the tree with `cargo check` and `cargo test` during the audit pass
 
 ## Log Rules

@@ -33,6 +33,16 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - scene merges all grids into `final_grid`
 - scene clears the frame and draws final lines
 
+## Current Camera Contract
+
+The active implementation treats camera as a top-left world offset:
+
+- `screen = world - camera`
+- `Viewport::from_camera` copies camera coordinates directly
+- debug border sampling uses the same top-left mapping
+
+This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
+
 ## Masks
 
 Mask values use compositor semantics:

@@ -30,6 +30,10 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 
 ## Current Known Issues
 
+- Research ingest from `yam-rust_debugging_260424-2009` confirms the same top-tier failure cluster: viewport recenter drift, camera semantic drift, and projection pipeline fragmentation.
+- The research also confirms that the active code still mixes camera-as-offset and camera-as-center behavior, which makes resize and fullscreen transitions non-invariant.
+- Anchor handling is still order-dependent in practice because render-derived values are written into `UiState` and then read by later layers.
+- The active fix direction is now explicit: `Camera` is treated as a top-left world offset for projection, while `Viewport` is a crop helper and not a centering transform.
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
 - `hero_visual_anchor` and `clock_final` are written through `UiState` side effects during rendering, so clock/debug correctness depends on layer order.
@@ -45,6 +49,18 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Mask semantics are provisional: the hero mask is captured and applied only to the field layer as a visual verification path.
 - `coords::Space` and `resolve_position` are placeholders; `Space::Anchor` does not yet resolve through an entity registry.
 - `UiOffsets` now stores offsets, camera, font, and animation settings; it should eventually be renamed or split.
+- `Viewport::from_camera` and the debug border code were updated to match the top-left camera contract, but the broader camera/anchor model still needs consolidation.
+
+## Research Rule Summary
+
+The research docs converge on these rules:
+
+- projection must be singular
+- viewport must be a crop, not a transform
+- camera must have one meaning across the entire pipeline
+- anchor-space elements should resolve before final screen projection
+- visibility should clip, not mutate position
+- rendering must be deterministic from state alone
 
 ## Gaps
 

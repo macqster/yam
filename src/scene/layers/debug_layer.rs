@@ -106,7 +106,6 @@ impl Layer for DebugLayer {
         let cam_y = ui.camera.y;
         let screen_w = width as i32;
         let screen_h = height as i32;
-        let _ = (screen_w, screen_h);
         let world_left = -WORLD_HALF_W;
         let world_right = WORLD_HALF_W - 1;
         let world_top = -WORLD_HALF_H;
@@ -117,8 +116,8 @@ impl Layer for DebugLayer {
         let exclude_y1 = panel_y + panel_height + 2;
         for sy in 0..screen_h {
             for sx in 0..screen_w {
-                let world_x = cam_x + (sx - screen_w / 2);
-                let world_y = cam_y + (sy - screen_h / 2);
+                let world_x = cam_x + sx;
+                let world_y = cam_y + sy;
                 let is_debug_zone = sx >= exclude_x0 as i32
                     && sx <= exclude_x1 as i32
                     && sy >= exclude_y0 as i32

@@ -15,6 +15,7 @@
 - integrated a cached chafa-backed hero frame path with escape-sequence stripping
 - switched the hero frame path to ANSI-preserving ratatui text and derived hero bounds from the rendered frame size
 - replaced the hero snapshot path with a persistent chafa stream and UI-owned frame updates
+- added a compile-time/runtime identity stamp to prove `cargo run` and `yam-rust` share the same source tree and build markers
 
 ## Log Rules
 

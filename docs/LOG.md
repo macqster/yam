@@ -20,6 +20,7 @@
 - aligned the crate/package version with the runtime footer so `cargo run` and `yam-rust` both report `v0.3.0`
 - replaced PTY-based hero capture with deterministic GIF decoding plus per-frame single-image chafa rendering
 - fixed temp GIF frame export to deterministic PNG filenames and verified the hero buffer loads 64 frames in tests
+- preserved ANSI-derived style spans while clipping hero frame text in the renderer
 
 ## Log Rules
 

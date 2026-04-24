@@ -1,7 +1,7 @@
 use crate::ui::viewport::Viewport;
 use ratatui::{
     prelude::*,
-    text::Line,
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -119,13 +119,8 @@ fn render_lines_clipped(
 ) {
     let width = lines.iter().map(Line::width).max().unwrap_or(0) as u16;
     for (i, line) in lines.iter().skip(skip_rows).enumerate() {
-        let text = line
-            .spans
-            .iter()
-            .map(|span| span.content.as_ref())
-            .collect::<String>();
-        let clipped = text.chars().skip(skip_cols).collect::<String>();
-        if clipped.is_empty() {
+        let clipped = clip_line(line, skip_cols);
+        if clipped.width() == 0 {
             continue;
         }
         frame.render_widget(
@@ -138,6 +133,28 @@ fn render_lines_clipped(
             ),
         );
     }
+}
+
+fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
+    let mut remaining = skip_cols;
+    let mut spans = Vec::new();
+
+    for span in &line.spans {
+        let content = span.content.as_ref();
+        let content_width = content.chars().count();
+        if remaining >= content_width {
+            remaining -= content_width;
+            continue;
+        }
+
+        let clipped = content.chars().skip(remaining).collect::<String>();
+        remaining = 0;
+        if !clipped.is_empty() {
+            spans.push(Span::styled(clipped, span.style));
+        }
+    }
+
+    Line::from(spans)
 }
 
 pub fn draw_hero_debug(

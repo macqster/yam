@@ -28,8 +28,6 @@ impl Layer for HeroLayer {
         let hero_world_y = hero_world_pos(ui).y;
         let hero_x = hero_world_x - ui.camera.x + ui.offsets.hero_dx;
         let hero_y = hero_world_y - ui.camera.y + ui.offsets.hero_dy;
-        let hero_visual_anchor_x = hero_x + hero.width as i32 / 2;
-        let hero_visual_anchor_y = hero_y + hero.height as i32 / 3;
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         assert_eq!(normalized.len() as u16, hero.height);
         if let Some(first) = normalized.first() {
@@ -45,8 +43,6 @@ impl Layer for HeroLayer {
                 ui.offsets.hero_dy,
             );
         }
-        ui.set_hero_anchor(hero_world_x, hero_world_y);
-        ui.set_hero_visual_anchor(hero_visual_anchor_x, hero_visual_anchor_y);
         draw_normalized_hero(frame, &normalized, hero_x, hero_y, hero.width, hero.height);
     }
 
@@ -67,10 +63,6 @@ impl Layer for HeroLayer {
         let hero_world_y = hero_world.y;
         let hero_x = hero_world_x - ui.camera.x + ui.offsets.hero_dx;
         let hero_y = hero_world_y - ui.camera.y + ui.offsets.hero_dy;
-        let hero_visual_anchor_x = hero_x + hero.width as i32 / 2;
-        let hero_visual_anchor_y = hero_y + hero.height as i32 / 3;
-        ui.set_hero_anchor(hero_world_x, hero_world_y);
-        ui.set_hero_visual_anchor(hero_visual_anchor_x, hero_visual_anchor_y);
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
         let mut mask = Mask::new(width as usize, height as usize);

@@ -33,6 +33,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Research ingest from `yam-rust_debugging_260424-2009` confirms the same top-tier failure cluster: viewport recenter drift, camera semantic drift, and projection pipeline fragmentation.
 - The research also confirms that the active code still mixes camera-as-offset and camera-as-center behavior, which makes resize and fullscreen transitions non-invariant.
 - Anchor handling is still order-dependent in practice because render-derived values are written into `UiState` and then read by later layers.
+- Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug now reconstructs those values from state helpers.
 - The active fix direction is now explicit: `Camera` is treated as a top-left world offset for projection, while `Viewport` is a crop helper and not a centering transform.
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
@@ -50,6 +51,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `coords::Space` and `resolve_position` are placeholders; `Space::Anchor` does not yet resolve through an entity registry.
 - `UiOffsets` now stores offsets, camera, font, and animation settings; it should eventually be renamed or split.
 - `Viewport::from_camera` and the debug border code were updated to match the top-left camera contract, but the broader camera/anchor model still needs consolidation.
+- `UiState` still carries render-cache fields (`hero_anchor`, `hero_visual_anchor`, `clock_final`) that are now effectively debug-only and should eventually be replaced with a per-frame render context or removed.
 
 ## Research Rule Summary
 

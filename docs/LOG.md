@@ -37,6 +37,7 @@
 - added build identity plumbing for runtime footer/version reporting
 - documented current coordinate/camera/rendering caveats in the repo audit and rendering docs
 - standardized the active camera/viewport path on top-left offset semantics and aligned the debug border mapping to it
+- removed render-time hero/clock anchor writes from the active layer path and made debug reconstruct its telemetry from pure state helpers
 - verified the tree with `cargo check` and `cargo test` during the audit pass
 
 ## Log Rules

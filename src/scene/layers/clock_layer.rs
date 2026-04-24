@@ -30,8 +30,6 @@ impl Layer for ClockLayer {
         let lines = clock_lines(ui, fonts);
         let clock_pos = clock_screen_pos(hero_visual_anchor, ui);
         let clock_visible = is_visible(clock_pos, screen.width, screen.height, &lines);
-        ui.set_hero_anchor(hero_world.x, hero_world.y);
-        ui.set_clock_final(clock_pos.x, clock_pos.y);
         if clock_visible {
             draw_clock_at(
                 frame,
@@ -61,7 +59,6 @@ impl Layer for ClockLayer {
         let hero_visual_anchor = hero_visual_anchor(ui, hero_world);
         let clock_pos = clock_screen_pos(hero_visual_anchor, ui);
         let clock_visible = is_visible(clock_pos, width, height, &lines);
-        ui.set_hero_anchor(hero_world.x, hero_world.y);
         if clock_visible {
             for (i, line) in lines.iter().enumerate() {
                 let y = clock_pos.y + i as i32;
@@ -72,7 +69,6 @@ impl Layer for ClockLayer {
                 write_string(&mut grid, x, y as u16, line, Style::default());
             }
         }
-        ui.set_clock_final(clock_pos.x, clock_pos.y);
         LayerOutput { grid, mask: None }
     }
 }

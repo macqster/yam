@@ -1,6 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
+use crate::scene::coords::{anchor_to_world, WorldPos};
 use crate::scene::viewport::Viewport;
 use crate::scene::{Layer, LayerOutput, WORLD_HALF_H, WORLD_HALF_W};
 use crate::ui::debug::draw_layout_debug;
@@ -32,17 +33,14 @@ impl Layer for DebugLayer {
 
         let frame_area = frame.area();
         let hero = &ui.hero;
-        let hero_anchor = ui.hero_anchor.get();
-        let hero_visual_anchor = ui.hero_visual_anchor.get();
-        let clock_final = ui.clock_final.get();
-        let clock_anchor = (
-            clock_final.0 - ui.offsets.clock_dx as i32,
-            clock_final.1 - ui.offsets.clock_dy as i32,
-        );
-        let clock_visible = clock_final.0 >= 0
-            && clock_final.1 >= 0
-            && clock_final.0 < frame_area.width as i32
-            && clock_final.1 < frame_area.height as i32;
+        let hero_anchor = hero_world_pos(ui);
+        let hero_visual_anchor = hero_visual_anchor(ui, hero_anchor);
+        let clock_final = clock_screen_pos(hero_visual_anchor, ui);
+        let clock_anchor = hero_visual_anchor;
+        let clock_visible = clock_final.x >= 0
+            && clock_final.y >= 0
+            && clock_final.x < frame_area.width as i32
+            && clock_final.y < frame_area.height as i32;
         let cam_x = ui.camera.x;
         let cam_y = ui.camera.y;
         let center_x = frame_area.width as i32 / 2;
@@ -56,18 +54,18 @@ impl Layer for DebugLayer {
             hero.current_frame,
             hero.frames.len(),
             hero.playing,
-            hero_anchor.0,
-            hero_anchor.1,
-            hero_visual_anchor.0,
-            hero_visual_anchor.1,
+            hero_anchor.x,
+            hero_anchor.y,
+            hero_visual_anchor.x,
+            hero_visual_anchor.y,
             ui.offsets.hero_dx,
             ui.offsets.hero_dy,
-            clock_anchor.0,
-            clock_anchor.1,
+            clock_anchor.x,
+            clock_anchor.y,
             ui.offsets.clock_dx,
             ui.offsets.clock_dy,
-            clock_final.0,
-            clock_final.1,
+            clock_final.x,
+            clock_final.y,
             clock_visible,
             cam_x,
             cam_y,
@@ -137,19 +135,15 @@ impl Layer for DebugLayer {
             }
         }
         let hero = &ui.hero;
-        let hero_anchor = if ui.offsets.hero_world_x == 0 && ui.offsets.hero_world_y == 0 {
-            (hero.x, hero.y)
-        } else {
-            (ui.offsets.hero_world_x, ui.offsets.hero_world_y)
-        };
-        let hero_visual_anchor = ui.hero_visual_anchor.get();
-        let clock_final = ui.clock_final.get();
+        let hero_anchor = hero_world_pos(ui);
+        let hero_visual_anchor = hero_visual_anchor(ui, hero_anchor);
+        let clock_final = clock_screen_pos(hero_visual_anchor, ui);
         let clock_screen = clock_final;
         let clock_anchor = hero_visual_anchor;
-        let clock_visible = clock_final.0 >= 0
-            && clock_final.1 >= 0
-            && clock_final.0 < width as i32
-            && clock_final.1 < height as i32;
+        let clock_visible = clock_final.x >= 0
+            && clock_final.y >= 0
+            && clock_final.x < width as i32
+            && clock_final.y < height as i32;
         let center_x = width as i32 / 2;
         let center_y = height as i32 / 2;
         let cam_dx = cam_x - center_x;
@@ -159,10 +153,10 @@ impl Layer for DebugLayer {
             format!("Hero FPS: {:.1}", ui.offsets.hero_fps),
             format!("Frame: {} / {}", hero.current_frame, hero.frames.len()),
             format!("Playing: {}", hero.playing),
-            format!("Hero anchor: ({}, {})", hero_anchor.0, hero_anchor.1),
+            format!("Hero anchor: ({}, {})", hero_anchor.x, hero_anchor.y),
             format!(
                 "Hero visual anchor: ({}, {})",
-                hero_visual_anchor.0, hero_visual_anchor.1
+                hero_visual_anchor.x, hero_visual_anchor.y
             ),
             format!(
                 "Hero offset: ({}, {})",
@@ -170,16 +164,16 @@ impl Layer for DebugLayer {
             ),
             format!(
                 "Clock world: ({}, {})",
-                hero_anchor.0 + ui.offsets.clock_dx as i32,
-                hero_anchor.1 + ui.offsets.clock_dy as i32
+                hero_anchor.x + ui.offsets.clock_dx as i32,
+                hero_anchor.y + ui.offsets.clock_dy as i32
             ),
-            format!("Clock screen: ({}, {})", clock_screen.0, clock_screen.1),
-            format!("Clock anchor: ({}, {})", clock_anchor.0, clock_anchor.1),
+            format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
+            format!("Clock anchor: ({}, {})", clock_anchor.x, clock_anchor.y),
             format!(
                 "Clock offset: ({}, {})",
                 ui.offsets.clock_dx, ui.offsets.clock_dy
             ),
-            format!("Clock final: ({}, {})", clock_final.0, clock_final.1),
+            format!("Clock final: ({}, {})", clock_final.x, clock_final.y),
             format!("Clock visible: {}", clock_visible),
             format!("Camera: ({}, {})", cam_x, cam_y),
             format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
@@ -195,4 +189,38 @@ impl Layer for DebugLayer {
         }
         LayerOutput { grid, mask: None }
     }
+}
+
+fn hero_world_pos(ui: &UiState) -> WorldPos {
+    if ui.offsets.hero_world_x == 0 && ui.offsets.hero_world_y == 0 {
+        WorldPos {
+            x: ui.hero.x,
+            y: ui.hero.y,
+        }
+    } else {
+        WorldPos {
+            x: ui.offsets.hero_world_x,
+            y: ui.offsets.hero_world_y,
+        }
+    }
+}
+
+fn hero_visual_anchor(ui: &UiState, hero_world: WorldPos) -> WorldPos {
+    anchor_to_world(
+        hero_world,
+        WorldPos {
+            x: ui.offsets.hero_dx,
+            y: ui.offsets.hero_dy,
+        },
+    )
+}
+
+fn clock_screen_pos(hero_visual_anchor: WorldPos, ui: &UiState) -> WorldPos {
+    anchor_to_world(
+        hero_visual_anchor,
+        WorldPos {
+            x: ui.offsets.clock_dx as i32,
+            y: ui.offsets.clock_dy as i32,
+        },
+    )
 }

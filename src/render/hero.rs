@@ -4,7 +4,6 @@ use ratatui::{
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
-use std::sync::mpsc::Receiver;
 
 pub struct Hero {
     pub x: i32,
@@ -14,32 +13,27 @@ pub struct Hero {
     pub frames: Vec<Vec<Line<'static>>>,
     pub current_frame: usize,
     pub playing: bool,
-    pub rx: Receiver<Vec<Line<'static>>>,
     step_once: bool,
 }
 
 impl Hero {
     pub fn new(world_width: usize, world_height: usize) -> Self {
-        let rx = crate::render::chafa::hero_stream(96, 48);
-        let frame = crate::render::chafa::hero_stream_initial_frame(96, 48);
-        let frame = if frame.is_empty() {
-            vec![Line::from("chafa unavailable")]
-        } else {
-            frame
-        };
-
-        let width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
-        let height = frame.len() as u16;
+        let frames = crate::render::chafa::hero_frames(96, 48);
+        let first_frame = frames
+            .first()
+            .cloned()
+            .unwrap_or_else(|| vec![Line::from("chafa unavailable")]);
+        let width = first_frame.iter().map(Line::width).max().unwrap_or(0) as u16;
+        let height = first_frame.len() as u16;
 
         Self {
             x: (world_width / 2) as i32,
             y: (world_height / 2) as i32,
             width,
             height,
-            frames: vec![frame],
+            frames: if frames.is_empty() { vec![first_frame] } else { frames },
             current_frame: 0,
             playing: true,
-            rx,
             step_once: false,
         }
     }
@@ -52,18 +46,6 @@ impl Hero {
     }
 
     pub fn tick(&mut self) {
-        while let Ok(frame) = self.rx.try_recv() {
-            self.height = frame.len() as u16;
-            self.width = frame.iter().map(Line::width).max().unwrap_or(0) as u16;
-            self.frames.push(frame);
-            if self.frames.len() > 128 {
-                self.frames.remove(0);
-                if self.current_frame > 0 {
-                    self.current_frame -= 1;
-                }
-            }
-        }
-
         if self.frames.is_empty() {
             return;
         }

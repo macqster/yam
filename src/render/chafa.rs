@@ -1,20 +1,13 @@
-use std::{
-    io::{BufReader, Read},
-    process::Command,
-    sync::mpsc::{self, Receiver},
-    thread,
-    time::{Duration, Instant},
-};
+use std::{fs, process::Command};
 
-use ansi_to_tui::IntoText;
-use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage};
 use ratatui::text::Line;
+use tempfile::NamedTempFile;
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 
 pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
     let size_arg = format!("{}x{}", width, height);
-    // NOTE: snapshot helper MUST be static; animation is handled by the streaming pipeline
     let output = Command::new("chafa")
         .arg(path)
         .arg("--size")
@@ -37,177 +30,46 @@ pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     stdout
-        .into_owned()
-        .into_text()
-        .expect("failed to convert ANSI text")
-        .lines
+        .lines()
+        .map(|line| Line::from(line.to_string()))
+        .collect()
 }
 
-pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<Line<'static>>> {
-    let (tx, rx) = mpsc::channel();
-    let path = path.to_string();
-
-    thread::spawn(move || {
-        let size_arg = format!("{}x{}", width, height);
-        let pty_system = native_pty_system();
-        let pair = pty_system
-            .openpty(PtySize {
-                rows: height,
-                cols: width,
-                pixel_width: 0,
-                pixel_height: 0,
-            })
-            .unwrap_or_else(|err| panic!("failed to open pty: {err}"));
-
-        let mut cmd = CommandBuilder::new("chafa");
-        cmd.env("TERM", "xterm-256color");
-        cmd.env("COLORTERM", "truecolor");
-        cmd.arg("--probe=off");
-        cmd.arg(&path);
-        cmd.arg("--animate=on");
-        cmd.arg("--clear");
-        cmd.arg("--polite=off");
-        cmd.arg("--probe=off");
-        cmd.arg("--speed=1");
-        cmd.arg("--duration=0");
-        cmd.arg("--size");
-        cmd.arg(&size_arg);
-
-        let mut child = pair
-            .slave
-            .spawn_command(cmd)
-            .unwrap_or_else(|err| panic!("failed to spawn chafa in pty: {err}"));
-        drop(pair.slave);
-
-        let stdout = pair
-            .master
-            .try_clone_reader()
-            .unwrap_or_else(|err| panic!("failed to clone pty reader: {err}"));
-
-        let mut reader = BufReader::new(stdout);
-        let mut buf = [0_u8; 4096];
-        let mut pending = String::new();
-        let mut last_emit = Instant::now();
-
-        loop {
-            let read = match reader.read(&mut buf) {
-                Ok(0) => break,
-                Ok(n) => n,
-                Err(_) => break,
-            };
-            pending.push_str(&String::from_utf8_lossy(&buf[..read]));
-
-            if pending.len() > 65_536 {
-                trim_pending(&mut pending, 32_768);
-            }
-
-            if last_emit.elapsed() >= Duration::from_millis(100) {
-                if let Some(lines) = frame_from_stream(&pending, height) {
-                    let _ = tx.send(lines);
-                }
-                last_emit = Instant::now();
-                pending.clear();
-            }
-        }
-
-        if let Some(lines) = frame_from_stream(&pending, height) {
-            let _ = tx.send(lines);
-        }
-
-        let _ = child.wait();
-    });
-
-    rx
-}
-
-pub fn hero_stream(width: u16, height: u16) -> Receiver<Vec<Line<'static>>> {
-    spawn_chafa_stream(HERO_GIF_PATH, width, height)
-}
-
-pub fn hero_stream_initial_frame(width: u16, height: u16) -> Vec<Line<'static>> {
-    render_frame(HERO_GIF_PATH, width, height)
-}
-
-fn frame_from_stream(stream: &str, height: u16) -> Option<Vec<Line<'static>>> {
-    let sanitized = sanitize_for_text(stream);
-    let text = sanitized.into_text().ok()?;
-    let mut lines: Vec<Line<'static>> = text
-        .lines
+pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
+    let frames = decode_gif_frames(HERO_GIF_PATH);
+    frames
         .into_iter()
-        .filter(|line| {
-            let s = line
-                .spans
-                .iter()
-                .map(|span| span.content.as_ref())
-                .collect::<String>();
-            !s.trim().is_empty()
-        })
-        .collect();
-    let needed = height as usize;
-    if lines.len() < needed {
-        None
-    } else {
-        lines = lines.split_off(lines.len() - needed);
-        Some(lines)
-    }
+        .map(|frame| render_image_frame(&frame, width, height))
+        .collect()
 }
 
-fn trim_pending(pending: &mut String, keep_chars: usize) {
-    if pending.len() <= keep_chars {
-        return;
-    }
-    let drop = pending.len().saturating_sub(keep_chars);
-    let start = pending
-        .char_indices()
-        .find(|(idx, _)| *idx >= drop)
-        .map(|(idx, _)| idx)
-        .unwrap_or(0);
-    pending.drain(..start);
+fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
+    let file = fs::File::open(path).unwrap_or_else(|err| panic!("failed to open gif {path}: {err}"));
+    let reader = std::io::BufReader::new(file);
+    let decoder = GifDecoder::new(reader)
+        .unwrap_or_else(|err| panic!("failed to decode gif {path}: {err}"));
+    let frames = decoder
+        .into_frames()
+        .collect_frames()
+        .unwrap_or_else(|err| panic!("failed to collect gif frames from {path}: {err}"));
+    frames
+        .into_iter()
+        .map(|frame| DynamicImage::ImageRgba8(frame.into_buffer()))
+        .collect()
 }
 
-fn sanitize_for_text(frame: &str) -> String {
-    let mut out = String::with_capacity(frame.len());
-    let mut chars = frame.chars().peekable();
-
-    while let Some(ch) = chars.next() {
-        if ch != '\u{1b}' {
-            out.push(ch);
-            continue;
-        }
-
-        let Some(next) = chars.next() else {
-            break;
-        };
-
-        match next {
-            '[' => {
-                let mut seq = String::from("\u{1b}[");
-                for c in chars.by_ref() {
-                    seq.push(c);
-                    if ('@'..='~').contains(&c) {
-                        if c == 'm' {
-                            out.push_str(&seq);
-                        }
-                        break;
-                    }
-                }
-            }
-            ']' => {
-                while let Some(c) = chars.next() {
-                    if c == '\u{7}' {
-                        break;
-                    }
-                    if c == '\u{1b}' {
-                        if matches!(chars.peek(), Some('\\')) {
-                            chars.next();
-                        }
-                        break;
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-
-    out
+fn render_image_frame(image: &DynamicImage, width: u16, height: u16) -> Vec<Line<'static>> {
+    let temp = NamedTempFile::new().unwrap_or_else(|err| panic!("failed to create temp file: {err}"));
+    let temp_path = temp.path().to_path_buf();
+    image
+        .save(&temp_path)
+        .unwrap_or_else(|err| panic!("failed to write temp image {temp_path:?}: {err}"));
+    let rendered = render_frame(
+        temp_path
+            .to_str()
+            .unwrap_or_else(|| panic!("temp path not utf-8: {temp_path:?}")),
+        width,
+        height,
+    );
+    rendered
 }

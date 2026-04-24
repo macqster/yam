@@ -21,6 +21,7 @@
 - replaced PTY-based hero capture with deterministic GIF decoding plus per-frame single-image chafa rendering
 - fixed temp GIF frame export to deterministic PNG filenames and verified the hero buffer loads 64 frames in tests
 - preserved ANSI-derived style spans while clipping hero frame text in the renderer
+- introduced a minimal scene + layer compositor and routed the existing render order through it without changing output
 
 ## Log Rules
 

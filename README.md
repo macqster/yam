@@ -13,6 +13,7 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 - `src/render/` - clock, hero, fonts, and render helpers
 - `src/ui/` - camera, viewport, panels, layout, scene composition, and debug overlays
 - `docs/` - current documentation and repo hygiene notes
+- this repository is the active Rust runtime tree; the older `/Users/maciejkuster/_git/yam` checkout has been removed
 
 ## Runtime
 

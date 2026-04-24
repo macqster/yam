@@ -5,6 +5,7 @@ Date: 2026-04-24
 ## Summary
 
 The repository tracks the Rust terminal scene engine as the active implementation.
+The older `/Users/maciejkuster/_git/yam` checkout has been removed to avoid split-tree confusion.
 
 Legacy Python systems are isolated under `tools/legacy-python/` and are not part of the Rust runtime.
 

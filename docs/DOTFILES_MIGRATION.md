@@ -1,6 +1,6 @@
 # Dotfiles Migration
 
-The terminal-startup assets that used to live in this repo have been moved out of `yam`.
+The terminal-startup assets that used to live in the older `yam` checkout have been moved out of this repo.
 
 ## Moved out
 
@@ -13,7 +13,7 @@ The terminal-startup assets that used to live in this repo have been moved out o
 
 ## Why
 
-- keep `yam` focused on the current Rust application and its docs
+- keep this repository focused on the current Rust application and its docs
 - keep shell, terminal, and startup customization in a dedicated dotfiles repository
 - reduce cross-coupling between app development and workstation bootstrap assets
 

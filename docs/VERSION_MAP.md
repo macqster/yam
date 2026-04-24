@@ -14,4 +14,4 @@
 ## Launcher Rule
 
 - `yam-rust` is the active binary
-- keep launcher notes aligned with the Rust baseline
+- keep launcher notes aligned with the Rust baseline and this repository only

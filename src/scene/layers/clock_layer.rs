@@ -1,9 +1,9 @@
 use crate::core::world::WorldState;
+use crate::render::clock::{draw_clock, draw_clock_at};
 use crate::render::fonts::FontRegistry;
 use crate::scene::Layer;
-use crate::ui::panels::clock::ClockPanel;
-use crate::ui::panel::Panel;
 use crate::ui::layout::LayoutRegions;
+use crate::ui::anchor::Anchor;
 use crate::ui::state::UiState;
 use crate::ui::viewport::Viewport;
 use ratatui::prelude::*;
@@ -25,15 +25,18 @@ impl Layer for ClockLayer {
         viewport_rect: Rect,
         _layout: &LayoutRegions,
     ) {
-        let panel = ClockPanel;
-        panel.render(
-            frame,
-            viewport_rect,
-            world,
-            ui,
-            fonts,
-            viewport,
-        );
+        if ui.anchored_clock {
+            let anchor = Anchor {
+                x: 0.75,
+                y: 0.33,
+                offset_x: 0,
+                offset_y: 0,
+            };
+            let (ax, ay) = anchor.resolve(viewport_rect);
+            draw_clock_at(frame, world, viewport_rect.x + ax, viewport_rect.y + ay, ui, fonts);
+        } else {
+            draw_clock(frame, world, viewport_rect, ui, fonts);
+        }
         draw_scrollbars(frame, viewport_rect, viewport, world);
     }
 }

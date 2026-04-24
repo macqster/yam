@@ -9,8 +9,6 @@ pub mod anchor;
 pub mod camera;
 pub mod debug;
 pub mod layout;
-pub mod panel;
-pub mod panels;
 pub mod scene;
 pub mod state;
 pub mod viewport;

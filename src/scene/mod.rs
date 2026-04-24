@@ -2,7 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
-use crate::scene::viewport::{select_viewport_tier, viewport_rect, Viewport};
+use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
@@ -65,13 +65,11 @@ impl Scene {
         fonts: &FontRegistry,
     ) {
         let full = frame.area();
-        let tier = select_viewport_tier(full.width, full.height);
-        let (viewport_width, viewport_height) = tier.size();
         let mut camera = ui.camera;
-        camera.width = viewport_width;
-        camera.height = viewport_height;
-        let viewport = Viewport::from_camera(&camera, viewport_width, viewport_height);
-        let viewport_rect = viewport_rect(full, tier);
+        camera.width = full.width;
+        camera.height = full.height;
+        let viewport = Viewport::from_camera(&camera, full.width, full.height);
+        let viewport_rect = full;
         let mut layers = self.layers.iter().collect::<Vec<_>>();
         layers.sort_by_key(|layer| layer.z_index());
         let mut outputs = Vec::with_capacity(layers.len());

@@ -40,8 +40,8 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `hero_visual_anchor` and `clock_final` are written through `UiState` side effects during rendering, so clock/debug correctness depends on layer order.
 - `(0, 0)` is used as a sentinel for hero world defaults in layer code, which prevents `(0, 0)` from being a clean valid world origin.
 - World constants are `212x57`, while `UiState` still constructs `Hero::new(300, 120)`. The bounds model is not yet unified.
-- Field rendering still uses `viewport_rect` and `Viewport`; hero, clock, debug, and status operate closer to full-grid screen coordinates.
-- Fixed viewport tiers can create discontinuities when resizing.
+- Field rendering now receives the full frame as `viewport_rect`; the previous centered tiered viewport box was removed from the active scene path.
+- `Viewport` still exists as a top-left camera wrapper, but the active scene no longer uses centered viewport tiers to place layers.
 - The legacy `Layer::render(...)` API remains alongside the active `render_to_grid(...)` API.
 - Clock visibility currently depends on anchor-space offsets and clipping behavior; it should preserve `clock = hero_visual_anchor + offset` and never clamp the final relationship.
 - Debug visibility checks and border exclusion are screen-space workarounds rather than a formal UI pass.

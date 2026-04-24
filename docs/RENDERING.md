@@ -22,12 +22,13 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - `merge_grid` is the only active cell merge path
 - final output is rendered once through `Paragraph::new(grid_to_lines(&final_grid))`
 - no layer should rely on ratatui layout wrapping for hero/image content
+- viewport selection is now a full-frame pass; the old centered tiered viewport box no longer drives layer placement
 
 ## Pipeline
 
 - `runtime` receives input and ticks state
 - `render_scene` builds a temporary `Scene`
-- `Scene::render` selects a viewport tier and full terminal area
+- `Scene::render` uses the full terminal area for viewport and viewport rect values
 - each layer writes to a full-frame `Grid`
 - scene captures the hero mask, currently applying it only to field output
 - scene merges all grids into `final_grid`

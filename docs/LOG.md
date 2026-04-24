@@ -41,6 +41,7 @@
 - removed the legacy `Layer::render(...)` path from the scene contract and dropped the `(0,0)` hero sentinel from runtime state
 - made the grid writer grapheme/display-width aware for safer text placement
 - verified the tree with `cargo check` and `cargo test` during the audit pass
+- removed the centered viewport-tier placement path from `Scene::render` so resize/fullscreen transitions no longer introduce a second framing rule
 
 ## Log Rules
 

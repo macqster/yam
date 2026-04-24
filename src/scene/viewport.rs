@@ -1,28 +1,3 @@
-use ratatui::prelude::*;
-
-#[derive(Debug, Clone, Copy)]
-pub enum ViewportTier {
-    Small,
-    Large,
-}
-
-impl ViewportTier {
-    pub fn size(&self) -> (u16, u16) {
-        match self {
-            ViewportTier::Small => (72, 36),
-            ViewportTier::Large => (96, 48),
-        }
-    }
-}
-
-pub fn select_viewport_tier(term_width: u16, term_height: u16) -> ViewportTier {
-    if term_width >= 100 && term_height >= 50 {
-        ViewportTier::Large
-    } else {
-        ViewportTier::Small
-    }
-}
-
 #[derive(Clone, Copy)]
 pub struct Viewport {
     pub x: i32,
@@ -50,17 +25,5 @@ impl Viewport {
         } else {
             None
         }
-    }
-}
-
-pub fn viewport_rect(area: Rect, tier: ViewportTier) -> Rect {
-    let (width, height) = tier.size();
-    let offset_x = (area.width.saturating_sub(width)) / 2;
-    let offset_y = (area.height.saturating_sub(height)) / 2;
-    Rect {
-        x: area.x + offset_x,
-        y: area.y + offset_y,
-        width,
-        height,
     }
 }

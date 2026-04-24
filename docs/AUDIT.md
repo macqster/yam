@@ -51,7 +51,9 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `coords::Space` and `resolve_position` are placeholders; `Space::Anchor` does not yet resolve through an entity registry.
 - `UiOffsets` now stores offsets, camera, font, and animation settings; it should eventually be renamed or split.
 - `Viewport::from_camera` and the debug border code were updated to match the top-left camera contract, but the broader camera/anchor model still needs consolidation.
-- `UiState` still carries render-cache fields (`hero_anchor`, `hero_visual_anchor`, `clock_final`) that are now effectively debug-only and should eventually be replaced with a per-frame render context or removed.
+- `UiState` no longer carries render-cache fields for hero or clock anchors; that dependency was removed from the active render path.
+- The legacy `Layer::render(...)` API has been removed from the active layer contract; only `render_to_grid(...)` remains.
+- Hero world position is no longer inferred through a `(0,0)` sentinel path.
 
 ## Research Rule Summary
 

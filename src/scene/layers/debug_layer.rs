@@ -4,80 +4,14 @@ use crate::render::fonts::FontRegistry;
 use crate::scene::coords::{anchor_to_world, WorldPos};
 use crate::scene::viewport::Viewport;
 use crate::scene::{Layer, LayerOutput, WORLD_HALF_H, WORLD_HALF_W};
-use crate::ui::debug::draw_layout_debug;
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
-use ratatui::widgets::Paragraph;
 
 pub struct DebugLayer;
 
 impl Layer for DebugLayer {
     fn z_index(&self) -> i32 {
         300
-    }
-
-    fn render(
-        &self,
-        frame: &mut Frame<'_>,
-        _world: &WorldState,
-        ui: &UiState,
-        _fonts: &FontRegistry,
-        _viewport: &Viewport,
-        viewport_rect: Rect,
-    ) {
-        if !ui.debug_layout {
-            return;
-        }
-
-        draw_layout_debug(frame, viewport_rect);
-
-        let frame_area = frame.area();
-        let hero = &ui.hero;
-        let hero_anchor = hero_world_pos(ui);
-        let hero_visual_anchor = hero_visual_anchor(ui, hero_anchor);
-        let clock_final = clock_screen_pos(hero_visual_anchor, ui);
-        let clock_anchor = hero_visual_anchor;
-        let clock_visible = clock_final.x >= 0
-            && clock_final.y >= 0
-            && clock_final.x < frame_area.width as i32
-            && clock_final.y < frame_area.height as i32;
-        let cam_x = ui.camera.x;
-        let cam_y = ui.camera.y;
-        let center_x = frame_area.width as i32 / 2;
-        let center_y = frame_area.height as i32 / 2;
-        let cam_dx = cam_x - center_x;
-        let cam_dy = cam_y - center_y;
-        let telemetry = Paragraph::new(format!(
-            "FPS: {:.1}\nHero FPS: {:.1}\nFrame: {} / {}\nPlaying: {}\nHero anchor: ({}, {})\nHero visual anchor: ({}, {})\nHero offset: ({}, {})\nClock anchor: ({}, {})\nClock offset: ({}, {})\nClock final: ({}, {})\nClock visible: {}\nCamera: ({}, {})\nCamera Δ: ({}, {})",
-            ui.fps,
-            ui.offsets.hero_fps,
-            hero.current_frame,
-            hero.frames.len(),
-            hero.playing,
-            hero_anchor.x,
-            hero_anchor.y,
-            hero_visual_anchor.x,
-            hero_visual_anchor.y,
-            ui.offsets.hero_dx,
-            ui.offsets.hero_dy,
-            clock_anchor.x,
-            clock_anchor.y,
-            ui.offsets.clock_dx,
-            ui.offsets.clock_dy,
-            clock_final.x,
-            clock_final.y,
-            clock_visible,
-            cam_x,
-            cam_y,
-            cam_dx,
-            cam_dy
-        ))
-        .style(Style::default().fg(Color::Green));
-
-        frame.render_widget(
-            telemetry,
-            Rect::new(viewport_rect.x + 10, viewport_rect.y + 5, 52, 10),
-        );
     }
 
     fn render_to_grid(
@@ -134,12 +68,11 @@ impl Layer for DebugLayer {
                 }
             }
         }
+
         let hero = &ui.hero;
         let hero_anchor = hero_world_pos(ui);
         let hero_visual_anchor = hero_visual_anchor(ui, hero_anchor);
         let clock_final = clock_screen_pos(hero_visual_anchor, ui);
-        let clock_screen = clock_final;
-        let clock_anchor = hero_visual_anchor;
         let clock_visible = clock_final.x >= 0
             && clock_final.y >= 0
             && clock_final.x < width as i32
@@ -167,8 +100,11 @@ impl Layer for DebugLayer {
                 hero_anchor.x + ui.offsets.clock_dx as i32,
                 hero_anchor.y + ui.offsets.clock_dy as i32
             ),
-            format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
-            format!("Clock anchor: ({}, {})", clock_anchor.x, clock_anchor.y),
+            format!("Clock screen: ({}, {})", clock_final.x, clock_final.y),
+            format!(
+                "Clock anchor: ({}, {})",
+                hero_visual_anchor.x, hero_visual_anchor.y
+            ),
             format!(
                 "Clock offset: ({}, {})",
                 ui.offsets.clock_dx, ui.offsets.clock_dy
@@ -192,16 +128,9 @@ impl Layer for DebugLayer {
 }
 
 fn hero_world_pos(ui: &UiState) -> WorldPos {
-    if ui.offsets.hero_world_x == 0 && ui.offsets.hero_world_y == 0 {
-        WorldPos {
-            x: ui.hero.x,
-            y: ui.hero.y,
-        }
-    } else {
-        WorldPos {
-            x: ui.offsets.hero_world_x,
-            y: ui.offsets.hero_world_y,
-        }
+    WorldPos {
+        x: ui.hero.x,
+        y: ui.hero.y,
     }
 }
 

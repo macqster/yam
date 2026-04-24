@@ -10,6 +10,7 @@ pub enum Anchor {
     Center,
 }
 
+#[allow(dead_code)]
 pub fn resolve_anchor(
     anchor: Anchor,
     width: u16,

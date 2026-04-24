@@ -4,6 +4,7 @@ pub struct WorldPos {
     pub y: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
 pub struct ScreenPos {
     pub x: u16,

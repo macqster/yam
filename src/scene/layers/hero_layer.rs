@@ -1,7 +1,6 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::render::hero::draw_hero_debug_at;
 use crate::render::mask::Mask;
 use crate::scene::{Layer, LayerOutput};
 use crate::ui::state::UiState;
@@ -12,38 +11,6 @@ pub struct HeroLayer;
 impl Layer for HeroLayer {
     fn z_index(&self) -> i32 {
         10
-    }
-
-    fn render(
-        &self,
-        frame: &mut Frame<'_>,
-        _world: &WorldState,
-        ui: &UiState,
-        _fonts: &FontRegistry,
-        _viewport: &crate::scene::viewport::Viewport,
-        _viewport_rect: Rect,
-    ) {
-        let hero = &ui.hero;
-        let hero_world_x = hero_world_pos(ui).x;
-        let hero_world_y = hero_world_pos(ui).y;
-        let hero_x = hero_world_x - ui.camera.x + ui.offsets.hero_dx;
-        let hero_y = hero_world_y - ui.camera.y + ui.offsets.hero_dy;
-        let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
-        assert_eq!(normalized.len() as u16, hero.height);
-        if let Some(first) = normalized.first() {
-            assert_eq!(first.chars().count() as u16, hero.width);
-        }
-        if ui.debug_layout {
-            draw_hero_debug_at(
-                frame,
-                hero,
-                hero_x,
-                hero_y,
-                ui.offsets.hero_dx,
-                ui.offsets.hero_dy,
-            );
-        }
-        draw_normalized_hero(frame, &normalized, hero_x, hero_y, hero.width, hero.height);
     }
 
     fn render_to_grid(
@@ -59,10 +26,8 @@ impl Layer for HeroLayer {
         let mut grid = Grid::new(width, height);
         let hero = &ui.hero;
         let hero_world = hero_world_pos(ui);
-        let hero_world_x = hero_world.x;
-        let hero_world_y = hero_world.y;
-        let hero_x = hero_world_x - ui.camera.x + ui.offsets.hero_dx;
-        let hero_y = hero_world_y - ui.camera.y + ui.offsets.hero_dy;
+        let hero_x = hero_world.x - ui.camera.x + ui.offsets.hero_dx;
+        let hero_y = hero_world.y - ui.camera.y + ui.offsets.hero_dy;
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
         let mut mask = Mask::new(width as usize, height as usize);
@@ -91,35 +56,11 @@ impl Layer for HeroLayer {
                 }
             }
         }
+
         LayerOutput {
             grid,
             mask: Some(mask),
         }
-    }
-}
-
-#[allow(dead_code)]
-fn draw_normalized_hero(
-    frame: &mut Frame<'_>,
-    lines: &[String],
-    start_x: i32,
-    start_y: i32,
-    width: u16,
-    height: u16,
-) {
-    let area = frame.area();
-    for row in 0..height as usize {
-        let y = start_y + row as i32;
-        if y < area.y as i32 || y >= area.bottom() as i32 {
-            continue;
-        }
-        let x = start_x.max(area.x as i32) as u16;
-        let y = y as u16;
-        let line = lines
-            .get(row)
-            .cloned()
-            .unwrap_or_else(|| " ".repeat(width as usize));
-        frame.buffer_mut().set_string(x, y, line, Style::default());
     }
 }
 
@@ -133,7 +74,7 @@ fn normalize_lines(
         normalized.push(normalize_line(line, width));
     }
     while normalized.len() < height as usize {
-        normalized.push(padded_line(width));
+        normalized.push(" ".repeat(width as usize));
     }
     if normalized.len() > height as usize {
         normalized.truncate(height as usize);
@@ -170,10 +111,6 @@ fn normalize_line(line: ratatui::text::Line<'static>, width: u16) -> String {
     chars.into_iter().collect::<String>()
 }
 
-fn padded_line(width: u16) -> String {
-    " ".repeat(width as usize)
-}
-
 fn hard_lock_text(text: &mut String, width: u16) {
     if text.chars().count() > width as usize {
         *text = text.chars().take(width as usize).collect::<String>();
@@ -184,15 +121,8 @@ fn hard_lock_text(text: &mut String, width: u16) {
 }
 
 fn hero_world_pos(ui: &UiState) -> crate::scene::coords::WorldPos {
-    if ui.offsets.hero_world_x == 0 && ui.offsets.hero_world_y == 0 {
-        crate::scene::coords::WorldPos {
-            x: ui.hero.x,
-            y: ui.hero.y,
-        }
-    } else {
-        crate::scene::coords::WorldPos {
-            x: ui.offsets.hero_world_x,
-            y: ui.offsets.hero_world_y,
-        }
+    crate::scene::coords::WorldPos {
+        x: ui.hero.x,
+        y: ui.hero.y,
     }
 }

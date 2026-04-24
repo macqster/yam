@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::cell::Cell;
 use std::{
     fs, io,
     path::{Path, PathBuf},
@@ -12,8 +11,6 @@ use crate::scene::camera::Camera;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct UiOffsets {
-    pub hero_world_x: i32,
-    pub hero_world_y: i32,
     pub camera_x: i32,
     pub camera_y: i32,
     pub hero_dx: i32,
@@ -27,8 +24,6 @@ pub struct UiOffsets {
 impl Default for UiOffsets {
     fn default() -> Self {
         Self {
-            hero_world_x: 0,
-            hero_world_y: 0,
             camera_x: 66,
             camera_y: 18,
             hero_dx: -110,
@@ -47,9 +42,6 @@ pub struct UiState {
     pub debug_layout: bool,
     pub anchored_clock: bool,
     pub offsets: UiOffsets,
-    pub hero_anchor: Cell<(i32, i32)>,
-    pub hero_visual_anchor: Cell<(i32, i32)>,
-    pub clock_final: Cell<(i32, i32)>,
     pub camera: Camera,
     pub hero: Hero,
 }
@@ -63,9 +55,6 @@ impl UiState {
             anchored_clock: false,
             clock_font: ClockFont::Gothic,
             offsets: UiOffsets::default(),
-            hero_anchor: Cell::new((0, 0)),
-            hero_visual_anchor: Cell::new((0, 0)),
-            clock_final: Cell::new((0, 0)),
             camera: Camera::new(),
             hero,
         }
@@ -112,40 +101,21 @@ impl UiState {
         self.anchored_clock = !self.anchored_clock;
     }
 
-    #[allow(dead_code)]
-    pub fn set_hero_anchor(&self, x: i32, y: i32) {
-        self.hero_anchor.set((x, y));
-    }
-
-    #[allow(dead_code)]
-    pub fn set_hero_visual_anchor(&self, x: i32, y: i32) {
-        self.hero_visual_anchor.set((x, y));
-    }
-
-    #[allow(dead_code)]
-    pub fn set_clock_final(&self, x: i32, y: i32) {
-        self.clock_final.set((x, y));
-    }
-
-    #[allow(dead_code)]
     pub fn move_hero_offset_left(&mut self) {
         self.offsets.hero_dx -= 1;
         self.save_state();
     }
 
-    #[allow(dead_code)]
     pub fn move_hero_offset_right(&mut self) {
         self.offsets.hero_dx += 1;
         self.save_state();
     }
 
-    #[allow(dead_code)]
     pub fn move_hero_offset_up(&mut self) {
         self.offsets.hero_dy -= 1;
         self.save_state();
     }
 
-    #[allow(dead_code)]
     pub fn move_hero_offset_down(&mut self) {
         self.offsets.hero_dy += 1;
         self.save_state();

@@ -28,16 +28,6 @@ pub trait Layer {
     fn is_field_layer(&self) -> bool {
         false
     }
-    #[allow(dead_code)]
-    fn render(
-        &self,
-        frame: &mut Frame<'_>,
-        world: &WorldState,
-        ui: &UiState,
-        fonts: &FontRegistry,
-        viewport: &Viewport,
-        viewport_rect: Rect,
-    );
 
     #[allow(clippy::too_many_arguments)]
     fn render_to_grid(

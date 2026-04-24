@@ -34,12 +34,12 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Research ingest from `yam-rust_debugging_260424-2009` confirms the same top-tier failure cluster: viewport recenter drift, camera semantic drift, and projection pipeline fragmentation.
 - The later ChatGPT audit report (`yam-rust_chatgpt_audit_report_260424-2104.md`) independently reinforces the same risk set: resize invariance, render-time mutation coupling, duplicate projection paths, and stale docs around camera/viewport semantics.
 - The research also confirms that the active code still mixes camera-as-offset and camera-as-center behavior, which makes resize and fullscreen transitions non-invariant.
-- Anchor handling is still order-dependent in practice because render-derived values are written into `UiState` and then read by later layers.
-- Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug now reconstructs those values from state helpers.
+- Anchor handling is now order-independent on the active path because render-derived values are captured in a per-frame `RenderState` snapshot and then read by later layers.
+- Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug reconstructs those values from the shared snapshot and state helpers.
 - The active fix direction is now explicit: `Camera` is treated as a top-left world offset for projection, while `Viewport` is a crop helper and not a centering transform.
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
-- `hero_visual_anchor` and `clock_final` are written through `UiState` side effects during rendering, so clock/debug correctness depends on layer order.
+- `hero_visual_anchor` and `clock_final` now live in the shared per-frame `RenderState`, reducing layer-order dependency on the active path.
 - `(0, 0)` is used as a sentinel for hero world defaults in layer code, which prevents `(0, 0)` from being a clean valid world origin.
 - World constants are `212x57`, while `UiState` still constructs `Hero::new(300, 120)`. The bounds model is not yet unified.
 - Field rendering now receives the full frame as `viewport_rect`; the previous centered tiered viewport box was removed from the active scene path.
@@ -57,7 +57,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `UiState` no longer carries render-cache fields for hero or clock anchors; that dependency was removed from the active render path.
 - The legacy `Layer::render(...)` API has been removed from the active layer contract; only `render_to_grid(...)` remains.
 - Hero world position is no longer inferred through a `(0,0)` sentinel path.
-- `Scene::render` now computes a per-frame read-only `RenderState` so hero, clock, and debug all read the same projection facts without render-time state mutation.
+- `Scene::render` computes a per-frame read-only `RenderState` so hero, clock, and debug all read the same projection facts without render-time state mutation.
 - `src/scene/coords.rs` now has basic invariance tests for anchor/world/screen composition and screen-space camera independence.
 
 ## Research Rule Summary

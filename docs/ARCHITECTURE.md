@@ -52,6 +52,6 @@ The current implementation does not fully enforce that model yet. Camera semanti
 ## Known Architectural Debt
 
 - `Layer::render(...)` remains as a legacy API while `Layer::render_to_grid(...)` is the active path.
-- Hero and clock layers publish render-derived values into `UiState` for debug/attachment behavior.
+- Hero and clock layers read from the per-frame `RenderState`; they no longer publish render-derived values into `UiState` on the active path.
 - `coords::Space` exists but is not yet the authoritative position resolver.
 - Masks are present but are still a probe, not a complete scene-wide occlusion policy.

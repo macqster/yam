@@ -66,4 +66,4 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 - Camera math is not yet a single-source contract across hero, field, viewport, and debug border rendering.
 - The active grid path coexists with legacy frame-render methods.
-- Some debug/attachment values are produced by render-time side effects into `UiState`.
+- Some debug/attachment values are now reconstructed from the per-frame `RenderState` snapshot rather than written through render-time `UiState` side effects.

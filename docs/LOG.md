@@ -45,6 +45,7 @@
 - added a read-only per-frame `FrameContext` so hero, clock, and debug now share one projection snapshot instead of recomputing it inside layers
 - added coordinate invariance tests for anchor/world/screen composition and screen-space overlays
 - removed stale repo-split wording after deleting the legacy `/Users/maciejkuster/_git/yam` checkout
+- ingested the 2026-04-24 chatgpt audit report and folded its findings into the repo audit trail
 
 ## Log Rules
 

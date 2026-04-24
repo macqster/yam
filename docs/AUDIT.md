@@ -32,6 +32,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 ## Current Known Issues
 
 - Research ingest from `yam-rust_debugging_260424-2009` confirms the same top-tier failure cluster: viewport recenter drift, camera semantic drift, and projection pipeline fragmentation.
+- The later ChatGPT audit report (`yam-rust_chatgpt_audit_report_260424-2104.md`) independently reinforces the same risk set: resize invariance, render-time mutation coupling, duplicate projection paths, and stale docs around camera/viewport semantics.
 - The research also confirms that the active code still mixes camera-as-offset and camera-as-center behavior, which makes resize and fullscreen transitions non-invariant.
 - Anchor handling is still order-dependent in practice because render-derived values are written into `UiState` and then read by later layers.
 - Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug now reconstructs those values from state helpers.

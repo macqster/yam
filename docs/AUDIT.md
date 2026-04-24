@@ -47,6 +47,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Debug visibility checks and border exclusion are screen-space workarounds rather than a formal UI pass.
 - `scripts/update.sh` and `yam --check-updates` assume optional external cargo tools may be installed.
 - `render::compositor::write_string` writes by `char`, not terminal display width or grapheme cluster width.
+- `render::compositor::write_string` and `lines_to_grid` now account for grapheme clusters and display width, but the engine still stores only one `char` per cell.
 - Mask semantics are provisional: the hero mask is captured and applied only to the field layer as a visual verification path.
 - `coords::Space` and `resolve_position` are placeholders; `Space::Anchor` does not yet resolve through an entity registry.
 - `UiOffsets` now stores offsets, camera, font, and animation settings; it should eventually be renamed or split.

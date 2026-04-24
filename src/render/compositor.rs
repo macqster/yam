@@ -2,6 +2,8 @@ use ratatui::{
     prelude::*,
     text::{Line, Span},
 };
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
 
 use crate::render::mask::Mask;
 
@@ -84,15 +86,21 @@ impl Grid {
 }
 
 pub fn write_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
-    for (i, ch) in text.chars().enumerate() {
-        let px = x + i as u16;
+    let mut px = x;
+    for grapheme in text.graphemes(true) {
+        let grapheme_width = UnicodeWidthStr::width(grapheme).max(1) as u16;
         if px >= grid.width || y >= grid.height {
+            break;
+        }
+        if px.saturating_add(grapheme_width) > grid.width {
             break;
         }
         let idx = grid.index(px, y);
         let cell = &mut grid.cells[idx];
-        if ch != ' ' {
-            cell.symbol = ch;
+        if let Some(ch) = grapheme.chars().next() {
+            if ch != ' ' {
+                cell.symbol = ch;
+            }
         }
         if let Some(fg) = style.fg {
             cell.style.fg = Some(fg);
@@ -102,6 +110,7 @@ pub fn write_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
         }
         cell.style.add_modifier |= style.add_modifier;
         cell.style.sub_modifier |= style.sub_modifier;
+        px = px.saturating_add(grapheme_width);
     }
 }
 
@@ -166,11 +175,14 @@ pub fn lines_to_grid(lines: &[Line<'_>], width: u16, height: u16) -> Grid {
         let mut x = 0u16;
         for span in &line.spans {
             for grapheme in span.styled_graphemes(Style::default()) {
-                let width = grapheme.symbol.chars().count() as u16;
+                let width = UnicodeWidthStr::width(grapheme.symbol).max(1) as u16;
                 if width == 0 {
                     continue;
                 }
                 if x >= grid.width {
+                    break;
+                }
+                if x.saturating_add(width) > grid.width {
                     break;
                 }
 

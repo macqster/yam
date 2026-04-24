@@ -19,6 +19,7 @@
 - removed the chafa stream signature gate so frame snapshots are no longer collapsed before reaching the hero state
 - aligned the crate/package version with the runtime footer so `cargo run` and `yam-rust` both report `v0.3.0`
 - replaced PTY-based hero capture with deterministic GIF decoding plus per-frame single-image chafa rendering
+- fixed temp GIF frame export to deterministic PNG filenames and verified the hero buffer loads 64 frames in tests
 
 ## Log Rules
 

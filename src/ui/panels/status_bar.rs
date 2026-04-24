@@ -15,8 +15,7 @@ pub struct StatusBarPanel;
 fn build_label() -> String {
     let version = env!("CARGO_PKG_VERSION");
     let build_time = env!("YAM_BUILD_TIME");
-    let git_hash = env!("YAM_GIT_HASH");
-    format!("yam-rust {version} build {build_time} ({git_hash})")
+    format!("yam {version}, build {build_time}")
 }
 
 impl Panel for StatusBarPanel {

@@ -23,6 +23,7 @@ impl Hero {
             .first()
             .cloned()
             .unwrap_or_else(|| vec![Line::from("chafa unavailable")]);
+        println!("LOADED FRAME COUNT: {}", frames.len());
         let width = first_frame.iter().map(Line::width).max().unwrap_or(0) as u16;
         let height = first_frame.len() as u16;
 

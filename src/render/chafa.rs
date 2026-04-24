@@ -1,8 +1,7 @@
-use std::{fs, process::Command};
+use std::{fs, path::PathBuf, process::Command};
 
-use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage};
+use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageFormat};
 use ratatui::text::Line;
-use tempfile::NamedTempFile;
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 
@@ -37,10 +36,24 @@ pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
 
 pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
     let frames = decode_gif_frames(HERO_GIF_PATH);
+    let temp_dir = prepare_temp_frame_dir();
     frames
         .into_iter()
-        .map(|frame| render_image_frame(&frame, width, height))
+        .enumerate()
+        .map(|(frame_index, frame)| render_image_frame(&temp_dir, frame_index, &frame, width, height))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hero_frames;
+
+    #[test]
+    fn hero_frame_buffer_has_multiple_frames() {
+        let frames = hero_frames(96, 48);
+        println!("LOADED FRAME COUNT: {}", frames.len());
+        assert!(frames.len() > 1, "expected multiple hero frames");
+    }
 }
 
 fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
@@ -58,11 +71,24 @@ fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
         .collect()
 }
 
-fn render_image_frame(image: &DynamicImage, width: u16, height: u16) -> Vec<Line<'static>> {
-    let temp = NamedTempFile::new().unwrap_or_else(|err| panic!("failed to create temp file: {err}"));
-    let temp_path = temp.path().to_path_buf();
+fn prepare_temp_frame_dir() -> PathBuf {
+    let temp_dir = std::env::temp_dir().join("yam_rust_frames");
+    let _ = fs::remove_dir_all(&temp_dir);
+    fs::create_dir_all(&temp_dir)
+        .unwrap_or_else(|err| panic!("failed to create temp frame dir {temp_dir:?}: {err}"));
+    temp_dir
+}
+
+fn render_image_frame(
+    temp_dir: &PathBuf,
+    frame_index: usize,
+    image: &DynamicImage,
+    width: u16,
+    height: u16,
+) -> Vec<Line<'static>> {
+    let temp_path = temp_dir.join(format!("yam_frame_{frame_index:04}.png"));
     image
-        .save(&temp_path)
+        .save_with_format(&temp_path, ImageFormat::Png)
         .unwrap_or_else(|err| panic!("failed to write temp image {temp_path:?}: {err}"));
     let rendered = render_frame(
         temp_path

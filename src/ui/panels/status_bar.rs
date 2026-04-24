@@ -12,6 +12,13 @@ use ratatui::{
 
 pub struct StatusBarPanel;
 
+fn build_label() -> String {
+    let version = env!("CARGO_PKG_VERSION");
+    let build_time = env!("YAM_BUILD_TIME");
+    let git_hash = env!("YAM_GIT_HASH");
+    format!("yam-rust {version} build {build_time} ({git_hash})")
+}
+
 impl Panel for StatusBarPanel {
     fn render(
         &self,
@@ -39,7 +46,7 @@ impl Panel for StatusBarPanel {
         .alignment(Alignment::Left);
         frame.render_widget(left, chunks[0]);
 
-        let right = Paragraph::new("yam-rust 0.3")
+        let right = Paragraph::new(build_label())
             .style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray))
             .alignment(Alignment::Right);
         frame.render_widget(right, chunks[1]);

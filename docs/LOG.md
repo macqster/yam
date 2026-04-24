@@ -43,6 +43,7 @@
 - verified the tree with `cargo check` and `cargo test` during the audit pass
 - removed the centered viewport-tier placement path from `Scene::render` so resize/fullscreen transitions no longer introduce a second framing rule
 - added a read-only per-frame `FrameContext` so hero, clock, and debug now share one projection snapshot instead of recomputing it inside layers
+- added coordinate invariance tests for anchor/world/screen composition and screen-space overlays
 
 ## Log Rules
 

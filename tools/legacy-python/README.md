@@ -1,14 +1,14 @@
 # Legacy Python YAM
 
-This directory contains the legacy Python implementation of YAM.
+These are legacy Python systems from pre-Rust YAM.
 
-It is kept for reference and tooling only. It is not part of the Rust runtime,
-and the Rust application does not depend on these modules.
+They are not used in the Rust runtime. They are kept for reference and tooling
+only.
 
 Contents:
 - `engine/`
-- `hero/`
-- `morphology/`
-
-Use these files only when working on the historical Python systems or migration
-support tooling.
+- `render/`
+- `runtime/`
+- `shape/`
+- `hero/` and related assets where still needed for reference
+- other historical Python support files moved out of the repo root

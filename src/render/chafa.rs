@@ -1,7 +1,8 @@
 use std::{fs, path::PathBuf, process::Command};
 
+use ansi_to_tui::IntoText;
 use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageFormat};
-use ratatui::text::Line;
+use ratatui::text::{Line, Text};
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 
@@ -27,11 +28,12 @@ pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
         return vec![format!("chafa exited with status {}", output.status).into()];
     }
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout
-        .lines()
-        .map(|line| Line::from(line.to_string()))
-        .collect()
+    let text: Text<'static> = output
+        .stdout
+        .as_slice()
+        .into_text()
+        .unwrap_or_else(|_| Text::raw("ANSI_PARSE_ERROR"));
+    text.lines
 }
 
 pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {

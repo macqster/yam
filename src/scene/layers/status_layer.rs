@@ -1,12 +1,10 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::viewport::Viewport;
-use crate::scene::{Layer, LayerOutput};
+use crate::scene::{FrameContext, Layer, LayerOutput};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
-use ratatui::prelude::*;
 
 pub struct StatusLayer;
 
@@ -22,8 +20,7 @@ impl Layer for StatusLayer {
         _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
-        _viewport: &Viewport,
-        _viewport_rect: Rect,
+        _ctx: &FrameContext,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let footer_y = height.saturating_sub(1);

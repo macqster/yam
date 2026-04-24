@@ -1,8 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::viewport::Viewport;
-use crate::scene::{Layer, LayerOutput};
+use crate::scene::{FrameContext, Layer, LayerOutput};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -24,15 +23,14 @@ impl Layer for FieldLayer {
         world: &WorldState,
         _ui: &UiState,
         _fonts: &FontRegistry,
-        viewport: &Viewport,
-        viewport_rect: Rect,
+        ctx: &FrameContext,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        for y in 0..viewport_rect.height.min(grid.height) {
+        for y in 0..ctx.viewport_rect.height.min(grid.height) {
             let mut line = String::new();
-            for x in 0..viewport_rect.width.min(grid.width) {
-                let wx = viewport.x + x as i32;
-                let wy = viewport.y + y as i32;
+            for x in 0..ctx.viewport_rect.width.min(grid.width) {
+                let wx = ctx.viewport.x + x as i32;
+                let wy = ctx.viewport.y + y as i32;
                 if wx >= 0
                     && wy >= 0
                     && (wx as usize) < world.grid.width as usize
@@ -52,8 +50,8 @@ impl Layer for FieldLayer {
             }
             write_string(
                 &mut grid,
-                viewport_rect.x,
-                viewport_rect.y + y,
+                ctx.viewport_rect.x,
+                ctx.viewport_rect.y + y,
                 &line,
                 Style::default(),
             );

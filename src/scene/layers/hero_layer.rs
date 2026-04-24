@@ -2,7 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
-use crate::scene::{Layer, LayerOutput};
+use crate::scene::{FrameContext, Layer, LayerOutput};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -20,14 +20,12 @@ impl Layer for HeroLayer {
         _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
-        _viewport: &crate::scene::viewport::Viewport,
-        _viewport_rect: Rect,
+        ctx: &FrameContext,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let hero = &ui.hero;
-        let hero_world = hero_world_pos(ui);
-        let hero_x = hero_world.x - ui.camera.x + ui.offsets.hero_dx;
-        let hero_y = hero_world.y - ui.camera.y + ui.offsets.hero_dy;
+        let hero_x = ctx.hero_visual_anchor.x - ctx.camera.x;
+        let hero_y = ctx.hero_visual_anchor.y - ctx.camera.y;
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
         let mut mask = Mask::new(width as usize, height as usize);
@@ -117,12 +115,5 @@ fn hard_lock_text(text: &mut String, width: u16) {
     }
     if text.chars().count() < width as usize {
         text.push_str(&" ".repeat(width as usize - text.chars().count()));
-    }
-}
-
-fn hero_world_pos(ui: &UiState) -> crate::scene::coords::WorldPos {
-    crate::scene::coords::WorldPos {
-        x: ui.hero.x,
-        y: ui.hero.y,
     }
 }

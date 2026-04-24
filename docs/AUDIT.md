@@ -55,6 +55,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `UiState` no longer carries render-cache fields for hero or clock anchors; that dependency was removed from the active render path.
 - The legacy `Layer::render(...)` API has been removed from the active layer contract; only `render_to_grid(...)` remains.
 - Hero world position is no longer inferred through a `(0,0)` sentinel path.
+- `Scene::render` now computes a per-frame read-only `FrameContext` so hero, clock, and debug all read the same projection facts without render-time state mutation.
 
 ## Research Rule Summary
 

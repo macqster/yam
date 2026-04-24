@@ -2,6 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
+use crate::scene::coords::{anchor_to_world, WorldPos};
 use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
@@ -23,6 +24,16 @@ pub struct LayerOutput {
     pub mask: Option<Mask>,
 }
 
+#[derive(Clone, Copy)]
+pub struct FrameContext {
+    pub viewport: Viewport,
+    pub viewport_rect: Rect,
+    pub camera: crate::scene::camera::Camera,
+    pub hero_world: WorldPos,
+    pub hero_visual_anchor: WorldPos,
+    pub clock_screen: WorldPos,
+}
+
 pub trait Layer {
     fn z_index(&self) -> i32;
     fn is_field_layer(&self) -> bool {
@@ -37,10 +48,9 @@ pub trait Layer {
         world: &WorldState,
         ui: &UiState,
         fonts: &FontRegistry,
-        viewport: &Viewport,
-        viewport_rect: Rect,
+        ctx: &FrameContext,
     ) -> LayerOutput {
-        let _ = (world, ui, fonts, viewport, viewport_rect);
+        let _ = (world, ui, fonts, ctx);
         LayerOutput {
             grid: Grid::new(width, height),
             mask: None,
@@ -70,19 +80,37 @@ impl Scene {
         camera.height = full.height;
         let viewport = Viewport::from_camera(&camera, full.width, full.height);
         let viewport_rect = full;
+        let hero_world = WorldPos {
+            x: ui.hero.x,
+            y: ui.hero.y,
+        };
+        let hero_visual_anchor = anchor_to_world(
+            hero_world,
+            WorldPos {
+                x: ui.offsets.hero_dx,
+                y: ui.offsets.hero_dy,
+            },
+        );
+        let clock_screen = anchor_to_world(
+            hero_visual_anchor,
+            WorldPos {
+                x: ui.offsets.clock_dx as i32,
+                y: ui.offsets.clock_dy as i32,
+            },
+        );
+        let ctx = FrameContext {
+            viewport,
+            viewport_rect,
+            camera,
+            hero_world,
+            hero_visual_anchor,
+            clock_screen,
+        };
         let mut layers = self.layers.iter().collect::<Vec<_>>();
         layers.sort_by_key(|layer| layer.z_index());
         let mut outputs = Vec::with_capacity(layers.len());
         for layer in layers.iter() {
-            outputs.push(layer.render_to_grid(
-                full.width,
-                full.height,
-                world,
-                ui,
-                fonts,
-                &viewport,
-                viewport_rect,
-            ));
+            outputs.push(layer.render_to_grid(full.width, full.height, world, ui, fonts, &ctx));
         }
 
         let hero_mask: Option<Mask> = outputs.iter().find_map(|output| output.mask.clone());

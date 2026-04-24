@@ -2,9 +2,8 @@ use crate::core::world::WorldState;
 use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::{anchor_to_world, WorldPos};
-use crate::scene::viewport::Viewport;
-use crate::scene::{Layer, LayerOutput};
+use crate::scene::coords::WorldPos;
+use crate::scene::{FrameContext, Layer, LayerOutput};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -22,14 +21,11 @@ impl Layer for ClockLayer {
         _world: &WorldState,
         ui: &UiState,
         fonts: &FontRegistry,
-        _viewport: &Viewport,
-        _viewport_rect: Rect,
+        ctx: &FrameContext,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let lines = clock_lines(ui, fonts);
-        let hero_world = hero_world_pos(ui);
-        let hero_visual_anchor = hero_visual_anchor(hero_world, ui);
-        let clock_pos = clock_screen_pos(hero_visual_anchor, ui);
+        let clock_pos = ctx.clock_screen;
         if is_visible(clock_pos, width, height, &lines) {
             for (i, line) in lines.iter().enumerate() {
                 let y = clock_pos.y + i as i32;
@@ -42,33 +38,6 @@ impl Layer for ClockLayer {
         }
         LayerOutput { grid, mask: None }
     }
-}
-
-fn hero_world_pos(ui: &UiState) -> WorldPos {
-    WorldPos {
-        x: ui.hero.x,
-        y: ui.hero.y,
-    }
-}
-
-fn hero_visual_anchor(hero_world: WorldPos, ui: &UiState) -> WorldPos {
-    anchor_to_world(
-        hero_world,
-        WorldPos {
-            x: ui.offsets.hero_dx,
-            y: ui.offsets.hero_dy,
-        },
-    )
-}
-
-fn clock_screen_pos(hero_visual_anchor: WorldPos, ui: &UiState) -> WorldPos {
-    anchor_to_world(
-        hero_visual_anchor,
-        WorldPos {
-            x: ui.offsets.clock_dx as i32,
-            y: ui.offsets.clock_dy as i32,
-        },
-    )
 }
 
 fn is_visible(pos: WorldPos, viewport_width: u16, viewport_height: u16, lines: &[String]) -> bool {

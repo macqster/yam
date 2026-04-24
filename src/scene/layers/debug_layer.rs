@@ -1,9 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::{anchor_to_world, WorldPos};
-use crate::scene::viewport::Viewport;
-use crate::scene::{Layer, LayerOutput, WORLD_HALF_H, WORLD_HALF_W};
+use crate::scene::{FrameContext, Layer, LayerOutput, WORLD_HALF_H, WORLD_HALF_W};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -21,8 +19,7 @@ impl Layer for DebugLayer {
         _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
-        _viewport: &Viewport,
-        _viewport_rect: Rect,
+        ctx: &FrameContext,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         if !ui.debug_layout {
@@ -34,8 +31,8 @@ impl Layer for DebugLayer {
         let panel_width = 52u16;
         let panel_height = 10u16;
 
-        let cam_x = ui.camera.x;
-        let cam_y = ui.camera.y;
+        let cam_x = ctx.camera.x;
+        let cam_y = ctx.camera.y;
         let screen_w = width as i32;
         let screen_h = height as i32;
         let world_left = -WORLD_HALF_W;
@@ -70,9 +67,9 @@ impl Layer for DebugLayer {
         }
 
         let hero = &ui.hero;
-        let hero_anchor = hero_world_pos(ui);
-        let hero_visual_anchor = hero_visual_anchor(ui, hero_anchor);
-        let clock_final = clock_screen_pos(hero_visual_anchor, ui);
+        let hero_anchor = ctx.hero_world;
+        let hero_visual_anchor = ctx.hero_visual_anchor;
+        let clock_final = ctx.clock_screen;
         let clock_visible = clock_final.x >= 0
             && clock_final.y >= 0
             && clock_final.x < width as i32
@@ -125,31 +122,4 @@ impl Layer for DebugLayer {
         }
         LayerOutput { grid, mask: None }
     }
-}
-
-fn hero_world_pos(ui: &UiState) -> WorldPos {
-    WorldPos {
-        x: ui.hero.x,
-        y: ui.hero.y,
-    }
-}
-
-fn hero_visual_anchor(ui: &UiState, hero_world: WorldPos) -> WorldPos {
-    anchor_to_world(
-        hero_world,
-        WorldPos {
-            x: ui.offsets.hero_dx,
-            y: ui.offsets.hero_dy,
-        },
-    )
-}
-
-fn clock_screen_pos(hero_visual_anchor: WorldPos, ui: &UiState) -> WorldPos {
-    anchor_to_world(
-        hero_visual_anchor,
-        WorldPos {
-            x: ui.offsets.clock_dx as i32,
-            y: ui.offsets.clock_dy as i32,
-        },
-    )
 }

@@ -23,6 +23,7 @@
 
 - runtime draw closure calls `render_scene`
 - `Scene` builds ordered layers through `ui::scene::build_ui_layers`
+- `Scene` computes a read-only `FrameContext` once per frame and passes it to every layer
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`
 - `Scene` converts the final grid into ratatui `Line`s

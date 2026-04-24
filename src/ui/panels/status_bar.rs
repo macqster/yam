@@ -3,6 +3,7 @@ use crate::render::fonts::FontRegistry;
 use crate::theme::style as theme_style;
 use crate::ui::panel::Panel;
 use crate::ui::state::UiState;
+use crate::ui::widgets::status::build_status_label;
 use crate::ui::viewport::Viewport;
 use ratatui::{
     layout::Alignment,
@@ -12,12 +13,6 @@ use ratatui::{
 };
 
 pub struct StatusBarPanel;
-
-fn build_label() -> String {
-    let version = env!("CARGO_PKG_VERSION");
-    let build_time = env!("YAM_BUILD_TIME");
-    format!("yam {version}, build {build_time}")
-}
 
 impl Panel for StatusBarPanel {
     fn render(
@@ -46,7 +41,7 @@ impl Panel for StatusBarPanel {
         .alignment(Alignment::Left);
         frame.render_widget(left, chunks[0]);
 
-        let right = Paragraph::new(build_label())
+        let right = Paragraph::new(build_status_label())
             .style(theme_style::panel_text())
             .alignment(Alignment::Right);
         frame.render_widget(right, chunks[1]);

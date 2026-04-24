@@ -14,3 +14,4 @@ pub mod panels;
 pub mod scene;
 pub mod state;
 pub mod viewport;
+pub mod widgets;

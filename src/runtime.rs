@@ -13,8 +13,8 @@ use std::{
 
 use crate::core::world::WorldState;
 use crate::render::fonts::FontRegistry;
+use crate::scene::render_scene;
 use crate::systems::tick::tick;
-use crate::ui::scene::render_scene;
 use crate::ui::state::UiState;
 use crossterm::{
     event::{self, Event, KeyCode, KeyModifiers},

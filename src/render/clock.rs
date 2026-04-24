@@ -1,8 +1,8 @@
 use crate::core::world::WorldState;
 use crate::render::figlet::render_figlet;
 use crate::render::fonts::FontRegistry;
+use crate::ui::widgets::clock::current_time_string;
 use crate::ui::state::UiState;
-use chrono::Local;
 use ratatui::{prelude::*, widgets::Paragraph};
 
 fn render_lines(frame: &mut Frame, lines: &[String], start_x: u16, start_y: u16) {
@@ -22,7 +22,7 @@ pub fn draw_clock(
     ui: &UiState,
     fonts: &FontRegistry,
 ) {
-    let now = Local::now().format("%H:%M:%S").to_string();
+    let now = current_time_string();
     let font = fonts.get(ui.clock_font);
     let lines = render_figlet(font, &now);
 
@@ -45,7 +45,7 @@ pub fn draw_clock_at(
     ui: &UiState,
     fonts: &FontRegistry,
 ) {
-    let now = Local::now().format("%H:%M:%S").to_string();
+    let now = current_time_string();
     let font = fonts.get(ui.clock_font);
     let lines = render_figlet(font, &now);
     let height = lines.len() as u16;

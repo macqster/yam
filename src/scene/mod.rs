@@ -1,6 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::fonts::FontRegistry;
 use crate::ui::layout::LayoutRegions;
+use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
 use crate::ui::viewport::{select_viewport_tier, viewport_rect, Viewport};
 use ratatui::prelude::*;
@@ -55,4 +56,9 @@ impl Scene {
             layer.render(frame, world, ui, fonts, &viewport, viewport_rect, &layout);
         }
     }
+}
+
+pub fn render_scene(frame: &mut Frame<'_>, world: &WorldState, ui: &UiState, fonts: &FontRegistry) {
+    let scene = Scene::new(build_ui_layers());
+    scene.render(frame, world, ui, fonts);
 }

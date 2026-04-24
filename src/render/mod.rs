@@ -7,6 +7,7 @@
 
 pub mod chafa;
 pub mod clock;
+pub mod compositor;
 pub mod figlet;
 pub mod fonts;
 pub mod hero;

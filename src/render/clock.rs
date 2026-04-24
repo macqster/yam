@@ -1,4 +1,5 @@
 use crate::core::world::WorldState;
+use crate::render::compositor::{grid_to_lines, lines_to_grid};
 use crate::render::figlet::render_figlet;
 use crate::render::fonts::FontRegistry;
 use crate::ui::widgets::clock::current_time_string;
@@ -7,6 +8,9 @@ use ratatui::{prelude::*, widgets::Paragraph};
 
 fn render_lines(frame: &mut Frame, lines: &[String], start_x: u16, start_y: u16) {
     let width = lines.iter().map(|l| l.len()).max().unwrap_or(0) as u16;
+    let lines = lines.iter().map(|line| Line::from(line.clone())).collect::<Vec<_>>();
+    let grid = lines_to_grid(&lines, width, lines.len() as u16);
+    let lines = grid_to_lines(&grid);
     for (i, line) in lines.iter().enumerate() {
         frame.render_widget(
             Paragraph::new(line.clone()),

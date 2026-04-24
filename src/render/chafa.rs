@@ -88,7 +88,6 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
         let mut buf = [0_u8; 4096];
         let mut pending = String::new();
         let mut last_emit = Instant::now();
-        let mut last_signature = String::new();
 
         loop {
             let read = match reader.read(&mut buf) {
@@ -104,11 +103,7 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
 
             if last_emit.elapsed() >= Duration::from_millis(100) {
                 if let Some(lines) = frame_from_stream(&pending, height) {
-                    let signature = frame_signature(&lines);
-                    if signature != last_signature {
-                        let _ = tx.send(lines);
-                        last_signature = signature;
-                    }
+                    let _ = tx.send(lines);
                 }
                 last_emit = Instant::now();
                 pending.clear();
@@ -116,10 +111,7 @@ pub fn spawn_chafa_stream(path: &str, width: u16, height: u16) -> Receiver<Vec<L
         }
 
         if let Some(lines) = frame_from_stream(&pending, height) {
-            let signature = frame_signature(&lines);
-            if signature != last_signature {
-                let _ = tx.send(lines);
-            }
+            let _ = tx.send(lines);
         }
 
         let _ = child.wait();
@@ -158,19 +150,6 @@ fn frame_from_stream(stream: &str, height: u16) -> Option<Vec<Line<'static>>> {
         lines = lines.split_off(lines.len() - needed);
         Some(lines)
     }
-}
-
-fn frame_signature(lines: &[Line<'static>]) -> String {
-    lines
-        .iter()
-        .map(|line| {
-            line.spans
-                .iter()
-                .map(|span| span.content.as_ref())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn trim_pending(pending: &mut String, keep_chars: usize) {

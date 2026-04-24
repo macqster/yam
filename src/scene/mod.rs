@@ -1,17 +1,34 @@
 use crate::core::world::WorldState;
+use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::ui::layout::LayoutRegions;
+use crate::render::mask::Mask;
+use crate::scene::viewport::{select_viewport_tier, viewport_rect, Viewport};
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
-use crate::scene::viewport::{select_viewport_tier, viewport_rect, Viewport};
 use ratatui::prelude::*;
+use ratatui::widgets::{Clear, Paragraph};
 
-pub mod layers;
 pub mod camera;
+pub mod coords;
+pub mod layers;
 pub mod viewport;
+
+pub const WORLD_WIDTH: i32 = 212;
+pub const WORLD_HEIGHT: i32 = 57;
+pub const WORLD_HALF_W: i32 = WORLD_WIDTH / 2;
+pub const WORLD_HALF_H: i32 = WORLD_HEIGHT / 2;
+
+pub struct LayerOutput {
+    pub grid: Grid,
+    pub mask: Option<Mask>,
+}
 
 pub trait Layer {
     fn z_index(&self) -> i32;
+    fn is_field_layer(&self) -> bool {
+        false
+    }
+    #[allow(dead_code)]
     fn render(
         &self,
         frame: &mut Frame<'_>,
@@ -20,8 +37,25 @@ pub trait Layer {
         fonts: &FontRegistry,
         viewport: &Viewport,
         viewport_rect: Rect,
-        layout: &LayoutRegions,
     );
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        viewport: &Viewport,
+        viewport_rect: Rect,
+    ) -> LayerOutput {
+        let _ = (world, ui, fonts, viewport, viewport_rect);
+        LayerOutput {
+            grid: Grid::new(width, height),
+            mask: None,
+        }
+    }
 }
 
 pub struct Scene {
@@ -41,24 +75,42 @@ impl Scene {
         fonts: &FontRegistry,
     ) {
         let full = frame.area();
-        let layout = crate::ui::layout::compute_layout(full);
-        let hero = &ui.hero;
         let tier = select_viewport_tier(full.width, full.height);
         let (viewport_width, viewport_height) = tier.size();
         let mut camera = ui.camera;
         camera.width = viewport_width;
         camera.height = viewport_height;
-        if camera.follow_hero {
-            camera.center_on(hero.x, hero.y);
-        }
         let viewport = Viewport::from_camera(&camera, viewport_width, viewport_height);
         let viewport_rect = viewport_rect(full, tier);
-
         let mut layers = self.layers.iter().collect::<Vec<_>>();
         layers.sort_by_key(|layer| layer.z_index());
-        for layer in layers {
-            layer.render(frame, world, ui, fonts, &viewport, viewport_rect, &layout);
+        let mut outputs = Vec::with_capacity(layers.len());
+        for layer in layers.iter() {
+            outputs.push(layer.render_to_grid(
+                full.width,
+                full.height,
+                world,
+                ui,
+                fonts,
+                &viewport,
+                viewport_rect,
+            ));
         }
+
+        let hero_mask: Option<Mask> = outputs.iter().find_map(|output| output.mask.clone());
+        let mut final_grid = Grid::new(full.width, full.height);
+        for (layer, output) in layers.into_iter().zip(outputs) {
+            let mask_to_apply = if layer.is_field_layer() {
+                hero_mask.as_ref()
+            } else {
+                None
+            };
+            merge_grid(&mut final_grid, &output.grid, mask_to_apply);
+        }
+
+        let lines = grid_to_lines(&final_grid);
+        frame.render_widget(Clear, full);
+        frame.render_widget(Paragraph::new(lines), full);
     }
 }
 

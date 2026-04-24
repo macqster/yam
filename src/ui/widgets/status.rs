@@ -1,5 +1,10 @@
+use crate::build_info;
+
 pub fn build_status_label() -> String {
-    let version = env!("CARGO_PKG_VERSION");
-    let build_time = env!("YAM_BUILD_TIME");
-    format!("yam {version}, build {build_time}")
+    format!(
+        "yam {}, build {} ({})",
+        build_info::VERSION,
+        build_info::BUILD_TIME,
+        build_info::build_hash()
+    )
 }

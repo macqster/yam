@@ -1,4 +1,8 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use ansi_to_tui::IntoText;
 use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageFormat};
@@ -42,7 +46,9 @@ pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
     frames
         .into_iter()
         .enumerate()
-        .map(|(frame_index, frame)| render_image_frame(&temp_dir, frame_index, &frame, width, height))
+        .map(|(frame_index, frame)| {
+            render_image_frame(&temp_dir, frame_index, &frame, width, height)
+        })
         .collect()
 }
 
@@ -59,10 +65,11 @@ mod tests {
 }
 
 fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
-    let file = fs::File::open(path).unwrap_or_else(|err| panic!("failed to open gif {path}: {err}"));
+    let file =
+        fs::File::open(path).unwrap_or_else(|err| panic!("failed to open gif {path}: {err}"));
     let reader = std::io::BufReader::new(file);
-    let decoder = GifDecoder::new(reader)
-        .unwrap_or_else(|err| panic!("failed to decode gif {path}: {err}"));
+    let decoder =
+        GifDecoder::new(reader).unwrap_or_else(|err| panic!("failed to decode gif {path}: {err}"));
     let frames = decoder
         .into_frames()
         .collect_frames()
@@ -82,7 +89,7 @@ fn prepare_temp_frame_dir() -> PathBuf {
 }
 
 fn render_image_frame(
-    temp_dir: &PathBuf,
+    temp_dir: &Path,
     frame_index: usize,
     image: &DynamicImage,
     width: u16,

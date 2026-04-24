@@ -1,26 +1,57 @@
 # YAM-RUST Render Contract
 
 Ratatui is an immediate-mode renderer.
-Every frame is rebuilt from state.
-Draw order defines visual layering.
+Every frame is rebuilt from state and emitted as a complete terminal grid.
+
+The active renderer treats ratatui as the final output adapter. Scene layers write into engine-owned `Grid` values first, and only the final composed grid is converted back into ratatui text.
 
 ## Layer Order
 
-- L0 - world, field, background
-- L1 - hero
-- L2 - UI overlays, clock, panels
-- L3 - debug, layout, text
-- L4 - particles, future
-- L5 - scaffolding, future top-most
+- L0 - field/background
+- L10 - hero/entity
+- L100 - anchored clock
+- L300 - debug overlay
+- L1000 - status/footer
 
 ## Rules
 
-- later layers overwrite earlier ones
-- no element may render outside its assigned layer
-- no implicit z-order exists
-- order is the visual truth
+- layers must emit `LayerOutput`
+- `LayerOutput.grid` is the layer proposal for the full frame
+- `LayerOutput.mask` is optional compositor data
+- `Scene` sorts layers by `z_index`
+- `merge_grid` is the only active cell merge path
+- final output is rendered once through `Paragraph::new(grid_to_lines(&final_grid))`
+- no layer should rely on ratatui layout wrapping for hero/image content
 
 ## Pipeline
 
-- world -> viewport -> terminal buffer
-- every world-space render must pass through `Viewport::world_to_view()`
+- `runtime` receives input and ticks state
+- `render_scene` builds a temporary `Scene`
+- `Scene::render` selects a viewport tier and full terminal area
+- each layer writes to a full-frame `Grid`
+- scene captures the hero mask, currently applying it only to field output
+- scene merges all grids into `final_grid`
+- scene clears the frame and draws final lines
+
+## Masks
+
+Mask values use compositor semantics:
+
+- `true` means a top-layer write is allowed
+- `false` means a top-layer write is blocked
+
+Current mask behavior is intentionally limited. The hero layer can emit a silhouette mask, and the scene can apply that mask to the field layer as a verification probe. This is not yet a general occlusion system.
+
+## Text And Geometry Caveats
+
+- Hero frames must remain fixed width and fixed height before render.
+- Hero rendering must not use ratatui wrapping.
+- `write_string` currently iterates `char`s, not display-width-aware graphemes.
+- `grid_to_lines` groups adjacent cells by style.
+- Clock attachment must preserve `clock_screen = hero_visual_anchor + clock_offset`; visibility should clip, not clamp, the relationship.
+
+## Current Risks
+
+- Camera math is not yet a single-source contract across hero, field, viewport, and debug border rendering.
+- The active grid path coexists with legacy frame-render methods.
+- Some debug/attachment values are produced by render-time side effects into `UiState`.

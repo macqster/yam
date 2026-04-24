@@ -23,6 +23,21 @@
 - preserved ANSI-derived style spans while clipping hero frame text in the renderer
 - introduced a minimal scene + layer compositor and routed the existing render order through it without changing output
 
+## 2026-04-24
+
+- isolated legacy Python runtime, render, engine, hero, morphology, shape, theme, and UI artifacts under `tools/legacy-python/`
+- moved experimental Python entrypoints under `tools/experiments/`
+- normalized `src/theme/` into palette/style/glyph-oriented styling modules
+- moved rendering authority from `ui` toward `scene` layers and removed legacy panel rendering from the active path
+- added fixed-size hero frame normalization and control-character cleanup to reduce frame jitter
+- introduced grid-backed composition primitives, scene-level `LayerOutput`, mask plumbing, and a hero mask probe path
+- added persisted runtime UI state for hero offsets, clock offsets, clock font, camera position, and hero animation FPS
+- added debug-only editing controls, debug telemetry, and split normal/debug footer text
+- added `scripts/update.sh` and CLI update/check-update entrypoints
+- added build identity plumbing for runtime footer/version reporting
+- documented current coordinate/camera/rendering caveats in the repo audit and rendering docs
+- verified the tree with `cargo check` and `cargo test` during the audit pass
+
 ## Log Rules
 
 - append entries in date order

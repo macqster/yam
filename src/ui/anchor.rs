@@ -1,19 +1,31 @@
-use ratatui::layout::Rect;
+use crate::scene::coords::ScreenPos;
 
-#[derive(Clone, Copy, Debug)]
-pub struct Anchor {
-    pub x: f32,
-    pub y: f32,
-    pub offset_x: i16,
-    pub offset_y: i16,
+#[allow(dead_code)]
+#[derive(Copy, Clone, Debug)]
+pub enum Anchor {
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+    Center,
 }
 
-impl Anchor {
-    pub fn resolve(&self, area: Rect) -> (u16, u16) {
-        let px = (area.width as f32 * self.x) as i16 + self.offset_x;
-        let py = (area.height as f32 * self.y) as i16 + self.offset_y;
-        let px = px.clamp(0, area.width as i16 - 1) as u16;
-        let py = py.clamp(0, area.height as i16 - 1) as u16;
-        (px, py)
-    }
+pub fn resolve_anchor(
+    anchor: Anchor,
+    width: u16,
+    height: u16,
+    element_w: u16,
+    element_h: u16,
+) -> ScreenPos {
+    let x = match anchor {
+        Anchor::TopLeft | Anchor::BottomLeft => 0,
+        Anchor::TopRight | Anchor::BottomRight => width.saturating_sub(element_w),
+        Anchor::Center => width.saturating_sub(element_w) / 2,
+    };
+    let y = match anchor {
+        Anchor::TopLeft | Anchor::TopRight => 0,
+        Anchor::BottomLeft | Anchor::BottomRight => height.saturating_sub(element_h),
+        Anchor::Center => height.saturating_sub(element_h) / 2,
+    };
+    ScreenPos { x, y }
 }

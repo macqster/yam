@@ -3,7 +3,7 @@ use crate::theme::{glyphs, style as theme_style};
 use ratatui::{
     prelude::*,
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::Paragraph,
 };
 
 pub struct Hero {
@@ -25,15 +25,38 @@ impl Hero {
             .cloned()
             .unwrap_or_else(|| vec![Line::from("chafa unavailable")]);
         println!("LOADED FRAME COUNT: {}", frames.len());
-        let width = first_frame.iter().map(Line::width).max().unwrap_or(0) as u16;
+        let width = first_frame
+            .iter()
+            .map(|line| {
+                line.spans
+                    .iter()
+                    .map(|span| span.content.chars().count() as u16)
+                    .sum()
+            })
+            .max()
+            .unwrap_or(0);
         let height = first_frame.len() as u16;
+        let base_width = width;
+        let base_height = height;
+        let normalized_frames = if frames.is_empty() {
+            vec![normalize_frame(
+                first_frame.clone(),
+                base_width,
+                base_height,
+            )]
+        } else {
+            frames
+                .into_iter()
+                .map(|frame| normalize_frame(frame, base_width, base_height))
+                .collect()
+        };
 
         Self {
             x: (world_width / 2) as i32,
             y: (world_height / 2) as i32,
             width,
             height,
-            frames: if frames.is_empty() { vec![first_frame] } else { frames },
+            frames: normalized_frames,
             current_frame: 0,
             playing: true,
             step_once: false,
@@ -75,6 +98,7 @@ impl Hero {
         }
     }
 
+    #[allow(dead_code)]
     pub fn debug_rect(&self) -> (i32, i32, u16, u16) {
         let x = self.x - (self.width as i32 / 2);
         let y = self.y - (self.height as i32 / 2);
@@ -82,6 +106,7 @@ impl Hero {
     }
 }
 
+#[allow(dead_code)]
 pub fn draw_hero(
     frame: &mut Frame,
     hero: &Hero,
@@ -110,6 +135,33 @@ pub fn draw_hero(
     render_lines_clipped(frame, hero.frame(), start_x, start_y, skip_cols, skip_rows);
 }
 
+#[allow(dead_code)]
+pub fn draw_hero_at(
+    frame: &mut Frame,
+    hero: &Hero,
+    start_x: i32,
+    start_y: i32,
+    offset_x: i32,
+    offset_y: i32,
+) {
+    let start_x = start_x + offset_x;
+    let start_y = start_y + offset_y;
+    let area = frame.area();
+    if start_x >= area.right() as i32
+        || start_y >= area.bottom() as i32
+        || start_x + hero.width as i32 <= area.x as i32
+        || start_y + hero.height as i32 <= area.y as i32
+    {
+        return;
+    }
+
+    let skip_cols = (area.x as i32 - start_x).max(0) as usize;
+    let skip_rows = (area.y as i32 - start_y).max(0) as usize;
+    let start_x = start_x.max(area.x as i32) as u16;
+    let start_y = start_y.max(area.y as i32) as u16;
+    render_lines_clipped(frame, hero.frame(), start_x, start_y, skip_cols, skip_rows);
+}
+
 fn render_lines_clipped(
     frame: &mut Frame,
     lines: &[Line<'static>],
@@ -118,21 +170,88 @@ fn render_lines_clipped(
     skip_cols: usize,
     skip_rows: usize,
 ) {
-    let width = lines.iter().map(Line::width).max().unwrap_or(0) as u16;
     for (i, line) in lines.iter().skip(skip_rows).enumerate() {
         let clipped = clip_line(line, skip_cols);
-        if clipped.width() == 0 {
+        let text = clipped
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+        if text.chars().all(|c| c == ' ') {
             continue;
         }
-        frame.render_widget(
-            Paragraph::new(clipped),
-            Rect::new(
-                start_x,
-                start_y + i as u16,
-                width.saturating_sub(skip_cols as u16),
-                1,
-            ),
-        );
+        frame
+            .buffer_mut()
+            .set_string(start_x, start_y + i as u16, text, Style::default());
+    }
+}
+
+fn normalize_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Line<'static>> {
+    hard_lock_frame(lines, width, height)
+}
+
+fn normalize_line(line: Line<'static>, width: u16) -> Line<'static> {
+    let mut chars = Vec::new();
+    for span in line.spans {
+        for ch in span.content.chars() {
+            let ch = match ch {
+                '\0' | '\r' | '\t' => ' ',
+                other => other,
+            };
+            chars.push(ch);
+            if chars.len() >= width as usize {
+                break;
+            }
+        }
+        if chars.len() >= width as usize {
+            break;
+        }
+    }
+
+    while chars.len() < width as usize {
+        chars.push(' ');
+    }
+
+    let mut text = chars.into_iter().collect::<String>();
+    hard_lock_text(&mut text, width);
+    Line::from(vec![Span::raw(text)])
+}
+
+fn padded_line(width: u16) -> Line<'static> {
+    Line::from(vec![Span::raw(" ".repeat(width as usize))])
+}
+
+fn hard_lock_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Line<'static>> {
+    let mut normalized = Vec::with_capacity(height as usize);
+    for line in lines.into_iter().take(height as usize) {
+        normalized.push(normalize_line(line, width));
+    }
+    while normalized.len() < height as usize {
+        normalized.push(padded_line(width));
+    }
+    if normalized.len() > height as usize {
+        normalized.truncate(height as usize);
+    }
+    debug_assert_eq!(normalized.len(), height as usize);
+    for line in &mut normalized {
+        let mut text = line
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+        hard_lock_text(&mut text, width);
+        debug_assert_eq!(text.chars().count(), width as usize);
+        *line = Line::from(vec![Span::raw(text)]);
+    }
+    normalized
+}
+
+fn hard_lock_text(text: &mut String, width: u16) {
+    if text.chars().count() > width as usize {
+        *text = text.chars().take(width as usize).collect::<String>();
+    }
+    if text.chars().count() < width as usize {
+        text.push_str(&" ".repeat(width as usize - text.chars().count()));
     }
 }
 
@@ -158,61 +277,22 @@ fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
     Line::from(spans)
 }
 
+#[allow(dead_code)]
 pub fn draw_hero_debug(
     frame: &mut Frame,
     hero: &Hero,
     viewport: &Viewport,
-    offset_x: i32,
-    offset_y: i32,
+    _offset_x: i32,
+    _offset_y: i32,
 ) {
-    let (hx, hy, hw, hh) = hero.debug_rect();
-    let title = format!(" hero box, x={:+}, y={:+} ", offset_x, offset_y);
-
-    let mut visible_left = None;
-    let mut visible_top = None;
-    let mut visible_right = None;
-    let mut visible_bottom = None;
-
-    for dx in 0..hw {
-        for dy in 0..hh {
-            let is_border = dx == 0 || dx == hw - 1 || dy == 0 || dy == hh - 1;
-            if !is_border {
-                continue;
-            }
-
-            let wx = hx + dx as i32 + offset_x;
-            let wy = hy + dy as i32 + offset_y;
-            if let Some((vx, vy)) = viewport.world_to_view(wx, wy) {
-                let tx = vx;
-                let ty = vy;
-                if tx < frame.area().width && ty < frame.area().height {
-                    visible_left = Some(visible_left.map_or(tx, |v: u16| v.min(tx)));
-                    visible_top = Some(visible_top.map_or(ty, |v: u16| v.min(ty)));
-                    visible_right = Some(visible_right.map_or(tx, |v: u16| v.max(tx)));
-                    visible_bottom = Some(visible_bottom.map_or(ty, |v: u16| v.max(ty)));
-                }
-            }
+    let center_x = (hero.x - viewport.x).max(0) as u16;
+    let center_y = (hero.y - viewport.y).max(0) as u16;
+    if center_x < frame.area().width && center_y < frame.area().height {
+        if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
+            cell.set_symbol(glyphs::HERO_CENTER_MARKER)
+                .set_fg(crate::theme::palette::MARKER);
         }
     }
-
-    let Some(left) = visible_left else { return };
-    let Some(top) = visible_top else { return };
-    let Some(right) = visible_right else { return };
-    let Some(bottom) = visible_bottom else { return };
-
-    let rect = Rect::new(
-        left,
-        top,
-        right.saturating_sub(left).saturating_add(1),
-        bottom.saturating_sub(top).saturating_add(1),
-    );
-
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .border_type(BorderType::LightDoubleDashed)
-        .title(Line::from(title))
-        .style(theme_style::accent_border());
-    frame.render_widget(block, rect);
 
     let overlay = Paragraph::new(format!(
         "Frame: {} / {}\nPlaying: {}",
@@ -222,14 +302,15 @@ pub fn draw_hero_debug(
     ))
     .style(theme_style::hero_overlay());
     frame.render_widget(overlay, Rect::new(0, 0, 28, 2));
+}
 
-    // Keep a subtle marker on the border where the hero center sits.
-    let center_x = (hero.x - viewport.x).max(0) as u16;
-    let center_y = (hero.y - viewport.y).max(0) as u16;
-    if center_x < frame.area().width && center_y < frame.area().height {
-        if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
-            cell.set_symbol(glyphs::HERO_CENTER_MARKER)
-                .set_fg(crate::theme::palette::MARKER);
-        }
-    }
+#[allow(dead_code)]
+pub fn draw_hero_debug_at(
+    _frame: &mut Frame,
+    _hero: &Hero,
+    _start_x: i32,
+    _start_y: i32,
+    _offset_x: i32,
+    _offset_y: i32,
+) {
 }

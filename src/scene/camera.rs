@@ -18,6 +18,7 @@ impl Camera {
         }
     }
 
+    #[allow(dead_code)]
     pub fn move_by(&mut self, dx: i32, dy: i32) {
         if !self.follow_hero {
             self.x += dx;
@@ -25,6 +26,7 @@ impl Camera {
         }
     }
 
+    #[allow(dead_code)]
     pub fn center_on(&mut self, hero_x: i32, hero_y: i32) {
         if self.follow_hero {
             self.x = hero_x;

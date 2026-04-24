@@ -3,7 +3,10 @@ use ratatui::{
     text::{Line, Span},
 };
 
+use crate::render::mask::Mask;
+
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct Cell {
     pub symbol: char,
     pub style: Style,
@@ -24,6 +27,12 @@ pub struct Grid {
     pub cells: Vec<Cell>,
 }
 
+#[allow(dead_code)]
+pub enum MaskMode<'a> {
+    None,
+    Apply(&'a Mask),
+}
+
 impl Grid {
     pub fn new(width: u16, height: u16) -> Self {
         Self {
@@ -33,9 +42,31 @@ impl Grid {
         }
     }
 
+    pub fn index(&self, x: u16, y: u16) -> usize {
+        (y as usize * self.width as usize) + x as usize
+    }
+
     fn idx(&self, x: u16, y: u16) -> Option<usize> {
         if x < self.width && y < self.height {
-            Some(y as usize * self.width as usize + x as usize)
+            Some(self.index(x, y))
+        } else {
+            None
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn set(&mut self, x: u16, y: u16, cell: Cell) {
+        if x < self.width && y < self.height {
+            let idx = self.index(x, y);
+            self.cells[idx] = cell;
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_mut(&mut self, x: u16, y: u16) -> Option<&mut Cell> {
+        if x < self.width && y < self.height {
+            let idx = self.index(x, y);
+            Some(&mut self.cells[idx])
         } else {
             None
         }
@@ -49,6 +80,28 @@ impl Grid {
         if let Some(base) = self.cell_mut(x, y) {
             merge_cell(base, top);
         }
+    }
+}
+
+pub fn write_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
+    for (i, ch) in text.chars().enumerate() {
+        let px = x + i as u16;
+        if px >= grid.width || y >= grid.height {
+            break;
+        }
+        let idx = grid.index(px, y);
+        let cell = &mut grid.cells[idx];
+        if ch != ' ' {
+            cell.symbol = ch;
+        }
+        if let Some(fg) = style.fg {
+            cell.style.fg = Some(fg);
+        }
+        if let Some(bg) = style.bg {
+            cell.style.bg = Some(bg);
+        }
+        cell.style.add_modifier |= style.add_modifier;
+        cell.style.sub_modifier |= style.sub_modifier;
     }
 }
 
@@ -66,6 +119,44 @@ pub fn merge_cell(base: &mut Cell, top: &Cell) {
 
     base.style.add_modifier |= top.style.add_modifier;
     base.style.sub_modifier |= top.style.sub_modifier;
+}
+
+#[allow(dead_code)]
+pub fn merge_grid(base: &mut Grid, top: &Grid, mask: Option<&Mask>) {
+    let width = base.width.min(top.width);
+    let height = base.height.min(top.height);
+
+    for y in 0..height {
+        for x in 0..width {
+            if let Some(mask) = mask {
+                if mask.width == 0 || mask.height == 0 {
+                    continue;
+                }
+                if x as usize >= mask.width
+                    || y as usize >= mask.height
+                    || !mask.get(x as usize, y as usize)
+                {
+                    continue;
+                }
+            }
+
+            let idx = base.index(x, y);
+            let top_idx = top.index(x, y);
+            if let (Some(base_cell), Some(top_cell)) =
+                (base.cells.get_mut(idx), top.cells.get(top_idx))
+            {
+                merge_cell(base_cell, top_cell);
+            }
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub fn merge_grid_legacy(base: &mut Grid, top: &Grid, mask: MaskMode<'_>) {
+    match mask {
+        MaskMode::None => merge_grid(base, top, None),
+        MaskMode::Apply(mask) => merge_grid(base, top, Some(mask)),
+    }
 }
 
 pub fn lines_to_grid(lines: &[Line<'_>], width: u16, height: u16) -> Grid {
@@ -125,4 +216,32 @@ pub fn grid_to_lines(grid: &Grid) -> Vec<Line<'static>> {
     }
 
     lines
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mask_can_protect_cells_during_merge() {
+        let mut base = Grid::new(2, 2);
+        let mut top = Grid::new(2, 2);
+        top.merge_at(
+            0,
+            0,
+            &Cell {
+                symbol: 'X',
+                style: Style::default().fg(Color::Red),
+            },
+        );
+
+        let mut mask = Mask::new(2, 2);
+        mask.set(0, 0, false);
+
+        merge_grid(&mut base, &top, Some(&mask));
+        assert_eq!(base.cells[0].symbol, ' ');
+
+        merge_grid(&mut base, &top, None);
+        assert_eq!(base.cells[0].symbol, 'X');
+    }
 }

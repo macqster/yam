@@ -44,6 +44,7 @@ impl FontRegistry {
         self.fonts.get(&font).unwrap_or(&self.fallback)
     }
 
+    #[allow(dead_code)]
     pub fn display_name(font: ClockFont) -> &'static str {
         match font {
             ClockFont::Small => "small",

@@ -11,4 +11,7 @@ Contents:
 - `runtime/`
 - `shape/`
 - `hero/` and related assets where still needed for reference
+- `morphology/`
+- `theme/`
+- `ui/`
 - other historical Python support files moved out of the repo root

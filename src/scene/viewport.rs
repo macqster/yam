@@ -41,6 +41,7 @@ impl Viewport {
         }
     }
 
+    #[allow(dead_code)]
     pub fn world_to_view(&self, wx: i32, wy: i32) -> Option<(u16, u16)> {
         let vx = wx - self.x;
         let vy = wy - self.y;

@@ -2,14 +2,19 @@ use ratatui::style::Style;
 
 use super::palette;
 
+#[allow(dead_code)]
 pub fn accent_border() -> Style {
     Style::default().fg(palette::ACCENT)
 }
 
 pub fn panel_text() -> Style {
-    Style::default().bg(palette::PANEL_BG).fg(palette::PRIMARY_FG)
+    Style::default()
+        .bg(palette::PANEL_BG)
+        .fg(palette::PRIMARY_FG)
 }
 
 pub fn hero_overlay() -> Style {
-    Style::default().fg(palette::PRIMARY_FG).bg(palette::HERO_BG)
+    Style::default()
+        .fg(palette::PRIMARY_FG)
+        .bg(palette::HERO_BG)
 }

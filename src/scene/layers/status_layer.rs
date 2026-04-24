@@ -1,13 +1,13 @@
 use crate::core::world::WorldState;
+use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
+use crate::scene::{Layer, LayerOutput};
 use crate::theme::style as theme_style;
-use crate::scene::Layer;
+use crate::ui::anchor::{resolve_anchor, Anchor};
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
-use crate::scene::viewport::Viewport;
-use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Paragraph};
+use ratatui::widgets::Paragraph;
 
 pub struct StatusLayer;
 
@@ -22,31 +22,83 @@ impl Layer for StatusLayer {
         world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
-        viewport: &Viewport,
+        _viewport: &crate::scene::viewport::Viewport,
         _viewport_rect: Rect,
-        _layout: &crate::ui::layout::LayoutRegions,
     ) {
-        let _ = (world, viewport);
-        let area = Rect::new(0, frame.area().bottom().saturating_sub(1), frame.area().width, 1);
-        let footer_bg = Block::default().style(theme_style::panel_text());
-        frame.render_widget(footer_bg, area);
+        let _ = world;
+        let screen = frame.area();
+        let footer_width = screen.width;
+        let pos = resolve_anchor(
+            Anchor::BottomLeft,
+            screen.width,
+            screen.height,
+            footer_width,
+            1,
+        );
+        let area = Rect::new(screen.x + pos.x, screen.y + pos.y, footer_width, 1);
+        let stamp = build_status_label();
+        let stamp_width = stamp.chars().count() as u16 + 2;
+        let stamp_pos = resolve_anchor(
+            Anchor::BottomRight,
+            screen.width,
+            screen.height,
+            stamp_width,
+            1,
+        );
+        let stamp_area = Rect::new(
+            screen.x + stamp_pos.x,
+            screen.y + stamp_pos.y,
+            stamp_width.min(footer_width),
+            1,
+        );
 
-        let chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Min(1), Constraint::Length(12)])
-            .split(area);
+        let left_text = if ui.debug_layout {
+            "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   hjkl hero   •   HJKL clock   •   { } font".to_string()
+        } else {
+            "q - quit   •   space - play/pause   •   . - step".to_string()
+        };
 
-        let left = Paragraph::new(format!(
-            "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   {{ or }} clock font – {}",
-            crate::render::fonts::FontRegistry::display_name(ui.clock_font)
-        ))
-        .style(theme_style::panel_text())
-        .alignment(Alignment::Left);
-        frame.render_widget(left, chunks[0]);
+        let left = Paragraph::new(left_text)
+            .style(theme_style::panel_text())
+            .alignment(Alignment::Left);
+        frame.render_widget(left, area);
 
-        let right = Paragraph::new(build_status_label())
+        let right = Paragraph::new(stamp)
             .style(theme_style::panel_text())
             .alignment(Alignment::Right);
-        frame.render_widget(right, chunks[1]);
+        frame.render_widget(right, stamp_area);
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        _world: &WorldState,
+        ui: &UiState,
+        _fonts: &FontRegistry,
+        _viewport: &crate::scene::viewport::Viewport,
+        _viewport_rect: Rect,
+    ) -> LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let screen_width = grid.width;
+        let screen_height = grid.height;
+        let footer_y = screen_height.saturating_sub(1);
+        let left_text = if ui.debug_layout {
+            "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   hjkl hero   •   HJKL clock   •   { } font"
+        } else {
+            "q - quit   •   space - play/pause   •   . - step"
+        };
+        let right_text = build_status_label();
+        write_string(&mut grid, 0, footer_y, left_text, theme_style::panel_text());
+        let stamp_width = right_text.chars().count() as u16 + 2;
+        let x = screen_width.saturating_sub(stamp_width);
+        write_string(
+            &mut grid,
+            x,
+            footer_y,
+            &right_text,
+            theme_style::panel_text(),
+        );
+        LayerOutput { grid, mask: None }
     }
 }

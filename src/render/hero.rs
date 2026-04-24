@@ -1,4 +1,5 @@
 use crate::ui::viewport::Viewport;
+use crate::theme::{glyphs, style as theme_style};
 use ratatui::{
     prelude::*,
     text::{Line, Span},
@@ -210,7 +211,7 @@ pub fn draw_hero_debug(
         .borders(Borders::ALL)
         .border_type(BorderType::LightDoubleDashed)
         .title(Line::from(title))
-        .style(Style::default().fg(Color::Cyan));
+        .style(theme_style::accent_border());
     frame.render_widget(block, rect);
 
     let overlay = Paragraph::new(format!(
@@ -219,7 +220,7 @@ pub fn draw_hero_debug(
         hero.frames.len(),
         hero.playing
     ))
-    .style(Style::default().fg(Color::Gray).bg(Color::Black));
+    .style(theme_style::hero_overlay());
     frame.render_widget(overlay, Rect::new(0, 0, 28, 2));
 
     // Keep a subtle marker on the border where the hero center sits.
@@ -227,7 +228,8 @@ pub fn draw_hero_debug(
     let center_y = (hero.y - viewport.y).max(0) as u16;
     if center_x < frame.area().width && center_y < frame.area().height {
         if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
-            cell.set_symbol("·").set_fg(Color::Yellow);
+            cell.set_symbol(glyphs::HERO_CENTER_MARKER)
+                .set_fg(crate::theme::palette::MARKER);
         }
     }
 }

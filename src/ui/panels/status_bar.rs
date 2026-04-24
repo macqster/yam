@@ -1,5 +1,6 @@
 use crate::core::world::WorldState;
 use crate::render::fonts::FontRegistry;
+use crate::theme::style as theme_style;
 use crate::ui::panel::Panel;
 use crate::ui::state::UiState;
 use crate::ui::viewport::Viewport;
@@ -29,7 +30,7 @@ impl Panel for StatusBarPanel {
         _viewport: &Viewport,
     ) {
         let footer_bg =
-            Block::default().style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray));
+            Block::default().style(theme_style::panel_text());
         frame.render_widget(footer_bg, area);
 
         let chunks = Layout::default()
@@ -41,12 +42,12 @@ impl Panel for StatusBarPanel {
             "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   {{ or }} clock font – {}",
             crate::render::fonts::FontRegistry::display_name(ui.clock_font)
         ))
-        .style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray))
+        .style(theme_style::panel_text())
         .alignment(Alignment::Left);
         frame.render_widget(left, chunks[0]);
 
         let right = Paragraph::new(build_label())
-            .style(Style::default().bg(Color::Rgb(24, 24, 24)).fg(Color::Gray))
+            .style(theme_style::panel_text())
             .alignment(Alignment::Right);
         frame.render_widget(right, chunks[1]);
     }

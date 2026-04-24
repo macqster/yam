@@ -1,10 +1,11 @@
 use crate::ui::layout::LayoutRegions;
+use crate::theme::style as theme_style;
 use ratatui::prelude::*;
 use ratatui::text::Line;
 use ratatui::widgets::{Block, BorderType, Borders};
 
 pub fn draw_layout_debug(frame: &mut Frame, layout: &LayoutRegions) {
-    let style = Style::default().fg(Color::Cyan);
+    let style = theme_style::accent_border();
     let left = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::LightDoubleDashed)

@@ -2,6 +2,7 @@ mod core;
 mod render;
 mod runtime;
 mod scene;
+mod theme;
 mod systems;
 mod ui;
 

@@ -12,3 +12,4 @@ pub mod figlet;
 pub mod fonts;
 pub mod hero;
 pub mod mask;
+pub mod render_state;

@@ -46,6 +46,7 @@
 - added coordinate invariance tests for anchor/world/screen composition and screen-space overlays
 - removed stale repo-split wording after deleting the legacy `/Users/maciejkuster/_git/yam` checkout
 - ingested the 2026-04-24 chatgpt audit report and folded its findings into the repo audit trail
+- renamed the per-frame snapshot to `RenderState` so the render path has one explicit read-only frame contract
 
 ## Log Rules
 

@@ -3,7 +3,7 @@ use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::coords::WorldPos;
-use crate::scene::{FrameContext, Layer, LayerOutput};
+use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -21,7 +21,7 @@ impl Layer for ClockLayer {
         _world: &WorldState,
         ui: &UiState,
         fonts: &FontRegistry,
-        ctx: &FrameContext,
+        ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let lines = clock_lines(ui, fonts);

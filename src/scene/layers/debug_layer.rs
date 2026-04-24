@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{FrameContext, Layer, LayerOutput, WORLD_HALF_H, WORLD_HALF_W};
+use crate::scene::{Layer, LayerOutput, RenderState, WORLD_HALF_H, WORLD_HALF_W};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -19,7 +19,7 @@ impl Layer for DebugLayer {
         _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
-        ctx: &FrameContext,
+        ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         if !ui.debug_layout {

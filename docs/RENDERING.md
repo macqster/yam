@@ -29,7 +29,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - `runtime` receives input and ticks state
 - `render_scene` builds a temporary `Scene`
 - `Scene::render` uses the full terminal area for viewport and viewport rect values
-- `Scene::render` also computes a single read-only `FrameContext` for hero/clock/debug values
+- `Scene::render` also computes a single read-only `RenderState` for hero/clock/debug values
 - each layer writes to a full-frame `Grid`
 - scene captures the hero mask, currently applying it only to field output
 - scene merges all grids into `final_grid`

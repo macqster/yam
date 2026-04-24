@@ -2,6 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
+use crate::render::render_state::RenderState;
 use crate::scene::coords::{anchor_to_world, WorldPos};
 use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
@@ -24,16 +25,6 @@ pub struct LayerOutput {
     pub mask: Option<Mask>,
 }
 
-#[derive(Clone, Copy)]
-pub struct FrameContext {
-    pub viewport: Viewport,
-    pub viewport_rect: Rect,
-    pub camera: crate::scene::camera::Camera,
-    pub hero_world: WorldPos,
-    pub hero_visual_anchor: WorldPos,
-    pub clock_screen: WorldPos,
-}
-
 pub trait Layer {
     fn z_index(&self) -> i32;
     fn is_field_layer(&self) -> bool {
@@ -48,9 +39,9 @@ pub trait Layer {
         world: &WorldState,
         ui: &UiState,
         fonts: &FontRegistry,
-        ctx: &FrameContext,
+        render_state: &RenderState,
     ) -> LayerOutput {
-        let _ = (world, ui, fonts, ctx);
+        let _ = (world, ui, fonts, render_state);
         LayerOutput {
             grid: Grid::new(width, height),
             mask: None,
@@ -98,7 +89,7 @@ impl Scene {
                 y: ui.offsets.clock_dy as i32,
             },
         );
-        let ctx = FrameContext {
+        let render_state = RenderState {
             viewport,
             viewport_rect,
             camera,
@@ -110,7 +101,14 @@ impl Scene {
         layers.sort_by_key(|layer| layer.z_index());
         let mut outputs = Vec::with_capacity(layers.len());
         for layer in layers.iter() {
-            outputs.push(layer.render_to_grid(full.width, full.height, world, ui, fonts, &ctx));
+            outputs.push(layer.render_to_grid(
+                full.width,
+                full.height,
+                world,
+                ui,
+                fonts,
+                &render_state,
+            ));
         }
 
         let hero_mask: Option<Mask> = outputs.iter().find_map(|output| output.mask.clone());

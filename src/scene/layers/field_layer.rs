@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{FrameContext, Layer, LayerOutput};
+use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -23,7 +23,7 @@ impl Layer for FieldLayer {
         world: &WorldState,
         _ui: &UiState,
         _fonts: &FontRegistry,
-        ctx: &FrameContext,
+        ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         for y in 0..ctx.viewport_rect.height.min(grid.height) {

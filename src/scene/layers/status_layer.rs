@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{FrameContext, Layer, LayerOutput};
+use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
@@ -20,7 +20,7 @@ impl Layer for StatusLayer {
         _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
-        _ctx: &FrameContext,
+        _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let footer_y = height.saturating_sub(1);

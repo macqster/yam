@@ -3,10 +3,12 @@ use crate::render::fonts::FontRegistry;
 use crate::ui::layout::LayoutRegions;
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
-use crate::ui::viewport::{select_viewport_tier, viewport_rect, Viewport};
+use crate::scene::viewport::{select_viewport_tier, viewport_rect, Viewport};
 use ratatui::prelude::*;
 
 pub mod layers;
+pub mod camera;
+pub mod viewport;
 
 pub trait Layer {
     fn z_index(&self) -> i32;
@@ -44,6 +46,8 @@ impl Scene {
         let tier = select_viewport_tier(full.width, full.height);
         let (viewport_width, viewport_height) = tier.size();
         let mut camera = ui.camera;
+        camera.width = viewport_width;
+        camera.height = viewport_height;
         if camera.follow_hero {
             camera.center_on(hero.x, hero.y);
         }

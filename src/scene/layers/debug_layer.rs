@@ -3,7 +3,7 @@ use crate::render::fonts::FontRegistry;
 use crate::scene::Layer;
 use crate::ui::layout::LayoutRegions;
 use crate::ui::state::UiState;
-use crate::ui::viewport::Viewport;
+use crate::scene::viewport::Viewport;
 use crate::ui::debug::draw_layout_debug;
 use ratatui::prelude::*;
 

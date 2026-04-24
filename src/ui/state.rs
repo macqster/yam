@@ -1,6 +1,6 @@
 use crate::render::fonts::ClockFont;
 use crate::render::hero::Hero;
-use crate::ui::camera::Camera;
+use crate::scene::camera::Camera;
 
 pub struct UiState {
     pub clock_font: ClockFont,

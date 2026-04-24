@@ -5,7 +5,7 @@ use crate::scene::Layer;
 use crate::ui::layout::LayoutRegions;
 use crate::ui::anchor::Anchor;
 use crate::ui::state::UiState;
-use crate::ui::viewport::Viewport;
+use crate::scene::viewport::Viewport;
 use ratatui::prelude::*;
 
 pub struct ClockLayer;
@@ -41,12 +41,7 @@ impl Layer for ClockLayer {
     }
 }
 
-fn draw_scrollbars(
-    frame: &mut Frame,
-    viewport_rect: Rect,
-    viewport: &crate::ui::viewport::Viewport,
-    world: &WorldState,
-) {
+fn draw_scrollbars(frame: &mut Frame, viewport_rect: Rect, viewport: &Viewport, world: &WorldState) {
     if viewport_rect.width == 0 || viewport_rect.height == 0 {
         return;
     }

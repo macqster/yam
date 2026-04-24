@@ -1,4 +1,4 @@
-use crate::ui::viewport::Viewport;
+use crate::scene::viewport::Viewport;
 use crate::theme::{glyphs, style as theme_style};
 use ratatui::{
     prelude::*,

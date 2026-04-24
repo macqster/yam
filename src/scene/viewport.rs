@@ -32,7 +32,7 @@ pub struct Viewport {
 }
 
 impl Viewport {
-    pub fn from_camera(camera: &crate::ui::camera::Camera, width: u16, height: u16) -> Self {
+    pub fn from_camera(camera: &crate::scene::camera::Camera, width: u16, height: u16) -> Self {
         Self {
             x: camera.x - (width as i32 / 2),
             y: camera.y - (height as i32 / 2),

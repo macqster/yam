@@ -2,6 +2,8 @@
 pub struct Camera {
     pub x: i32,
     pub y: i32,
+    pub width: u16,
+    pub height: u16,
     pub follow_hero: bool,
 }
 
@@ -10,6 +12,8 @@ impl Camera {
         Self {
             x: 0,
             y: 0,
+            width: 0,
+            height: 0,
             follow_hero: true,
         }
     }
@@ -25,6 +29,17 @@ impl Camera {
         if self.follow_hero {
             self.x = hero_x;
             self.y = hero_y;
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn world_to_screen(&self, wx: i32, wy: i32) -> Option<(u16, u16)> {
+        let sx = wx - self.x;
+        let sy = wy - self.y;
+        if sx >= 0 && sy >= 0 && sx < self.width as i32 && sy < self.height as i32 {
+            Some((sx as u16, sy as u16))
+        } else {
+            None
         }
     }
 }

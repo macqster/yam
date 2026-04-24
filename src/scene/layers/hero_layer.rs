@@ -4,7 +4,7 @@ use crate::render::hero::{draw_hero, draw_hero_debug};
 use crate::scene::Layer;
 use crate::ui::layout::LayoutRegions;
 use crate::ui::state::UiState;
-use crate::ui::viewport::Viewport;
+use crate::scene::viewport::Viewport;
 use ratatui::prelude::*;
 
 pub struct HeroLayer;

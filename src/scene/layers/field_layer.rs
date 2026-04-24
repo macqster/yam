@@ -1,7 +1,7 @@
 use crate::scene::Layer;
 use crate::{
     core::world::WorldState, render::fonts::FontRegistry, ui::layout::LayoutRegions,
-    ui::state::UiState, ui::viewport::Viewport,
+    ui::state::UiState, scene::viewport::Viewport,
 };
 use ratatui::{prelude::*, widgets::Paragraph};
 

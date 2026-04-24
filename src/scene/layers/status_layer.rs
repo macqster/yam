@@ -4,7 +4,7 @@ use crate::theme::style as theme_style;
 use crate::scene::Layer;
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
-use crate::ui::viewport::Viewport;
+use crate::scene::viewport::Viewport;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph};

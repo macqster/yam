@@ -66,6 +66,7 @@
 - tightened the current-issues report with an explicit static/dynamic placement table for world-ui, hud-ui, camera, and viewport semantics
 - clarified the fullscreen lock contract in the current issues, audit, and rendering docs so windowed panning and fullscreen datum-centered static framing are distinct rules
 - implemented the fullscreen lock as a render-state rule and added tests that pin fullscreen datum-centered lock vs windowed-pan behavior
+- fixed the current-issues note to call out the debug telemetry mismatch where `Clock screen` was still reported from raw world data instead of the projected value
 
 ## Log Rules
 

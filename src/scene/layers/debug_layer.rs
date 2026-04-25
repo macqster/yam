@@ -89,7 +89,7 @@ impl Layer for DebugLayer {
         let hero_anchor = ctx.world.hero_world;
         let hero_visual_anchor = ctx.world.hero_visual_anchor;
         let clock_world = ctx.world.clock_world;
-        let clock_screen = clock_world;
+        let clock_screen = world_to_screen(clock_world, cam_x, cam_y);
         let clock_visible = clock_screen.x >= 0
             && clock_screen.y >= 0
             && clock_screen.x < width as i32

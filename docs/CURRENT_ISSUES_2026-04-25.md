@@ -58,6 +58,10 @@ Impact:
 - arrow-key panning feels inconsistent
 - it is unclear which elements are supposed to move with camera and which are not
 
+Immediate mismatch:
+- `debug_layer` still reports `Clock screen` using the raw world value instead of the projected screen value.
+- That makes the overlay contradict the active clock layer and keeps the static/dynamic story harder to trust.
+
 ## 2. Static vs dynamic semantics are still overloaded
 
 We currently have three distinct semantics, but the code and docs still drift between them:
@@ -215,5 +219,6 @@ First:
   - world-projected
   - HUD-attached
   - resize-invariant
+- fix the debug telemetry so the printed values match the actual layer projection path
 
 Only after that should the render behavior be extended further.

@@ -150,6 +150,32 @@ mod tests {
     }
 
     #[test]
+    fn world_pinned_clock_keeps_hero_attachment_and_hud_stays_screen_attached() {
+        let hero_world = WorldPos { x: 150, y: 60 };
+        let hero_offset = WorldPos { x: -110, y: -54 };
+        let clock_offset = WorldPos { x: 96, y: 9 };
+        let camera_a = WorldPos { x: 0, y: 0 };
+        let camera_b = WorldPos { x: 30, y: 10 };
+        let hud_a = WorldPos { x: 8, y: 3 };
+        let hud_b = WorldPos { x: 8, y: 3 };
+
+        let hero_visual_anchor = resolve_world_ui(hero_world, hero_offset);
+        let clock_world = anchor_to_world(hero_visual_anchor, clock_offset);
+
+        assert_eq!(hero_visual_anchor, WorldPos { x: 40, y: 6 });
+        assert_eq!(clock_world, WorldPos { x: 136, y: 15 });
+        assert_eq!(
+            world_to_screen(hero_visual_anchor, camera_a.x, camera_a.y),
+            WorldPos { x: 40, y: 6 }
+        );
+        assert_eq!(
+            world_to_screen(hero_visual_anchor, camera_b.x, camera_b.y),
+            WorldPos { x: 10, y: -4 }
+        );
+        assert_eq!(resolve_hud_ui(hud_a), hud_b);
+    }
+
+    #[test]
     fn world_origin_and_quadrants_are_signed_from_zero() {
         let datum = WorldPos { x: 0, y: 0 };
         let top_left = WorldPos { x: -1, y: -1 };

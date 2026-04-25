@@ -58,6 +58,7 @@
 - clarified that camera is the world-space origin of the crop and viewport is the terminal-sized crop rectangle
 - recorded the world-ui vs hud-ui split: world-ui stays attached to world entities; hud-ui stays attached to the viewport/camera/terminal frame
 - clarified that world-ui stays world-pinned while hud-ui stays screen-attached, and encoded that split in `src/scene/coords.rs`
+- reclassified the clock as world-ui and the footer/status bar as hud-ui so the active contract matches runtime behavior
 
 ## Log Rules
 

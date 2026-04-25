@@ -40,6 +40,8 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - The active contract now explicitly treats `(0, 0)` as the world datum, with signed quadrants around that origin.
 - World coordinates are Cartesian (`y` upward); terminal/screen coordinates remain terminal-style (`y` downward).
 - World-ui elements are attached to world entities; HUD-ui elements are attached to the viewport/camera/terminal frame.
+- The clock is now explicitly classified as world-ui because it follows the hero in world space and carries its own relative offset.
+- The footer/status bar is explicitly classified as hud-ui because it is screen-attached and carries hotkeys plus the version/build label.
 - The repo now has explicit helper-level vocabulary for this split in `src/scene/coords.rs`:
   - `resolve_world_ui(...)` for world-attached elements that stay pinned in world space
   - `resolve_hud_ui(...)` for screen-attached overlays

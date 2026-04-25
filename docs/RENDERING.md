@@ -48,7 +48,7 @@ The active implementation treats camera as a viewport crop helper:
 - camera is the world-space origin of the visible crop
 - viewport is the terminal-sized crop rectangle that follows camera
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
-- debug border sampling uses the same crop-origin mapping
+- debug border sampling is a datum-centered screen-stable probe, not a camera-driven crop
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
 - the clock is world-ui: it follows the hero in world space and keeps its own relative offset
@@ -77,7 +77,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
 - Clock attachment on the active path is world-pinned: the clock follows the hero in world space and keeps its own hero-relative offset. It does not inherit camera, viewport, or terminal motion directly.
-- Debug world borders are rendered as a stable ASCII 2x2 world feature projected through the camera, with one top padding row and one side padding cell for symmetry. This padding is intentional and reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
+- Debug world borders are rendered as a stable ASCII 2x2 datum-centered indicator that stays screen-stable and does not move with camera panning. It keeps one top padding row and one side padding cell for symmetry, and those margins are intentional and reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
 - The world itself keeps a 1-cell inset boundary, and the HUD/viewport overlay layer also keeps a 1-cell inset boundary where needed for future UI elements.
 
 ## Current Risks

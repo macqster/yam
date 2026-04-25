@@ -57,14 +57,14 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - The legacy `Layer::render(...)` API remains alongside the active `render_to_grid(...)` API.
 - Clock visibility currently depends on anchor-space offsets and clipping behavior; hero and clock are now world-pinned on the active path and should not be reprojected by camera movement.
 - Debug visibility checks and border exclusion are screen-space workarounds rather than a formal UI pass.
-- The active debug border is now a stable ASCII world feature projected through camera space, matching the repo's world datum and quadrant split more clearly than the earlier dotted edge markers. It intentionally leaves a top padding row and one side padding cell for symmetry; that space is reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
+- The active debug border is now a stable ASCII datum-centered indicator that stays screen-stable and does not move with camera panning. It intentionally leaves a top padding row and one side padding cell for symmetry; that space is reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
 - `scripts/update.sh` and `yam --check-updates` assume optional external cargo tools may be installed.
 - `render::compositor::write_string` writes by `char`, not terminal display width or grapheme cluster width.
 - `render::compositor::write_string` and `lines_to_grid` now account for grapheme clusters and display width, but the engine still stores only one `char` per cell.
 - Mask semantics are provisional: the hero mask is captured and applied only to the field layer as a visual verification path.
 - `coords::Space` and `resolve_position` are placeholders; `Space::Anchor` does not yet resolve through an entity registry.
 - `UiOffsets` now stores offsets, camera, font, and animation settings; it should eventually be renamed or split.
-- `Viewport::from_camera` and the debug border code follow the crop-origin contract, but the broader camera/anchor model still needs consolidation.
+- `Viewport::from_camera` and the debug border code still reflect different presentation layers; the broader camera/anchor model still needs consolidation.
 - `UiState` no longer carries render-cache fields for hero or clock anchors; that dependency was removed from the active render path.
 - The legacy `Layer::render(...)` API has been removed from the active layer contract; only `render_to_grid(...)` remains.
 - Hero world position is no longer inferred through a `(0,0)` sentinel path.

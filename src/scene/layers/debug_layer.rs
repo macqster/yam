@@ -1,9 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::world_to_screen;
 use crate::scene::{Layer, LayerOutput, RenderState};
-use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -41,51 +39,48 @@ impl Layer for DebugLayer {
         let exclude_y0 = panel_y.saturating_sub(2);
         let exclude_x1 = panel_x + panel_width + 2;
         let exclude_y1 = panel_y + panel_height + 2;
-        let world_left = -WORLD_HALF_W;
-        let world_right = WORLD_HALF_W - 1;
-        let world_top = WORLD_HALF_H - 1;
-        let world_bottom = -WORLD_HALF_H;
-        let world_mid_x = 0;
-        let world_mid_y = 0;
+        // Datum-centered world-border probe:
+        // the frame stays screen-stable and does not move with arrow-key camera panning.
+        let left = 1i32;
+        let right = screen_w - 2;
+        let top = 1i32;
+        let bottom = screen_h - 2;
+        let mid_x = screen_w / 2;
+        let mid_y = screen_h / 2;
 
-        let mut draw_border_cell = |wx: i32, wy: i32, ch: char| {
-            let screen = world_to_screen(
-                crate::scene::coords::WorldPos { x: wx, y: wy },
-                cam_x,
-                cam_y,
-            );
-            if screen.x < 0 || screen.y < 0 || screen.x >= screen_w || screen.y >= screen_h {
+        let mut draw_border_cell = |x: i32, y: i32, ch: char| {
+            if x < 0 || y < 0 || x >= screen_w || y >= screen_h {
                 return;
             }
-            if screen.x >= exclude_x0 as i32
-                && screen.x <= exclude_x1 as i32
-                && screen.y >= exclude_y0 as i32
-                && screen.y <= exclude_y1 as i32
+            if x >= exclude_x0 as i32
+                && x <= exclude_x1 as i32
+                && y >= exclude_y0 as i32
+                && y <= exclude_y1 as i32
             {
                 return;
             }
-            if let Some(cell) = grid.cell_mut(screen.x as u16, screen.y as u16) {
+            if let Some(cell) = grid.cell_mut(x as u16, y as u16) {
                 cell.symbol = ch;
                 cell.style = Style::default().fg(Color::DarkGray);
             }
         };
 
-        for wx in world_left..=world_right {
-            let ch = if wx == world_left || wx == world_mid_x || wx == world_right {
+        for x in left..=right {
+            let ch = if x == left || x == mid_x || x == right {
                 '+'
             } else {
                 '-'
             };
-            draw_border_cell(wx, world_top, ch);
-            draw_border_cell(wx, world_mid_y, ch);
-            draw_border_cell(wx, world_bottom, ch);
+            draw_border_cell(x, top, ch);
+            draw_border_cell(x, mid_y, ch);
+            draw_border_cell(x, bottom, ch);
         }
 
-        for wy in world_bottom + 1..world_top {
-            let ch = if wy == world_mid_y { '+' } else { '|' };
-            draw_border_cell(world_left, wy, ch);
-            draw_border_cell(world_mid_x, wy, ch);
-            draw_border_cell(world_right, wy, ch);
+        for y in top + 1..bottom {
+            let ch = if y == mid_y { '+' } else { '|' };
+            draw_border_cell(left, y, ch);
+            draw_border_cell(mid_x, y, ch);
+            draw_border_cell(right, y, ch);
         }
 
         let hero = &ui.hero;

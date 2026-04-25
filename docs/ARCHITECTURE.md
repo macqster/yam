@@ -79,6 +79,7 @@ The intended model is:
 - the world retains a 1-cell inset boundary for world-ui border work, and the active HUD/border layout also preserves a 1-cell inset for overlay/UI work
 - world-ui should not be repositioned by camera semantics after it is anchored in world space
 - hud-ui should not inherit world coordinates directly; it should use viewport/screen positioning
+- the debug border probe is a world feature projected through camera space, not a screen-fixed HUD overlay
 
 The current implementation does not fully enforce that model yet. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 

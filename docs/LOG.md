@@ -61,6 +61,7 @@
 - reclassified the clock as world-ui and the footer/status bar as hud-ui so the active contract matches runtime behavior
 - split `RenderState` into explicit `world` and `hud` sections and added a resize-invariance test for the frame builder
 - encoded the footer bottom-row rule in `footer_row(height)` and added a unit test for the HUD row contract
+- moved the ASCII world border probe into world space so it is projected through camera instead of behaving like a HUD overlay
 
 ## Log Rules
 

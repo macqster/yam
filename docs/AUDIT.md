@@ -57,7 +57,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - The legacy `Layer::render(...)` API remains alongside the active `render_to_grid(...)` API.
 - Clock visibility currently depends on anchor-space offsets and clipping behavior; hero and clock are now world-pinned on the active path and should not be reprojected by camera movement.
 - Debug visibility checks and border exclusion are screen-space workarounds rather than a formal UI pass.
-- The active debug border is now a stable ASCII frame probe, matching the repo's world datum and quadrant split more clearly than the earlier dotted edge markers. It intentionally leaves a top padding row and one side padding cell for symmetry; that space is reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
+- The active debug border is now a stable ASCII world feature projected through camera space, matching the repo's world datum and quadrant split more clearly than the earlier dotted edge markers. It intentionally leaves a top padding row and one side padding cell for symmetry; that space is reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
 - `scripts/update.sh` and `yam --check-updates` assume optional external cargo tools may be installed.
 - `render::compositor::write_string` writes by `char`, not terminal display width or grapheme cluster width.
 - `render::compositor::write_string` and `lines_to_grid` now account for grapheme clusters and display width, but the engine still stores only one `char` per cell.

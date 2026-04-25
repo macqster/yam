@@ -71,6 +71,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `Scene::render` computes a per-frame read-only `RenderState` so hero, clock, and debug all read the same frame facts without render-time state mutation.
 - `src/scene/coords.rs` now has basic invariance tests for anchor/world/screen composition and screen-space camera independence.
 - The hero source asset is square `820x820` pixels; the active terminal render footprint is fixed at `96x48` cells to preserve visual proportions in cell space.
+- `docs/CURRENT_ISSUES_2026-04-25.md` captures the current contract confusion points: camera visibility, world-ui vs hud-ui boundaries, and the static-vs-dynamic classification problem.
 
 ## Research Rule Summary
 

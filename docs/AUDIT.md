@@ -38,7 +38,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug reconstructs those values from the shared snapshot and state helpers.
 - The active fix direction is now explicit: `Camera` is the world-space origin of the visible crop, while `Viewport` is the terminal-sized crop rectangle and not a centering transform.
 - Fullscreen still needs a stronger lock rule: when the terminal crop equals or exceeds the world extent, arrow-key camera motion should not produce visible movement.
-- That fullscreen lock is now implemented as a render-state rule: the stored camera can still mutate, but the active crop is frozen to the world top-left when the terminal covers the world extent.
+- That fullscreen lock is now implemented as a render-state rule: the stored camera can still mutate, but the active crop is frozen to a datum-centered fullscreen crop when the terminal covers the world extent.
 - The active contract now explicitly treats `(0, 0)` as the world datum, with signed quadrants around that origin.
 - World coordinates are Cartesian (`y` upward); terminal/screen coordinates remain terminal-style (`y` downward).
 - World-ui elements are attached to world entities; HUD-ui elements are attached to the viewport/camera/terminal frame.
@@ -56,7 +56,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `(0, 0)` is used as a sentinel for hero world defaults in layer code, which prevents `(0, 0)` from being a clean valid world origin.
 - World constants are `212x57`, while `UiState` still constructs `Hero::new(300, 120)`. The bounds model is not yet unified.
 - Field rendering now receives the full frame as `viewport_rect`; the previous centered tiered viewport box was removed from the active scene path.
-- `Viewport` still exists as a top-left camera wrapper, but the active scene no longer uses centered viewport tiers to place layers.
+- `Viewport` still exists as a crop wrapper, but the active scene no longer uses centered viewport tiers to place layers.
 - The legacy `Layer::render(...)` API remains alongside the active `render_to_grid(...)` API.
 - Clock visibility currently depends on anchor-space offsets and clipping behavior; hero and clock are now world-pinned on the active path and should not be reprojected by camera movement.
 - Debug visibility checks and border exclusion are screen-space workarounds rather than a formal UI pass.
@@ -83,7 +83,7 @@ The research docs converge on these rules:
 
 - projection must be singular
 - viewport must be a crop, not a transform
-- camera must have one meaning across the entire pipeline, with fullscreen locked to the world-top-left anchor
+- camera must have one meaning across the entire pipeline, with fullscreen locked to the world datum `(0, 0)` in fullscreen mode
 - anchor-space elements should resolve before final screen projection
 - visibility should clip, not mutate position
 - rendering must be deterministic from state alone

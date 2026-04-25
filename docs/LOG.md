@@ -36,7 +36,7 @@
 - added `scripts/update.sh` and CLI update/check-update entrypoints
 - added build identity plumbing for runtime footer/version reporting
 - documented current coordinate/camera/rendering caveats in the repo audit and rendering docs
-- standardized the active camera/viewport path on top-left offset semantics and aligned the debug border mapping to it
+- standardized the active camera/viewport path so fullscreen can lock to a datum-centered crop while windowed mode keeps mutable panning, and aligned the debug border mapping to it
 - removed render-time hero/clock anchor writes from the active layer path and made debug reconstruct its telemetry from pure state helpers
 - removed the legacy `Layer::render(...)` path from the scene contract and dropped the `(0,0)` hero sentinel from runtime state
 - made the grid writer grapheme/display-width aware for safer text placement
@@ -64,8 +64,8 @@
 - restored the ASCII world border probe as a datum-centered world-space indicator and aligned its camera-projected meaning with the active contract
 - added a current-issues report covering the remaining static-vs-dynamic contract confusion points
 - tightened the current-issues report with an explicit static/dynamic placement table for world-ui, hud-ui, camera, and viewport semantics
-- clarified the fullscreen lock contract in the current issues, audit, and rendering docs so windowed panning and fullscreen static framing are distinct rules
-- implemented the fullscreen lock as a render-state rule and added tests that pin fullscreen world-top-left lock vs windowed-pan behavior
+- clarified the fullscreen lock contract in the current issues, audit, and rendering docs so windowed panning and fullscreen datum-centered static framing are distinct rules
+- implemented the fullscreen lock as a render-state rule and added tests that pin fullscreen datum-centered lock vs windowed-pan behavior
 
 ## Log Rules
 

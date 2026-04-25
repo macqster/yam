@@ -2,6 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
+use crate::scene::coords::world_to_screen;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
@@ -26,21 +27,28 @@ impl Layer for HeroLayer {
         let hero = &ui.hero;
         let hero_x = ctx.world.hero_visual_anchor.x;
         let hero_y = ctx.world.hero_visual_anchor.y;
+        let cam_x = ctx.hud.camera.x;
+        let cam_y = ctx.hud.camera.y;
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
         let mut mask = Mask::new(width as usize, height as usize);
 
         for (row_idx, row) in normalized.into_iter().enumerate() {
             let py = hero_y + row_idx as i32;
-            if py < 0 {
+            let screen = world_to_screen(
+                crate::scene::coords::WorldPos { x: hero_x, y: py },
+                cam_x,
+                cam_y,
+            );
+            if screen.y < 0 {
                 continue;
             }
-            if py >= grid.height as i32 {
+            if screen.y >= grid.height as i32 {
                 break;
             }
-            let clip_cols = hero_x.clamp(i32::MIN, 0).unsigned_abs() as usize;
-            let draw_x = hero_x.max(0) as u16;
-            let draw_y = py as u16;
+            let clip_cols = screen.x.clamp(i32::MIN, 0).unsigned_abs() as usize;
+            let draw_x = screen.x.max(0) as u16;
+            let draw_y = screen.y as u16;
             let clipped_row = row.chars().skip(clip_cols).collect::<String>();
             write_string(&mut grid, draw_x, draw_y, &clipped_row, Style::default());
             for (col_idx, ch) in clipped_row.chars().enumerate() {

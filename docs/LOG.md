@@ -61,7 +61,7 @@
 - reclassified the clock as world-ui and the footer/status bar as hud-ui so the active contract matches runtime behavior
 - split `RenderState` into explicit `world` and `hud` sections and added a resize-invariance test for the frame builder
 - encoded the footer bottom-row rule in `footer_row(height)` and added a unit test for the HUD row contract
-- restored the ASCII world border probe as a screen-stable datum-centered indicator and removed the camera-projected wording from the active contract
+- restored the ASCII world border probe as a datum-centered world-space indicator and aligned its camera-projected meaning with the active contract
 
 ## Log Rules
 

@@ -55,6 +55,7 @@ The active implementation treats camera as a viewport crop helper:
 - the footer/status bar is hud-ui: it is screen-attached and does not inherit world motion
 - the latest screenshot set confirms the distinction: world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - fullscreen is a special case of the camera contract: when the viewport matches the world extent, the visible crop should be static and centered, even if debug controls still mutate the stored camera position
+- fullscreen lock is now exercised in `build_render_state(...)`: the stored camera can still move, but the frame uses a centered crop whenever the terminal fully covers the world extent
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`

@@ -17,6 +17,7 @@ This is the current intended split, written as a contract instead of a preferenc
 - arrow-key camera motion: may change the visible crop in windowed mode, but must not reclassify world-ui as hud-ui or the reverse
 - fullscreen lock: when terminal size matches the world crop, the visible frame should be static and centered on the world datum
 - windowed pan: when terminal size is smaller than the world crop, the viewport may move within the world bounds, but only as a crop change
+- fullscreen lock is now enforced by a render-state rule: the stored camera may still change, but the visible crop is recentered when the terminal covers the world extent
 
 What belongs where:
 

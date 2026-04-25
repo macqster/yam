@@ -104,9 +104,7 @@ pub fn render_scene(frame: &mut Frame<'_>, world: &WorldState, ui: &UiState, fon
 }
 
 pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
-    let mut camera = ui.camera;
-    camera.width = full.width;
-    camera.height = full.height;
+    let camera = camera_for_frame(full, ui);
     let viewport = Viewport::from_camera(&camera, full.width, full.height);
     let viewport_rect = full;
     let hero_world = WorldPos {
@@ -141,6 +139,21 @@ pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
     }
 }
 
+fn camera_for_frame(full: Rect, ui: &UiState) -> crate::scene::camera::Camera {
+    let mut camera = ui.camera;
+    camera.width = full.width;
+    camera.height = full.height;
+    if is_fullscreen_like(full) {
+        camera.x = WORLD_HALF_W - full.width as i32 / 2;
+        camera.y = WORLD_HALF_H - full.height as i32 / 2;
+    }
+    camera
+}
+
+fn is_fullscreen_like(full: Rect) -> bool {
+    full.width as i32 >= WORLD_WIDTH && full.height as i32 >= WORLD_HEIGHT
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -165,5 +178,45 @@ mod tests {
         assert_eq!(win_state.hud.viewport_rect.width, windowed.width);
         assert_eq!(full_state.hud.viewport_rect.height, fullscreen.height);
         assert_eq!(win_state.hud.viewport_rect.height, windowed.height);
+    }
+
+    #[test]
+    fn fullscreen_camera_is_locked_to_centered_crop() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -77;
+        ui.offsets.camera_y = 19;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        let fullscreen = Rect::new(0, 0, 215, 57);
+        let state = build_render_state(fullscreen, &ui);
+
+        assert_eq!(state.hud.camera.width, fullscreen.width);
+        assert_eq!(state.hud.camera.height, fullscreen.height);
+        assert_eq!(
+            state.hud.camera.x,
+            WORLD_HALF_W - fullscreen.width as i32 / 2
+        );
+        assert_eq!(
+            state.hud.camera.y,
+            WORLD_HALF_H - fullscreen.height as i32 / 2
+        );
+    }
+
+    #[test]
+    fn windowed_camera_keeps_mutable_offset() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -77;
+        ui.offsets.camera_y = 19;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        let windowed = Rect::new(0, 0, 132, 36);
+        let state = build_render_state(windowed, &ui);
+
+        assert_eq!(state.hud.camera.width, windowed.width);
+        assert_eq!(state.hud.camera.height, windowed.height);
+        assert_eq!(state.hud.camera.x, ui.camera.x);
+        assert_eq!(state.hud.camera.y, ui.camera.y);
     }
 }

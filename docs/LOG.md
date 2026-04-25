@@ -50,6 +50,8 @@
 - aligned repo docs with the `RenderState` snapshot contract and removed stale `UiState` side-effect wording
 - corrected the active hero/clock placement contract so both remain world-pinned and camera movement no longer reprojects them
 - tightened the world datum contract to define `(0, 0)` as the centered origin with signed quadrants around it
+- recorded the coordinate orientation split: world is Cartesian, terminal/screen is downward-y
+- recorded the hero geometry contract: `820x820` source GIF renders to a fixed `96x48` terminal footprint
 
 ## Log Rules
 

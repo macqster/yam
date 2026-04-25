@@ -1,3 +1,4 @@
+use crate::render::chafa::{HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH};
 use crate::scene::viewport::Viewport;
 use crate::theme::{glyphs, style as theme_style};
 use ratatui::{
@@ -19,7 +20,9 @@ pub struct Hero {
 
 impl Hero {
     pub fn new(world_width: usize, world_height: usize) -> Self {
-        let frames = crate::render::chafa::hero_frames(96, 48);
+        // The source hero GIF is square (820x820); the terminal render target is intentionally
+        // downscaled to a fixed 96x48 cell footprint to compensate for terminal cell aspect.
+        let frames = crate::render::chafa::hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
         let first_frame = frames
             .first()
             .cloned()

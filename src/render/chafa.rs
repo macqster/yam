@@ -9,6 +9,8 @@ use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageFormat
 use ratatui::text::{Line, Text};
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
+pub const HERO_RENDER_WIDTH: u16 = 96;
+pub const HERO_RENDER_HEIGHT: u16 = 48;
 
 pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
     let size_arg = format!("{}x{}", width, height);
@@ -54,11 +56,11 @@ pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
 
 #[cfg(test)]
 mod tests {
-    use super::hero_frames;
+    use super::{hero_frames, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH};
 
     #[test]
     fn hero_frame_buffer_has_multiple_frames() {
-        let frames = hero_frames(96, 48);
+        let frames = hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
         println!("LOADED FRAME COUNT: {}", frames.len());
         assert!(frames.len() > 1, "expected multiple hero frames");
     }

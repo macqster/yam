@@ -49,10 +49,20 @@ The intended model is:
   - top-right: `(x, -y)`
   - bottom-left: `(-x, y)`
   - bottom-right: `(x, y)`
+- world coordinates use Cartesian orientation: `x` increases to the right, `y` increases upward
+- terminal/screen coordinates use the usual terminal orientation: `x` increases to the right, `y` increases downward
 - world space: simulation/object positions
 - camera space: projection offset from world to viewport
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
+
+## Hero Geometry Contract
+
+- source hero GIF: square `820x820` pixels
+- terminal render target: fixed `96x48` cells
+- the target is a layout/scaling result, not a raw pixel-to-cell division
+- hero world anchor: `(0, 0)` when centered in world space
+- hero visual center should cross the datum, while the rendered cell footprint remains `96x48`
 
 The current implementation does not fully enforce that model yet. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 

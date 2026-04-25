@@ -41,6 +41,8 @@ The active implementation treats camera as a viewport crop helper:
 
 - world positions are defined around the `(0, 0)` datum
 - the world quadrants are sign-defined around that datum
+- world coordinates use Cartesian orientation (`y` increases upward)
+- terminal/screen coordinates use terminal orientation (`y` increases downward)
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
 - debug border sampling uses the same crop-origin mapping
 
@@ -57,6 +59,8 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 ## Text And Geometry Caveats
 
+- Hero source GIF is `820x820` pixels and is rendered into a fixed `96x48` cell footprint.
+- That `96x48` target is the current layout result used to preserve the GIF's proportions in terminal cell space.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.

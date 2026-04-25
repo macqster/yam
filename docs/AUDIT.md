@@ -38,6 +38,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug reconstructs those values from the shared snapshot and state helpers.
 - The active fix direction is now explicit: `Camera` is treated as a top-left world offset for projection, while `Viewport` is a crop helper and not a centering transform.
 - The active contract now explicitly treats `(0, 0)` as the world datum, with signed quadrants around that origin.
+- World coordinates are Cartesian (`y` upward); terminal/screen coordinates remain terminal-style (`y` downward).
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
 - `hero_visual_anchor` and `clock_final` now live in the shared per-frame `RenderState`, reducing layer-order dependency on the active path.
@@ -60,6 +61,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Hero world position is no longer inferred through a `(0,0)` sentinel path.
 - `Scene::render` computes a per-frame read-only `RenderState` so hero, clock, and debug all read the same frame facts without render-time state mutation.
 - `src/scene/coords.rs` now has basic invariance tests for anchor/world/screen composition and screen-space camera independence.
+- The hero source asset is square `820x820` pixels; the active terminal render footprint is fixed at `96x48` cells to preserve visual proportions in cell space.
 
 ## Research Rule Summary
 

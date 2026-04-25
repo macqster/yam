@@ -69,11 +69,12 @@ impl Layer for DebugLayer {
         let hero = &ui.hero;
         let hero_anchor = ctx.hero_world;
         let hero_visual_anchor = ctx.hero_visual_anchor;
-        let clock_final = ctx.clock_screen;
-        let clock_visible = clock_final.x >= 0
-            && clock_final.y >= 0
-            && clock_final.x < width as i32
-            && clock_final.y < height as i32;
+        let clock_world = ctx.clock_world;
+        let clock_screen = ctx.clock_screen;
+        let clock_visible = clock_screen.x >= 0
+            && clock_screen.y >= 0
+            && clock_screen.x < width as i32
+            && clock_screen.y < height as i32;
         let center_x = width as i32 / 2;
         let center_y = height as i32 / 2;
         let cam_dx = cam_x - center_x;
@@ -92,12 +93,8 @@ impl Layer for DebugLayer {
                 "Hero offset: ({}, {})",
                 ui.offsets.hero_dx, ui.offsets.hero_dy
             ),
-            format!(
-                "Clock world: ({}, {})",
-                hero_anchor.x + ui.offsets.clock_dx as i32,
-                hero_anchor.y + ui.offsets.clock_dy as i32
-            ),
-            format!("Clock screen: ({}, {})", clock_final.x, clock_final.y),
+            format!("Clock world: ({}, {})", clock_world.x, clock_world.y),
+            format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
             format!(
                 "Clock anchor: ({}, {})",
                 hero_visual_anchor.x, hero_visual_anchor.y
@@ -106,7 +103,7 @@ impl Layer for DebugLayer {
                 "Clock offset: ({}, {})",
                 ui.offsets.clock_dx, ui.offsets.clock_dy
             ),
-            format!("Clock final: ({}, {})", clock_final.x, clock_final.y),
+            format!("Clock final: ({}, {})", clock_screen.x, clock_screen.y),
             format!("Clock visible: {}", clock_visible),
             format!("Camera: ({}, {})", cam_x, cam_y),
             format!("Camera Δ: ({}, {})", cam_dx, cam_dy),

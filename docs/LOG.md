@@ -48,6 +48,7 @@
 - ingested the 2026-04-24 chatgpt audit report and folded its findings into the repo audit trail
 - renamed the per-frame snapshot to `RenderState` so the render path has one explicit read-only frame contract
 - aligned repo docs with the `RenderState` snapshot contract and removed stale `UiState` side-effect wording
+- corrected the active hero/clock placement contract so both remain world-pinned and camera movement no longer reprojects them
 
 ## Log Rules
 

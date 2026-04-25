@@ -45,7 +45,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Field rendering now receives the full frame as `viewport_rect`; the previous centered tiered viewport box was removed from the active scene path.
 - `Viewport` still exists as a top-left camera wrapper, but the active scene no longer uses centered viewport tiers to place layers.
 - The legacy `Layer::render(...)` API remains alongside the active `render_to_grid(...)` API.
-- Clock visibility currently depends on anchor-space offsets and clipping behavior; it should preserve `clock = hero_visual_anchor + offset` and never clamp the final relationship.
+- Clock visibility currently depends on anchor-space offsets and clipping behavior; hero and clock are now world-pinned on the active path and should not be reprojected by camera movement.
 - Debug visibility checks and border exclusion are screen-space workarounds rather than a formal UI pass.
 - `scripts/update.sh` and `yam --check-updates` assume optional external cargo tools may be installed.
 - `render::compositor::write_string` writes by `char`, not terminal display width or grapheme cluster width.
@@ -57,7 +57,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `UiState` no longer carries render-cache fields for hero or clock anchors; that dependency was removed from the active render path.
 - The legacy `Layer::render(...)` API has been removed from the active layer contract; only `render_to_grid(...)` remains.
 - Hero world position is no longer inferred through a `(0,0)` sentinel path.
-- `Scene::render` computes a per-frame read-only `RenderState` so hero, clock, and debug all read the same projection facts without render-time state mutation.
+- `Scene::render` computes a per-frame read-only `RenderState` so hero, clock, and debug all read the same frame facts without render-time state mutation.
 - `src/scene/coords.rs` now has basic invariance tests for anchor/world/screen composition and screen-space camera independence.
 
 ## Research Rule Summary

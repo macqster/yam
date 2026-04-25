@@ -60,10 +60,10 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero rendering must not use ratatui wrapping.
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
-- Clock attachment must preserve `clock_screen = hero_visual_anchor + clock_offset`; visibility should clip, not clamp, the relationship.
+- Clock attachment on the active path is world-pinned: hero and clock positions are resolved before camera influence, and visibility should clip rather than clamp positions.
 
 ## Current Risks
 
 - Camera math is not yet a single-source contract across hero, field, viewport, and debug border rendering.
 - The active grid path coexists with legacy frame-render methods.
-- Some debug/attachment values are now reconstructed from the per-frame `RenderState` snapshot rather than written through render-time `UiState` side effects.
+- Some debug/attachment values are reconstructed from the per-frame `RenderState` snapshot rather than written through render-time `UiState` side effects.

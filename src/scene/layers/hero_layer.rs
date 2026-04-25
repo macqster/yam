@@ -24,8 +24,8 @@ impl Layer for HeroLayer {
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let hero = &ui.hero;
-        let hero_x = ctx.hero_visual_anchor.x - ctx.camera.x;
-        let hero_y = ctx.hero_visual_anchor.y - ctx.camera.y;
+        let hero_x = ctx.hero_visual_anchor.x;
+        let hero_y = ctx.hero_visual_anchor.y;
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
         let mut mask = Mask::new(width as usize, height as usize);

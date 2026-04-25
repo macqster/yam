@@ -82,19 +82,21 @@ impl Scene {
                 y: ui.offsets.hero_dy,
             },
         );
-        let clock_screen = anchor_to_world(
+        let clock_world = anchor_to_world(
             hero_visual_anchor,
             WorldPos {
                 x: ui.offsets.clock_dx as i32,
                 y: ui.offsets.clock_dy as i32,
             },
         );
+        let clock_screen = clock_world;
         let render_state = RenderState {
             viewport,
             viewport_rect,
             camera,
             hero_world,
             hero_visual_anchor,
+            clock_world,
             clock_screen,
         };
         let mut layers = self.layers.iter().collect::<Vec<_>>();

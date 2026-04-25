@@ -10,5 +10,6 @@ pub struct RenderState {
     pub camera: Camera,
     pub hero_world: WorldPos,
     pub hero_visual_anchor: WorldPos,
+    pub clock_world: WorldPos,
     pub clock_screen: WorldPos,
 }

@@ -1,3 +1,5 @@
+/// Camera stores the world-space origin of the visible crop.
+/// It is not the viewport itself.
 #[derive(Debug, Clone, Copy)]
 pub struct Camera {
     pub x: i32,

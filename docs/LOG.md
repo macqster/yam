@@ -53,6 +53,9 @@
 - recorded the coordinate orientation split: world is Cartesian, terminal/screen is downward-y
 - recorded the hero geometry contract: `820x820` source GIF renders to a fixed `96x48` terminal footprint
 - replaced the dotted debug world-edge probe with a stable ASCII frame border probe
+- documented the intentional debug border padding row and side padding cell for future UI placement
+- documented that the bottom one-row padding is currently occupied by the footer
+- clarified that camera is the world-space origin of the crop and viewport is the terminal-sized crop rectangle
 
 ## Log Rules
 

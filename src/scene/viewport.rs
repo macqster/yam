@@ -1,3 +1,5 @@
+/// Viewport stores the terminal-sized crop rectangle.
+/// It follows the camera origin but is not the same thing as camera.
 #[derive(Clone, Copy)]
 pub struct Viewport {
     pub x: i32,

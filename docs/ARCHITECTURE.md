@@ -52,9 +52,11 @@ The intended model is:
 - world coordinates use Cartesian orientation: `x` increases to the right, `y` increases upward
 - terminal/screen coordinates use the usual terminal orientation: `x` increases to the right, `y` increases downward
 - world space: simulation/object positions
-- camera space: projection offset from world to viewport
+- camera: world-space origin of the visible crop, not the viewport itself
+- viewport: terminal-sized crop rectangle, not the camera itself
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
+- world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement
 
 ## Hero Geometry Contract
 
@@ -63,6 +65,7 @@ The intended model is:
 - the target is a layout/scaling result, not a raw pixel-to-cell division
 - hero world anchor: `(0, 0)` when centered in world space
 - hero visual center should cross the datum, while the rendered cell footprint remains `96x48`
+- the world retains a 1-cell inset boundary for world-ui border work, and the active HUD/border layout also preserves a 1-cell inset for overlay/UI work
 
 The current implementation does not fully enforce that model yet. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 

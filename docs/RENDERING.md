@@ -43,6 +43,8 @@ The active implementation treats camera as a viewport crop helper:
 - the world quadrants are sign-defined around that datum
 - world coordinates use Cartesian orientation (`y` increases upward)
 - terminal/screen coordinates use terminal orientation (`y` increases downward)
+- camera is the world-space origin of the visible crop
+- viewport is the terminal-sized crop rectangle that follows camera
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
 - debug border sampling uses the same crop-origin mapping
 
@@ -66,7 +68,8 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
 - Clock attachment on the active path is world-pinned: hero and clock positions are resolved before camera influence, and visibility should clip rather than clamp positions.
-- Debug world borders are rendered as a stable ASCII 2x2 frame probe, not as a dotted camera probe.
+- Debug world borders are rendered as a stable ASCII 2x2 frame probe, with one top padding row and one side padding cell for symmetry. This padding is intentional and reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
+- The world itself keeps a 1-cell inset boundary, and the HUD/viewport overlay layer also keeps a 1-cell inset boundary where needed for future UI elements.
 
 ## Current Risks
 

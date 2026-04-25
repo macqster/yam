@@ -112,4 +112,19 @@ mod tests {
             panel
         );
     }
+
+    #[test]
+    fn world_origin_and_quadrants_are_signed_from_zero() {
+        let datum = WorldPos { x: 0, y: 0 };
+        let top_left = WorldPos { x: -1, y: -1 };
+        let top_right = WorldPos { x: 1, y: -1 };
+        let bottom_left = WorldPos { x: -1, y: 1 };
+        let bottom_right = WorldPos { x: 1, y: 1 };
+
+        assert_eq!(datum, WorldPos { x: 0, y: 0 });
+        assert!(top_left.x < datum.x && top_left.y < datum.y);
+        assert!(top_right.x > datum.x && top_right.y < datum.y);
+        assert!(bottom_left.x < datum.x && bottom_left.y > datum.y);
+        assert!(bottom_right.x > datum.x && bottom_right.y > datum.y);
+    }
 }

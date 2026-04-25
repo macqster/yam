@@ -42,12 +42,19 @@
 
 The intended model is:
 
+- datum/origin: `(0, 0)`
+- world is centered around the datum
+- the world quadrants are sign-defined around that datum:
+  - top-left: `(-x, -y)`
+  - top-right: `(x, -y)`
+  - bottom-left: `(-x, y)`
+  - bottom-right: `(x, y)`
 - world space: simulation/object positions
 - camera space: projection offset from world to viewport
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
 
-The current implementation does not fully enforce that model yet. Camera semantics are split between top-left-offset math and center-point viewport math. New features should not build on those mixed semantics until the camera contract is resolved.
+The current implementation does not fully enforce that model yet. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 
 ## Known Architectural Debt
 

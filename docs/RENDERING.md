@@ -37,11 +37,12 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 
 ## Current Camera Contract
 
-The active implementation treats camera as a top-left world offset:
+The active implementation treats camera as a viewport crop helper:
 
-- `screen = world - camera`
-- `Viewport::from_camera` copies camera coordinates directly
-- debug border sampling uses the same top-left mapping
+- world positions are defined around the `(0, 0)` datum
+- the world quadrants are sign-defined around that datum
+- `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
+- debug border sampling uses the same crop-origin mapping
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

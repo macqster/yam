@@ -37,6 +37,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Anchor handling is now order-independent on the active path because render-derived values are captured in a per-frame `RenderState` snapshot and then read by later layers.
 - Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug reconstructs those values from the shared snapshot and state helpers.
 - The active fix direction is now explicit: `Camera` is treated as a top-left world offset for projection, while `Viewport` is a crop helper and not a centering transform.
+- The active contract now explicitly treats `(0, 0)` as the world datum, with signed quadrants around that origin.
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
 - `hero_visual_anchor` and `clock_final` now live in the shared per-frame `RenderState`, reducing layer-order dependency on the active path.

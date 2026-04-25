@@ -63,6 +63,7 @@
 - encoded the footer bottom-row rule in `footer_row(height)` and added a unit test for the HUD row contract
 - restored the ASCII world border probe as a datum-centered world-space indicator and aligned its camera-projected meaning with the active contract
 - added a current-issues report covering the remaining static-vs-dynamic contract confusion points
+- tightened the current-issues report with an explicit static/dynamic placement table for world-ui, hud-ui, camera, and viewport semantics
 
 ## Log Rules
 

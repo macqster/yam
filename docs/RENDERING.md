@@ -53,6 +53,7 @@ The active implementation treats camera as a viewport crop helper:
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
 - the clock is world-ui: it follows the hero in world space and keeps its own relative offset
 - the footer/status bar is hud-ui: it is screen-attached and does not inherit world motion
+- the latest screenshot set confirms the distinction: world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`

@@ -4,6 +4,40 @@ Date: 2026-04-25
 
 This report captures the current problems visible in the screenshots and the contract gaps they expose.
 
+## Contract Snapshot
+
+This is the current intended split, written as a contract instead of a preference:
+
+- static world datum: `(0, 0)`
+- world-ui: attached to world entities and allowed to move only when the world attachment changes
+- hud-ui: attached to the terminal frame and allowed to move only when the viewport changes
+- camera: the world-space origin of the visible crop
+- viewport: the terminal-sized crop rectangle
+- resize: may change the viewport, but must not change the world datum or the world-ui attachment rules
+- arrow-key camera motion: may change the visible crop in windowed mode, but must not reclassify world-ui as hud-ui or the reverse
+
+What belongs where:
+
+- world-ui
+  - hero
+  - clock
+  - border probe
+  - any world-attached effect or label
+- hud-ui
+  - debug telemetry
+  - footer/status bar
+  - version/build label
+  - any terminal-fixed overlay
+
+What must not drift:
+
+- hero must stay world-pinned
+- clock must stay hero-relative in world space
+- border probe must stay a world-border indicator
+- footer must stay hud-attached
+- debug text must stay hud-attached
+- camera must never become a second meaning for viewport
+
 ## 1. Camera moves, but the view does not always change
 
 Observed:
@@ -144,6 +178,21 @@ The repo is still trying to answer these questions consistently:
 8. Which features should remain pinned to the world datum?
 
 Until those questions stay fixed, the screenshots will keep showing visually correct pieces that still feel semantically inconsistent.
+
+## 11. Immediate Interpretation Of The Latest Screenshots
+
+The latest screenshots are not showing a missing render pass.
+They are showing a contract split:
+
+- the debug overlay/footer are behaving like hud-ui, which is correct
+- the hero/clock/border probe are behaving like world-ui, which is also correct
+- the perceived bug is that the contract is still too easy to forget when reading the screenshot
+
+The practical issue is therefore semantic, not mechanical:
+
+- some features are static in hud space
+- some features are dynamic in world space
+- the repo still needs a stronger naming and test boundary so those spaces are not reinterpreted later
 
 ## Recommended next step
 

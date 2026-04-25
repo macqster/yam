@@ -1,5 +1,5 @@
 use crate::scene::camera::Camera;
-use crate::scene::coords::WorldPos;
+use crate::scene::coords::{world_to_screen, WorldPos};
 use crate::scene::viewport::Viewport;
 use ratatui::prelude::Rect;
 
@@ -21,4 +21,10 @@ pub struct HudFrame {
 pub struct RenderState {
     pub world: WorldFrame,
     pub hud: HudFrame,
+}
+
+impl RenderState {
+    pub fn clock_screen(&self) -> WorldPos {
+        world_to_screen(self.world.clock_world, self.hud.camera.x, self.hud.camera.y)
+    }
 }

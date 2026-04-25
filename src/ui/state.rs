@@ -24,8 +24,8 @@ pub struct UiOffsets {
 impl Default for UiOffsets {
     fn default() -> Self {
         Self {
-            camera_x: 66,
-            camera_y: 18,
+            camera_x: -69,
+            camera_y: -17,
             hero_dx: -110,
             hero_dy: -54,
             clock_dx: 96,
@@ -49,13 +49,17 @@ pub struct UiState {
 impl UiState {
     pub fn new() -> Self {
         let hero = Hero::new(300, 120);
+        let offsets = UiOffsets::default();
+        let mut camera = Camera::new();
+        camera.x = offsets.camera_x;
+        camera.y = offsets.camera_y;
         Self {
             fps: 0.0,
             debug_layout: false,
             anchored_clock: false,
             clock_font: ClockFont::Gothic,
-            offsets: UiOffsets::default(),
-            camera: Camera::new(),
+            offsets,
+            camera,
             hero,
         }
     }
@@ -155,16 +159,15 @@ impl UiState {
         self.save_state();
     }
 
-    #[allow(dead_code)]
     pub fn clamp_camera(&mut self, screen_w: i32, screen_h: i32) {
-        use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
+        use crate::scene::{CAMERA_OVERSCAN_CELLS, WORLD_HALF_H, WORLD_HALF_W};
 
-        let min_x = -WORLD_HALF_W + screen_w / 2;
-        let max_x = WORLD_HALF_W - screen_w / 2;
-        let min_y = -WORLD_HALF_H + screen_h / 2;
-        let max_y = WORLD_HALF_H - screen_h / 2;
-        self.offsets.camera_x = self.offsets.camera_x.clamp(min_x, max_x);
-        self.offsets.camera_y = self.offsets.camera_y.clamp(min_y, max_y);
+        let min_x = -WORLD_HALF_W - CAMERA_OVERSCAN_CELLS;
+        let max_x = WORLD_HALF_W - 1 + CAMERA_OVERSCAN_CELLS - screen_w + 1;
+        let min_y = -WORLD_HALF_H - CAMERA_OVERSCAN_CELLS;
+        let max_y = WORLD_HALF_H - 1 + CAMERA_OVERSCAN_CELLS - screen_h + 1;
+        self.offsets.camera_x = clamp_axis(self.offsets.camera_x, min_x, max_x, screen_w);
+        self.offsets.camera_y = clamp_axis(self.offsets.camera_y, min_y, max_y, screen_h);
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
     }
@@ -256,5 +259,34 @@ impl UiState {
             }
             Err(err) => eprintln!("[yam] failed to encode state: {err}"),
         }
+    }
+}
+
+fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
+    if min > max {
+        -(viewport_len / 2)
+    } else {
+        value.clamp(min, max)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::UiState;
+
+    #[test]
+    fn clamp_camera_limits_windowed_pan_to_one_cell_overscan() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = 500;
+        ui.offsets.camera_y = -500;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        ui.clamp_camera(124, 32);
+
+        assert_eq!(ui.offsets.camera_x, -17);
+        assert_eq!(ui.offsets.camera_y, -29);
+        assert_eq!(ui.camera.x, ui.offsets.camera_x);
+        assert_eq!(ui.camera.y, ui.offsets.camera_y);
     }
 }

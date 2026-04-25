@@ -17,7 +17,23 @@ This is the current intended split, written as a contract instead of a preferenc
 - arrow-key camera motion: may change the visible crop in windowed mode, but must not reclassify world-ui as hud-ui or the reverse
 - fullscreen lock: when terminal size matches or exceeds the world crop, the visible frame should be static and centered on the world datum `(0, 0)` so the whole world remains locked under a datum-centered contract
 - windowed pan: when terminal size is smaller than the world crop, the viewport may move within the world bounds, but only as a crop change
+- windowed pan limit: the visible crop may overscan the world border/frame by at most one cell on any edge
 - fullscreen lock is now enforced by a render-state rule: the stored camera may still change, but the visible crop is frozen to a datum-centered fullscreen crop when the terminal covers the world extent
+
+## Default Mode Baselines
+
+These are the reference defaults we want to preserve and compare against when mode behavior drifts:
+
+- fullscreen default
+  - hero stays world-pinned at the datum-centered world contract
+  - camera/viewport/terminal stay centered on the world datum `(0, 0)`
+  - the visible frame is static; arrow-key camera motion must not produce visible movement in fullscreen
+- windowed default at `124x32`
+  - hero stays world-pinned at the same world datum contract used in fullscreen
+  - camera uses the screenshot baseline `(-69, -17)`
+  - the visible frame may pan within world bounds, but the hero/clock/world attachment rules must remain unchanged
+
+The important part is not the exact pixel/cell phrasing, but that the same hero/world contract should survive both modes unchanged.
 
 What belongs where:
 
@@ -58,9 +74,9 @@ Impact:
 - arrow-key panning feels inconsistent
 - it is unclear which elements are supposed to move with camera and which are not
 
-Immediate mismatch:
-- `debug_layer` still reports `Clock screen` using the raw world value instead of the projected screen value.
-- That makes the overlay contradict the active clock layer and keeps the static/dynamic story harder to trust.
+Current correction:
+- `debug_layer` and `clock_layer` now read clock screen placement from the same `RenderState::clock_screen()` projection.
+- That keeps the overlay tied to the active clock render path instead of reconstructing a second meaning for `Clock screen`.
 
 ## 2. Static vs dynamic semantics are still overloaded
 
@@ -219,6 +235,6 @@ First:
   - world-projected
   - HUD-attached
   - resize-invariant
-- fix the debug telemetry so the printed values match the actual layer projection path
+- keep debug telemetry tied to shared `RenderState` helpers so printed values match the actual layer projection path
 
 Only after that should the render behavior be extended further.

@@ -57,6 +57,8 @@ The intended model is:
 - world space: simulation/object positions
 - camera: world-space origin of the visible crop, not the viewport itself
 - viewport: terminal-sized crop rectangle, not the camera itself
+- windowed camera crops are clamped to one cell of overscan beyond the world border/frame
+- the default `124x32` windowed crop starts at camera `(-69, -17)`
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
 - world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement
@@ -73,6 +75,7 @@ The intended model is:
 
 - source hero GIF: square `820x820` pixels
 - terminal render target: fixed `96x48` cells
+- decoded GIF subimage frames are expanded and flattened to an opaque full `820x820` logical canvas before terminal conversion
 - the target is a layout/scaling result, not a raw pixel-to-cell division
 - hero world anchor: `(0, 0)` when centered in world space
 - hero visual center should cross the datum, while the rendered cell footprint remains `96x48`

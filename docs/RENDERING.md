@@ -24,6 +24,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - no layer should rely on ratatui layout wrapping for hero/image content
 - viewport selection is now a full-frame pass; the old centered tiered viewport box no longer drives layer placement
 - `RenderState` is split into `world` and `hud` sections to keep world-pinned attachments separate from screen-attached overlays
+- shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement
 
 ## Pipeline
 
@@ -48,6 +49,8 @@ The active implementation treats camera as a viewport crop helper:
 - camera is the world-space origin of the visible crop
 - viewport is the terminal-sized crop rectangle that follows camera
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
+- windowed camera movement is clamped in runtime state and in `build_render_state(...)` so the visible crop can overscan the world border/frame by at most one cell on any edge
+- the default `124x32` windowed start uses camera `(-69, -17)`
 - debug border sampling is a datum-centered screen-stable probe, not a camera-driven crop
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
@@ -56,6 +59,7 @@ The active implementation treats camera as a viewport crop helper:
 - the latest screenshot set confirms the distinction: world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - fullscreen is a special case of the camera contract: when the viewport matches or exceeds the world extent, the visible crop should be static and centered on the world datum `(0, 0)`, even if debug controls still mutate the stored camera position
 - fullscreen lock is now exercised in `build_render_state(...)`: the stored camera can still move, but the frame uses a datum-centered crop whenever the terminal fully covers the world extent
+- `RenderState::clock_screen()` is the shared projected clock position used by both the clock layer and the debug overlay
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
@@ -75,6 +79,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 - Hero source GIF is `820x820` pixels and is rendered into a fixed `96x48` cell footprint.
 - That `96x48` target is the current layout result used to preserve the GIF's proportions in terminal cell space.
+- GIF subimage frames are expanded and flattened onto an opaque full `820x820` logical canvas before chafa rendering so partial frames, including frames 15 and 30, cannot stretch vertically.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
@@ -88,4 +93,4 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Camera math is not yet a single-source contract across hero, field, viewport, and debug border rendering.
 - The fullscreen lock rule is still behavioral rather than structural: the code should treat fullscreen as an immovable, datum-centered crop, not just a larger windowed viewport.
 - The active grid path coexists with legacy frame-render methods.
-- Some debug/attachment values are reconstructed from the per-frame `RenderState` snapshot rather than written through render-time `UiState` side effects.
+- Debug/attachment values should be read through shared `RenderState` helpers when they need to match visible layer placement.

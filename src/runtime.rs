@@ -135,6 +135,8 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         terminal.autoresize().ok();
+        let size = terminal.size()?;
+        ui_state.clamp_camera(size.width as i32, size.height as i32);
         terminal.draw(|frame| {
             render_scene(frame, &world, &ui_state, &fonts);
         })?;

@@ -19,6 +19,7 @@ pub const WORLD_WIDTH: i32 = 212;
 pub const WORLD_HEIGHT: i32 = 57;
 pub const WORLD_HALF_W: i32 = WORLD_WIDTH / 2;
 pub const WORLD_HALF_H: i32 = WORLD_HEIGHT / 2;
+pub const CAMERA_OVERSCAN_CELLS: i32 = 1;
 
 pub struct LayerOutput {
     pub grid: Grid,
@@ -146,6 +147,8 @@ fn camera_for_frame(full: Rect, ui: &UiState) -> crate::scene::camera::Camera {
     if is_fullscreen_like(full) {
         camera.x = -(full.width as i32) / 2;
         camera.y = -(full.height as i32) / 2;
+    } else {
+        clamp_camera_to_world_overscan(&mut camera);
     }
     camera
 }
@@ -154,9 +157,40 @@ fn is_fullscreen_like(full: Rect) -> bool {
     full.width as i32 >= WORLD_WIDTH && full.height as i32 >= WORLD_HEIGHT
 }
 
+fn clamp_camera_to_world_overscan(camera: &mut crate::scene::camera::Camera) {
+    camera.x = clamp_axis_to_world_overscan(
+        camera.x,
+        -WORLD_HALF_W,
+        WORLD_HALF_W - 1,
+        camera.width as i32,
+    );
+    camera.y = clamp_axis_to_world_overscan(
+        camera.y,
+        -WORLD_HALF_H,
+        WORLD_HALF_H - 1,
+        camera.height as i32,
+    );
+}
+
+fn clamp_axis_to_world_overscan(
+    camera_origin: i32,
+    world_min: i32,
+    world_max: i32,
+    viewport_len: i32,
+) -> i32 {
+    let min_origin = world_min - CAMERA_OVERSCAN_CELLS;
+    let max_origin = world_max + CAMERA_OVERSCAN_CELLS - viewport_len + 1;
+    if min_origin > max_origin {
+        -(viewport_len / 2)
+    } else {
+        camera_origin.clamp(min_origin, max_origin)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scene::coords::world_to_screen;
     use crate::ui::state::UiState;
 
     #[test]
@@ -198,19 +232,86 @@ mod tests {
     }
 
     #[test]
-    fn windowed_camera_keeps_mutable_offset() {
+    fn default_camera_matches_124x32_starting_baseline() {
+        let ui = UiState::new();
+        let windowed = Rect::new(0, 0, 124, 32);
+        let state = build_render_state(windowed, &ui);
+
+        assert_eq!(state.hud.camera.width, windowed.width);
+        assert_eq!(state.hud.camera.height, windowed.height);
+        assert_eq!(state.hud.camera.x, -69);
+        assert_eq!(state.hud.camera.y, -17);
+    }
+
+    #[test]
+    fn windowed_camera_clamps_to_one_cell_world_overscan() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -200;
+        ui.offsets.camera_y = 200;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        let windowed = Rect::new(0, 0, 124, 32);
+        let state = build_render_state(windowed, &ui);
+
+        assert_eq!(state.hud.camera.width, windowed.width);
+        assert_eq!(state.hud.camera.height, windowed.height);
+        assert_eq!(state.hud.camera.x, -107);
+        assert_eq!(state.hud.camera.y, -3);
+    }
+
+    #[test]
+    fn windowed_camera_keeps_mutable_offset_inside_bounds() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -77;
+        ui.offsets.camera_y = -17;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        let windowed = Rect::new(0, 0, 124, 32);
+        let state = build_render_state(windowed, &ui);
+
+        assert_eq!(state.hud.camera.x, ui.camera.x);
+        assert_eq!(state.hud.camera.y, ui.camera.y);
+    }
+
+    #[test]
+    fn clock_screen_uses_active_render_state_projection() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = 30;
+        ui.offsets.camera_y = 10;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        let windowed = Rect::new(0, 0, 132, 36);
+        let state = build_render_state(windowed, &ui);
+        let expected = world_to_screen(
+            state.world.clock_world,
+            state.hud.camera.x,
+            state.hud.camera.y,
+        );
+
+        assert_eq!(state.clock_screen(), expected);
+        assert_ne!(state.clock_screen(), state.world.clock_world);
+    }
+
+    #[test]
+    fn fullscreen_clock_screen_ignores_stored_camera_motion() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = -77;
         ui.offsets.camera_y = 19;
         ui.camera.x = ui.offsets.camera_x;
         ui.camera.y = ui.offsets.camera_y;
 
-        let windowed = Rect::new(0, 0, 132, 36);
-        let state = build_render_state(windowed, &ui);
+        let fullscreen = Rect::new(0, 0, 215, 57);
+        let before = build_render_state(fullscreen, &ui).clock_screen();
 
-        assert_eq!(state.hud.camera.width, windowed.width);
-        assert_eq!(state.hud.camera.height, windowed.height);
-        assert_eq!(state.hud.camera.x, ui.camera.x);
-        assert_eq!(state.hud.camera.y, ui.camera.y);
+        ui.offsets.camera_x += 1;
+        ui.offsets.camera_y += 1;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+        let after = build_render_state(fullscreen, &ui).clock_screen();
+
+        assert_eq!(before, after);
     }
 }

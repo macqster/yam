@@ -67,6 +67,14 @@
 - clarified the fullscreen lock contract in the current issues, audit, and rendering docs so windowed panning and fullscreen datum-centered static framing are distinct rules
 - implemented the fullscreen lock as a render-state rule and added tests that pin fullscreen datum-centered lock vs windowed-pan behavior
 - fixed the current-issues note to call out the debug telemetry mismatch where `Clock screen` was still reported from raw world data instead of the projected value
+- added `RenderState::clock_screen()` so clock rendering and debug telemetry share one projected clock position
+- added tests for projected clock telemetry and fullscreen clock-screen invariance under stored camera motion
+- updated the current-issues and rendering docs to mark the clock telemetry mismatch corrected
+- changed the default windowed starting camera baseline to `(-69, -17)` for the `124x32` terminal screenshots
+- clamped windowed runtime and render-state camera crops to at most one cell of overscan beyond the world border/frame and recorded that architecture rule
+- added tests for the `124x32` starting baseline and windowed camera overscan clamp
+- expanded and flattened decoded GIF subimage frames to an opaque full `820x820` logical canvas before chafa rendering to prevent frame 15 and frame 30 vertical overstretch
+- added a regression test for full-canvas opaque hero frame geometry across partial GIF frames
 
 ## Log Rules
 

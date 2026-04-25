@@ -37,8 +37,8 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Anchor handling is now order-independent on the active path because render-derived values are captured in a per-frame `RenderState` snapshot and then read by later layers.
 - Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug reconstructs those values from the shared snapshot and state helpers.
 - The active fix direction is now explicit: `Camera` is the world-space origin of the visible crop, while `Viewport` is the terminal-sized crop rectangle and not a centering transform.
-- Fullscreen still needs a stronger lock rule: when the terminal crop equals the world extent, arrow-key camera motion should not produce visible movement.
-- That fullscreen lock is now implemented as a render-state rule: the stored camera can still mutate, but the active crop is recentered when the terminal covers the world extent.
+- Fullscreen still needs a stronger lock rule: when the terminal crop equals or exceeds the world extent, arrow-key camera motion should not produce visible movement.
+- That fullscreen lock is now implemented as a render-state rule: the stored camera can still mutate, but the active crop is frozen to the world top-left when the terminal covers the world extent.
 - The active contract now explicitly treats `(0, 0)` as the world datum, with signed quadrants around that origin.
 - World coordinates are Cartesian (`y` upward); terminal/screen coordinates remain terminal-style (`y` downward).
 - World-ui elements are attached to world entities; HUD-ui elements are attached to the viewport/camera/terminal frame.
@@ -83,7 +83,7 @@ The research docs converge on these rules:
 
 - projection must be singular
 - viewport must be a crop, not a transform
-- camera must have one meaning across the entire pipeline
+- camera must have one meaning across the entire pipeline, with fullscreen locked to the world-top-left anchor
 - anchor-space elements should resolve before final screen projection
 - visibility should clip, not mutate position
 - rendering must be deterministic from state alone

@@ -15,9 +15,9 @@ This is the current intended split, written as a contract instead of a preferenc
 - viewport: the terminal-sized crop rectangle
 - resize: may change the viewport, but must not change the world datum or the world-ui attachment rules
 - arrow-key camera motion: may change the visible crop in windowed mode, but must not reclassify world-ui as hud-ui or the reverse
-- fullscreen lock: when terminal size matches the world crop, the visible frame should be static and centered on the world datum
+- fullscreen lock: when terminal size matches or exceeds the world crop, the visible frame should be static and anchored to the world top-left corner so the whole world remains locked under a world-centered datum contract
 - windowed pan: when terminal size is smaller than the world crop, the viewport may move within the world bounds, but only as a crop change
-- fullscreen lock is now enforced by a render-state rule: the stored camera may still change, but the visible crop is recentered when the terminal covers the world extent
+- fullscreen lock is now enforced by a render-state rule: the stored camera may still change, but the visible crop is frozen to the world top-left anchor when the terminal covers the world extent
 
 What belongs where:
 

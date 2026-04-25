@@ -144,8 +144,8 @@ fn camera_for_frame(full: Rect, ui: &UiState) -> crate::scene::camera::Camera {
     camera.width = full.width;
     camera.height = full.height;
     if is_fullscreen_like(full) {
-        camera.x = WORLD_HALF_W - full.width as i32 / 2;
-        camera.y = WORLD_HALF_H - full.height as i32 / 2;
+        camera.x = -WORLD_HALF_W;
+        camera.y = WORLD_HALF_H;
     }
     camera
 }
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn fullscreen_camera_is_locked_to_centered_crop() {
+    fn fullscreen_camera_is_locked_to_world_top_left() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = -77;
         ui.offsets.camera_y = 19;
@@ -193,14 +193,8 @@ mod tests {
 
         assert_eq!(state.hud.camera.width, fullscreen.width);
         assert_eq!(state.hud.camera.height, fullscreen.height);
-        assert_eq!(
-            state.hud.camera.x,
-            WORLD_HALF_W - fullscreen.width as i32 / 2
-        );
-        assert_eq!(
-            state.hud.camera.y,
-            WORLD_HALF_H - fullscreen.height as i32 / 2
-        );
+        assert_eq!(state.hud.camera.x, -WORLD_HALF_W);
+        assert_eq!(state.hud.camera.y, WORLD_HALF_H);
     }
 
     #[test]

@@ -49,6 +49,8 @@ The active implementation treats camera as a viewport crop helper:
 - debug border sampling uses the same crop-origin mapping
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
+- `resolve_world_ui(...)` is the helper for world-attached elements
+- `resolve_hud_ui(...)` is the helper for screen-attached overlays
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

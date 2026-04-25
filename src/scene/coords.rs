@@ -37,6 +37,23 @@ pub fn anchor_to_world(anchor: WorldPos, offset: WorldPos) -> WorldPos {
     }
 }
 
+/// World-ui resolves through world space first, then projects once for display.
+#[allow(dead_code)]
+pub fn resolve_world_ui(
+    anchor: WorldPos,
+    offset: WorldPos,
+    camera_x: i32,
+    camera_y: i32,
+) -> WorldPos {
+    world_to_screen(anchor_to_world(anchor, offset), camera_x, camera_y)
+}
+
+/// Hud-ui is screen-attached and must not inherit world motion.
+#[allow(dead_code)]
+pub fn resolve_hud_ui(screen: WorldPos) -> WorldPos {
+    screen
+}
+
 pub fn world_to_screen(world: WorldPos, camera_x: i32, camera_y: i32) -> WorldPos {
     WorldPos {
         x: world.x - camera_x,
@@ -111,6 +128,28 @@ mod tests {
             ),
             panel
         );
+    }
+
+    #[test]
+    fn world_ui_tracks_world_and_camera() {
+        let hero = WorldPos { x: 150, y: 60 };
+        let offset = WorldPos { x: -110, y: -54 };
+        let camera_a = WorldPos { x: 0, y: 0 };
+        let camera_b = WorldPos { x: 30, y: 10 };
+
+        let hero_screen_a = resolve_world_ui(hero, offset, camera_a.x, camera_a.y);
+        let hero_screen_b = resolve_world_ui(hero, offset, camera_b.x, camera_b.y);
+
+        assert_eq!(hero_screen_a, WorldPos { x: 40, y: 6 });
+        assert_eq!(hero_screen_b, WorldPos { x: 10, y: -4 });
+    }
+
+    #[test]
+    fn hud_ui_is_screen_attached() {
+        let hud = WorldPos { x: 8, y: 3 };
+        let second = WorldPos { x: 8, y: 3 };
+        assert_eq!(resolve_hud_ui(hud), hud);
+        assert_eq!(resolve_hud_ui(second), hud);
     }
 
     #[test]

@@ -59,6 +59,9 @@ The intended model is:
 - world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement
 - world-ui elements stay tied to world entities and follow the world contract
 - hud-ui elements stay tied to viewport/camera/terminal position and follow the screen contract
+- the repo now exposes explicit helpers for both sides of that split:
+  - `resolve_world_ui(...)` resolves anchor + offset through world space and then projects once
+  - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
 
 ## Hero Geometry Contract
 

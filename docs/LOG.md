@@ -56,6 +56,7 @@
 - documented the intentional debug border padding row and side padding cell for future UI placement
 - documented that the bottom one-row padding is currently occupied by the footer
 - clarified that camera is the world-space origin of the crop and viewport is the terminal-sized crop rectangle
+- recorded the world-ui vs hud-ui split: world-ui stays attached to world entities; hud-ui stays attached to the viewport/camera/terminal frame
 
 ## Log Rules
 

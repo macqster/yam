@@ -47,6 +47,8 @@ The active implementation treats camera as a viewport crop helper:
 - viewport is the terminal-sized crop rectangle that follows camera
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
 - debug border sampling uses the same crop-origin mapping
+- world-ui layers attach to world entities and resolve before screen-space overlay work
+- hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

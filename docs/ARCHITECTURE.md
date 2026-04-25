@@ -57,6 +57,8 @@ The intended model is:
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
 - world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement
+- world-ui elements stay tied to world entities and follow the world contract
+- hud-ui elements stay tied to viewport/camera/terminal position and follow the screen contract
 
 ## Hero Geometry Contract
 
@@ -66,6 +68,8 @@ The intended model is:
 - hero world anchor: `(0, 0)` when centered in world space
 - hero visual center should cross the datum, while the rendered cell footprint remains `96x48`
 - the world retains a 1-cell inset boundary for world-ui border work, and the active HUD/border layout also preserves a 1-cell inset for overlay/UI work
+- world-ui should not be repositioned by camera semantics after it is anchored in world space
+- hud-ui should not inherit world coordinates directly; it should use viewport/screen positioning
 
 The current implementation does not fully enforce that model yet. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 

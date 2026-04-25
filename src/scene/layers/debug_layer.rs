@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{Layer, LayerOutput, RenderState, WORLD_HALF_H, WORLD_HALF_W};
+use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -35,35 +35,50 @@ impl Layer for DebugLayer {
         let cam_y = ctx.camera.y;
         let screen_w = width as i32;
         let screen_h = height as i32;
-        let world_left = -WORLD_HALF_W;
-        let world_right = WORLD_HALF_W - 1;
-        let world_top = -WORLD_HALF_H;
-        let world_bottom = WORLD_HALF_H - 1;
         let exclude_x0 = panel_x.saturating_sub(2);
         let exclude_y0 = panel_y.saturating_sub(2);
         let exclude_x1 = panel_x + panel_width + 2;
         let exclude_y1 = panel_y + panel_height + 2;
-        for sy in 0..screen_h {
-            for sx in 0..screen_w {
-                let world_x = cam_x + sx;
-                let world_y = cam_y + sy;
-                let is_debug_zone = sx >= exclude_x0 as i32
-                    && sx <= exclude_x1 as i32
-                    && sy >= exclude_y0 as i32
-                    && sy <= exclude_y1 as i32;
-                let is_border = world_x == world_left
-                    || world_x == world_right
-                    || world_y == world_top
-                    || world_y == world_bottom;
-                if is_border && !is_debug_zone {
-                    let x = sx as u16;
-                    let y = sy as u16;
-                    if let Some(cell) = grid.cell_mut(x, y) {
-                        cell.symbol = '•';
-                        cell.style = Style::default().fg(Color::DarkGray);
-                    }
-                }
+        let left = 1i32;
+        let right = screen_w - 2;
+        let top = 1i32;
+        let bottom = screen_h - 2;
+        let mid_x = screen_w / 2;
+        let mid_y = screen_h / 2;
+
+        let mut draw_border_cell = |x: i32, y: i32, ch: char| {
+            if x < 0 || y < 0 || x >= screen_w || y >= screen_h {
+                return;
             }
+            if x >= exclude_x0 as i32
+                && x <= exclude_x1 as i32
+                && y >= exclude_y0 as i32
+                && y <= exclude_y1 as i32
+            {
+                return;
+            }
+            if let Some(cell) = grid.cell_mut(x as u16, y as u16) {
+                cell.symbol = ch;
+                cell.style = Style::default().fg(Color::DarkGray);
+            }
+        };
+
+        for x in left..=right {
+            let ch = if x == left || x == mid_x || x == right {
+                '+'
+            } else {
+                '-'
+            };
+            draw_border_cell(x, top, ch);
+            draw_border_cell(x, mid_y, ch);
+            draw_border_cell(x, bottom, ch);
+        }
+
+        for y in top + 1..bottom {
+            let ch = if y == mid_y { '+' } else { '|' };
+            draw_border_cell(left, y, ch);
+            draw_border_cell(mid_x, y, ch);
+            draw_border_cell(right, y, ch);
         }
 
         let hero = &ui.hero;

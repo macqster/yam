@@ -66,6 +66,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
 - Clock attachment on the active path is world-pinned: hero and clock positions are resolved before camera influence, and visibility should clip rather than clamp positions.
+- Debug world borders are rendered as a stable ASCII 2x2 frame probe, not as a dotted camera probe.
 
 ## Current Risks
 

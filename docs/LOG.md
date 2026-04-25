@@ -52,6 +52,7 @@
 - tightened the world datum contract to define `(0, 0)` as the centered origin with signed quadrants around it
 - recorded the coordinate orientation split: world is Cartesian, terminal/screen is downward-y
 - recorded the hero geometry contract: `820x820` source GIF renders to a fixed `96x48` terminal footprint
+- replaced the dotted debug world-edge probe with a stable ASCII frame border probe
 
 ## Log Rules
 

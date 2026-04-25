@@ -60,7 +60,7 @@ The intended model is:
 - world-ui elements stay tied to world entities and follow the world contract
 - hud-ui elements stay tied to viewport/camera/terminal position and follow the screen contract
 - the repo now exposes explicit helpers for both sides of that split:
-  - `resolve_world_ui(...)` resolves anchor + offset through world space and then projects once
+  - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
   - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
 
 ## Hero Geometry Contract

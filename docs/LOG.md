@@ -57,7 +57,7 @@
 - documented that the bottom one-row padding is currently occupied by the footer
 - clarified that camera is the world-space origin of the crop and viewport is the terminal-sized crop rectangle
 - recorded the world-ui vs hud-ui split: world-ui stays attached to world entities; hud-ui stays attached to the viewport/camera/terminal frame
-- added explicit `resolve_world_ui(...)` and `resolve_hud_ui(...)` helpers so the split has a code-level contract in `src/scene/coords.rs`
+- clarified that world-ui stays world-pinned while hud-ui stays screen-attached, and encoded that split in `src/scene/coords.rs`
 
 ## Log Rules
 

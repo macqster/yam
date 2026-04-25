@@ -41,7 +41,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - World coordinates are Cartesian (`y` upward); terminal/screen coordinates remain terminal-style (`y` downward).
 - World-ui elements are attached to world entities; HUD-ui elements are attached to the viewport/camera/terminal frame.
 - The repo now has explicit helper-level vocabulary for this split in `src/scene/coords.rs`:
-  - `resolve_world_ui(...)` for world-attached elements
+  - `resolve_world_ui(...)` for world-attached elements that stay pinned in world space
   - `resolve_hud_ui(...)` for screen-attached overlays
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.

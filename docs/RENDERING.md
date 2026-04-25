@@ -49,7 +49,7 @@ The active implementation treats camera as a viewport crop helper:
 - debug border sampling uses the same crop-origin mapping
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
-- `resolve_world_ui(...)` is the helper for world-attached elements
+- `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
@@ -71,7 +71,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero rendering must not use ratatui wrapping.
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
-- Clock attachment on the active path is world-pinned: hero and clock positions are resolved before camera influence, and visibility should clip rather than clamp positions.
+- Clock attachment on the active path is world-pinned: the clock follows the hero in world space and does not inherit camera, viewport, or terminal motion directly.
 - Debug world borders are rendered as a stable ASCII 2x2 frame probe, with one top padding row and one side padding cell for symmetry. This padding is intentional and reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
 - The world itself keeps a 1-cell inset boundary, and the HUD/viewport overlay layer also keeps a 1-cell inset boundary where needed for future UI elements.
 

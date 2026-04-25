@@ -45,6 +45,8 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - The repo now has explicit helper-level vocabulary for this split in `src/scene/coords.rs`:
   - `resolve_world_ui(...)` for world-attached elements that stay pinned in world space
   - `resolve_hud_ui(...)` for screen-attached overlays
+- `RenderState` is now split into `world` and `hud` sections, and the resize invariance test checks that the world facts stay stable while the HUD crop changes with terminal size.
+- footer row placement is now encoded in `footer_row(height)` so the HUD bottom row contract is testable.
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
 - `hero_visual_anchor` and `clock_final` now live in the shared per-frame `RenderState`, reducing layer-order dependency on the active path.

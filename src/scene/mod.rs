@@ -2,7 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
-use crate::render::render_state::RenderState;
+use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
 use crate::scene::coords::{anchor_to_world, WorldPos};
 use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
@@ -66,39 +66,7 @@ impl Scene {
         fonts: &FontRegistry,
     ) {
         let full = frame.area();
-        let mut camera = ui.camera;
-        camera.width = full.width;
-        camera.height = full.height;
-        let viewport = Viewport::from_camera(&camera, full.width, full.height);
-        let viewport_rect = full;
-        let hero_world = WorldPos {
-            x: ui.hero.x,
-            y: ui.hero.y,
-        };
-        let hero_visual_anchor = anchor_to_world(
-            hero_world,
-            WorldPos {
-                x: ui.offsets.hero_dx,
-                y: ui.offsets.hero_dy,
-            },
-        );
-        let clock_world = anchor_to_world(
-            hero_visual_anchor,
-            WorldPos {
-                x: ui.offsets.clock_dx as i32,
-                y: ui.offsets.clock_dy as i32,
-            },
-        );
-        let clock_screen = clock_world;
-        let render_state = RenderState {
-            viewport,
-            viewport_rect,
-            camera,
-            hero_world,
-            hero_visual_anchor,
-            clock_world,
-            clock_screen,
-        };
+        let render_state = build_render_state(full, ui);
         let mut layers = self.layers.iter().collect::<Vec<_>>();
         layers.sort_by_key(|layer| layer.z_index());
         let mut outputs = Vec::with_capacity(layers.len());
@@ -133,4 +101,69 @@ impl Scene {
 pub fn render_scene(frame: &mut Frame<'_>, world: &WorldState, ui: &UiState, fonts: &FontRegistry) {
     let scene = Scene::new(build_ui_layers());
     scene.render(frame, world, ui, fonts);
+}
+
+pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
+    let mut camera = ui.camera;
+    camera.width = full.width;
+    camera.height = full.height;
+    let viewport = Viewport::from_camera(&camera, full.width, full.height);
+    let viewport_rect = full;
+    let hero_world = WorldPos {
+        x: ui.hero.x,
+        y: ui.hero.y,
+    };
+    let hero_visual_anchor = anchor_to_world(
+        hero_world,
+        WorldPos {
+            x: ui.offsets.hero_dx,
+            y: ui.offsets.hero_dy,
+        },
+    );
+    let clock_world = anchor_to_world(
+        hero_visual_anchor,
+        WorldPos {
+            x: ui.offsets.clock_dx as i32,
+            y: ui.offsets.clock_dy as i32,
+        },
+    );
+    RenderState {
+        world: WorldFrame {
+            hero_world,
+            hero_visual_anchor,
+            clock_world,
+        },
+        hud: HudFrame {
+            viewport,
+            viewport_rect,
+            camera,
+        },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::state::UiState;
+
+    #[test]
+    fn render_state_world_facts_stay_stable_across_resize() {
+        let ui = UiState::new();
+        let fullscreen = Rect::new(0, 0, 215, 57);
+        let windowed = Rect::new(0, 0, 132, 36);
+
+        let full_state = build_render_state(fullscreen, &ui);
+        let win_state = build_render_state(windowed, &ui);
+
+        assert_eq!(full_state.world.hero_world, win_state.world.hero_world);
+        assert_eq!(
+            full_state.world.hero_visual_anchor,
+            win_state.world.hero_visual_anchor
+        );
+        assert_eq!(full_state.world.clock_world, win_state.world.clock_world);
+        assert_eq!(full_state.hud.viewport_rect.width, fullscreen.width);
+        assert_eq!(win_state.hud.viewport_rect.width, windowed.width);
+        assert_eq!(full_state.hud.viewport_rect.height, fullscreen.height);
+        assert_eq!(win_state.hud.viewport_rect.height, windowed.height);
+    }
 }

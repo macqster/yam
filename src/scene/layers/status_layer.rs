@@ -23,7 +23,7 @@ impl Layer for StatusLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        let footer_y = height.saturating_sub(1);
+        let footer_y = footer_row(height);
         let left_text = if ui.debug_layout {
             "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   hjkl hero   •   HJKL clock   •   { } font"
         } else {
@@ -41,5 +41,22 @@ impl Layer for StatusLayer {
             theme_style::panel_text(),
         );
         LayerOutput { grid, mask: None }
+    }
+}
+
+fn footer_row(height: u16) -> u16 {
+    height.saturating_sub(1)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::footer_row;
+
+    #[test]
+    fn footer_uses_bottom_row_for_any_height() {
+        assert_eq!(footer_row(57), 56);
+        assert_eq!(footer_row(36), 35);
+        assert_eq!(footer_row(1), 0);
+        assert_eq!(footer_row(0), 0);
     }
 }

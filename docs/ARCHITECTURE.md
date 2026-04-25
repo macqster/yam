@@ -24,6 +24,9 @@
 - runtime draw closure calls `render_scene`
 - `Scene` builds ordered layers through `ui::scene::build_ui_layers`
 - `Scene` computes a read-only `RenderState` once per frame and passes it to every layer
+- `RenderState` is split into:
+  - `world`: hero and clock attachment facts that stay world-pinned
+  - `hud`: viewport and camera facts that stay screen/terminal-attached
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`
 - `Scene` converts the final grid into ratatui `Line`s
@@ -64,6 +67,7 @@ The intended model is:
 - the repo now exposes explicit helpers for both sides of that split:
   - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
   - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
+- the footer row is intentionally the bottom terminal row; `footer_row(height)` encodes that contract
 
 ## Hero Geometry Contract
 

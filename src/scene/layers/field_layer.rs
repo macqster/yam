@@ -26,11 +26,11 @@ impl Layer for FieldLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        for y in 0..ctx.viewport_rect.height.min(grid.height) {
+        for y in 0..ctx.hud.viewport_rect.height.min(grid.height) {
             let mut line = String::new();
-            for x in 0..ctx.viewport_rect.width.min(grid.width) {
-                let wx = ctx.viewport.x + x as i32;
-                let wy = ctx.viewport.y + y as i32;
+            for x in 0..ctx.hud.viewport_rect.width.min(grid.width) {
+                let wx = ctx.hud.viewport.x + x as i32;
+                let wy = ctx.hud.viewport.y + y as i32;
                 if wx >= 0
                     && wy >= 0
                     && (wx as usize) < world.grid.width as usize
@@ -50,8 +50,8 @@ impl Layer for FieldLayer {
             }
             write_string(
                 &mut grid,
-                ctx.viewport_rect.x,
-                ctx.viewport_rect.y + y,
+                ctx.hud.viewport_rect.x,
+                ctx.hud.viewport_rect.y + y,
                 &line,
                 Style::default(),
             );

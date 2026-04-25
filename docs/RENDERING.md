@@ -23,6 +23,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - final output is rendered once through `Paragraph::new(grid_to_lines(&final_grid))`
 - no layer should rely on ratatui layout wrapping for hero/image content
 - viewport selection is now a full-frame pass; the old centered tiered viewport box no longer drives layer placement
+- `RenderState` is split into `world` and `hud` sections to keep world-pinned attachments separate from screen-attached overlays
 
 ## Pipeline
 
@@ -30,6 +31,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - `render_scene` builds a temporary `Scene`
 - `Scene::render` uses the full terminal area for viewport and viewport rect values
 - `Scene::render` also computes a single read-only `RenderState` for hero/clock/debug values
+- `Scene::render` builds `RenderState` through `build_render_state(...)`, which is covered by a resize-invariance test
 - each layer writes to a full-frame `Grid`
 - scene captures the hero mask, currently applying it only to field output
 - scene merges all grids into `final_grid`
@@ -53,6 +55,7 @@ The active implementation treats camera as a viewport crop helper:
 - the footer/status bar is hud-ui: it is screen-attached and does not inherit world motion
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
+- footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

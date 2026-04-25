@@ -31,8 +31,8 @@ impl Layer for DebugLayer {
         let panel_width = 52u16;
         let panel_height = 10u16;
 
-        let cam_x = ctx.camera.x;
-        let cam_y = ctx.camera.y;
+        let cam_x = ctx.hud.camera.x;
+        let cam_y = ctx.hud.camera.y;
         let screen_w = width as i32;
         let screen_h = height as i32;
         let exclude_x0 = panel_x.saturating_sub(2);
@@ -82,10 +82,10 @@ impl Layer for DebugLayer {
         }
 
         let hero = &ui.hero;
-        let hero_anchor = ctx.hero_world;
-        let hero_visual_anchor = ctx.hero_visual_anchor;
-        let clock_world = ctx.clock_world;
-        let clock_screen = ctx.clock_screen;
+        let hero_anchor = ctx.world.hero_world;
+        let hero_visual_anchor = ctx.world.hero_visual_anchor;
+        let clock_world = ctx.world.clock_world;
+        let clock_screen = clock_world;
         let clock_visible = clock_screen.x >= 0
             && clock_screen.y >= 0
             && clock_screen.x < width as i32

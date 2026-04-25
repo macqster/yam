@@ -25,7 +25,7 @@ impl Layer for ClockLayer {
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let lines = clock_lines(ui, fonts);
-        let clock_pos = ctx.clock_screen;
+        let clock_pos = ctx.world.clock_world;
         if is_visible(clock_pos, width, height, &lines) {
             for (i, line) in lines.iter().enumerate() {
                 let y = clock_pos.y + i as i32;

@@ -15,6 +15,8 @@ This is the current intended split, written as a contract instead of a preferenc
 - viewport: the terminal-sized crop rectangle
 - resize: may change the viewport, but must not change the world datum or the world-ui attachment rules
 - arrow-key camera motion: may change the visible crop in windowed mode, but must not reclassify world-ui as hud-ui or the reverse
+- fullscreen lock: when terminal size matches the world crop, the visible frame should be static and centered on the world datum
+- windowed pan: when terminal size is smaller than the world crop, the viewport may move within the world bounds, but only as a crop change
 
 What belongs where:
 
@@ -37,6 +39,7 @@ What must not drift:
 - footer must stay hud-attached
 - debug text must stay hud-attached
 - camera must never become a second meaning for viewport
+- fullscreen must never expose camera panning as visible motion when the crop already equals the world
 
 ## 1. Camera moves, but the view does not always change
 
@@ -48,6 +51,7 @@ Likely causes:
 - the active projection contract is still being interpreted differently across layers
 - some layers use camera projection, while others remain screen-stable
 - fullscreen and windowed mode are still treated with different assumptions
+- the fullscreen case still allows camera mutation even when the crop should be locked to the world datum
 
 Impact:
 - arrow-key panning feels inconsistent
@@ -114,6 +118,7 @@ Observed problem:
 Need:
 - a tighter, single-sentence contract for each term
 - a hard rule about which layers may read camera and which may read viewport
+- a fullscreen rule that freezes the crop at the centered world extent
 
 ## 6. Resize invariance still needs explicit enforcement
 
@@ -176,6 +181,8 @@ The repo is still trying to answer these questions consistently:
 6. What is viewport?
 7. Which features should move with arrow keys?
 8. Which features should remain pinned to the world datum?
+9. When should the visible crop be movable?
+10. When should the visible crop be static?
 
 Until those questions stay fixed, the screenshots will keep showing visually correct pieces that still feel semantically inconsistent.
 
@@ -187,6 +194,7 @@ They are showing a contract split:
 - the debug overlay/footer are behaving like hud-ui, which is correct
 - the hero/clock/border probe are behaving like world-ui, which is also correct
 - the perceived bug is that the contract is still too easy to forget when reading the screenshot
+- fullscreen is still effectively pannable, so the visible crop can drift even when terminal size equals world size
 
 The practical issue is therefore semantic, not mechanical:
 

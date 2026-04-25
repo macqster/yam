@@ -54,6 +54,7 @@ The active implementation treats camera as a viewport crop helper:
 - the clock is world-ui: it follows the hero in world space and keeps its own relative offset
 - the footer/status bar is hud-ui: it is screen-attached and does not inherit world motion
 - the latest screenshot set confirms the distinction: world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
+- fullscreen is a special case of the camera contract: when the viewport matches the world extent, the visible crop should be static and centered, even if debug controls still mutate the stored camera position
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
@@ -84,5 +85,6 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 ## Current Risks
 
 - Camera math is not yet a single-source contract across hero, field, viewport, and debug border rendering.
+- The fullscreen lock rule is still behavioral rather than structural: the code should treat fullscreen as an immovable crop, not just a larger windowed viewport.
 - The active grid path coexists with legacy frame-render methods.
 - Some debug/attachment values are reconstructed from the per-frame `RenderState` snapshot rather than written through render-time `UiState` side effects.

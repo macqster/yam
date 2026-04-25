@@ -37,6 +37,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - Anchor handling is now order-independent on the active path because render-derived values are captured in a per-frame `RenderState` snapshot and then read by later layers.
 - Render-time `UiState` anchor writes have been removed from the active hero/clock paths; debug reconstructs those values from the shared snapshot and state helpers.
 - The active fix direction is now explicit: `Camera` is the world-space origin of the visible crop, while `Viewport` is the terminal-sized crop rectangle and not a centering transform.
+- Fullscreen still needs a stronger lock rule: when the terminal crop equals the world extent, arrow-key camera motion should not produce visible movement.
 - The active contract now explicitly treats `(0, 0)` as the world datum, with signed quadrants around that origin.
 - World coordinates are Cartesian (`y` upward); terminal/screen coordinates remain terminal-style (`y` downward).
 - World-ui elements are attached to world entities; HUD-ui elements are attached to the viewport/camera/terminal frame.
@@ -48,6 +49,7 @@ The current Rust runtime has moved from direct ratatui widget rendering toward a
 - `RenderState` is now split into `world` and `hud` sections, and the resize invariance test checks that the world facts stay stable while the HUD crop changes with terminal size.
 - footer row placement is now encoded in `footer_row(height)` so the HUD bottom row contract is testable.
 - Camera semantics are inconsistent across modules. Hero/clock code uses `screen = world - camera`, while `Viewport` and the debug world border still treat camera as a center point.
+- The remaining drift is not a missing viewport tie; it is an incomplete fullscreen contract. Windowed mode may pan the crop, fullscreen must freeze it.
 - `follow_hero` is still present in state/camera controls, but no longer has a complete active render behavior.
 - `hero_visual_anchor` and `clock_final` now live in the shared per-frame `RenderState`, reducing layer-order dependency on the active path.
 - `(0, 0)` is used as a sentinel for hero world defaults in layer code, which prevents `(0, 0)` from being a clean valid world origin.

@@ -64,6 +64,7 @@
 - restored the ASCII world border probe as a datum-centered world-space indicator and aligned its camera-projected meaning with the active contract
 - added a current-issues report covering the remaining static-vs-dynamic contract confusion points
 - tightened the current-issues report with an explicit static/dynamic placement table for world-ui, hud-ui, camera, and viewport semantics
+- clarified the fullscreen lock contract in the current issues, audit, and rendering docs so windowed panning and fullscreen static framing are distinct rules
 
 ## Log Rules
 

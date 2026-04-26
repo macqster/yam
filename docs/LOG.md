@@ -5,6 +5,7 @@
 - added `docs/SCENE_MODEL.md` to formalize the deterministic scene layer above ratatui, including layer order, coordinate spaces, masking, and the frame pipeline
 - aligned the scene docs with the terminal presentation split: world, HUD, and overlay
 - compiled the `new/` concept notes into the repo-wide `TODO.md` backlog at the repository root
+- tightened `TODO.md` wording so it matches the scene and architecture docs without introducing a second projection or presentation vocabulary
 
 ## 2026-04-23
 

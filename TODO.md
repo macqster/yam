@@ -16,6 +16,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
   - render through ratatui
 - Keep world-space, screen-space, and anchor-space distinct in code.
 - Keep HUD attached to the terminal frame and overlays modal/top-z-index.
+- Treat the terminal as a framebuffer, not a panel dashboard.
 
 ## 2. Greenhouse / World Modes
 
@@ -34,6 +35,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Keep debug split into passive HUD info and active overlay inspection.
 - Keep scrollbars as viewport indicators, not widget chrome.
 - Make sure hotkey visibility and hotkey behavior remain separate concerns.
+- Keep passive debug in HUD and modal inspection in overlay.
 
 ## 4. Hero GIF Rendering
 
@@ -60,6 +62,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Keep evaluating layout vs `SceneLayout` mapping.
 - Keep reviewing event/focus patterns from ratatui ecosystem crates only when they solve a concrete problem.
 - Keep `Canvas`, popup, tabs, scrollbar, and widget research tied to actual scene needs.
+- Prefer research that preserves the world/HUD/overlay split and single projection contract.
 
 ## 7. Contract Debt To Avoid Reintroducing
 
@@ -77,4 +80,3 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - `new/yam-rust_hero_gif_render_concepts.md`
 - `new/yam-rust_to-do.md`
 - `new/yam-rust_ui_architecture_concepting.md`
-

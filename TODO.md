@@ -85,3 +85,14 @@ This file compiles the open work captured in the recent `new/` concept notes and
 
 - Use `docs/REFERENCE_ARCHIVE.md` for the dump folder and other historical notes that are reference-only.
 - Do not move archived notes back into the active backlog unless the active docs explicitly promote them.
+
+## 10. Archive-Derived Ideas Worth Preserving
+
+- Keep the single projection gateway as a first-class implementation rule.
+- Add invariance tests for resize, camera, projection, anchor, and rounding behavior.
+- Prefer `ViewOrigin`-style translation semantics over ambiguous camera behavior if a simplification is needed.
+- Keep greenhouse as a world mode, not tabbed UI chrome.
+- Treat footer layout as deterministic truncation logic, not generic widget layout.
+- Split debug into passive HUD telemetry and active overlay inspection.
+- Prefer renderer-owned or cached hero frame ownership if chafa-stream instability remains a problem.
+- Keep the bug taxonomy around as a basis for concrete tests and regression checks.

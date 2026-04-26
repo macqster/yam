@@ -7,6 +7,7 @@
 - compiled the `new/` concept notes into the repo-wide `TODO.md` backlog at the repository root
 - tightened `TODO.md` wording so it matches the scene and architecture docs without introducing a second projection or presentation vocabulary
 - added `docs/REFERENCE_ARCHIVE.md` to catalog the `yam-rust_debugging_260424-2009_dump` notes as reference-only archive material
+- marked the archived dump notes as reference-only in `TODO.md` so the active backlog stays separate from historical context
 
 ## 2026-04-23
 

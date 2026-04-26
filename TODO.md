@@ -80,3 +80,8 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - `new/yam-rust_hero_gif_render_concepts.md`
 - `new/yam-rust_to-do.md`
 - `new/yam-rust_ui_architecture_concepting.md`
+
+## 9. Reference Archive
+
+- Use `docs/REFERENCE_ARCHIVE.md` for the dump folder and other historical notes that are reference-only.
+- Do not move archived notes back into the active backlog unless the active docs explicitly promote them.

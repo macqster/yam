@@ -7,6 +7,7 @@
 - [`HYGIENE.md`](HYGIENE.md) - repo hygiene rules
 - [`AUDIT.md`](AUDIT.md) - current repo audit
 - [`SCENE_MODEL.md`](SCENE_MODEL.md) - deterministic scene model above ratatui
+- [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
 
 ## Notes
 

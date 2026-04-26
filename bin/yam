@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+exec "${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}" "$@"

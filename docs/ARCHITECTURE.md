@@ -32,6 +32,7 @@
 - `Scene` converts the final grid into ratatui `Line`s
 - ratatui receives one final `Paragraph` for the frame
 - scene rendering now uses the full terminal area for viewport and viewport-rect values; the earlier centered tiered viewport box is no longer used to place layers
+- the scene model contract lives in [`SCENE_MODEL.md`](SCENE_MODEL.md) and defines the deterministic layer/space/masking rules above ratatui
 
 ## Active Layers
 

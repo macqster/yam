@@ -1,5 +1,9 @@
 # YAM Log
 
+## 2026-04-26
+
+- added `docs/SCENE_MODEL.md` to formalize the deterministic scene layer above ratatui, including layer order, coordinate spaces, masking, and the frame pipeline
+
 ## 2026-04-23
 
 - pruned Go-era root artifacts from the repo

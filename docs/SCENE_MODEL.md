@@ -36,6 +36,20 @@ The scene is composed of these systems:
 
 Each system owns its own state and emits renderable primitives.
 
+## Presentation Layers
+
+Conceptually, the terminal presentation is organized as:
+
+- World: the rendered scene and world-attached systems
+- HUD: screen-attached footer, indicators, and passive debug
+- Overlay: modal or top-z-index panels such as settings and active debug UI
+
+Rules:
+
+- world content may be affected by projection
+- HUD content stays screen-space only
+- overlay content sits above both and may block input
+
 ## Coordinate Spaces
 
 The engine must keep these spaces distinct:
@@ -84,6 +98,12 @@ Rules:
 - layer ordering is explicit
 - no implicit z-index behavior
 - no dynamic reordering at render time
+
+The higher-level presentation stack maps this as:
+
+- world below HUD below overlay
+- overlays are modal when active
+- footer and passive indicators belong to the HUD, not the overlay
 
 ## Masking and Occlusion
 
@@ -151,4 +171,3 @@ Avoid:
 - mixing world and screen space
 - dynamic layer ordering
 - masking by omission
-

@@ -3,6 +3,7 @@
 ## 2026-04-26
 
 - added `docs/SCENE_MODEL.md` to formalize the deterministic scene layer above ratatui, including layer order, coordinate spaces, masking, and the frame pipeline
+- aligned the scene docs with the terminal presentation split: world, HUD, and overlay
 
 ## 2026-04-23
 

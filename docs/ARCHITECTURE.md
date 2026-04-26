@@ -33,6 +33,7 @@
 - ratatui receives one final `Paragraph` for the frame
 - scene rendering now uses the full terminal area for viewport and viewport-rect values; the earlier centered tiered viewport box is no longer used to place layers
 - the scene model contract lives in [`SCENE_MODEL.md`](SCENE_MODEL.md) and defines the deterministic layer/space/masking rules above ratatui
+- the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 
 ## Active Layers
 
@@ -41,6 +42,13 @@
 - clock/anchored UI: `z_index = 100`
 - debug overlay: `z_index = 300`
 - status/footer: `z_index = 1000`
+
+## Presentation Contract
+
+- world systems are the scene and world-attached content
+- HUD systems are screen-attached footers, indicators, and passive debug
+- overlay systems are modal or top-z-index panels such as settings or active debug UI
+- terminal layout should be treated as a framebuffer, not a panel dashboard
 
 ## Coordinate Contract
 
@@ -68,9 +76,10 @@ The intended model is:
 - clock is treated as world-ui: it stays tied to the hero in world space and carries its own hero-relative offset
 - footer/status is treated as hud-ui: it lives in screen space alongside hotkeys and version/build labels
 - the repo now exposes explicit helpers for both sides of that split:
-  - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
-  - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
+- `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
+- `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
 - the footer row is intentionally the bottom terminal row; `footer_row(height)` encodes that contract
+- projection should live in one explicit place only; do not split world-to-screen conversion across world, HUD, and overlay code paths
 
 ## Hero Geometry Contract
 

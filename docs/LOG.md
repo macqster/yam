@@ -11,6 +11,7 @@
 - added an archive-derived ideas section to `TODO.md` so the useful design patterns stay visible without collapsing the archive back into active work
 - added a concrete next-steps section to `TODO.md` for projection, invariance, and hero-rendering follow-up work
 - replaced the TODO implementation order with the explicit work order: ui -> main scene stabilisation -> hero gif -> main scene stabilisation -> main scene vines -> main scene stabilisation
+- expanded the `ui` phase in `TODO.md` with a checklist that keeps projection ownership, world-state boundaries, and footer/HUD/overlay responsibilities explicit
 
 ## 2026-04-23
 

@@ -58,6 +58,14 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Treat each stabilization step as a hard checkpoint before moving on.
 - Stop any pass when the scene is not clean, flicker-free, and layout-stable.
 
+### 5.1 UI Phase Checklist
+
+- Audit the current UI split so `ui/` remains runtime UI state and screen-space widgets only.
+- Keep world-state mutation out of UI widgets.
+- Keep camera/viewport ownership in the projection path, not in UI widgets.
+- Keep footer, HUD, and overlay responsibilities explicit before changing scene code.
+- Make sure the UI phase does not reintroduce panel-style layout as the primary model.
+
 ## 6. Ratatui Research Follow-Ups
 
 - Keep evaluating layout vs `SceneLayout` mapping.

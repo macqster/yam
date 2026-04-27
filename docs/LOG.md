@@ -1,5 +1,7 @@
 # YAM Log
 
+This file is append-only and historical only; current rules live in the active docs.
+
 ## 2026-04-26
 
 - added `docs/SCENE_MODEL.md` to formalize the deterministic scene layer above ratatui, including layer order, coordinate spaces, masking, and the frame pipeline
@@ -108,6 +110,7 @@
 - added tests for the `124x32` starting baseline and windowed camera overscan clamp
 - expanded and flattened decoded GIF subimage frames to an opaque full `820x820` logical canvas before chafa rendering to prevent frame 15 and frame 30 vertical overstretch
 - added a regression test for full-canvas opaque hero frame geometry across partial GIF frames
+- hardened the active docs with explicit assertions, out-of-scope sections, and a docs-map "where to change things" guide so the contract docs are easier to keep single-purpose
 
 ## Log Rules
 

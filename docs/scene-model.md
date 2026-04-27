@@ -2,6 +2,13 @@
 
 This document defines the deterministic scene model that sits above ratatui.
 
+## Assertions
+
+- World-space entities must not depend on viewport dimensions.
+- Projection must be deterministic for identical inputs.
+- HUD elements must not use world-space projection.
+- The conceptual layer order in this file is the source of truth for scene categories.
+
 ## Purpose
 
 The scene is the single source of truth for everything visible on screen.
@@ -65,6 +72,13 @@ Rules:
 - anchor space is relational, not absolute
 - world and screen spaces must never be mixed implicitly
 
+## Glossary
+
+- world-space: logical positions of entities in the simulation
+- screen-space: terminal cell coordinates
+- anchor-space: offsets relative to another rendered object
+- vines: the world-attached growth systems that occupy the growth-system layer
+
 ## Camera Model
 
 Camera is a world-to-screen projection helper.
@@ -73,13 +87,18 @@ Responsibilities:
 
 - map world space to screen space
 - frame the viewport
-- control offset and scaling if needed
+- control offset
 
 Rules:
 
 - camera must not mutate world state
 - viewport is not the camera
 - camera should stay deterministic
+
+## Out of Scope
+
+- This document does not define the numeric layer implementation; see [`rendering.md`](rendering.md).
+- This document does not define module ownership or coupling rules; see [`architecture.md`](architecture.md).
 
 ## Layering Model
 

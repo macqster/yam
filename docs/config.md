@@ -1,6 +1,11 @@
 # Scene Config
 
-`scene_config.json` is the active, repo-tracked default scene configuration for the visualizer / experimental runtime path.
+## Assertions
+
+- `scene_config.json` is the active, repo-tracked default configuration for the visualizer / experimental runtime path.
+- Changes here should be reflected in the runtime and the docs together.
+
+This note owns the active, repo-tracked default scene configuration for the visualizer / experimental runtime path.
 
 ## What It Controls
 

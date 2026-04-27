@@ -26,16 +26,7 @@ This repository contains the active Rust runtime tree for YAM-Rust.
 
 ## Current Work
 
-The active work order is:
-
-1. ui
-2. main scene stabilisation
-3. hero gif
-4. main scene stabilisation
-5. main scene vines
-6. main scene stabilisation
-
-The active backlog lives in [`TODO.md`](TODO.md).
+The active work order lives in [`TODO.md`](TODO.md).
 
 ## Working Rules
 

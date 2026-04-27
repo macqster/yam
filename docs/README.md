@@ -22,6 +22,14 @@
 - historical reconstruction notes were consolidated into the current docs set.
 - uppercase markdown filenames are reserved for the highest-visibility entry points; lower-case names are preferred for most active contracts and archive reports.
 
+## Where to Change Things
+
+- Conceptual behavior changes -> `docs/scene-model.md`
+- Ownership and architecture changes -> `docs/architecture.md`
+- Rendering and layer-order changes -> `docs/rendering.md`
+- Work order and validation changes -> `TODO.md`
+- Risk and status changes -> `docs/audit.md`
+
 ## Archive Notes
 
 - [`archive/notes/flattening-plan.md`](archive/notes/flattening-plan.md) - completed flattening note

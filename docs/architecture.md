@@ -1,5 +1,11 @@
 # YAM-RUST Architecture Contract
 
+## Assertions
+
+- Ownership and data flow belong here, not in the contract or archive docs.
+- Projection must have a single explicit owner.
+- `RenderState` is built once per frame and then treated as read-only.
+
 ## Core Rules
 
 - `core/` - data only, no UI, no terminal, no rendering
@@ -34,6 +40,11 @@
 - scene rendering now uses the full terminal area for viewport and viewport-rect values; the earlier centered tiered viewport box is no longer used to place layers
 - the scene model contract lives in [`scene-model.md`](scene-model.md) and defines the deterministic layer/space/masking rules above ratatui
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
+
+## Out of Scope
+
+- This document does not define conceptual scene categories; see [`scene-model.md`](scene-model.md).
+- This document does not define numeric layer meaning in detail; see [`rendering.md`](rendering.md).
 
 ## Active Layers
 

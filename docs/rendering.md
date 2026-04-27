@@ -1,5 +1,11 @@
 # YAM-RUST Render Contract
 
+## Assertions
+
+- Numeric layer ordering implements the conceptual layer model defined in [`scene-model.md`](scene-model.md).
+- Debug border geometry is world-space data projected through the active camera.
+- Hero frames must be fixed size before render.
+
 Ratatui is an immediate-mode renderer.
 Every frame is rebuilt from state and emitted as a complete terminal grid.
 

@@ -111,6 +111,7 @@ This file is append-only and historical only; current rules live in the active d
 - expanded and flattened decoded GIF subimage frames to an opaque full `820x820` logical canvas before chafa rendering to prevent frame 15 and frame 30 vertical overstretch
 - added a regression test for full-canvas opaque hero frame geometry across partial GIF frames
 - hardened the active docs with explicit assertions, out-of-scope sections, and a docs-map "where to change things" guide so the contract docs are easier to keep single-purpose
+- sharpened the active docs with more testable assertions, stricter projection ownership wording, and verification tags in the backlog so the docs read more like guardrails than commentary
 
 ## Log Rules
 

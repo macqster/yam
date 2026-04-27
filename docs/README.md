@@ -24,6 +24,7 @@
 
 ## Where to Change Things
 
+- If unsure where to change something, start here.
 - Conceptual behavior changes -> `docs/scene-model.md`
 - Ownership and architecture changes -> `docs/architecture.md`
 - Rendering and layer-order changes -> `docs/rendering.md`

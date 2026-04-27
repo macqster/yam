@@ -145,14 +145,14 @@ This file is the repo-wide work order and stabilization checklist.
 
 ## 11. Concrete Next Steps
 
-- Add or tighten tests for:
+- [verify] Add or tighten tests for:
   - resize invariance
   - camera projection consistency
   - anchor integrity
   - rounding / jitter stability
-- Audit the current projection path for any remaining split responsibilities.
-- Decide whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
-- Use the bug taxonomy as a checklist for missing regression coverage.
+- [inspect] Audit the current projection path for any remaining split responsibilities.
+- [decide] Determine whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
+- [verify] Use the bug taxonomy as a checklist for missing regression coverage.
 - Keep the active backlog aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.
 
 ## 12. Contract Pointers

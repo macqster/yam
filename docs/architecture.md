@@ -90,7 +90,7 @@ The intended model is:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
 - the footer row is intentionally the bottom terminal row; `footer_row(height)` encodes that contract
-- projection should live in one explicit place only; do not split world-to-screen conversion across world, HUD, and overlay code paths
+- projection is applied by the renderer using camera state; do not split world-to-screen conversion across world, HUD, and overlay code paths
 
 ## Hero Geometry Contract
 

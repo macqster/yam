@@ -5,7 +5,7 @@ This document defines the deterministic scene model that sits above ratatui.
 ## Assertions
 
 - World-space entities must not depend on viewport dimensions.
-- Projection must be deterministic for identical inputs.
+- Given identical world state, camera, and viewport inputs, projection must produce identical screen coordinates.
 - HUD elements must not use world-space projection.
 - The conceptual layer order in this file is the source of truth for scene categories.
 
@@ -93,7 +93,7 @@ Rules:
 
 - camera must not mutate world state
 - viewport is not the camera
-- camera should stay deterministic
+- camera must stay deterministic
 
 ## Out of Scope
 

@@ -157,11 +157,18 @@ This file compiles the open work captured in the recent `new/` concept notes and
 
 ## 12. Projection Contract
 
-- Define projection as a single pure function from world position, camera, and viewport to screen position.
+- Define projection as a single pure function with the shape `project(world_pos, camera, viewport) -> screen_pos`.
 - Keep projection free of side effects, masking, layering, and state mutation.
 - Route every world-to-screen conversion through the same implementation path.
+- Keep camera as a pure translation input and viewport as a pure crop input.
 
-## 13. Core Invariants
+## 13. Layering Contract
+
+- Keep layer order fixed, even if it is encoded numerically.
+- Do not allow dynamic layer reordering at runtime.
+- Treat the fixed order as the encoding of world, HUD, and overlay precedence.
+
+## 14. Core Invariants
 
 - Keep world-space resolution independent.
 - Keep HUD camera-independent and screen-attached.
@@ -169,10 +176,22 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Keep masks applied before composition is finalized.
 - Keep layer ordering fixed, even if it is encoded numerically.
 
-## 14. RenderState and Validation
+## 15. Determinism Scope
+
+- Treat world state, camera, viewport, and explicit animation time as the only valid inputs to frame determinism.
+- Treat resize as an input change that may alter screen projection but must not alter world attachment semantics.
+- Keep frame output repeatable when the input set is unchanged.
+
+## 16. RenderState and Validation
 
 - Define the required `RenderState` fields and their ownership lifecycle.
 - Keep `RenderState` constructed once per frame and treated as read-only by render layers.
 - Add measurable stabilization checks for identical buffer output, resize invariance, and zero-jitter projection behavior.
 - Expose instrumentation for projection output, masks, and layer boundaries when stabilizing scene work.
 - Define the hero rendering decision gate before vines work begins so the chafa-backed and cached-frame options are compared explicitly.
+
+## 17. Greenhouse Integration Contract
+
+- Model greenhouse as a `WorldMode` variant that reuses the same projection contract.
+- Keep greenhouse out of the HUD, overlay, and tab-chrome models.
+- Define how greenhouse interacts with `RenderState`, camera, and input without introducing a second projection path.

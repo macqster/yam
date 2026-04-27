@@ -19,6 +19,7 @@
 - clarified that every stabilization checkpoint in `TODO.md` must end with the scene matching the current presentation contract before the next phase starts
 - added a final TODO alignment rule so the backlog stays subordinate to `SCENE_MODEL.md` and `ARCHITECTURE.md` whenever the work order changes
 - archived the `todo_review.md` critique and promoted its strongest gaps into `TODO.md` as explicit projection, invariants, RenderState, validation, and hero decision-gate contracts
+- promoted archive ideas into `TODO.md` as explicit projection, layering, determinism, and greenhouse integration contracts
 
 ## 2026-04-23
 

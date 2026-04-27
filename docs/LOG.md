@@ -9,6 +9,7 @@
 - added `docs/REFERENCE_ARCHIVE.md` to catalog the `yam-rust_debugging_260424-2009_dump` notes as reference-only archive material
 - marked the archived dump notes as reference-only in `TODO.md` so the active backlog stays separate from historical context
 - added an archive-derived ideas section to `TODO.md` so the useful design patterns stay visible without collapsing the archive back into active work
+- added a concrete next-steps section to `TODO.md` for projection, invariance, and hero-rendering follow-up work
 
 ## 2026-04-23
 

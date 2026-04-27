@@ -96,3 +96,14 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Split debug into passive HUD telemetry and active overlay inspection.
 - Prefer renderer-owned or cached hero frame ownership if chafa-stream instability remains a problem.
 - Keep the bug taxonomy around as a basis for concrete tests and regression checks.
+
+## 11. Concrete Next Steps
+
+- Add or tighten tests for:
+  - resize invariance
+  - camera projection consistency
+  - anchor integrity
+  - rounding / jitter stability
+- Audit the current projection path for any remaining split responsibilities.
+- Decide whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
+- Use the bug taxonomy as a checklist for missing regression coverage.

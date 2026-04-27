@@ -29,7 +29,7 @@ No system should render itself outside that path.
 The scene is composed of these systems:
 
 - Hero
-- Ivy
+- Vines
 - Scaffold
 - Particles
 - UI
@@ -87,7 +87,7 @@ The scene must render in a fixed order:
 
 1. Background
 2. Scaffold
-3. Ivy
+3. Vines
 4. Hero
 5. Particles
 6. UI

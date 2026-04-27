@@ -6,6 +6,10 @@
 - Its current hero asset path, dimensions, offsets, and theme are intentional defaults for that tooling path, not placeholder values.
 - Changes here should be reflected in the tooling and the docs together.
 
+## Mental Model
+
+- `scene_config.json` is a tooling preset, not a Rust runtime source of truth.
+
 ## Authority
 
 - `scene_config.json` is authoritative for the visualizer / experimental tooling.

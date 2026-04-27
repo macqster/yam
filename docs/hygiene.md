@@ -17,3 +17,4 @@
 - "must" means an invariant, "should" means a recommendation, and "is" means a descriptive statement
 - if a concept appears in more than one active doc, one doc must be canonical and the others must link to it
 - any behavior change must update the owning contract doc in the same change
+- terminology is part of the contract surface; do not introduce synonyms for `world-space`, `screen-space`, `vines`, or `RenderState`

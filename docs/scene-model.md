@@ -9,6 +9,10 @@ This document defines the deterministic scene model that sits above ratatui.
 - HUD elements must not use world-space projection.
 - The conceptual layer order in this file is the source of truth for scene categories.
 
+## Change Impact
+
+- If you change this, also review `docs/rendering.md`, `docs/architecture.md`, and the projection-related tests.
+
 ## Purpose
 
 The scene is the single source of truth for everything visible on screen.

@@ -122,6 +122,7 @@ This file is append-only and historical only; current rules live in the active d
 - removed the last open-ended hero migration phrasing from `TODO.md` so the backlog matches the current chafa-backed baseline
 - tightened the docs hierarchy by moving archive entry points out of the active index and trimming backlog/archive digest text from `TODO.md`
 - added explicit config authority wording, a repo hygiene behavior-change rule, environment assumptions, and a layer-order assertion for the active renderer
+- added change-impact hints to the active contract docs, a deterministic full-frame render check, and a terminology guardrail in hygiene
 
 ## Log Rules
 

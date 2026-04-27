@@ -192,6 +192,21 @@ mod tests {
     use super::*;
     use crate::scene::coords::world_to_screen;
     use crate::ui::state::UiState;
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    // invariant: docs/scene-model.md#projection
+    fn buffer_hash(buffer: &ratatui::buffer::Buffer) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        buffer.area.hash(&mut hasher);
+        for cell in &buffer.content {
+            cell.symbol().hash(&mut hasher);
+            cell.style().hash(&mut hasher);
+        }
+        hasher.finish()
+    }
 
     #[test]
     fn render_state_world_facts_stay_stable_across_resize() {
@@ -328,6 +343,29 @@ mod tests {
         let z_indices: Vec<i32> = layers.iter().map(|layer| layer.z_index()).collect();
 
         assert_eq!(z_indices, vec![0, 10, 100, 300, 1000]);
+    }
+
+    #[test]
+    fn full_frame_render_is_deterministic_for_identical_inputs() {
+        let backend = TestBackend::new(132, 36);
+        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
+        let world = crate::core::world::WorldState::new();
+        let ui = UiState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+
+        terminal
+            .draw(|frame| render_scene(frame, &world, &ui, &fonts))
+            .expect("first frame should render");
+        let first = buffer_hash(terminal.backend().buffer());
+
+        terminal
+            .draw(|frame| render_scene(frame, &world, &ui, &fonts))
+            .expect("second frame should render");
+        let second = buffer_hash(terminal.backend().buffer());
+
+        assert_eq!(terminal.backend().buffer().area.width, 132);
+        assert_eq!(terminal.backend().buffer().area.height, 36);
+        assert_eq!(first, second);
     }
 
     #[test]

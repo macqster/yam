@@ -6,6 +6,10 @@
 - Debug border geometry is world-space data projected through the active camera.
 - Hero frames must be fixed size before render.
 
+## Change Impact
+
+- If you change this, also review `docs/scene-model.md`, `docs/architecture.md`, and the frame-rendering tests.
+
 Ratatui is an immediate-mode renderer.
 Every frame is rebuilt from state and emitted as a complete terminal grid.
 
@@ -99,3 +103,8 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 - Legacy helper functions remain in `src/render/hero.rs`, but the active scene path uses layer grids and `LayerOutput`.
 - Fullscreen lock should remain a structural invariant: the code should treat fullscreen as an immovable, datum-centered crop, not just a larger windowed viewport.
+
+## Known Gaps
+
+- Masking is limited to the probe behavior described above.
+- There is no generalized scene-wide mask pipeline yet.

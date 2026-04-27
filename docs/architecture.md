@@ -5,6 +5,10 @@
 - Ownership and data flow belong here, not in scene-model, rendering, TODO, or archive docs.
 - `RenderState` is built once per frame and then treated as read-only.
 
+## Change Impact
+
+- If you change this, also review `docs/scene-model.md`, `docs/rendering.md`, and the `RenderState` tests.
+
 ## Core Rules
 
 - `core/` - data only, no UI, no terminal, no rendering

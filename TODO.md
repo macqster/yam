@@ -159,6 +159,6 @@ This file is the repo-wide work order and stabilization checklist.
 
 - Keep projection details in `docs/scene-model.md` and `docs/rendering.md`.
 - Keep layering and `RenderState` ownership details in `docs/architecture.md` and `docs/rendering.md`.
-- Keep invariants and determinism wording in `docs/scene-model.md`.
+- Keep invariants and determinism checks referenced from `docs/scene-model.md`.
 - Keep greenhouse integration rules in `docs/scene-model.md`.
 - Keep render-time validation goals in the active backlog here, but do not duplicate the contract text itself.

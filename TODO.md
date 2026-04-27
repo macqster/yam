@@ -93,6 +93,15 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Border probe remains a world-border indicator, not a second UI system.
 - `RenderState` remains read-only and shared by the layers that need it.
 
+### 5.4 Main Scene Vines Checklist
+
+- Add vines only after the scene is stable under resize.
+- Keep vines as world-attached scene content, not HUD or overlay chrome.
+- Reuse the single projection path and the shared `RenderState` contract.
+- Keep vine layering deterministic relative to scaffold, hero, and background.
+- Preserve collision / masking rules so vines do not reintroduce geometry drift.
+- Stop vine work if it starts to destabilize the hero or footer contracts.
+
 ## 6. Ratatui Research Follow-Ups
 
 - Keep evaluating layout vs `SceneLayout` mapping.

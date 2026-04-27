@@ -15,6 +15,7 @@
 - added a main scene stabilisation checklist to `TODO.md` covering singular projection, world/HUD boundaries, and resize invariance before hero work resumes
 - added a hero GIF checklist to `TODO.md` that keeps frame ownership, geometry stability, and cached rendering decisions explicit before the vines phase
 - added explicit main scene stabilisation exit criteria to `TODO.md` so resize, camera, footer, and border-probe behavior have a hard checkpoint before hero or vines work continues
+- added a main scene vines checklist to `TODO.md` that keeps vine work world-attached and constrained by the same projection and masking rules as the rest of the scene
 
 ## 2026-04-23
 

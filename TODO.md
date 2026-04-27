@@ -84,6 +84,15 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Check that the footer row, debug overlay, and border probe still obey the presentation contract.
 - Do not advance to hero gif work until the scene is stable and deterministic under resize.
 
+### 5.3 Main Scene Stabilisation Exit Criteria
+
+- Resize does not change world attachment semantics.
+- Camera changes do not produce multiple projection meanings.
+- Footer stays on the bottom HUD row with deterministic truncation.
+- Debug telemetry matches visible placement.
+- Border probe remains a world-border indicator, not a second UI system.
+- `RenderState` remains read-only and shared by the layers that need it.
+
 ## 6. Ratatui Research Follow-Ups
 
 - Keep evaluating layout vs `SceneLayout` mapping.

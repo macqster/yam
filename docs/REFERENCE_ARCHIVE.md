@@ -32,5 +32,4 @@ but they are not the active source of truth for implementation work.
 
 - Read these files when you need historical context or to recover a design rationale.
 - Do not treat them as active TODO items unless the working docs explicitly pull them forward.
-- Prefer `SCENE_MODEL.md`, `ARCHITECTURE.md`, `TODO.md`, and `LOG.md` for current work.
-
+- Prefer `scene-model.md`, `architecture.md`, `TODO.md`, and `LOG.md` for current work.

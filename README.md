@@ -32,5 +32,5 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 
 - run `scripts/check.sh` before committing
 - `cargo clippy -- -D warnings` must pass without warnings
-- keep the render order contract in `docs/RENDERING.md`
+- keep the render order contract in `docs/rendering.md`
 - start with `docs/README.md` when you need the docs map

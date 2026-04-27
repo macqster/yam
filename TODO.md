@@ -4,7 +4,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
 
 ## 1. Scene Model and Presentation Contract
 
-- Keep `docs/SCENE_MODEL.md` and `docs/ARCHITECTURE.md` as the source of truth for world, HUD, and overlay behavior.
+- Keep `docs/scene-model.md` and `docs/architecture.md` as the source of truth for world, HUD, and overlay behavior.
 - Keep projection defined in one place only.
 - Preserve the deterministic frame pipeline:
   - update state
@@ -153,7 +153,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Audit the current projection path for any remaining split responsibilities.
 - Decide whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
 - Use the bug taxonomy as a checklist for missing regression coverage.
-- Keep `TODO.md` aligned with `docs/SCENE_MODEL.md` and `docs/ARCHITECTURE.md` whenever the work-order sequence changes.
+- Keep `TODO.md` aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.
 
 ## 12. Projection Contract
 

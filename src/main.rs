@@ -41,3 +41,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     runtime::run()
 }
+
+#[cfg(test)]
+mod tests {
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct SceneConfig {
+        clock_font_name: String,
+        day_format: String,
+        gif_path: String,
+        hero_anchor: String,
+        hero_width: i32,
+        hero_height: i32,
+        hero_offset_x: i32,
+        hero_offset_y: i32,
+        clock_format: String,
+        theme_name: String,
+    }
+
+    #[test]
+    fn scene_config_matches_the_current_runtime_defaults() {
+        let config: SceneConfig = serde_json::from_str(include_str!("../scene_config.json"))
+            .expect("scene_config.json should be valid JSON");
+
+        assert_eq!(config.clock_font_name, "Fender");
+        assert_eq!(config.day_format, "%A, %d %B");
+        assert_eq!(config.clock_format, "%H:%M");
+        assert_eq!(config.gif_path, "hero/assets/hero_go.gif");
+        assert_eq!(config.hero_anchor, "left");
+        assert_eq!(config.hero_width, 10);
+        assert_eq!(config.hero_height, 6);
+        assert_eq!(config.hero_offset_x, 0);
+        assert_eq!(config.hero_offset_y, 0);
+        assert_eq!(config.theme_name, "btas_dark_deco");
+    }
+}

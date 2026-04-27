@@ -4,9 +4,9 @@ This file is the repo-wide work order and stabilization checklist.
 
 ## 1. Scene Model and Presentation Contract
 
-- Keep `docs/scene-model.md` and `docs/architecture.md` as the source of truth for world, HUD, and overlay behavior.
-- Keep projection defined in one place only.
-- Preserve the deterministic frame pipeline:
+- [verify] `docs/scene-model.md` and `docs/architecture.md` remain the source of truth for world, HUD, and overlay behavior.
+- [verify] projection remains defined in one place only.
+- [verify] the deterministic frame pipeline remains:
   - update state
   - generate primitives
   - apply masks
@@ -14,151 +14,127 @@ This file is the repo-wide work order and stabilization checklist.
   - sort into layers
   - compose frame buffer
   - render through ratatui
-- Keep world-space, screen-space, and anchor-space distinct in code.
-- Keep HUD attached to the terminal frame and overlays modal/top-z-index.
-- Treat the terminal as a framebuffer, not a panel dashboard.
+- [verify] world-space, screen-space, and anchor-space remain distinct in code.
+- [verify] HUD stays attached to the terminal frame and overlays stay modal/top-z-index.
+- [verify] the terminal is treated as a framebuffer, not a panel dashboard.
 
 ## 2. Greenhouse / World Modes
 
-- Model greenhouse as a separate world mode, not as panel chrome.
-- Keep room selection internal to the world model.
-- Avoid side-by-side tab UI as the primary greenhouse architecture.
-- Define how `WorldMode::Main` and `WorldMode::Greenhouse` interact with camera and input.
+- [verify] greenhouse remains a separate world mode, not panel chrome.
+- [verify] room selection stays internal to the world model.
+- [verify] side-by-side tab UI is not the primary greenhouse architecture.
+- [verify] `WorldMode::Main` and `WorldMode::Greenhouse` interaction with camera and input stays defined.
 
 ## 3. Footer, HUD, and Debug
 
-- Keep footer layout deterministic with left / center / right zones.
-- Preserve truncation rules:
+- [verify] footer layout remains deterministic with left / center / right zones.
+- [verify] truncation rules remain:
   - center collapses first
   - right indicators survive longest
   - no wrapping
-- Keep debug split into passive HUD info and active overlay inspection.
-- Keep scrollbars as viewport indicators, not widget chrome.
-- Make sure hotkey visibility and hotkey behavior remain separate concerns.
-- Keep passive debug in HUD and modal inspection in overlay.
+- [verify] debug stays split into passive HUD info and active overlay inspection.
+- [verify] scrollbars stay viewport indicators, not widget chrome.
+- [verify] hotkey visibility and hotkey behavior stay separate concerns.
+- [verify] passive debug stays in HUD and modal inspection stays in overlay.
 
 ## 4. Hero GIF Rendering
 
-- Move hero rendering toward stable, renderer-owned frame ownership.
-- Prefer precomputed or cached frame grids over streamed ANSI output.
-- Reduce color instability caused by per-frame quantization.
-- Reduce geometry drift by avoiding per-frame glyph remapping where possible.
-- Keep a distinct “hero frame representation” concept in the renderer.
-- Investigate whether a cached frame bake or internal grid renderer should replace the current chafa-heavy path.
+- [verify] hero rendering stays stable and renderer-owned.
+- [verify] precomputed or cached frame grids stay preferred over streamed ANSI output.
+- [verify] color instability caused by per-frame quantization stays minimized.
+- [verify] geometry drift from per-frame glyph remapping stays minimized.
+- [verify] the renderer keeps a distinct “hero frame representation” concept.
+- [verify] cached-frame or internal grid migration is revisited only if the chafa-backed baseline fails stabilization checkpoints again.
 
 ### 4.1 Hero GIF Checklist
 
-- Keep hero frames fixed-size before render.
-- Keep hero frame ownership inside the renderer, not in ad hoc terminal output.
-- Preserve the full-canvas / flattened-frame geometry contract for partial GIF frames.
-- Avoid changing color mapping per frame unless a stable cache is used.
-- Keep hero rendering deterministic across resize and scene stabilisation checkpoints.
-- Decide whether the hero path should stay chafa-backed or move toward cached frame ownership before starting vines.
+- [verify] hero frames stay fixed-size before render.
+- [verify] hero frame ownership stays inside the renderer, not in ad hoc terminal output.
+- [verify] the full-canvas / flattened-frame geometry contract holds for partial GIF frames.
+- [verify] color mapping does not change per frame unless a stable cache is used.
+- [verify] hero rendering stays deterministic across resize and scene stabilisation checkpoints.
+- [verify] `scene_config.json` stays aligned with the active hero asset and footprint defaults that the runtime currently expects.
+- [verify] hero rendering uses the chafa-backed baseline unless a measured regression justifies cached-frame migration.
 
 ## 5. Implementation Order
 
-- Keep the implementation order explicit:
+- [verify] the implementation order remains explicit:
   1. ui
   2. main scene stabilisation
   3. hero gif
   4. main scene stabilisation
   5. main scene vines
   6. main scene stabilisation
-- Treat each stabilization step as a hard checkpoint before moving on.
-- Stop any pass when the scene is not clean, flicker-free, and layout-stable.
-- Each stabilization checkpoint must end with the scene matching the current presentation contract before the next phase starts.
+- [verify] each stabilization step remains a hard checkpoint before moving on.
+- [verify] passes stop when the scene is not clean, flicker-free, and layout-stable.
+- [verify] each stabilization checkpoint ends with the scene matching the current presentation contract before the next phase starts.
 
 ### 5.1 UI Phase Checklist
 
-- Audit the current UI split so `ui/` remains runtime UI state and screen-space widgets only.
-- Keep world-state mutation out of UI widgets.
-- Keep camera/viewport ownership in the projection path, not in UI widgets.
-- Keep footer, HUD, and overlay responsibilities explicit before changing scene code.
-- Make sure the UI phase does not reintroduce panel-style layout as the primary model.
+- [verify] `ui/` remains runtime UI state and screen-space widgets only.
+- [verify] world-state mutation stays out of UI widgets.
+- [verify] camera/viewport ownership stays in the projection path, not in UI widgets.
+- [verify] footer, HUD, and overlay responsibilities stay explicit before changing scene code.
+- [verify] the UI phase does not reintroduce panel-style layout as the primary model.
 
 ### 5.2 Main Scene Stabilisation Checklist
 
-- Confirm projection stays singular and lives in one path only.
-- Verify world-ui remains world-pinned and hud-ui remains screen-attached.
-- Add or tighten invariance coverage for resize, camera, anchor, and rounding behavior.
-- Keep `RenderState` as the shared per-frame contract for world and HUD facts.
-- Check that the footer row, debug overlay, and border probe still obey the presentation contract.
-- Do not advance to hero gif work until the scene is stable and deterministic under resize.
+- [verify] projection stays singular and lives in one path only.
+- [verify] world-ui remains world-pinned and hud-ui remains screen-attached.
+- [verify] resize, camera, anchor, and rounding invariance coverage stays tight.
+- [verify] `RenderState` remains the shared per-frame contract for world and HUD facts.
+- [verify] the footer row, debug overlay, and border probe obey the presentation contract.
+- [verify] hero gif work does not advance until the scene is stable and deterministic under resize.
 
 ### 5.3 Main Scene Stabilisation Exit Criteria
 
-- Resize does not change world attachment semantics.
-- Camera changes do not produce multiple projection meanings.
-- Footer stays on the bottom HUD row with deterministic truncation.
-- Debug telemetry matches visible placement.
-- Border probe remains a world-border indicator, not a second UI system.
-- `RenderState` remains read-only and shared by the layers that need it.
+- [verify] resize does not change world attachment semantics.
+- [verify] camera changes do not produce multiple projection meanings.
+- [verify] footer stays on the bottom HUD row with deterministic truncation.
+- [verify] debug telemetry matches visible placement.
+- [verify] border probe remains a world-border indicator, not a second UI system.
+- [verify] `RenderState` remains read-only and shared by the layers that need it.
 
 ### 5.4 Main Scene Vines Checklist
 
-- Add vines only after the scene is stable under resize.
-- Keep vines as world-attached scene content, not HUD or overlay chrome.
-- Reuse the single projection path and the shared `RenderState` contract.
-- Keep vine layering deterministic relative to scaffold, hero, and background.
-- Preserve collision / masking rules so vines do not reintroduce geometry drift.
-- Stop vine work if it starts to destabilize the hero or footer contracts.
+- [verify] vines are added only after the scene is stable under resize.
+- [verify] vines remain world-attached scene content, not HUD or overlay chrome.
+- [verify] vines reuse the single projection path and the shared `RenderState` contract.
+- [verify] vine layering remains deterministic relative to scaffold, hero, and background.
+- [verify] collision / masking rules prevent vine geometry drift.
+- [verify] vine work stops if it destabilizes the hero or footer contracts.
 
 ## 6. Ratatui Research Follow-Ups
 
-- Keep evaluating layout vs `SceneLayout` mapping.
-- Keep reviewing event/focus patterns from ratatui ecosystem crates only when they solve a concrete problem.
-- Keep `Canvas`, popup, tabs, scrollbar, and widget research tied to actual scene needs.
-- Prefer research that preserves the world/HUD/overlay split and single projection contract.
+- [verify] layout vs `SceneLayout` mapping remains evaluated.
+- [verify] event/focus patterns from ratatui ecosystem crates are reviewed only when they solve a concrete problem.
+- [verify] `Canvas`, popup, tabs, scrollbar, and widget research stays tied to actual scene needs.
+- [verify] research preserves the world/HUD/overlay split and single projection contract.
 
 ## 7. Contract Debt To Avoid Reintroducing
 
-- Do not reintroduce mixed camera semantics.
-- Do not split projection across multiple code paths.
-- Do not let HUD content inherit world motion.
-- Do not let world content become screen-fixed by accident.
-- Do not treat masking as “empty pixels”.
-- Do not render inside logic systems.
+- [verify] mixed camera semantics are not reintroduced.
+- [verify] projection is not split across multiple code paths.
+- [verify] HUD content does not inherit world motion.
+- [verify] world content does not become screen-fixed by accident.
+- [verify] masking is not treated as “empty pixels”.
+- [verify] rendering does not happen inside logic systems.
 
-## 8. Notes Ingested
+## 8. Concrete Next Steps
 
-- `new/01_yam-rust_ui_concepting.md`
-- `new/02_scene_and_layer_model.md`
-- `new/yam-rust_hero_gif_render_concepts.md`
-- `new/yam-rust_to-do.md`
-- `new/yam-rust_ui_architecture_concepting.md`
-
-## 9. Reference Archive
-
-- Use `docs/REFERENCE_ARCHIVE.md` for the dump folder and other historical notes that are reference-only.
-- Do not move archived notes back into the active backlog unless the active docs explicitly promote them.
-
-## 10. Archive-Derived Ideas Worth Preserving
-
-- Keep the single projection gateway as a first-class implementation rule.
-- Add invariance tests for resize, camera, projection, anchor, and rounding behavior.
-- Prefer `ViewOrigin`-style translation semantics over ambiguous camera behavior if a simplification is needed.
-- Keep greenhouse as a world mode, not tabbed UI chrome.
-- Treat footer layout as deterministic truncation logic, not generic widget layout.
-- Split debug into passive HUD telemetry and active overlay inspection.
-- Prefer renderer-owned or cached hero frame ownership if chafa-stream instability remains a problem.
-- Keep the bug taxonomy around as a basis for concrete tests and regression checks.
-
-## 11. Concrete Next Steps
-
-- [verify] Add or tighten tests for:
+- [verify] add or tighten tests for:
   - resize invariance
   - camera projection consistency
   - anchor integrity
   - rounding / jitter stability
-- [inspect] Audit the current projection path for any remaining split responsibilities.
-- [decide] Determine whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
-- [verify] Use the bug taxonomy as a checklist for missing regression coverage.
-- Keep the active backlog aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.
+- [inspect] audit the current projection path for any remaining split responsibilities.
+- [verify] use the bug taxonomy as a checklist for missing regression coverage.
+- [verify] the active backlog stays aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.
 
-## 12. Contract Pointers
+## 9. Contract Pointers
 
-- Keep projection details in `docs/scene-model.md` and `docs/rendering.md`.
-- Keep layering and `RenderState` ownership details in `docs/architecture.md` and `docs/rendering.md`.
-- Keep invariants and determinism checks referenced from `docs/scene-model.md`.
-- Keep greenhouse integration rules in `docs/scene-model.md`.
-- Keep render-time validation goals in the active backlog here, but do not duplicate the contract text itself.
+- [verify] projection details stay in `docs/scene-model.md` and `docs/rendering.md`.
+- [verify] layering and `RenderState` ownership details stay in `docs/architecture.md` and `docs/rendering.md`.
+- [verify] invariants and determinism checks stay referenced from `docs/scene-model.md`.
+- [verify] greenhouse integration rules stay in `docs/scene-model.md`.
+- [verify] render-time validation goals stay in the active backlog here without duplicating contract text.

@@ -40,4 +40,4 @@ The active work order lives in [`TODO.md`](TODO.md).
 
 - run `scripts/check.sh` before committing
 - `cargo clippy -- -D warnings` must pass without warnings
-- keep the render order contract in `docs/rendering.md`
+- keep active behavior contracts in the relevant docs under `docs/`

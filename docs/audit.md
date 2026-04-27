@@ -4,16 +4,10 @@ Date: 2026-04-27
 
 ## Unresolved Risks
 
-- [high] `scene_config.json` is active but still carries legacy-looking hero path and dimension values that should be reconciled or intentionally documented.
-  - evidence: `scene_config.json`, `docs/config.md`
-- [high] The hero path still needs a chafa-vs-cached-frame decision before vines work advances.
-  - evidence: `TODO.md`, `docs/rendering.md`
-- [medium] Projection and camera semantics still need stronger frame-level invariance coverage in code.
-  - evidence: `docs/architecture.md`, `docs/rendering.md`
-- [medium] `RenderState` still needs more explicit test coverage around resize and round-trip behavior.
-  - evidence: `TODO.md`, `docs/architecture.md`
-- [medium] The debug border and footer contracts still need to stay synchronized with the active render path.
-  - evidence: `docs/rendering.md`, `docs/architecture.md`
+- [medium] `scene_config.json` is active for tooling and should stay aligned with the tooling defaults if they change.
+  - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
+- [medium] Projection and camera semantics now have shared projection, resize round-trip, and viewport-origin helper tests.
+  - evidence: `docs/architecture.md`, `docs/rendering.md`, `src/render/render_state.rs`, `src/scene/mod.rs`
 
 ## Recently Resolved
 
@@ -21,6 +15,10 @@ Date: 2026-04-27
 - [resolved] `docs/architecture.md` now points at `scene-model.md`.
 - [resolved] `TODO.md` is restored as the active backlog at the root.
 - [resolved] The root docs have been separated into a front door, a real backlog, and a docs map.
+- [resolved] The debug border bounds are now directly tested and kept in sync with the footer row contract.
+- [resolved] The hero path is now explicitly documented as chafa-backed, with cached-frame ownership reserved for future migration if needed.
+- [resolved] `RenderState` now has resize, round-trip, and projection-helper coverage.
+- [resolved] The debug border contract now has a direct bounds test, and the footer/debug split remains documented in the active contracts.
 
 ## Deferred
 

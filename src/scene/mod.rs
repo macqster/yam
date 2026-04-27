@@ -261,6 +261,53 @@ mod tests {
     }
 
     #[test]
+    fn resize_round_trip_preserves_world_facts_and_windowed_camera_rules() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -200;
+        ui.offsets.camera_y = 200;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+
+        let windowed = Rect::new(0, 0, 124, 32);
+        let fullscreen = Rect::new(0, 0, 215, 57);
+
+        let windowed_state = build_render_state(windowed, &ui);
+        let fullscreen_state = build_render_state(fullscreen, &ui);
+        let round_tripped_state = build_render_state(windowed, &ui);
+
+        assert_eq!(
+            windowed_state.world.hero_world,
+            fullscreen_state.world.hero_world
+        );
+        assert_eq!(
+            windowed_state.world.hero_visual_anchor,
+            fullscreen_state.world.hero_visual_anchor
+        );
+        assert_eq!(
+            windowed_state.world.clock_world,
+            fullscreen_state.world.clock_world
+        );
+        assert_eq!(windowed_state.hud.camera.x, -107);
+        assert_eq!(windowed_state.hud.camera.y, -3);
+        assert_eq!(
+            fullscreen_state.hud.camera.x,
+            -(fullscreen.width as i32) / 2
+        );
+        assert_eq!(
+            fullscreen_state.hud.camera.y,
+            -(fullscreen.height as i32) / 2
+        );
+        assert_eq!(
+            round_tripped_state.hud.camera.x,
+            windowed_state.hud.camera.x
+        );
+        assert_eq!(
+            round_tripped_state.hud.camera.y,
+            windowed_state.hud.camera.y
+        );
+    }
+
+    #[test]
     fn windowed_camera_keeps_mutable_offset_inside_bounds() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = -77;

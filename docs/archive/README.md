@@ -19,5 +19,6 @@ This folder holds older reports and update notes that are kept for historical co
 
 ## Rule
 
-- Keep active contracts in `docs/scene-model.md`, `docs/architecture.md`, `TODO.md`, and `docs/LOG.md`.
+- Keep active contracts in `docs/scene-model.md`, `docs/architecture.md`, and `docs/rendering.md`.
+- Keep work order in `TODO.md` and factual history in `docs/LOG.md`.
 - Keep historical reports here unless they are explicitly promoted back into active docs.

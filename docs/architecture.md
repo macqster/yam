@@ -2,8 +2,7 @@
 
 ## Assertions
 
-- Ownership and data flow belong here, not in the contract or archive docs.
-- Projection must have a single explicit owner.
+- Ownership and data flow belong here, not in scene-model, rendering, TODO, or archive docs.
 - `RenderState` is built once per frame and then treated as read-only.
 
 ## Core Rules
@@ -37,7 +36,7 @@
 - `Scene` merges layer grids with `render::compositor::merge_grid`
 - `Scene` converts the final grid into ratatui `Line`s
 - ratatui receives one final `Paragraph` for the frame
-- scene rendering now uses the full terminal area for viewport and viewport-rect values; the earlier centered tiered viewport box is no longer used to place layers
+- scene rendering uses the full terminal area for viewport and viewport-rect values
 - the scene model contract lives in [`scene-model.md`](scene-model.md) and defines the deterministic layer/space/masking rules above ratatui
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 
@@ -90,7 +89,7 @@ The intended model is:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
 - the footer row is intentionally the bottom terminal row; `footer_row(height)` encodes that contract
-- projection is applied by the renderer using camera state; do not split world-to-screen conversion across world, HUD, and overlay code paths
+- projection is defined in `docs/scene-model.md` and applied by the renderer
 
 ## Hero Geometry Contract
 
@@ -105,11 +104,11 @@ The intended model is:
 - hud-ui should not inherit world coordinates directly; it should use viewport/screen positioning
 - the debug border probe is a datum-centered world-border indicator that is rendered in world space and therefore moves with camera panning
 
-The current implementation does not fully enforce that model yet. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
+The remaining architectural gap is that `coords::Space` is not yet the authoritative resolver for all placement paths. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 
 ## Known Architectural Debt
 
-- `Layer::render(...)` remains as a legacy API while `Layer::render_to_grid(...)` is the active path.
+- Historical `Layer::render(...)` references are archive-only; the active layer API is `Layer::render_to_grid(...)`.
 - Hero and clock layers read from the per-frame `RenderState`; on the active path they are world-pinned and do not move with camera projection.
 - `coords::Space` exists but is not yet the authoritative position resolver.
 - Masks are present but are still a probe, not a complete scene-wide occlusion policy.

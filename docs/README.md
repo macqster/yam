@@ -1,6 +1,6 @@
 # Documentation Index
 
-## Active
+## Active Docs
 
 - [`../README.md`](../README.md) - current repo and runtime overview
 - [`../TODO.md`](../TODO.md) - active backlog
@@ -12,15 +12,18 @@
 - [`rendering.md`](rendering.md) - render order contract
 - [`release-model.md`](release-model.md) - branch and release policy
 - [`config.md`](config.md) - scene config ownership note
-- [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
-- [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
-
 ## Notes
 
 - `docs/` is the active documentation surface.
 - `README.md` is the repo front door; `docs/README.md` is the docs map.
+- If unsure where to make a change, start here.
 - historical reconstruction notes were consolidated into the current docs set.
 - uppercase markdown filenames are reserved for the highest-visibility entry points; lower-case names are preferred for most active contracts and archive reports.
+
+## Archive Entry Points
+
+- [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
+- [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
 
 ## Where to Change Things
 

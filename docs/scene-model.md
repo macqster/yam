@@ -126,7 +126,7 @@ The higher-level presentation stack maps this as:
 
 ## Masking and Occlusion
 
-Masking is a first-class scene system.
+Masking is a first-class scene-model concept. The current renderer implements only the limited probe behavior described in [`rendering.md`](rendering.md).
 
 Types:
 

@@ -42,12 +42,7 @@ impl Layer for DebugLayer {
         let exclude_y1 = panel_y + panel_height + 2;
         // Datum-centered world-border probe:
         // the frame is defined in world space and projected through the current camera.
-        let left = -crate::scene::WORLD_HALF_W;
-        let right = crate::scene::WORLD_HALF_W - 1;
-        let top = crate::scene::WORLD_HALF_H - 1;
-        let bottom = -crate::scene::WORLD_HALF_H;
-        let mid_x = 0;
-        let mid_y = 0;
+        let border = border_probe_bounds();
 
         let mut draw_border_cell = |wx: i32, wy: i32, ch: char| {
             let screen = world_to_screen(WorldPos { x: wx, y: wy }, cam_x, cam_y);
@@ -67,22 +62,22 @@ impl Layer for DebugLayer {
             }
         };
 
-        for wx in left..=right {
-            let ch = if wx == left || wx == mid_x || wx == right {
+        for wx in border.left..=border.right {
+            let ch = if wx == border.left || wx == border.mid_x || wx == border.right {
                 '+'
             } else {
                 '-'
             };
-            draw_border_cell(wx, top, ch);
-            draw_border_cell(wx, mid_y, ch);
-            draw_border_cell(wx, bottom, ch);
+            draw_border_cell(wx, border.top, ch);
+            draw_border_cell(wx, border.mid_y, ch);
+            draw_border_cell(wx, border.bottom, ch);
         }
 
-        for wy in bottom + 1..top {
-            let ch = if wy == mid_y { '+' } else { '|' };
-            draw_border_cell(left, wy, ch);
-            draw_border_cell(mid_x, wy, ch);
-            draw_border_cell(right, wy, ch);
+        for wy in border.bottom + 1..border.top {
+            let ch = if wy == border.mid_y { '+' } else { '|' };
+            draw_border_cell(border.left, wy, ch);
+            draw_border_cell(border.mid_x, wy, ch);
+            draw_border_cell(border.right, wy, ch);
         }
 
         let hero = &ui.hero;
@@ -137,5 +132,46 @@ impl Layer for DebugLayer {
             );
         }
         LayerOutput { grid, mask: None }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct BorderProbeBounds {
+    left: i32,
+    right: i32,
+    top: i32,
+    bottom: i32,
+    mid_x: i32,
+    mid_y: i32,
+}
+
+fn border_probe_bounds() -> BorderProbeBounds {
+    BorderProbeBounds {
+        left: -crate::scene::WORLD_HALF_W,
+        right: crate::scene::WORLD_HALF_W - 1,
+        top: crate::scene::WORLD_HALF_H - 1,
+        bottom: -crate::scene::WORLD_HALF_H,
+        mid_x: 0,
+        mid_y: 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::border_probe_bounds;
+    use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
+
+    #[test]
+    fn border_probe_stays_datum_centered_with_one_cell_inset() {
+        let border = border_probe_bounds();
+
+        assert_eq!(border.left, -WORLD_HALF_W);
+        assert_eq!(border.right, WORLD_HALF_W - 1);
+        assert_eq!(border.top, WORLD_HALF_H - 1);
+        assert_eq!(border.bottom, -WORLD_HALF_H);
+        assert_eq!(border.mid_x, 0);
+        assert_eq!(border.mid_y, 0);
+        assert_eq!(border.top - border.bottom, crate::scene::WORLD_HEIGHT - 2);
+        assert_eq!(border.right - border.left, crate::scene::WORLD_WIDTH - 1);
     }
 }

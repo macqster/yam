@@ -62,7 +62,7 @@ The active implementation treats camera as a viewport crop helper:
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
 - the clock is world-ui: it follows the hero in world space and keeps its own relative offset
 - the footer/status bar is hud-ui: it is screen-attached and does not inherit world motion
-- the latest screenshot set confirms the distinction: world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
+- world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - fullscreen is a special case of the camera contract: when the viewport matches or exceeds the world extent, the visible crop should be static and centered on the world datum `(0, 0)`, even if debug controls still mutate the stored camera position
 - fullscreen lock is now exercised in `build_render_state(...)`: the stored camera can still move, but the frame uses a datum-centered crop whenever the terminal fully covers the world extent
 - `RenderState::clock_screen()` is the shared projected clock position used by both the clock layer and the debug overlay
@@ -79,7 +79,7 @@ Mask values use compositor semantics:
 - `true` means a top-layer write is allowed
 - `false` means a top-layer write is blocked
 
-Current mask behavior is intentionally limited. The hero layer can emit a silhouette mask, and the scene can apply that mask to the field layer as a verification probe. This is not yet a general occlusion system.
+Current mask behavior is intentionally limited. The hero layer can emit a silhouette mask, and the scene can apply that mask to the field layer as a verification probe.
 
 ## Text And Geometry Caveats
 
@@ -88,6 +88,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - GIF subimage frames are expanded and flattened onto an opaque full `820x820` logical canvas before chafa rendering so partial frames, including frames 15 and 30, cannot stretch vertically.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
+- Hero rendering uses the chafa-backed frame conversion path; cached-frame ownership remains a future migration option if measurable instability returns.
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
 - Clock attachment on the active path is world-pinned: the clock follows the hero in world space and keeps its own hero-relative offset. It does not inherit camera, viewport, or terminal motion directly.
@@ -96,7 +97,5 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 ## Current Risks
 
-- Camera math is not yet a single-source contract across hero, field, viewport, and debug border rendering.
-- The fullscreen lock rule is still behavioral rather than structural: the code should treat fullscreen as an immovable, datum-centered crop, not just a larger windowed viewport.
-- The active grid path coexists with legacy frame-render methods.
-- Debug/attachment values should be read through shared `RenderState` helpers when they need to match visible layer placement.
+- Legacy helper functions remain in `src/render/hero.rs`, but the active scene path uses layer grids and `LayerOutput`.
+- Fullscreen lock should remain a structural invariant: the code should treat fullscreen as an immovable, datum-centered crop, not just a larger windowed viewport.

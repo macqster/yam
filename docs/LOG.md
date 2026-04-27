@@ -112,6 +112,15 @@ This file is append-only and historical only; current rules live in the active d
 - added a regression test for full-canvas opaque hero frame geometry across partial GIF frames
 - hardened the active docs with explicit assertions, out-of-scope sections, and a docs-map "where to change things" guide so the contract docs are easier to keep single-purpose
 - sharpened the active docs with more testable assertions, stricter projection ownership wording, and verification tags in the backlog so the docs read more like guardrails than commentary
+- tightened the audit/config wording around `scene_config.json` and added a Rust regression test that pins the tracked defaults to the current runtime scene surface
+- added a shared `RenderState` projection consistency test and narrowed the audit wording for the remaining projection/camera risk
+- added a resize round-trip invariant at the frame-builder boundary and updated the audit to reflect the tighter projection/camera coverage
+- extracted the debug border probe bounds into a tested helper and downgraded the footer/debug sync risk in the audit
+- marked the debug border/footer sync risk resolved after adding a direct bounds test for the border probe helper
+- added a shared projection-helper test that checks hero and clock screen placement against the viewport origin
+- documented the hero path as the active chafa-backed baseline and removed the open decision-gate wording from the audit
+- removed the last open-ended hero migration phrasing from `TODO.md` so the backlog matches the current chafa-backed baseline
+- tightened the docs hierarchy by moving archive entry points out of the active index and trimming backlog/archive digest text from `TODO.md`
 
 ## Log Rules
 

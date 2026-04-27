@@ -175,12 +175,14 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Keep overlay modal and top-z above world and HUD.
 - Keep masks applied before composition is finalized.
 - Keep layer ordering fixed, even if it is encoded numerically.
+- Keep startup invariants explicit for world origin stability and camera default state.
 
 ## 15. Determinism Scope
 
 - Treat world state, camera, viewport, and explicit animation time as the only valid inputs to frame determinism.
 - Treat resize as an input change that may alter screen projection but must not alter world attachment semantics.
 - Keep frame output repeatable when the input set is unchanged.
+- Add round-trip consistency checks for projection where a reverse mapping is meaningful.
 
 ## 16. RenderState and Validation
 
@@ -189,6 +191,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Add measurable stabilization checks for identical buffer output, resize invariance, and zero-jitter projection behavior.
 - Expose instrumentation for projection output, masks, and layer boundaries when stabilizing scene work.
 - Define the hero rendering decision gate before vines work begins so the chafa-backed and cached-frame options are compared explicitly.
+- Keep validation focused on static-input determinism, resize spam, and frame repeatability under unchanged inputs.
 
 ## 17. Greenhouse Integration Contract
 

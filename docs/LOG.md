@@ -20,6 +20,7 @@
 - added a final TODO alignment rule so the backlog stays subordinate to `SCENE_MODEL.md` and `ARCHITECTURE.md` whenever the work order changes
 - archived the `todo_review.md` critique and promoted its strongest gaps into `TODO.md` as explicit projection, invariants, RenderState, validation, and hero decision-gate contracts
 - promoted archive ideas into `TODO.md` as explicit projection, layering, determinism, and greenhouse integration contracts
+- promoted archive stress-test ideas into `TODO.md` as startup invariants, projection round-trip checks, and static-input determinism validation
 
 ## 2026-04-23
 

@@ -66,6 +66,15 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Keep footer, HUD, and overlay responsibilities explicit before changing scene code.
 - Make sure the UI phase does not reintroduce panel-style layout as the primary model.
 
+### 5.2 Main Scene Stabilisation Checklist
+
+- Confirm projection stays singular and lives in one path only.
+- Verify world-ui remains world-pinned and hud-ui remains screen-attached.
+- Add or tighten invariance coverage for resize, camera, anchor, and rounding behavior.
+- Keep `RenderState` as the shared per-frame contract for world and HUD facts.
+- Check that the footer row, debug overlay, and border probe still obey the presentation contract.
+- Do not advance to hero gif work until the scene is stable and deterministic under resize.
+
 ## 6. Ratatui Research Follow-Ups
 
 - Keep evaluating layout vs `SceneLayout` mapping.

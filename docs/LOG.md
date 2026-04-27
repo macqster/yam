@@ -12,6 +12,7 @@
 - added a concrete next-steps section to `TODO.md` for projection, invariance, and hero-rendering follow-up work
 - replaced the TODO implementation order with the explicit work order: ui -> main scene stabilisation -> hero gif -> main scene stabilisation -> main scene vines -> main scene stabilisation
 - expanded the `ui` phase in `TODO.md` with a checklist that keeps projection ownership, world-state boundaries, and footer/HUD/overlay responsibilities explicit
+- added a main scene stabilisation checklist to `TODO.md` covering singular projection, world/HUD boundaries, and resize invariance before hero work resumes
 
 ## 2026-04-23
 

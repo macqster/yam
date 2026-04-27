@@ -16,3 +16,4 @@
 - use uppercase markdown filenames only for front-door docs or similarly high-visibility entry points; prefer lower-case names for routine contracts and archive notes
 - "must" means an invariant, "should" means a recommendation, and "is" means a descriptive statement
 - if a concept appears in more than one active doc, one doc must be canonical and the others must link to it
+- any behavior change must update the owning contract doc in the same change

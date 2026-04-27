@@ -36,6 +36,12 @@ The active work order lives in [`TODO.md`](TODO.md).
 - reserve uppercase markdown filenames for the repo front door and other high-visibility entry points
 - use `docs/README.md` when you need the docs map
 
+## Environment Assumptions
+
+- Terminal support for UTF-8 braille characters is required for hero rendering.
+- Full color output is recommended.
+- The app is tested primarily in Kitty and similar terminals.
+
 ## Maintenance
 
 - run `scripts/check.sh` before committing

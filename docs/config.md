@@ -10,6 +10,7 @@
 
 - `scene_config.json` is authoritative for the visualizer / experimental tooling.
 - `scene_config.json` is not authoritative for the Rust renderer under `src/render/*`.
+- Hero rendering fields in `scene_config.json` are ignored by the Rust renderer and only matter to the tooling path.
 
 This note owns the active, repo-tracked default scene configuration for the visualizer / experimental tooling path.
 

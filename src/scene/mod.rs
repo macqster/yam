@@ -323,6 +323,14 @@ mod tests {
     }
 
     #[test]
+    fn active_layer_z_indices_remain_sorted_by_presentation_order() {
+        let layers = build_ui_layers();
+        let z_indices: Vec<i32> = layers.iter().map(|layer| layer.z_index()).collect();
+
+        assert_eq!(z_indices, vec![0, 10, 100, 300, 1000]);
+    }
+
+    #[test]
     fn clock_screen_uses_active_render_state_projection() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = 30;

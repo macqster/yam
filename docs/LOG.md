@@ -121,6 +121,7 @@ This file is append-only and historical only; current rules live in the active d
 - documented the hero path as the active chafa-backed baseline and removed the open decision-gate wording from the audit
 - removed the last open-ended hero migration phrasing from `TODO.md` so the backlog matches the current chafa-backed baseline
 - tightened the docs hierarchy by moving archive entry points out of the active index and trimming backlog/archive digest text from `TODO.md`
+- added explicit config authority wording, a repo hygiene behavior-change rule, environment assumptions, and a layer-order assertion for the active renderer
 
 ## Log Rules
 

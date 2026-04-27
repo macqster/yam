@@ -11,6 +11,7 @@
 - [`architecture.md`](architecture.md) - implementation architecture contract
 - [`rendering.md`](rendering.md) - render order contract
 - [`release-model.md`](release-model.md) - branch and release policy
+- [`config.md`](config.md) - scene config ownership note
 - [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
 - [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
 

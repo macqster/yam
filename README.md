@@ -15,6 +15,7 @@ This repository contains the active Rust runtime tree for YAM-Rust.
 - [`docs/architecture.md`](docs/architecture.md) - architecture contract
 - [`docs/rendering.md`](docs/rendering.md) - render order contract
 - [`docs/audit.md`](docs/audit.md) - current repo audit
+- [`docs/config.md`](docs/config.md) - scene config ownership note
 - [`docs/archive/README.md`](docs/archive/README.md) - historical reports and reviews
 
 ## Runtime

@@ -11,8 +11,6 @@
 - [`architecture.md`](architecture.md) - implementation architecture contract
 - [`rendering.md`](rendering.md) - render order contract
 - [`release-model.md`](release-model.md) - branch and release policy
-- [`flattening-plan.md`](flattening-plan.md) - historical flattening note
-- [`version-map.md`](version-map.md) - runtime/version mapping note
 - [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
 - [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
 
@@ -22,3 +20,8 @@
 - `README.md` is the repo front door; `docs/README.md` is the docs map.
 - historical reconstruction notes were consolidated into the current docs set.
 - uppercase markdown filenames are reserved for the highest-visibility entry points; lower-case names are preferred for most active contracts and archive reports.
+
+## Archive Notes
+
+- [`archive/notes/flattening-plan.md`](archive/notes/flattening-plan.md) - completed flattening note
+- [`archive/notes/version-map.md`](archive/notes/version-map.md) - runtime/version mapping note

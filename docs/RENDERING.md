@@ -51,7 +51,7 @@ The active implementation treats camera as a viewport crop helper:
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
 - windowed camera movement is clamped in runtime state and in `build_render_state(...)` so the visible crop can overscan the world border/frame by at most one cell on any edge
 - the default `124x32` windowed start uses camera `(-69, -17)`
-- debug border sampling is a datum-centered screen-stable probe, not a camera-driven crop
+- debug border sampling is a datum-centered world-space probe that is projected through the active camera; it is not HUD chrome
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
 - the clock is world-ui: it follows the hero in world space and keeps its own relative offset

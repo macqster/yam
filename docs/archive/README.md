@@ -12,6 +12,11 @@ This folder holds older reports and update notes that are kept for historical co
 - [`reports/DEBUG_RESEARCH_INGEST_2026-04-24.md`](reports/DEBUG_RESEARCH_INGEST_2026-04-24.md)
 - [`todo_review.md`](todo_review.md)
 
+## Notes
+
+- [`notes/flattening-plan.md`](notes/flattening-plan.md)
+- [`notes/version-map.md`](notes/version-map.md)
+
 ## Rule
 
 - Keep active contracts in `docs/scene-model.md`, `docs/architecture.md`, `TODO.md`, and `docs/LOG.md`.

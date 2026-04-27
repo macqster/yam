@@ -155,46 +155,10 @@ This file is the repo-wide work order and stabilization checklist.
 - Use the bug taxonomy as a checklist for missing regression coverage.
 - Keep the active backlog aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.
 
-## 12. Projection Contract
+## 12. Contract Pointers
 
-- Define projection as a single pure function with the shape `project(world_pos, camera, viewport) -> screen_pos`.
-- Keep projection free of side effects, masking, layering, and state mutation.
-- Route every world-to-screen conversion through the same implementation path.
-- Keep camera as a pure translation input and viewport as a pure crop input.
-
-## 13. Layering Contract
-
-- Keep layer order fixed, even if it is encoded numerically.
-- Do not allow dynamic layer reordering at runtime.
-- Treat the fixed order as the encoding of world, HUD, and overlay precedence.
-
-## 14. Core Invariants
-
-- Keep world-space resolution independent.
-- Keep HUD camera-independent and screen-attached.
-- Keep overlay modal and top-z above world and HUD.
-- Keep masks applied before composition is finalized.
-- Keep layer ordering fixed, even if it is encoded numerically.
-- Keep startup invariants explicit for world origin stability and camera default state.
-
-## 15. Determinism Scope
-
-- Treat world state, camera, viewport, and explicit animation time as the only valid inputs to frame determinism.
-- Treat resize as an input change that may alter screen projection but must not alter world attachment semantics.
-- Keep frame output repeatable when the input set is unchanged.
-- Add round-trip consistency checks for projection where a reverse mapping is meaningful.
-
-## 16. RenderState and Validation
-
-- Define the required `RenderState` fields and their ownership lifecycle.
-- Keep `RenderState` constructed once per frame and treated as read-only by render layers.
-- Add measurable stabilization checks for identical buffer output, resize invariance, and zero-jitter projection behavior.
-- Expose instrumentation for projection output, masks, and layer boundaries when stabilizing scene work.
-- Define the hero rendering decision gate before vines work begins so the chafa-backed and cached-frame options are compared explicitly.
-- Keep validation focused on static-input determinism, resize spam, and frame repeatability under unchanged inputs.
-
-## 17. Greenhouse Integration Contract
-
-- Model greenhouse as a `WorldMode` variant that reuses the same projection contract.
-- Keep greenhouse out of the HUD, overlay, and tab-chrome models.
-- Define how greenhouse interacts with `RenderState`, camera, and input without introducing a second projection path.
+- Keep projection details in `docs/scene-model.md` and `docs/rendering.md`.
+- Keep layering and `RenderState` ownership details in `docs/architecture.md` and `docs/rendering.md`.
+- Keep invariants and determinism wording in `docs/scene-model.md`.
+- Keep greenhouse integration rules in `docs/scene-model.md`.
+- Keep render-time validation goals in the active backlog here, but do not duplicate the contract text itself.

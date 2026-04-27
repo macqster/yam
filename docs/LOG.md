@@ -29,6 +29,7 @@
 - flattened the root `README.md` into the master repo doc so it now owns the active backlog and working guidance while `TODO.md` and `NOTES.md` act as compatibility pointers
 - removed the root `TODO.md` and `NOTES.md` stubs after folding their useful content into the master `README.md`
 - restored `TODO.md` as the active backlog, trimmed `README.md` back toward a front door, and repaired stale docs links to the lowercase contract filenames
+- rewrote `docs/audit.md` into a current risk snapshot, trimmed `TODO.md` back to backlog pointers, and archived the completed flattening/version-map notes
 
 ## 2026-04-23
 

@@ -66,6 +66,7 @@ This file compiles the open work captured in the recent `new/` concept notes and
   6. main scene stabilisation
 - Treat each stabilization step as a hard checkpoint before moving on.
 - Stop any pass when the scene is not clean, flicker-free, and layout-stable.
+- Each stabilization checkpoint must end with the scene matching the current presentation contract before the next phase starts.
 
 ### 5.1 UI Phase Checklist
 

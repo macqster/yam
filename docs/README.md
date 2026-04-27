@@ -8,6 +8,7 @@
 - [`AUDIT.md`](AUDIT.md) - current repo audit
 - [`SCENE_MODEL.md`](SCENE_MODEL.md) - deterministic scene model above ratatui
 - [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
+- [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
 
 ## Notes
 

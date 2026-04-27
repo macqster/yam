@@ -21,6 +21,7 @@
 - archived the `todo_review.md` critique and promoted its strongest gaps into `TODO.md` as explicit projection, invariants, RenderState, validation, and hero decision-gate contracts
 - promoted archive ideas into `TODO.md` as explicit projection, layering, determinism, and greenhouse integration contracts
 - promoted archive stress-test ideas into `TODO.md` as startup invariants, projection round-trip checks, and static-input determinism validation
+- moved dated audit/update/issue reports into `docs/archive/reports/` and added an archive index so active docs stay contract-focused
 
 ## 2026-04-23
 

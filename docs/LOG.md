@@ -24,6 +24,7 @@
 - moved dated audit/update/issue reports into `docs/archive/reports/` and added an archive index so active docs stay contract-focused
 - demoted `NOTES.md` into a short working-notes file and archived the old `DOTFILES_MIGRATION.md` report with the other dated docs
 - clarified the front-door docs split: root `README.md` for orientation, `docs/README.md` for navigation, and `NOTES.md` for non-authoritative working notes
+- documented the filename convention that reserves uppercase markdown names for high-visibility entry points and prefers lower-case names for routine docs
 
 ## 2026-04-23
 

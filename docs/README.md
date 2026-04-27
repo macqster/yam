@@ -15,3 +15,4 @@
 - `docs/` is the active documentation surface.
 - `README.md` is the repo front door; `docs/README.md` is the docs map.
 - historical reconstruction notes were consolidated into the current docs set.
+- uppercase markdown filenames are reserved for the highest-visibility entry points; lower-case names are preferred for most active contracts and archive reports.

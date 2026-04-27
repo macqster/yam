@@ -26,6 +26,7 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 - keep changes logged in `docs/LOG.md`
 - keep build output out of the repository
 - avoid reintroducing old runtime artifacts unless explicitly needed
+- reserve uppercase markdown filenames for the repo front door and other high-visibility entry points
 
 ## Maintenance
 

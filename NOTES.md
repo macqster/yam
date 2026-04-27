@@ -8,6 +8,7 @@ Working notes for repo/runtime sync. This file is not the docs index and not the
 - Treat installed copies under `~/.config` and `~/.local` as runtime artifacts, not authoritative source.
 - Keep live runtime tweaks copied back into the repo before committing.
 - Use `./install.sh` only when you need to resync runtime copies or startup assets.
+- Uppercase markdown filenames are reserved for the front door and other high-visibility entry points; lower-case names are preferred for ordinary notes and contracts.
 
 ## Visualizer
 

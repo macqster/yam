@@ -154,3 +154,25 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Decide whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
 - Use the bug taxonomy as a checklist for missing regression coverage.
 - Keep `TODO.md` aligned with `docs/SCENE_MODEL.md` and `docs/ARCHITECTURE.md` whenever the work-order sequence changes.
+
+## 12. Projection Contract
+
+- Define projection as a single pure function from world position, camera, and viewport to screen position.
+- Keep projection free of side effects, masking, layering, and state mutation.
+- Route every world-to-screen conversion through the same implementation path.
+
+## 13. Core Invariants
+
+- Keep world-space resolution independent.
+- Keep HUD camera-independent and screen-attached.
+- Keep overlay modal and top-z above world and HUD.
+- Keep masks applied before composition is finalized.
+- Keep layer ordering fixed, even if it is encoded numerically.
+
+## 14. RenderState and Validation
+
+- Define the required `RenderState` fields and their ownership lifecycle.
+- Keep `RenderState` constructed once per frame and treated as read-only by render layers.
+- Add measurable stabilization checks for identical buffer output, resize invariance, and zero-jitter projection behavior.
+- Expose instrumentation for projection output, masks, and layer boundaries when stabilizing scene work.
+- Define the hero rendering decision gate before vines work begins so the chafa-backed and cached-frame options are compared explicitly.

@@ -49,13 +49,14 @@ This file compiles the open work captured in the recent `new/` concept notes and
 ## 5. Implementation Order
 
 - Keep the implementation order explicit:
-  1. core + hero + renderer
-  2. scene + layout
-  3. asset loader
-  4. ivy integration
-  5. temporal stabilization
-  6. compiler / tooling support
-- Stop the first pass when hero animation is clean, flicker-free, and layout-stable.
+  1. ui
+  2. main scene stabilisation
+  3. hero gif
+  4. main scene stabilisation
+  5. main scene vines
+  6. main scene stabilisation
+- Treat each stabilization step as a hard checkpoint before moving on.
+- Stop any pass when the scene is not clean, flicker-free, and layout-stable.
 
 ## 6. Ratatui Research Follow-Ups
 

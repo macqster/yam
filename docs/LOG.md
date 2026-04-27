@@ -26,6 +26,7 @@
 - clarified the front-door docs split: root `README.md` for orientation, `docs/README.md` for navigation, and `NOTES.md` for non-authoritative working notes
 - documented the filename convention that reserves uppercase markdown names for high-visibility entry points and prefers lower-case names for routine docs
 - renamed the routine contract docs in `docs/` to lowercase filenames so the tree reserves uppercase names for the few front-door entry points
+- flattened the root `README.md` into the master repo doc so it now owns the active backlog and working guidance while `TODO.md` and `NOTES.md` act as compatibility pointers
 
 ## 2026-04-23
 

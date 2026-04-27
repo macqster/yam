@@ -1,75 +1,25 @@
 # Notes
 
-## Source of truth
+Working notes for repo/runtime sync.
 
-`~/_git/yam` is the source of truth.
+## Rules
 
-Installed copies under `~/.config` and `~/.local` are runtime files, not the canonical copy.
+- Treat `~/ _git/yam` as the canonical source tree for the Rust app.
+- Treat installed copies under `~/.config` and `~/.local` as runtime artifacts, not authoritative source.
+- Keep live runtime tweaks copied back into the repo before committing.
+- Use `./install.sh` only when you need to resync runtime copies or startup assets.
 
-## Sync rule
+## Visualizer
 
-Preferred workflow:
-1. Edit files in `~/_git/yam`
-2. For visualizer-only iteration, run `yam` directly because the launcher now prefers `~/_git/yam/visualizer`
-3. Run `./install.sh` when runtime copies or startup assets need to be synced
-4. Reopen Ghostty and verify
-5. Commit after the live setup looks right
+- The current visualizer maintenance snapshot lives in `visualizer/STATUS.md` and `visualizer/VOCABULARY.md`.
+- Ghostty is the preferred terminal target.
+- Ghostty config source of truth is `ghostty/config`.
+- Installed runtime path is `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty`.
+- Ghostty should not inject a synthetic `Ctrl+A`; tmux receives the raw control key directly.
+- Treat `visualizer/src/main.py`, `visualizer/src/chafa_pipeline.py`, `visualizer/src/info_panel.py`, `visualizer/src/renderer.py`, and `visualizer/src/terminal.py` as stable unless there is a clear bug.
+- Treat `visualizer/src/layout.py` and `visualizer/src/vines_engine.py` as the future seam for outside vines code.
 
-If you edit a live file directly, copy that change back into `~/_git/yam` before committing.
+## Runtime Difference
 
-## Expected repo/runtime difference
-
-`chafa/chafa_lab.sh` supports both repo and installed asset layouts:
-- repo path candidate: `../assets/ives_yam.png`
-- runtime path candidate: `assets/ives_yam.png`
-
-That dual-path behavior is expected and should not be “fixed” unless the install layout changes.
-
-## Visualizer maintenance
-
-The current maintenance snapshot for the visualizer lives in:
-
-- `visualizer/STATUS.md`
-- `visualizer/VOCABULARY.md`
-
-Current terminal target for the visualizer:
-
-- Ghostty first
-
-Ghostty config source of truth:
-
-- `ghostty/config`
-
-Installed runtime path:
-
-- `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty`
-
-The installer now symlinks that file back to the repo copy through App Support on macOS instead of copying it.
-tmux prefix handling stays native: Ghostty should not inject a synthetic `Ctrl+A`; tmux receives the raw control key directly.
-
-Treat these visualizer modules as stable unless there is a clear bug:
-
-- `visualizer/src/main.py`
-- `visualizer/src/chafa_pipeline.py`
-- `visualizer/src/info_panel.py`
-- `visualizer/src/renderer.py`
-- `visualizer/src/terminal.py`
-
-Treat these as the future integration seam for outside vines code:
-
-- `visualizer/src/layout.py`
-- `visualizer/src/vines_engine.py`
-
-## Visualizer runtime rule
-
-The `yam` command now prefers:
-
-- `~/_git/yam/visualizer`
-
-and only falls back to:
-
-- `~/.local/share/yam-visualizer`
-
-when the repo copy is unavailable.
-
-That is intentional and exists so visualizer iteration does not require reinstall for every change.
+- `chafa/chafa_lab.sh` supports both repo and installed asset layouts.
+- The dual-path behavior is expected and should not be “fixed” unless the install layout changes.

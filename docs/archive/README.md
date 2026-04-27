@@ -7,6 +7,7 @@ This folder holds older reports and update notes that are kept for historical co
 - [`reports/CHATGPT_AUDIT_INGEST_2026-04-24.md`](reports/CHATGPT_AUDIT_INGEST_2026-04-24.md)
 - [`reports/CHATGPT_UPDATE_2026-04-23.md`](reports/CHATGPT_UPDATE_2026-04-23.md)
 - [`reports/COORDINATE_AUDIT_2026-04-24.md`](reports/COORDINATE_AUDIT_2026-04-24.md)
+- [`reports/DOTFILES_MIGRATION.md`](reports/DOTFILES_MIGRATION.md)
 - [`reports/CURRENT_ISSUES_2026-04-25.md`](reports/CURRENT_ISSUES_2026-04-25.md)
 - [`reports/DEBUG_RESEARCH_INGEST_2026-04-24.md`](reports/DEBUG_RESEARCH_INGEST_2026-04-24.md)
 - [`todo_review.md`](todo_review.md)

@@ -153,3 +153,4 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Audit the current projection path for any remaining split responsibilities.
 - Decide whether the hero path should keep the current chafa-backed flow or migrate toward cached frame ownership.
 - Use the bug taxonomy as a checklist for missing regression coverage.
+- Keep `TODO.md` aligned with `docs/SCENE_MODEL.md` and `docs/ARCHITECTURE.md` whenever the work-order sequence changes.

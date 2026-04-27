@@ -17,6 +17,7 @@
 - added explicit main scene stabilisation exit criteria to `TODO.md` so resize, camera, footer, and border-probe behavior have a hard checkpoint before hero or vines work continues
 - added a main scene vines checklist to `TODO.md` that keeps vine work world-attached and constrained by the same projection and masking rules as the rest of the scene
 - clarified that every stabilization checkpoint in `TODO.md` must end with the scene matching the current presentation contract before the next phase starts
+- added a final TODO alignment rule so the backlog stays subordinate to `SCENE_MODEL.md` and `ARCHITECTURE.md` whenever the work order changes
 
 ## 2026-04-23
 

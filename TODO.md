@@ -46,6 +46,15 @@ This file compiles the open work captured in the recent `new/` concept notes and
 - Keep a distinct “hero frame representation” concept in the renderer.
 - Investigate whether a cached frame bake or internal grid renderer should replace the current chafa-heavy path.
 
+### 4.1 Hero GIF Checklist
+
+- Keep hero frames fixed-size before render.
+- Keep hero frame ownership inside the renderer, not in ad hoc terminal output.
+- Preserve the full-canvas / flattened-frame geometry contract for partial GIF frames.
+- Avoid changing color mapping per frame unless a stable cache is used.
+- Keep hero rendering deterministic across resize and scene stabilisation checkpoints.
+- Decide whether the hero path should stay chafa-backed or move toward cached frame ownership before starting vines.
+
 ## 5. Implementation Order
 
 - Keep the implementation order explicit:

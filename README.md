@@ -12,7 +12,7 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 - `src/systems/` - tick pipeline and system scaffolding
 - `src/render/` - clock, hero, fonts, and render helpers
 - `src/ui/` - camera, viewport, panels, layout, scene composition, and debug overlays
-- `docs/` - current documentation and repo hygiene notes
+- `docs/` - documentation index, active contracts, and archive pointers
 - this repository is the active Rust runtime tree; the older `/Users/maciejkuster/_git/yam` checkout has been removed
 
 ## Runtime
@@ -32,3 +32,4 @@ Persistent world, camera, viewport, panels, and live terminal rendering.
 - run `scripts/check.sh` before committing
 - `cargo clippy -- -D warnings` must pass without warnings
 - keep the render order contract in `docs/RENDERING.md`
+- start with `docs/README.md` when you need the docs map

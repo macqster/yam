@@ -23,6 +23,7 @@
 - promoted archive stress-test ideas into `TODO.md` as startup invariants, projection round-trip checks, and static-input determinism validation
 - moved dated audit/update/issue reports into `docs/archive/reports/` and added an archive index so active docs stay contract-focused
 - demoted `NOTES.md` into a short working-notes file and archived the old `DOTFILES_MIGRATION.md` report with the other dated docs
+- clarified the front-door docs split: root `README.md` for orientation, `docs/README.md` for navigation, and `NOTES.md` for non-authoritative working notes
 
 ## 2026-04-23
 

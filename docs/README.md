@@ -13,4 +13,5 @@
 ## Notes
 
 - `docs/` is the active documentation surface.
+- `README.md` is the repo front door; `docs/README.md` is the docs map.
 - historical reconstruction notes were consolidated into the current docs set.

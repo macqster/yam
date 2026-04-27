@@ -1,10 +1,10 @@
 # Notes
 
-Working notes for repo/runtime sync.
+Working notes for repo/runtime sync. This file is not the docs index and not the active contract surface.
 
 ## Rules
 
-- Treat `~/ _git/yam` as the canonical source tree for the Rust app.
+- Treat `~/_git/yam` as the canonical source tree for the Rust app.
 - Treat installed copies under `~/.config` and `~/.local` as runtime artifacts, not authoritative source.
 - Keep live runtime tweaks copied back into the repo before committing.
 - Use `./install.sh` only when you need to resync runtime copies or startup assets.

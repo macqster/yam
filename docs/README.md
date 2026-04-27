@@ -3,10 +3,16 @@
 ## Active
 
 - [`../README.md`](../README.md) - current repo and runtime overview
+- [`../TODO.md`](../TODO.md) - active backlog
 - [`LOG.md`](LOG.md) - current repository log
 - [`hygiene.md`](hygiene.md) - repo hygiene rules
 - [`audit.md`](audit.md) - current repo audit
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
+- [`architecture.md`](architecture.md) - implementation architecture contract
+- [`rendering.md`](rendering.md) - render order contract
+- [`release-model.md`](release-model.md) - branch and release policy
+- [`flattening-plan.md`](flattening-plan.md) - historical flattening note
+- [`version-map.md`](version-map.md) - runtime/version mapping note
 - [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
 - [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
 

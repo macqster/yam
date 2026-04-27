@@ -18,8 +18,6 @@ The scene and architecture contracts live in `docs/scene-model.md` and `docs/arc
 ## Quick Links
 
 - [`docs/README.md`](docs/README.md) - docs map
-- [`TODO.md`](TODO.md) - active backlog
-- [`NOTES.md`](NOTES.md) - working notes pointer
 - [`docs/LOG.md`](docs/LOG.md) - append-only repo log
 - [`docs/scene-model.md`](docs/scene-model.md) - deterministic scene model
 - [`docs/architecture.md`](docs/architecture.md) - architecture contract
@@ -220,4 +218,4 @@ Keep these source documents authoritative:
 
 ## Notes
 
-The working-notes file exists only as a lightweight pointer. The authoritative docs are the active contracts and the backlog.
+The authoritative docs are the active contracts and the backlog content embedded above.

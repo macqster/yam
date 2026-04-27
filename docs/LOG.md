@@ -27,6 +27,7 @@
 - documented the filename convention that reserves uppercase markdown names for high-visibility entry points and prefers lower-case names for routine docs
 - renamed the routine contract docs in `docs/` to lowercase filenames so the tree reserves uppercase names for the few front-door entry points
 - flattened the root `README.md` into the master repo doc so it now owns the active backlog and working guidance while `TODO.md` and `NOTES.md` act as compatibility pointers
+- removed the root `TODO.md` and `NOTES.md` stubs after folding their useful content into the master `README.md`
 
 ## 2026-04-23
 

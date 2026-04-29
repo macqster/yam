@@ -16,6 +16,10 @@ impl EntityPose {
     }
 }
 
+pub fn hero_pose(world: WorldPos, offset: WorldPos) -> EntityPose {
+    EntityPose::new(world, offset)
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct AttachedEntityPose {
     pub anchor: WorldPos,
@@ -32,14 +36,18 @@ impl AttachedEntityPose {
     }
 }
 
+pub fn attached_pose(anchor: WorldPos, offset: WorldPos) -> AttachedEntityPose {
+    AttachedEntityPose::new(anchor, offset)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn anchored_entities_keep_world_offsets_stable() {
-        let hero = EntityPose::new(WorldPos { x: 150, y: 60 }, WorldPos { x: -110, y: -54 });
-        let clock = AttachedEntityPose::new(hero.anchor_world(), WorldPos { x: 96, y: 9 });
+        let hero = hero_pose(WorldPos { x: 150, y: 60 }, WorldPos { x: -110, y: -54 });
+        let clock = attached_pose(hero.anchor_world(), WorldPos { x: 96, y: 9 });
 
         assert_eq!(hero.anchor_world(), WorldPos { x: 40, y: 6 });
         assert_eq!(clock.world(), WorldPos { x: 136, y: 15 });

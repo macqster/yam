@@ -109,7 +109,7 @@ pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
     let camera = camera_for_frame(full, ui);
     let viewport = Viewport::from_camera(&camera, full.width, full.height);
     let viewport_rect = full;
-    let hero = entity::EntityPose::new(
+    let hero = entity::hero_pose(
         WorldPos {
             x: ui.hero.x,
             y: ui.hero.y,
@@ -121,7 +121,7 @@ pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
     );
     let hero_world = hero.world;
     let hero_visual_anchor = hero.anchor_world();
-    let clock = entity::AttachedEntityPose::new(
+    let clock = entity::attached_pose(
         hero_visual_anchor,
         WorldPos {
             x: ui.offsets.clock_dx as i32,

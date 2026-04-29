@@ -129,7 +129,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a mask-semantics test proving the hero mask only blocks the field layer, and tightened the corresponding wording in the render and scene-model contracts
 - added a negative mask-semantics test proving the hero mask does not block non-field overlay layers
 - reinforced the scene layer mask contract with a direct overlay-layer negative test in `src/scene/mod.rs`
-- extracted explicit hero and clock entity-pose helpers for attachment math and noted the helper boundary in the architecture and backlog docs
+- extracted explicit `scene::entity::hero_pose(...)` and `scene::entity::attached_pose(...)` helpers for attachment math and updated the architecture and backlog docs to point at them
 
 ## Log Rules
 

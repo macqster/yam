@@ -318,4 +318,19 @@ mod tests {
         assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: 40, y: 6 });
         assert_eq!(attachment.clock_world(), WorldPos { x: 136, y: 15 });
     }
+
+    #[test]
+    fn hero_clock_attachment_reflects_offset_changes() {
+        let mut ui = UiState::new();
+        ui.offsets.hero_dx = -100;
+        ui.offsets.hero_dy = -50;
+        ui.offsets.clock_dx = 12;
+        ui.offsets.clock_dy = -3;
+
+        let attachment = ui.hero_clock_attachment();
+
+        assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
+        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: 50, y: 10 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 62, y: 7 });
+    }
 }

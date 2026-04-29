@@ -126,6 +126,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a zero-size viewport guardrail test in `RenderState` so projection helpers explicitly reject empty screen areas
 - added further-development guidelines to `TODO.md` so new backlog items stay execution-only and continue to point at the owning contract docs
 - clarified in `docs/rendering.md` and `TODO.md` that all scene rendering continues through the existing `render_scene` / `Scene::render` pipeline
+- added a mask-semantics test proving the hero mask only blocks the field layer, and tightened the corresponding wording in the render and scene-model contracts
 
 ## Log Rules
 

@@ -84,7 +84,7 @@ Mask values use compositor semantics:
 - `true` means a top-layer write is allowed
 - `false` means a top-layer write is blocked
 
-Current mask behavior is intentionally limited. The hero layer can emit a silhouette mask, and the scene can apply that mask to the field layer as a verification probe.
+Current mask behavior is intentionally limited. The hero layer can emit a silhouette mask, and the scene applies that mask only to the field layer as a verification probe. HUD and debug layers do not consume the hero mask.
 
 ## Text And Geometry Caveats
 

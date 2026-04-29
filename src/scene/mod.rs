@@ -190,9 +190,14 @@ fn clamp_axis_to_world_overscan(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::world::WorldState;
+    use crate::render::compositor::Grid;
+    use crate::render::fonts::FontRegistry;
+    use crate::render::mask::Mask;
     use crate::scene::coords::world_to_screen;
     use crate::ui::state::UiState;
     use ratatui::backend::TestBackend;
+    use ratatui::prelude::Rect;
     use ratatui::Terminal;
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
@@ -343,6 +348,77 @@ mod tests {
         let z_indices: Vec<i32> = layers.iter().map(|layer| layer.z_index()).collect();
 
         assert_eq!(z_indices, vec![0, 10, 100, 300, 1000]);
+    }
+
+    struct MaskedFieldLayer;
+    impl Layer for MaskedFieldLayer {
+        fn z_index(&self) -> i32 {
+            10
+        }
+
+        fn is_field_layer(&self) -> bool {
+            true
+        }
+
+        fn render_to_grid(
+            &self,
+            width: u16,
+            height: u16,
+            _world: &WorldState,
+            _ui: &UiState,
+            _fonts: &FontRegistry,
+            _render_state: &RenderState,
+        ) -> LayerOutput {
+            let mut grid = Grid::new(width, height);
+            if let Some(cell) = grid.cell_mut(0, 0) {
+                cell.symbol = 'F';
+            }
+            LayerOutput { grid, mask: None }
+        }
+    }
+
+    struct MaskLayer;
+    impl Layer for MaskLayer {
+        fn z_index(&self) -> i32 {
+            0
+        }
+
+        fn render_to_grid(
+            &self,
+            width: u16,
+            height: u16,
+            _world: &WorldState,
+            _ui: &UiState,
+            _fonts: &FontRegistry,
+            _render_state: &RenderState,
+        ) -> LayerOutput {
+            let grid = Grid::new(width, height);
+            let mut mask = Mask::new(width as usize, height as usize);
+            if width > 0 && height > 0 {
+                mask.set(0, 0, false);
+            }
+            LayerOutput {
+                grid,
+                mask: Some(mask),
+            }
+        }
+    }
+
+    #[test]
+    fn hero_mask_only_blocks_the_field_layer() {
+        let layers: Vec<Box<dyn Layer>> = vec![Box::new(MaskLayer), Box::new(MaskedFieldLayer)];
+        let scene = Scene::new(layers);
+        let mut terminal = Terminal::new(TestBackend::new(2, 1)).expect("terminal should init");
+        let world = WorldState::new();
+        let ui = UiState::new();
+        let fonts = FontRegistry::new();
+
+        terminal
+            .draw(|frame| scene.render(frame, &world, &ui, &fonts))
+            .expect("scene render should succeed");
+
+        let buffer = terminal.backend().buffer();
+        assert_eq!(buffer.content[0].symbol(), " ");
     }
 
     #[test]

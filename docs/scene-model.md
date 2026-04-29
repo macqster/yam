@@ -141,6 +141,7 @@ Types:
 Rules:
 
 - masks are applied before final render
+- the hero mask currently applies only to the field layer; HUD and debug layers ignore it
 - masks are derived from scene state, not from visual output
 - masking should not be simulated with empty cells
 

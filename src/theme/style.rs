@@ -18,3 +18,9 @@ pub fn hero_overlay() -> Style {
         .fg(palette::PRIMARY_FG)
         .bg(palette::HERO_BG)
 }
+
+pub fn footer_bar() -> Style {
+    Style::default()
+        .bg(palette::FOOTER_BG)
+        .fg(palette::FOOTER_FG)
+}

@@ -154,6 +154,7 @@ This file is append-only and historical only; current rules live in the active d
 - cleaned the default footer help so the main scene now shows a compact `[q]uit • [d]ev mode` hint with a right-aligned version stamp instead of the longer play/pause/step banner
 - kept the dev-mode footer on the same compact punctuation grammar as the default footer while preserving the richer runtime controls
 - removed the redundant loaded-frame-count print from hero loading so the frame count stays visible only in the debug/info panel
+- highlighted the footer row as a full-width soft green bar with dark inverse text so the main scene footer reads as a proper bar instead of plain text
 
 ## Log Rules
 

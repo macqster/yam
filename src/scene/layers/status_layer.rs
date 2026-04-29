@@ -24,28 +24,34 @@ impl Layer for StatusLayer {
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
+        paint_footer_row(&mut grid, footer_y, width);
         let left_text = if ui.meta.dev_mode {
             "  [q]uit   •   [d]ev mode   •   [space] play/pause   •   [.] step   •   hjkl hero   •   HJKL clock"
         } else {
             "  [q]uit   •   [d]ev mode"
         };
         let right_text = build_status_label();
-        write_string(&mut grid, 0, footer_y, left_text, theme_style::panel_text());
+        let footer_style = theme_style::footer_bar();
+        write_string(&mut grid, 0, footer_y, left_text, footer_style);
         let stamp_width = right_text.chars().count() as u16 + 2;
         let x = width.saturating_sub(stamp_width);
-        write_string(
-            &mut grid,
-            x,
-            footer_y,
-            &right_text,
-            theme_style::panel_text(),
-        );
+        write_string(&mut grid, x, footer_y, &right_text, footer_style);
         LayerOutput { grid, mask: None }
     }
 }
 
 fn footer_row(height: u16) -> u16 {
     height.saturating_sub(1)
+}
+
+fn paint_footer_row(grid: &mut Grid, y: u16, width: u16) {
+    let style = theme_style::footer_bar();
+    for x in 0..width {
+        if let Some(cell) = grid.cell_mut(x, y) {
+            cell.symbol = ' ';
+            cell.style = style;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -67,6 +73,46 @@ mod tests {
         assert_eq!(footer_row(36), 35);
         assert_eq!(footer_row(1), 0);
         assert_eq!(footer_row(0), 0);
+    }
+
+    #[test]
+    fn footer_row_is_color_highlighted_across_the_full_width() {
+        let layer = StatusLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let ui = UiState::new();
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let row = footer_row(32);
+        let first = &output.grid.cells[output.grid.index(0, row)];
+        let middle = &output.grid.cells[output.grid.index(50, row)];
+
+        assert_eq!(first.style.bg, Some(crate::theme::palette::FOOTER_BG));
+        assert_eq!(middle.style.bg, Some(crate::theme::palette::FOOTER_BG));
+        assert_eq!(first.style.fg, Some(crate::theme::palette::FOOTER_FG));
+        assert_eq!(middle.style.fg, Some(crate::theme::palette::FOOTER_FG));
     }
 
     #[test]

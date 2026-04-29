@@ -150,30 +150,22 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
     }
 
     let viewport = ctx.hud.viewport;
-    let viewport_extent_width = (crate::scene::WORLD_WIDTH
-        + crate::scene::CAMERA_OVERSCAN_CELLS * 2)
-        .max(viewport.width as i32) as usize;
-    let viewport_extent_height = (crate::scene::WORLD_HEIGHT
-        + crate::scene::CAMERA_OVERSCAN_CELLS * 2)
-        .max(viewport.height as i32) as usize;
     let horizontal_min = -crate::scene::WORLD_HALF_W - crate::scene::CAMERA_OVERSCAN_CELLS;
     let vertical_min = -crate::scene::WORLD_HALF_H - crate::scene::CAMERA_OVERSCAN_CELLS;
+    let horizontal_content_length =
+        (crate::scene::WORLD_WIDTH + crate::scene::CAMERA_OVERSCAN_CELLS * 2) as usize;
+    let vertical_content_length =
+        (crate::scene::WORLD_HEIGHT + crate::scene::CAMERA_OVERSCAN_CELLS * 2) as usize;
     let horizontal_area = Rect::new(inset, inset, width - inset * 2, 1);
     let vertical_area = Rect::new(inset, inset, 1, height - inset * 2);
 
-    let horizontal_position = (viewport.x - horizontal_min).clamp(
-        0,
-        viewport_extent_width.saturating_sub(viewport.width as usize) as i32,
-    ) as usize;
-    let vertical_position = (viewport.y - vertical_min).clamp(
-        0,
-        viewport_extent_height.saturating_sub(viewport.height as usize) as i32,
-    ) as usize;
+    let horizontal_position = (ctx.hud.camera.x - horizontal_min).max(0) as usize;
+    let vertical_position = (ctx.hud.camera.y - vertical_min).max(0) as usize;
 
-    let mut horizontal_state = ScrollbarState::new(viewport_extent_width)
+    let mut horizontal_state = ScrollbarState::new(horizontal_content_length)
         .viewport_content_length(viewport.width as usize)
         .position(horizontal_position);
-    let mut vertical_state = ScrollbarState::new(viewport_extent_height)
+    let mut vertical_state = ScrollbarState::new(vertical_content_length)
         .viewport_content_length(viewport.height as usize)
         .position(vertical_position);
 

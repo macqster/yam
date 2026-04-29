@@ -142,4 +142,39 @@ mod tests {
             world_to_screen(state.world.clock_world, 30, 10)
         );
     }
+
+    #[test]
+    fn zero_size_viewport_rejects_screen_coordinates() {
+        let world = WorldFrame {
+            hero_world: WorldPos { x: 1, y: 1 },
+            hero_visual_anchor: WorldPos { x: 1, y: 1 },
+            clock_world: WorldPos { x: 1, y: 1 },
+        };
+        let hud = HudFrame {
+            viewport: Viewport {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+            },
+            viewport_rect: Rect::new(0, 0, 0, 0),
+            camera: Camera {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+                follow_hero: false,
+            },
+        };
+        let state = RenderState { world, hud };
+
+        assert_eq!(state.hud.viewport.world_to_view(1, 1), None);
+        assert_eq!(state.hud.camera.world_to_screen(1, 1), None);
+        assert_eq!(
+            state.clock_screen(),
+            world_to_screen(state.world.clock_world, 0, 0)
+        );
+        assert_eq!(state.hud.viewport_rect.width, 0);
+        assert_eq!(state.hud.viewport_rect.height, 0);
+    }
 }

@@ -40,12 +40,19 @@ No system should render itself outside that path.
 The scene is composed of these systems:
 
 - Hero
+- Clock
 - Vines
 - Scaffold
 - Particles
 - UI
 
 Each system owns its own state and emits renderable primitives.
+
+Rules:
+
+- hero and clock are world-attached systems, not HUD systems
+- the clock follows the hero in world space and carries its own relative offset
+- UI is screen-attached presentation, not world-attached simulation state
 
 ## Presentation Layers
 

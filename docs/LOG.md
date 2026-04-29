@@ -150,6 +150,7 @@ This file is append-only and historical only; current rules live in the active d
 - restored `UiState::hero_clock_attachment()` to the shared `hero_and_clock_poses(...)` helper so the attachment seam remains live and `cargo install` stays warning-free
 - corrected the clock contract back to a single world-attached hero entity and removed the temporary HUD fallback path so the debug/info panels now describe the real attachment behavior
 - removed the obsolete clock fallback toggle and updated the settings popup, docs, and clock layer so the clock is treated as a world entity only
+- documented the clock as a world-attached hero entity in the active scene/render/architecture contracts so debug info and settings text no longer imply a screen-attached UI clock
 
 ## Log Rules
 

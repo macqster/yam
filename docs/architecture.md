@@ -49,6 +49,7 @@
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
+- the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 
 ## Out of Scope
 

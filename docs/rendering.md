@@ -36,6 +36,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - viewport selection is now a full-frame pass; the old centered tiered viewport box no longer drives layer placement
 - `RenderState` is split into `world` and `hud` sections to keep world-pinned attachments separate from screen-attached overlays
 - shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement
+- the clock is a world entity: debug/info panels report its projected screen position, but they do not define it
 
 ## Pipeline
 
@@ -100,6 +101,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
 - Clock attachment on the active path is world-pinned: the clock follows the hero in world space and keeps its own hero-relative offset. It does not inherit camera, viewport, or terminal motion directly.
+- Debug info that prints clock position is reporting the projected world-entity clock position, not a screen-attached UI placement.
 - Debug world borders are rendered as a stable ASCII 2x2 datum-centered indicator in world space, so they move with camera panning and remain a debug view of the real world bounds. It keeps one top padding row and one side padding cell for symmetry, and those margins are intentional and reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
 - The world itself keeps a 1-cell inset boundary, and the HUD/viewport overlay layer also keeps a 1-cell inset boundary where needed for future UI elements.
 

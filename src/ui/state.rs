@@ -7,7 +7,7 @@ use std::{
 use crate::render::fonts::ClockFont;
 use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
-use crate::scene::entity::HeroClockAttachment;
+use crate::scene::entity::hero_and_clock_poses;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MetaState {
@@ -192,8 +192,8 @@ impl UiState {
         self.meta.toggle_clock_mode();
     }
 
-    pub fn hero_clock_attachment(&self) -> HeroClockAttachment {
-        HeroClockAttachment::new(
+    pub fn hero_clock_attachment(&self) -> crate::scene::entity::HeroClockAttachment {
+        hero_and_clock_poses(
             crate::scene::coords::WorldPos {
                 x: self.hero.x,
                 y: self.hero.y,

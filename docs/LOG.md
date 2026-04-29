@@ -147,6 +147,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a frame-level regression test that pins the `[d]ev` footer hint in rendered output so the mode label is covered at the buffer/snapshot boundary
 - added a modal tabbed settings popup in the overlay layer, with `dev_mode` gating and tab sections for positions, widgets, gif, and theme values
 - inserted the settings popup between debug and footer in the active layer order and updated the layer-order contract to include its new `z_index = 400` tier
+- restored `UiState::hero_clock_attachment()` to the shared `hero_and_clock_poses(...)` helper so the attachment seam remains live and `cargo install` stays warning-free
 
 ## Log Rules
 

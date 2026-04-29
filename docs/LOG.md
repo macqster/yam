@@ -133,6 +133,7 @@ This file is append-only and historical only; current rules live in the active d
 - made chafa temp frame directories unique per render batch to avoid parallel-test collisions while preserving the existing hero rendering contract
 - reran the render suite after the temp-dir fix and confirmed the chafa hero tests still pass under parallel execution
 - added backlog guidance for negative tests and run-isolated temp/shared-state artifacts, plus a matching hygiene rule
+- added a boundary-change guideline for explicit negative tests in hygiene and the active backlog
 
 ## Log Rules
 

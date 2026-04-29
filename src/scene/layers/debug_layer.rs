@@ -152,6 +152,12 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
     let viewport = ctx.hud.viewport;
     let horizontal_min = -crate::scene::WORLD_HALF_W - crate::scene::CAMERA_OVERSCAN_CELLS;
     let vertical_min = -crate::scene::WORLD_HALF_H - crate::scene::CAMERA_OVERSCAN_CELLS;
+    let horizontal_max = crate::scene::WORLD_HALF_W - 1 + crate::scene::CAMERA_OVERSCAN_CELLS
+        - viewport.width as i32
+        + 1;
+    let vertical_max = crate::scene::WORLD_HALF_H - 1 + crate::scene::CAMERA_OVERSCAN_CELLS
+        - viewport.height as i32
+        + 1;
     let horizontal_content_length =
         (crate::scene::WORLD_WIDTH + crate::scene::CAMERA_OVERSCAN_CELLS * 2) as usize;
     let vertical_content_length =
@@ -159,8 +165,18 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
     let horizontal_area = Rect::new(inset, inset, width - inset * 2, 1);
     let vertical_area = Rect::new(inset, inset, 1, height - inset * 2);
 
-    let horizontal_position = (ctx.hud.camera.x - horizontal_min).max(0) as usize;
-    let vertical_position = (ctx.hud.camera.y - vertical_min).max(0) as usize;
+    let horizontal_position = scrollbar_position(
+        ctx.hud.camera.x,
+        horizontal_min,
+        horizontal_max,
+        horizontal_content_length,
+    );
+    let vertical_position = scrollbar_position(
+        ctx.hud.camera.y,
+        vertical_min,
+        vertical_max,
+        vertical_content_length,
+    );
 
     let mut horizontal_state = ScrollbarState::new(horizontal_content_length)
         .viewport_content_length(viewport.width as usize)
@@ -191,6 +207,24 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
         .track_style(theme_style::camera_indicator_track())
         .thumb_style(theme_style::camera_indicator_thumb());
     render_scrollbar(grid, vertical_area, scrollbar_style, &mut vertical_state);
+}
+
+fn scrollbar_position(
+    camera_origin: i32,
+    camera_min: i32,
+    camera_max: i32,
+    content_length: usize,
+) -> usize {
+    let content_max = content_length.saturating_sub(1);
+    let camera_range = (camera_max - camera_min).max(0) as usize;
+    if camera_range == 0 {
+        return 0;
+    }
+
+    let camera_offset = camera_origin
+        .saturating_sub(camera_min)
+        .clamp(0, camera_range as i32) as usize;
+    camera_offset.saturating_mul(content_max) / camera_range
 }
 
 fn render_scrollbar(
@@ -242,7 +276,7 @@ fn border_probe_bounds() -> BorderProbeBounds {
 
 #[cfg(test)]
 mod tests {
-    use super::{border_probe_bounds, draw_camera_scrollbars};
+    use super::{border_probe_bounds, draw_camera_scrollbars, scrollbar_position};
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
     use crate::scene::coords::WorldPos;
@@ -306,5 +340,25 @@ mod tests {
         assert_ne!(top_cell.symbol, ' ');
         assert_ne!(side_cell.symbol, ' ');
         assert!(thumb_present);
+    }
+
+    #[test]
+    fn scrollbar_position_spans_the_full_range() {
+        let viewport_width = 124usize;
+        let world_width =
+            (crate::scene::WORLD_WIDTH + crate::scene::CAMERA_OVERSCAN_CELLS * 2) as usize;
+        let camera_min = -crate::scene::WORLD_HALF_W - crate::scene::CAMERA_OVERSCAN_CELLS;
+        let camera_max = crate::scene::WORLD_HALF_W - 1 + crate::scene::CAMERA_OVERSCAN_CELLS
+            - viewport_width as i32
+            + 1;
+
+        assert_eq!(
+            scrollbar_position(camera_min, camera_min, camera_max, world_width),
+            0
+        );
+        assert_eq!(
+            scrollbar_position(camera_max, camera_min, camera_max, world_width),
+            world_width.saturating_sub(1)
+        );
     }
 }

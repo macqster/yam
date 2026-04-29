@@ -3,7 +3,7 @@ use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
 use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
-use crate::scene::coords::{anchor_to_world, WorldPos};
+use crate::scene::coords::WorldPos;
 use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
@@ -12,6 +12,7 @@ use ratatui::widgets::{Clear, Paragraph};
 
 pub mod camera;
 pub mod coords;
+pub mod entity;
 pub mod layers;
 pub mod viewport;
 
@@ -108,24 +109,26 @@ pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
     let camera = camera_for_frame(full, ui);
     let viewport = Viewport::from_camera(&camera, full.width, full.height);
     let viewport_rect = full;
-    let hero_world = WorldPos {
-        x: ui.hero.x,
-        y: ui.hero.y,
-    };
-    let hero_visual_anchor = anchor_to_world(
-        hero_world,
+    let hero = entity::EntityPose::new(
+        WorldPos {
+            x: ui.hero.x,
+            y: ui.hero.y,
+        },
         WorldPos {
             x: ui.offsets.hero_dx,
             y: ui.offsets.hero_dy,
         },
     );
-    let clock_world = anchor_to_world(
+    let hero_world = hero.world;
+    let hero_visual_anchor = hero.anchor_world();
+    let clock = entity::AttachedEntityPose::new(
         hero_visual_anchor,
         WorldPos {
             x: ui.offsets.clock_dx as i32,
             y: ui.offsets.clock_dy as i32,
         },
     );
+    let clock_world = clock.world();
     RenderState {
         world: WorldFrame {
             hero_world,

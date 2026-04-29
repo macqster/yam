@@ -2,6 +2,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use ansi_to_tui::IntoText;
@@ -144,8 +145,12 @@ fn flatten_pixel(pixel: Rgba<u8>) -> Rgba<u8> {
 }
 
 fn prepare_temp_frame_dir() -> PathBuf {
-    let temp_dir = std::env::temp_dir().join("yam_rust_frames");
-    let _ = fs::remove_dir_all(&temp_dir);
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let temp_dir =
+        std::env::temp_dir().join(format!("yam_rust_frames_{}_{}", std::process::id(), unique));
     fs::create_dir_all(&temp_dir)
         .unwrap_or_else(|err| panic!("failed to create temp frame dir {temp_dir:?}: {err}"));
     temp_dir

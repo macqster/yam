@@ -40,14 +40,27 @@ pub fn attached_pose(anchor: WorldPos, offset: WorldPos) -> AttachedEntityPose {
     AttachedEntityPose::new(anchor, offset)
 }
 
+pub fn hero_and_clock_poses(
+    hero_world: WorldPos,
+    hero_offset: WorldPos,
+    clock_offset: WorldPos,
+) -> (EntityPose, AttachedEntityPose) {
+    let hero = hero_pose(hero_world, hero_offset);
+    let clock = attached_pose(hero.anchor_world(), clock_offset);
+    (hero, clock)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn anchored_entities_keep_world_offsets_stable() {
-        let hero = hero_pose(WorldPos { x: 150, y: 60 }, WorldPos { x: -110, y: -54 });
-        let clock = attached_pose(hero.anchor_world(), WorldPos { x: 96, y: 9 });
+        let (hero, clock) = hero_and_clock_poses(
+            WorldPos { x: 150, y: 60 },
+            WorldPos { x: -110, y: -54 },
+            WorldPos { x: 96, y: 9 },
+        );
 
         assert_eq!(hero.anchor_world(), WorldPos { x: 40, y: 6 });
         assert_eq!(clock.world(), WorldPos { x: 136, y: 15 });

@@ -40,14 +40,38 @@ pub fn attached_pose(anchor: WorldPos, offset: WorldPos) -> AttachedEntityPose {
     AttachedEntityPose::new(anchor, offset)
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct HeroClockAttachment {
+    pub hero: EntityPose,
+    pub clock: AttachedEntityPose,
+}
+
+impl HeroClockAttachment {
+    pub fn new(hero_world: WorldPos, hero_offset: WorldPos, clock_offset: WorldPos) -> Self {
+        let hero = hero_pose(hero_world, hero_offset);
+        let clock = attached_pose(hero.anchor_world(), clock_offset);
+        Self { hero, clock }
+    }
+
+    pub fn hero_world(&self) -> WorldPos {
+        self.hero.world
+    }
+
+    pub fn hero_visual_anchor(&self) -> WorldPos {
+        self.hero.anchor_world()
+    }
+
+    pub fn clock_world(&self) -> WorldPos {
+        self.clock.world()
+    }
+}
+
 pub fn hero_and_clock_poses(
     hero_world: WorldPos,
     hero_offset: WorldPos,
     clock_offset: WorldPos,
-) -> (EntityPose, AttachedEntityPose) {
-    let hero = hero_pose(hero_world, hero_offset);
-    let clock = attached_pose(hero.anchor_world(), clock_offset);
-    (hero, clock)
+) -> HeroClockAttachment {
+    HeroClockAttachment::new(hero_world, hero_offset, clock_offset)
 }
 
 #[cfg(test)]
@@ -56,13 +80,14 @@ mod tests {
 
     #[test]
     fn anchored_entities_keep_world_offsets_stable() {
-        let (hero, clock) = hero_and_clock_poses(
+        let attachment = hero_and_clock_poses(
             WorldPos { x: 150, y: 60 },
             WorldPos { x: -110, y: -54 },
             WorldPos { x: 96, y: 9 },
         );
 
-        assert_eq!(hero.anchor_world(), WorldPos { x: 40, y: 6 });
-        assert_eq!(clock.world(), WorldPos { x: 136, y: 15 });
+        assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
+        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: 40, y: 6 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 136, y: 15 });
     }
 }

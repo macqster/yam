@@ -147,7 +147,7 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] any behavior change keeps its test, log entry, and owning doc update in the same change.
 - [verify] new work that introduces a concept already named in an active doc must reference the canonical doc instead of restating the rule.
 - [verify] all scene rendering continues through `render_scene` and `Scene::render`; no side-path should write to the terminal buffer.
-- [verify] new world-attached renderables reuse the explicit `scene::entity::hero_and_clock_poses(...)` helper or its smaller pose helpers instead of adding bespoke anchor math.
+- [verify] new world-attached renderables reuse the explicit `scene::entity::HeroClockAttachment` path or its smaller pose helpers instead of adding bespoke anchor math.
 - [verify] prefer negative tests for forbidden behavior when adding new render, layer, attachment, or mask rules.
 - [verify] isolate temp files and other shared runtime artifacts by run when tests or helpers need them.
 - [verify] boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.

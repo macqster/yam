@@ -36,7 +36,7 @@
 - `RenderState` is split into:
   - `world`: hero and clock attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
-- hero and clock attachment facts are computed through explicit `scene::entity::hero_and_clock_poses(...)` helper
+- hero and clock attachment facts are computed through explicit `scene::entity::HeroClockAttachment` produced by `scene::entity::hero_and_clock_poses(...)`
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`
 - `Scene` converts the final grid into ratatui `Line`s

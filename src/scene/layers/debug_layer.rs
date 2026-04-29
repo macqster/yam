@@ -97,6 +97,11 @@ impl Layer for DebugLayer {
             && clock_screen.y >= 0
             && clock_screen.x < width as i32
             && clock_screen.y < height as i32;
+        let camera_mode = if ui.camera.follow_hero {
+            "Camera mode: follow-hero"
+        } else {
+            "Camera mode: manual pan"
+        };
         let center_x = width as i32 / 2;
         let center_y = height as i32 / 2;
         let cam_dx = cam_x - center_x;
@@ -127,6 +132,7 @@ impl Layer for DebugLayer {
             ),
             format!("Clock final: ({}, {})", clock_screen.x, clock_screen.y),
             format!("Clock visible: {}", clock_visible),
+            camera_mode.to_string(),
             format!("Camera: ({}, {})", cam_x, cam_y),
             format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
         ];

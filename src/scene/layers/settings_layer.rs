@@ -101,6 +101,14 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState) {
         SettingsTab::Widgets => vec![
             format!("dev mode: {}", ui.meta.dev_mode),
             format!("settings open: {}", ui.meta.settings_open),
+            format!(
+                "camera mode: {}",
+                if ui.camera.follow_hero {
+                    "follow-hero"
+                } else {
+                    "manual pan"
+                }
+            ),
             "clock: hero-attached world entity".to_string(),
         ],
         SettingsTab::Gif => vec![

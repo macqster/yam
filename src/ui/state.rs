@@ -9,7 +9,7 @@ use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
 use crate::scene::entity::HeroClockAttachment;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MetaState {
     pub debug_layout: bool,
     pub anchored_clock: bool,
@@ -23,6 +23,12 @@ impl MetaState {
     pub fn toggle_clock_mode(&mut self) {
         self.anchored_clock = !self.anchored_clock;
     }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct UiStateSnapshot {
+    offsets: UiOffsets,
+    meta: MetaState,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -81,9 +87,10 @@ impl UiState {
 
     pub fn load_or_new() -> Self {
         let mut state = Self::new();
-        if let Ok(offsets) = Self::load_offsets() {
-            state.clock_font = Self::parse_clock_font(&offsets.clock_font);
-            state.offsets = offsets;
+        if let Ok(snapshot) = Self::load_snapshot() {
+            state.clock_font = Self::parse_clock_font(&snapshot.offsets.clock_font);
+            state.offsets = snapshot.offsets;
+            state.meta = snapshot.meta;
         }
         state.camera.x = state.offsets.camera_x;
         state.camera.y = state.offsets.camera_y;
@@ -250,10 +257,18 @@ impl UiState {
             .join("state.json")
     }
 
-    fn load_offsets() -> io::Result<UiOffsets> {
+    fn load_snapshot() -> io::Result<UiStateSnapshot> {
         let path = Self::state_path();
         let data = fs::read_to_string(path)?;
-        serde_json::from_str(&data).map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
+        if let Ok(snapshot) = serde_json::from_str::<UiStateSnapshot>(&data) {
+            return Ok(snapshot);
+        }
+        let offsets = serde_json::from_str::<UiOffsets>(&data)
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
+        Ok(UiStateSnapshot {
+            offsets,
+            meta: MetaState::default(),
+        })
     }
 
     fn parse_clock_font(name: &str) -> ClockFont {
@@ -283,7 +298,11 @@ impl UiState {
                 return;
             }
         }
-        match serde_json::to_string_pretty(&self.offsets) {
+        let snapshot = UiStateSnapshot {
+            offsets: self.offsets.clone(),
+            meta: self.meta.clone(),
+        };
+        match serde_json::to_string_pretty(&snapshot) {
             Ok(json) => {
                 if let Err(err) = fs::write(path, json) {
                     eprintln!("[yam] failed to write state: {err}");
@@ -304,7 +323,7 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::UiState;
+    use super::{MetaState, UiOffsets, UiState, UiStateSnapshot};
     use crate::scene::coords::WorldPos;
 
     #[test]
@@ -364,5 +383,40 @@ mod tests {
             after_toggle.hero_visual_anchor()
         );
         assert_eq!(baseline.clock_world(), after_toggle.clock_world());
+    }
+
+    #[test]
+    fn snapshot_round_trips_meta_and_offsets() {
+        let snapshot = UiStateSnapshot {
+            offsets: UiOffsets {
+                camera_x: 12,
+                camera_y: -8,
+                hero_dx: -91,
+                hero_dy: -43,
+                clock_dx: 77,
+                clock_dy: -5,
+                clock_font: "fender".to_string(),
+                hero_fps: 4.5,
+            },
+            meta: MetaState {
+                debug_layout: true,
+                anchored_clock: true,
+            },
+        };
+
+        let json = serde_json::to_string(&snapshot).expect("snapshot should serialize");
+        let round_trip: UiStateSnapshot =
+            serde_json::from_str(&json).expect("snapshot should deserialize");
+
+        assert_eq!(round_trip.offsets.camera_x, 12);
+        assert_eq!(round_trip.offsets.camera_y, -8);
+        assert_eq!(round_trip.offsets.hero_dx, -91);
+        assert_eq!(round_trip.offsets.hero_dy, -43);
+        assert_eq!(round_trip.offsets.clock_dx, 77);
+        assert_eq!(round_trip.offsets.clock_dy, -5);
+        assert_eq!(round_trip.offsets.clock_font, "fender");
+        assert_eq!(round_trip.offsets.hero_fps, 4.5);
+        assert!(round_trip.meta.debug_layout);
+        assert!(round_trip.meta.anchored_clock);
     }
 }

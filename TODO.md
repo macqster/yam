@@ -138,3 +138,11 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] invariants and determinism checks stay referenced from `docs/scene-model.md`.
 - [verify] greenhouse integration rules stay in `docs/scene-model.md`.
 - [verify] render-time validation goals stay in the active backlog here without duplicating contract text.
+
+## 10. Further Development Guidelines
+
+- [verify] add new backlog items as execution steps, inspections, or regression checks; keep contract wording in the owning docs.
+- [verify] prefer one narrowly scoped item per line so TODO stays easy to prune.
+- [verify] if a TODO item survives multiple passes without changing shape, either promote it to the owning contract doc or remove it.
+- [verify] any behavior change keeps its test, log entry, and owning doc update in the same change.
+- [verify] new work that introduces a concept already named in an active doc must reference the canonical doc instead of restating the rule.

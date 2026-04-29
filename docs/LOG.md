@@ -124,6 +124,7 @@ This file is append-only and historical only; current rules live in the active d
 - added explicit config authority wording, a repo hygiene behavior-change rule, environment assumptions, and a layer-order assertion for the active renderer
 - added change-impact hints to the active contract docs, a deterministic full-frame render check, and a terminology guardrail in hygiene
 - added a zero-size viewport guardrail test in `RenderState` so projection helpers explicitly reject empty screen areas
+- added further-development guidelines to `TODO.md` so new backlog items stay execution-only and continue to point at the owning contract docs
 
 ## Log Rules
 

@@ -136,6 +136,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a boundary-change guideline for explicit negative tests in hygiene and the active backlog
 - wrapped hero and clock attachment math in a named `scene::entity::HeroClockAttachment` to make the extraction seam more explicit and keep the hero/clock pairing as one attachment object
 - moved hero and clock attachment construction behind a `UiState` accessor so the frame builder reads one attachment source of truth
+- added a `UiState::hero_clock_attachment()` test and documented `UiState` as the runtime source of truth for hero, clock, and camera attachment inputs
 
 ## Log Rules
 

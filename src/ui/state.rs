@@ -291,6 +291,7 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::UiState;
+    use crate::scene::coords::WorldPos;
 
     #[test]
     fn clamp_camera_limits_windowed_pan_to_one_cell_overscan() {
@@ -306,5 +307,15 @@ mod tests {
         assert_eq!(ui.offsets.camera_y, -29);
         assert_eq!(ui.camera.x, ui.offsets.camera_x);
         assert_eq!(ui.camera.y, ui.offsets.camera_y);
+    }
+
+    #[test]
+    fn hero_clock_attachment_uses_ui_offsets_as_runtime_source_of_truth() {
+        let ui = UiState::new();
+        let attachment = ui.hero_clock_attachment();
+
+        assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
+        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: 40, y: 6 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 136, y: 15 });
     }
 }

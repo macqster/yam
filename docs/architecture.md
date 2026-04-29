@@ -36,6 +36,7 @@
 - `RenderState` is split into:
   - `world`: hero and clock attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
+- `UiState` owns the runtime attachment offsets that feed the hero/clock attachment object
 - hero and clock attachment facts are computed through explicit `scene::entity::HeroClockAttachment` produced by `scene::entity::hero_and_clock_poses(...)`
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`

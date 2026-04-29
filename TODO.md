@@ -148,6 +148,7 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] new work that introduces a concept already named in an active doc must reference the canonical doc instead of restating the rule.
 - [verify] all scene rendering continues through `render_scene` and `Scene::render`; no side-path should write to the terminal buffer.
 - [verify] new world-attached renderables reuse the explicit `scene::entity::HeroClockAttachment` path or its smaller pose helpers instead of adding bespoke anchor math.
+- [verify] `UiState` remains the runtime source of truth for hero, clock, and camera attachment inputs until a deliberate ownership change lands.
 - [verify] prefer negative tests for forbidden behavior when adding new render, layer, attachment, or mask rules.
 - [verify] isolate temp files and other shared runtime artifacts by run when tests or helpers need them.
 - [verify] boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.

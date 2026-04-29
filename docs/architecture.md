@@ -47,6 +47,7 @@
 - the scene model contract lives in [`scene-model.md`](scene-model.md) and defines the deterministic layer/space/masking rules above ratatui
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
+- `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
 - `anchored_clock` is a metamechanics presentation flag: when enabled, the clock is rendered as a world-attached hero companion; when disabled, it falls back to screen-attached HUD placement
 
 ## Out of Scope

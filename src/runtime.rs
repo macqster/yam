@@ -47,24 +47,24 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             {
                 match code {
                     KeyCode::Char('q') => break 'run,
-                    KeyCode::Char('d') => ui_state.toggle_debug_layout(),
+                    KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
-                    KeyCode::Left if ui_state.meta.debug_layout => {
+                    KeyCode::Left if ui_state.meta.dev_mode => {
                         ui_state.move_camera_left();
                     }
-                    KeyCode::Right if ui_state.meta.debug_layout => {
+                    KeyCode::Right if ui_state.meta.dev_mode => {
                         ui_state.move_camera_right();
                     }
-                    KeyCode::Up if ui_state.meta.debug_layout => {
+                    KeyCode::Up if ui_state.meta.dev_mode => {
                         ui_state.move_camera_up();
                     }
-                    KeyCode::Down if ui_state.meta.debug_layout => {
+                    KeyCode::Down if ui_state.meta.dev_mode => {
                         ui_state.move_camera_down();
                     }
                     KeyCode::Char(c) => {
-                        if ui_state.meta.debug_layout {
+                        if ui_state.meta.dev_mode {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
                             let base = c.to_ascii_lowercase();
                             match base {
@@ -100,7 +100,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                                 _ => {}
                             }
                             if c == 'd' {
-                                ui_state.toggle_debug_layout();
+                                ui_state.toggle_dev_mode();
                             } else if c == '}' || (c == '=' && is_shift) {
                                 ui_state.next_font();
                             } else if c == '{' || (c == '-' && is_shift) {
@@ -114,7 +114,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             ui_state.toggle_clock_mode();
                         }
                     }
-                    KeyCode::F(5) if ui_state.meta.debug_layout => ui_state.next_font(),
+                    KeyCode::F(5) if ui_state.meta.dev_mode => ui_state.next_font(),
                     _ => {}
                 }
             }

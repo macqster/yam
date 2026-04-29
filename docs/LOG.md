@@ -142,6 +142,7 @@ This file is append-only and historical only; current rules live in the active d
 - persisted the metamechanics toggles alongside the existing UI state bundle so debug/layout and anchored-clock preferences now survive reloads, with a snapshot roundtrip test covering the new state shape
 - added a legacy offsets-only load path test so the persisted UI snapshot still accepts old state files while defaulting metamechanics flags to false
 - gave `anchored_clock` a concrete presentation meaning: it now switches the clock between a world-attached hero companion and a screen-attached HUD fallback, with a regression test covering both modes
+- renamed the umbrella metamechanics toggle from `debug_layout` to `dev_mode` so the control surface reads as editing/layout mode while `debug` stays the diagnostic surface
 
 ## Log Rules
 

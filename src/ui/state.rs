@@ -11,13 +11,14 @@ use crate::scene::entity::HeroClockAttachment;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MetaState {
-    pub debug_layout: bool,
+    #[serde(rename = "debug_layout")]
+    pub dev_mode: bool,
     pub anchored_clock: bool,
 }
 
 impl MetaState {
-    pub fn toggle_debug_layout(&mut self) {
-        self.debug_layout = !self.debug_layout;
+    pub fn toggle_dev_mode(&mut self) {
+        self.dev_mode = !self.dev_mode;
     }
 
     pub fn toggle_clock_mode(&mut self) {
@@ -119,8 +120,8 @@ impl UiState {
         self.save_state();
     }
 
-    pub fn toggle_debug_layout(&mut self) {
-        self.meta.toggle_debug_layout();
+    pub fn toggle_dev_mode(&mut self) {
+        self.meta.toggle_dev_mode();
     }
 
     pub fn toggle_clock_mode(&mut self) {
@@ -376,7 +377,7 @@ mod tests {
         let mut ui = UiState::new();
         let baseline = ui.hero_clock_attachment();
 
-        ui.toggle_debug_layout();
+        ui.toggle_dev_mode();
         ui.toggle_clock_mode();
 
         let after_toggle = ui.hero_clock_attachment();
@@ -403,7 +404,7 @@ mod tests {
                 hero_fps: 4.5,
             },
             meta: MetaState {
-                debug_layout: true,
+                dev_mode: true,
                 anchored_clock: true,
             },
         };
@@ -420,7 +421,7 @@ mod tests {
         assert_eq!(round_trip.offsets.clock_dy, -5);
         assert_eq!(round_trip.offsets.clock_font, "fender");
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
-        assert!(round_trip.meta.debug_layout);
+        assert!(round_trip.meta.dev_mode);
         assert!(round_trip.meta.anchored_clock);
     }
 
@@ -448,7 +449,7 @@ mod tests {
         assert_eq!(snapshot.offsets.clock_dy, -6);
         assert_eq!(snapshot.offsets.clock_font, "small");
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
-        assert!(!snapshot.meta.debug_layout);
+        assert!(!snapshot.meta.dev_mode);
         assert!(!snapshot.meta.anchored_clock);
     }
 }

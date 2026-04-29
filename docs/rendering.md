@@ -74,7 +74,7 @@ The active implementation treats camera as a viewport crop helper:
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
-- debug overlay and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
+- dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - `anchored_clock` is a presentation flag: it chooses between the world-attached hero companion clock and the screen-attached HUD fallback clock
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.

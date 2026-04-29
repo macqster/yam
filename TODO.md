@@ -152,4 +152,4 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] prefer negative tests for forbidden behavior when adding new render, layer, attachment, or mask rules.
 - [verify] isolate temp files and other shared runtime artifacts by run when tests or helpers need them.
 - [verify] boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.
-- [verify] metamechanics remains a subordinate control/observation seam inside `ui/`; it may toggle presentation flags, but it does not own world state, projection, or render order.
+- [verify] metamechanics remains a subordinate control/observation seam inside `ui/`; `dev_mode` may toggle presentation flags, but it does not own world state, projection, or render order.

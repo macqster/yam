@@ -164,6 +164,7 @@ This file is append-only and historical only; current rules live in the active d
 - simplified the passive camera/world indicators into a minimal gauge look with dot tracks and bold blue thumbs to make the dev overlay cleaner without changing the diagnostic mapping
 - softened the horizontal camera indicator thumb so the gauge reads lighter while the vertical bar keeps its stronger weight
 - switched the camera/world gauge glyphs to a thinner `┄`/`═` horizontal pair and `┊`/`║` vertical pair for a cleaner diagnostic look
+- changed the default camera path so follow-hero mode stays centered on the world datum across terminal resizes instead of keeping the old top-left-leaning windowed baseline
 
 ## Log Rules
 

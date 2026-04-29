@@ -130,7 +130,7 @@ fn camera_for_frame(full: Rect, ui: &UiState) -> crate::scene::camera::Camera {
     let mut camera = ui.camera;
     camera.width = full.width;
     camera.height = full.height;
-    if is_fullscreen_like(full) {
+    if ui.camera.follow_hero || is_fullscreen_like(full) {
         camera.x = -(full.width as i32) / 2;
         camera.y = -(full.height as i32) / 2;
     } else {
@@ -238,20 +238,21 @@ mod tests {
     }
 
     #[test]
-    fn default_camera_matches_124x32_starting_baseline() {
+    fn follow_hero_camera_centers_on_the_viewport() {
         let ui = UiState::new();
         let windowed = Rect::new(0, 0, 124, 32);
         let state = build_render_state(windowed, &ui);
 
         assert_eq!(state.hud.camera.width, windowed.width);
         assert_eq!(state.hud.camera.height, windowed.height);
-        assert_eq!(state.hud.camera.x, -69);
-        assert_eq!(state.hud.camera.y, -17);
+        assert_eq!(state.hud.camera.x, -(windowed.width as i32) / 2);
+        assert_eq!(state.hud.camera.y, -(windowed.height as i32) / 2);
     }
 
     #[test]
     fn windowed_camera_clamps_to_one_cell_world_overscan() {
         let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
         ui.offsets.camera_x = -200;
         ui.offsets.camera_y = 200;
         ui.camera.x = ui.offsets.camera_x;
@@ -269,6 +270,7 @@ mod tests {
     #[test]
     fn resize_round_trip_preserves_world_facts_and_windowed_camera_rules() {
         let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
         ui.offsets.camera_x = -200;
         ui.offsets.camera_y = 200;
         ui.camera.x = ui.offsets.camera_x;
@@ -316,6 +318,7 @@ mod tests {
     #[test]
     fn windowed_camera_keeps_mutable_offset_inside_bounds() {
         let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
         ui.offsets.camera_x = -77;
         ui.offsets.camera_y = -17;
         ui.camera.x = ui.offsets.camera_x;
@@ -326,6 +329,16 @@ mod tests {
 
         assert_eq!(state.hud.camera.x, ui.camera.x);
         assert_eq!(state.hud.camera.y, ui.camera.y);
+    }
+
+    #[test]
+    fn centered_follow_hero_camera_syncs_to_viewport_center() {
+        let ui = UiState::new();
+        let windowed = Rect::new(0, 0, 124, 32);
+        let centered = build_render_state(windowed, &ui);
+
+        assert_eq!(centered.hud.camera.x, -62);
+        assert_eq!(centered.hud.camera.y, -16);
     }
 
     #[test]

@@ -89,8 +89,8 @@ The intended model is:
 - world space: simulation/object positions
 - camera: world-space origin of the visible crop, not the viewport itself
 - viewport: terminal-sized crop rectangle, not the camera itself
-- windowed camera crops are clamped to one cell of overscan beyond the world border/frame
-- the default `124x32` windowed crop starts at camera `(-69, -17)`
+- default follow-hero camera crops are centered on the world datum across resizes; manual pan mode is clamped to one cell of overscan beyond the world border/frame
+- the default centered `124x32` crop starts at camera `(-62, -16)`
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
 - world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement

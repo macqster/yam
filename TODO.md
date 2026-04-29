@@ -156,3 +156,4 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] isolate temp files and other shared runtime artifacts by run when tests or helpers need them.
 - [verify] boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.
 - [verify] metamechanics remains a subordinate control/observation seam inside `ui/`; `dev_mode` may toggle presentation flags, but it does not own world state, projection, or render order.
+- [verify] follow-hero camera mode stays centered on the world datum across terminal resizes, while manual pan mode remains clamped to world overscan.

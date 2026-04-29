@@ -141,7 +141,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         terminal.autoresize().ok();
         let size = terminal.size()?;
-        ui_state.clamp_camera(size.width as i32, size.height as i32);
+        if ui_state.camera.follow_hero {
+            ui_state.sync_camera_to_viewport_center(size.width as i32, size.height as i32);
+        } else {
+            ui_state.clamp_camera(size.width as i32, size.height as i32);
+        }
         terminal.draw(|frame| {
             render_scene(frame, &world, &ui_state, &fonts);
         })?;

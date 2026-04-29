@@ -267,12 +267,9 @@ impl UiState {
         self.camera.y = self.offsets.camera_y;
     }
 
-    #[allow(dead_code)]
-    pub fn center_camera_to_viewport(&mut self, screen_w: i32, screen_h: i32) {
-        use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
-
-        self.offsets.camera_x = WORLD_HALF_W - screen_w / 2;
-        self.offsets.camera_y = WORLD_HALF_H - screen_h / 2;
+    pub fn sync_camera_to_viewport_center(&mut self, screen_w: i32, screen_h: i32) {
+        self.offsets.camera_x = -(screen_w / 2);
+        self.offsets.camera_y = -(screen_h / 2);
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
     }
@@ -389,6 +386,7 @@ mod tests {
     #[test]
     fn clamp_camera_limits_windowed_pan_to_one_cell_overscan() {
         let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
         ui.offsets.camera_x = 500;
         ui.offsets.camera_y = -500;
         ui.camera.x = ui.offsets.camera_x;
@@ -400,6 +398,19 @@ mod tests {
         assert_eq!(ui.offsets.camera_y, -29);
         assert_eq!(ui.camera.x, ui.offsets.camera_x);
         assert_eq!(ui.camera.y, ui.offsets.camera_y);
+    }
+
+    #[test]
+    fn follow_hero_camera_syncs_to_viewport_center_without_disabling_follow_mode() {
+        let mut ui = UiState::new();
+
+        ui.sync_camera_to_viewport_center(124, 32);
+
+        assert!(ui.camera.follow_hero);
+        assert_eq!(ui.offsets.camera_x, -62);
+        assert_eq!(ui.offsets.camera_y, -16);
+        assert_eq!(ui.camera.x, -62);
+        assert_eq!(ui.camera.y, -16);
     }
 
     #[test]

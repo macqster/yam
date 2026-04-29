@@ -3,7 +3,6 @@ use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
 use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
-use crate::scene::coords::WorldPos;
 use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
@@ -109,20 +108,7 @@ pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
     let camera = camera_for_frame(full, ui);
     let viewport = Viewport::from_camera(&camera, full.width, full.height);
     let viewport_rect = full;
-    let attachment = entity::hero_and_clock_poses(
-        WorldPos {
-            x: ui.hero.x,
-            y: ui.hero.y,
-        },
-        WorldPos {
-            x: ui.offsets.hero_dx,
-            y: ui.offsets.hero_dy,
-        },
-        WorldPos {
-            x: ui.offsets.clock_dx as i32,
-            y: ui.offsets.clock_dy as i32,
-        },
-    );
+    let attachment = ui.hero_clock_attachment();
     let hero_world = attachment.hero_world();
     let hero_visual_anchor = attachment.hero_visual_anchor();
     let clock_world = attachment.clock_world();

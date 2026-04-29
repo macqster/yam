@@ -7,6 +7,7 @@ use std::{
 use crate::render::fonts::ClockFont;
 use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
+use crate::scene::entity::HeroClockAttachment;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -103,6 +104,23 @@ impl UiState {
 
     pub fn toggle_clock_mode(&mut self) {
         self.anchored_clock = !self.anchored_clock;
+    }
+
+    pub fn hero_clock_attachment(&self) -> HeroClockAttachment {
+        HeroClockAttachment::new(
+            crate::scene::coords::WorldPos {
+                x: self.hero.x,
+                y: self.hero.y,
+            },
+            crate::scene::coords::WorldPos {
+                x: self.offsets.hero_dx,
+                y: self.offsets.hero_dy,
+            },
+            crate::scene::coords::WorldPos {
+                x: self.offsets.clock_dx as i32,
+                y: self.offsets.clock_dy as i32,
+            },
+        )
     }
 
     pub fn move_hero_offset_left(&mut self) {

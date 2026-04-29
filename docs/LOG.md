@@ -158,6 +158,7 @@ This file is append-only and historical only; current rules live in the active d
 - added passive camera/world scrollbar indicators to the dev-mode debug overlay at the third cell inward from the terminal edge, derived from `RenderState` and rendered read-only with ratatui scrollbars
 - corrected the scrollbar positioning math so the passive camera/world indicators track the actual viewport origin more faithfully, and recolored them dark blue to separate them from the footer bar
 - refined the scrollbar diagnostics to derive their size and placement from the visible crop so the bars describe camera/world position rather than reading like a scrollable panel
+- kept the passive camera/world indicators ratio-based and read-only while loosening the regression to match the actual ratatui thumb placement instead of a single hard-coded cell
 
 ## Log Rules
 

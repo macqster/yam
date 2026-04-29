@@ -152,6 +152,7 @@ This file is append-only and historical only; current rules live in the active d
 - removed the obsolete clock fallback toggle and updated the settings popup, docs, and clock layer so the clock is treated as a world entity only
 - documented the clock as a world-attached hero entity in the active scene/render/architecture contracts so debug info and settings text no longer imply a screen-attached UI clock
 - cleaned the default footer help so the main scene now shows a compact `[q]uit • [d]ev mode` hint with a right-aligned version stamp instead of the longer play/pause/step banner
+- kept the dev-mode footer on the same compact punctuation grammar as the default footer while preserving the richer runtime controls
 
 ## Log Rules
 

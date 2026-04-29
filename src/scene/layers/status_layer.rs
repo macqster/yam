@@ -25,7 +25,7 @@ impl Layer for StatusLayer {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
         let left_text = if ui.meta.dev_mode {
-            "  [q]uit   •   [d]ev mode   •   hjkl hero   •   HJKL clock   •   { } font"
+            "  [q]uit   •   [d]ev mode   •   [space] play/pause   •   [.] step   •   hjkl hero   •   HJKL clock"
         } else {
             "  [q]uit   •   [d]ev mode"
         };
@@ -105,5 +105,43 @@ mod tests {
         assert!(text.contains(&build_status_label()));
         assert!(!text.contains("space - play/pause"));
         assert!(!text.contains(". - step"));
+    }
+
+    #[test]
+    fn dev_footer_keeps_the_same_compact_grammar() {
+        let layer = StatusLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("  [q]uit   •   [d]ev mode"));
+        assert!(text.contains("[space] play/pause"));
+        assert!(text.contains("[.] step"));
     }
 }

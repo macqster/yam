@@ -76,7 +76,7 @@ The active implementation treats camera as a viewport crop helper:
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
-- the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned
+- the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
 

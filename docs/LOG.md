@@ -151,6 +151,7 @@ This file is append-only and historical only; current rules live in the active d
 - corrected the clock contract back to a single world-attached hero entity and removed the temporary HUD fallback path so the debug/info panels now describe the real attachment behavior
 - removed the obsolete clock fallback toggle and updated the settings popup, docs, and clock layer so the clock is treated as a world entity only
 - documented the clock as a world-attached hero entity in the active scene/render/architecture contracts so debug info and settings text no longer imply a screen-attached UI clock
+- cleaned the default footer help so the main scene now shows a compact `[q]uit • [d]ev mode` hint with a right-aligned version stamp instead of the longer play/pause/step banner
 
 ## Log Rules
 

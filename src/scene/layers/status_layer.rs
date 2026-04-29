@@ -25,9 +25,9 @@ impl Layer for StatusLayer {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
         let left_text = if ui.meta.dev_mode {
-            "q - quit   •   space - play/pause   •   . - step   •   [d]ev   •   hjkl hero   •   HJKL clock   •   { } font"
+            "  [q]uit   •   [d]ev mode   •   hjkl hero   •   HJKL clock   •   { } font"
         } else {
-            "q - quit   •   space - play/pause   •   . - step"
+            "  [q]uit   •   [d]ev mode"
         };
         let right_text = build_status_label();
         write_string(&mut grid, 0, footer_y, left_text, theme_style::panel_text());
@@ -50,7 +50,16 @@ fn footer_row(height: u16) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use super::footer_row;
+    use super::{build_status_label, footer_row, StatusLayer};
+    use crate::core::world::WorldState;
+    use crate::render::fonts::FontRegistry;
+    use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
+    use crate::scene::camera::Camera;
+    use crate::scene::coords::WorldPos;
+    use crate::scene::viewport::Viewport;
+    use crate::scene::Layer;
+    use crate::ui::state::UiState;
+    use ratatui::prelude::Rect;
 
     #[test]
     fn footer_uses_bottom_row_for_any_height() {
@@ -58,5 +67,43 @@ mod tests {
         assert_eq!(footer_row(36), 35);
         assert_eq!(footer_row(1), 0);
         assert_eq!(footer_row(0), 0);
+    }
+
+    #[test]
+    fn default_footer_shows_clean_dev_hint_and_version_stamp() {
+        let layer = StatusLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let ui = UiState::new();
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("  [q]uit   •   [d]ev mode"));
+        assert!(text.contains(&build_status_label()));
+        assert!(!text.contains("space - play/pause"));
+        assert!(!text.contains(". - step"));
     }
 }

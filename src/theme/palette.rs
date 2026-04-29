@@ -8,3 +8,4 @@ pub const MARKER: Color = Color::Yellow;
 pub const HERO_BG: Color = Color::Black;
 pub const FOOTER_BG: Color = Color::Rgb(29, 55, 33);
 pub const FOOTER_FG: Color = Color::Rgb(8, 12, 8);
+pub const FOOTER_THUMB: Color = Color::Rgb(92, 128, 98);

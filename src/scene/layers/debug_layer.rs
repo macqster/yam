@@ -1,10 +1,16 @@
 use crate::core::world::WorldState;
+use crate::render::compositor::Cell;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::coords::{world_to_screen, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
+use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
+use ratatui::{
+    buffer::Buffer,
+    widgets::{Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget},
+};
 
 pub struct DebugLayer;
 
@@ -26,6 +32,8 @@ impl Layer for DebugLayer {
         if !ui.meta.dev_mode {
             return LayerOutput { grid, mask: None };
         }
+
+        draw_camera_scrollbars(&mut grid, width, height, ctx);
 
         let panel_x = 10u16;
         let panel_y = 5u16;
@@ -135,6 +143,79 @@ impl Layer for DebugLayer {
     }
 }
 
+fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &RenderState) {
+    let inset = 2;
+    if width <= inset * 2 || height <= inset * 2 {
+        return;
+    }
+
+    let viewport = ctx.hud.viewport;
+    let horizontal_area = Rect::new(inset, inset, width - inset * 2, 1);
+    let vertical_area = Rect::new(inset, inset, 1, height - inset * 2);
+
+    let mut horizontal_state = ScrollbarState::new(crate::scene::WORLD_WIDTH as usize)
+        .viewport_content_length(viewport.width as usize)
+        .position(
+            (ctx.hud.camera.x + crate::scene::WORLD_HALF_W).clamp(0, crate::scene::WORLD_WIDTH - 1)
+                as usize,
+        );
+    let mut vertical_state = ScrollbarState::new(crate::scene::WORLD_HEIGHT as usize)
+        .viewport_content_length(viewport.height as usize)
+        .position(
+            (crate::scene::WORLD_HALF_H - 1 - ctx.hud.camera.y)
+                .clamp(0, crate::scene::WORLD_HEIGHT - 1) as usize,
+        );
+
+    let scrollbar_style = Scrollbar::new(ScrollbarOrientation::HorizontalTop)
+        .begin_symbol(None)
+        .end_symbol(None)
+        .track_symbol(Some("─"))
+        .thumb_symbol("▮")
+        .track_style(theme_style::camera_indicator_track())
+        .thumb_style(theme_style::camera_indicator_thumb());
+    render_scrollbar(
+        grid,
+        horizontal_area,
+        scrollbar_style,
+        &mut horizontal_state,
+    );
+
+    let scrollbar_style = Scrollbar::new(ScrollbarOrientation::VerticalLeft)
+        .begin_symbol(None)
+        .end_symbol(None)
+        .track_symbol(Some("│"))
+        .thumb_symbol("▮")
+        .track_style(theme_style::camera_indicator_track())
+        .thumb_style(theme_style::camera_indicator_thumb());
+    render_scrollbar(grid, vertical_area, scrollbar_style, &mut vertical_state);
+}
+
+fn render_scrollbar(
+    grid: &mut Grid,
+    area: Rect,
+    scrollbar: Scrollbar<'_>,
+    state: &mut ScrollbarState,
+) {
+    let mut buffer = Buffer::empty(area);
+    scrollbar.render(area, &mut buffer, state);
+    copy_buffer_to_grid(grid, &buffer);
+}
+
+fn copy_buffer_to_grid(grid: &mut Grid, buffer: &Buffer) {
+    for y in buffer.area.top()..buffer.area.bottom() {
+        for x in buffer.area.left()..buffer.area.right() {
+            if let Some(cell) = buffer.cell((x, y)) {
+                if let Some(dst) = grid.cell_mut(x, y) {
+                    *dst = Cell {
+                        symbol: cell.symbol().chars().next().unwrap_or(' '),
+                        style: cell.style(),
+                    };
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct BorderProbeBounds {
     left: i32,
@@ -158,8 +239,14 @@ fn border_probe_bounds() -> BorderProbeBounds {
 
 #[cfg(test)]
 mod tests {
-    use super::border_probe_bounds;
+    use super::{border_probe_bounds, draw_camera_scrollbars};
+    use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
+    use crate::scene::camera::Camera;
+    use crate::scene::coords::WorldPos;
+    use crate::scene::viewport::Viewport;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
+    use crate::theme::palette;
+    use ratatui::prelude::Rect;
 
     #[test]
     fn border_probe_stays_datum_centered_with_one_cell_inset() {
@@ -173,5 +260,50 @@ mod tests {
         assert_eq!(border.mid_y, 0);
         assert_eq!(border.top - border.bottom, crate::scene::WORLD_HEIGHT - 2);
         assert_eq!(border.right - border.left, crate::scene::WORLD_WIDTH - 1);
+    }
+
+    #[test]
+    fn camera_scrollbars_render_in_the_third_cell_inward() {
+        let mut grid = crate::render::compositor::Grid::new(124, 32);
+        let ctx = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+
+        draw_camera_scrollbars(&mut grid, 124, 32, &ctx);
+
+        let top_row = 2;
+        let left_col = 2;
+        let top_cell = &grid.cells[grid.index(left_col, top_row)];
+        let side_cell = &grid.cells[grid.index(left_col, top_row + 1)];
+        let thumb_present = grid
+            .cells
+            .iter()
+            .any(|cell| cell.style.fg == Some(palette::FOOTER_THUMB));
+
+        assert_ne!(top_cell.symbol, ' ');
+        assert_ne!(side_cell.symbol, ' ');
+        assert_eq!(top_cell.style.fg, Some(palette::FOOTER_BG));
+        assert_eq!(side_cell.style.fg, Some(palette::FOOTER_BG));
+        assert!(thumb_present);
     }
 }

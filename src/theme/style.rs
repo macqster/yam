@@ -24,3 +24,11 @@ pub fn footer_bar() -> Style {
         .bg(palette::FOOTER_BG)
         .fg(palette::FOOTER_FG)
 }
+
+pub fn camera_indicator_track() -> Style {
+    Style::default().fg(palette::FOOTER_BG)
+}
+
+pub fn camera_indicator_thumb() -> Style {
+    Style::default().fg(palette::FOOTER_THUMB)
+}

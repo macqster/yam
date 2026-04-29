@@ -50,6 +50,7 @@
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
+- the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge and read from `RenderState` only
 
 ## Out of Scope
 

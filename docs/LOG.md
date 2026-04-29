@@ -144,6 +144,7 @@ This file is append-only and historical only; current rules live in the active d
 - gave `anchored_clock` a concrete presentation meaning: it now switches the clock between a world-attached hero companion and a screen-attached HUD fallback, with a regression test covering both modes
 - renamed the umbrella metamechanics toggle from `debug_layout` to `dev_mode` so the control surface reads as editing/layout mode while `debug` stays the diagnostic surface
 - updated the footer help to show `[d]ev` as the visible hint for the `dev_mode` hotkey
+- added a frame-level regression test that pins the `[d]ev` footer hint in rendered output so the mode label is covered at the buffer/snapshot boundary
 
 ## Log Rules
 

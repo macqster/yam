@@ -475,6 +475,31 @@ mod tests {
     }
 
     #[test]
+    fn dev_mode_footer_hint_is_visible_in_frame_output() {
+        let backend = TestBackend::new(132, 36);
+        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
+        let world = crate::core::world::WorldState::new();
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        let fonts = crate::render::fonts::FontRegistry::new();
+
+        terminal
+            .draw(|frame| render_scene(frame, &world, &ui, &fonts))
+            .expect("frame should render");
+
+        let buffer = terminal.backend().buffer();
+        let footer_y = buffer.area.height.saturating_sub(1) as usize;
+        let footer_start = footer_y * buffer.area.width as usize;
+        let footer_end = footer_start + buffer.area.width as usize;
+        let footer_line: String = buffer.content[footer_start..footer_end]
+            .iter()
+            .map(|cell| cell.symbol().to_string())
+            .collect();
+
+        assert!(footer_line.contains("[d]ev"));
+    }
+
+    #[test]
     fn clock_screen_uses_active_render_state_projection() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = 30;

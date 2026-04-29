@@ -189,7 +189,7 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
         .begin_symbol(None)
         .end_symbol(None)
         .track_symbol(Some("·"))
-        .thumb_symbol("█")
+        .thumb_symbol("▂")
         .track_style(theme_style::camera_indicator_track())
         .thumb_style(theme_style::camera_indicator_thumb());
     render_scrollbar(

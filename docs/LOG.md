@@ -162,6 +162,7 @@ This file is append-only and historical only; current rules live in the active d
 - remapped the passive camera/world indicators to use the world-min camera offset as scroll position so the four corner positions line up with the world extents more naturally
 - normalized the passive camera/world scrollbar indicators across the full camera range so the top-left and bottom-right edge cases align with the scrollbar ends more faithfully
 - simplified the passive camera/world indicators into a minimal gauge look with dot tracks and bold blue thumbs to make the dev overlay cleaner without changing the diagnostic mapping
+- softened the horizontal camera indicator thumb so the gauge reads lighter while the vertical bar keeps its stronger weight
 
 ## Log Rules
 

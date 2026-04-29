@@ -49,6 +49,7 @@
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
 - `anchored_clock` is a metamechanics presentation flag: when enabled, the clock is rendered as a world-attached hero companion; when disabled, it falls back to screen-attached HUD placement
+- `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 
 ## Out of Scope
 
@@ -61,6 +62,7 @@
 - hero/entity: `z_index = 10`
 - clock/anchored UI: `z_index = 100`
 - debug overlay: `z_index = 300`
+- settings popup: `z_index = 400`
 - status/footer: `z_index = 1000`
 
 ## Presentation Contract

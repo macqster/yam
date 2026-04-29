@@ -333,7 +333,7 @@ mod tests {
         let layers = build_ui_layers();
         let z_indices: Vec<i32> = layers.iter().map(|layer| layer.z_index()).collect();
 
-        assert_eq!(z_indices, vec![0, 10, 100, 300, 1000]);
+        assert_eq!(z_indices, vec![0, 10, 100, 300, 400, 1000]);
     }
 
     struct MaskedFieldLayer;

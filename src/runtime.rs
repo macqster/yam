@@ -49,22 +49,26 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Char('q') => break 'run,
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
+                    KeyCode::Char('s') if ui_state.meta.dev_mode => ui_state.toggle_settings(),
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
-                    KeyCode::Left if ui_state.meta.dev_mode => {
+                    KeyCode::Left if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
                         ui_state.move_camera_left();
                     }
-                    KeyCode::Right if ui_state.meta.dev_mode => {
+                    KeyCode::Right if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
                         ui_state.move_camera_right();
                     }
-                    KeyCode::Up if ui_state.meta.dev_mode => {
+                    KeyCode::Up if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
                         ui_state.move_camera_up();
                     }
-                    KeyCode::Down if ui_state.meta.dev_mode => {
+                    KeyCode::Down if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
                         ui_state.move_camera_down();
                     }
+                    KeyCode::Tab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
+                        ui_state.next_settings_tab();
+                    }
                     KeyCode::Char(c) => {
-                        if ui_state.meta.dev_mode {
+                        if ui_state.meta.dev_mode && !ui_state.meta.settings_open {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
                             let base = c.to_ascii_lowercase();
                             match base {
@@ -114,7 +118,12 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             ui_state.toggle_clock_mode();
                         }
                     }
-                    KeyCode::F(5) if ui_state.meta.dev_mode => ui_state.next_font(),
+                    KeyCode::BackTab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
+                        ui_state.prev_settings_tab()
+                    }
+                    KeyCode::F(5) if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
+                        ui_state.next_font()
+                    }
                     _ => {}
                 }
             }

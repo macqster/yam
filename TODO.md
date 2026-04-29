@@ -128,6 +128,7 @@ This file is the repo-wide work order and stabilization checklist.
   - anchor integrity
   - rounding / jitter stability
 - [verify] frame-level render snapshots keep the footer/dev hint and other visible mode labels pinned to their current contract.
+- [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/widgets/gif/theme tabs staying presentation-only.
 - [inspect] audit the current projection path for any remaining split responsibilities.
 - [verify] use the bug taxonomy as a checklist for missing regression coverage.
 - [verify] the active backlog stays aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.

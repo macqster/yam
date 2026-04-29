@@ -145,6 +145,8 @@ This file is append-only and historical only; current rules live in the active d
 - renamed the umbrella metamechanics toggle from `debug_layout` to `dev_mode` so the control surface reads as editing/layout mode while `debug` stays the diagnostic surface
 - updated the footer help to show `[d]ev` as the visible hint for the `dev_mode` hotkey
 - added a frame-level regression test that pins the `[d]ev` footer hint in rendered output so the mode label is covered at the buffer/snapshot boundary
+- added a modal tabbed settings popup in the overlay layer, with `dev_mode` gating and tab sections for positions, widgets, gif, and theme values
+- inserted the settings popup between debug and footer in the active layer order and updated the layer-order contract to include its new `z_index = 400` tier
 
 ## Log Rules
 

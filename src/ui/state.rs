@@ -14,6 +14,8 @@ pub struct MetaState {
     #[serde(rename = "debug_layout")]
     pub dev_mode: bool,
     pub anchored_clock: bool,
+    pub settings_open: bool,
+    pub settings_tab: SettingsTab,
 }
 
 impl MetaState {
@@ -23,6 +25,56 @@ impl MetaState {
 
     pub fn toggle_clock_mode(&mut self) {
         self.anchored_clock = !self.anchored_clock;
+    }
+
+    pub fn toggle_settings(&mut self) {
+        self.settings_open = !self.settings_open;
+    }
+
+    pub fn next_settings_tab(&mut self) {
+        self.settings_tab = self.settings_tab.next();
+    }
+
+    pub fn prev_settings_tab(&mut self) {
+        self.settings_tab = self.settings_tab.prev();
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum SettingsTab {
+    #[default]
+    Positions,
+    Widgets,
+    Gif,
+    Theme,
+}
+
+impl SettingsTab {
+    pub fn next(self) -> Self {
+        match self {
+            SettingsTab::Positions => SettingsTab::Widgets,
+            SettingsTab::Widgets => SettingsTab::Gif,
+            SettingsTab::Gif => SettingsTab::Theme,
+            SettingsTab::Theme => SettingsTab::Positions,
+        }
+    }
+
+    pub fn prev(self) -> Self {
+        match self {
+            SettingsTab::Positions => SettingsTab::Theme,
+            SettingsTab::Widgets => SettingsTab::Positions,
+            SettingsTab::Gif => SettingsTab::Widgets,
+            SettingsTab::Theme => SettingsTab::Gif,
+        }
+    }
+
+    pub fn title(self) -> &'static str {
+        match self {
+            SettingsTab::Positions => "positions",
+            SettingsTab::Widgets => "widgets",
+            SettingsTab::Gif => "gif",
+            SettingsTab::Theme => "theme",
+        }
     }
 }
 
@@ -122,6 +174,18 @@ impl UiState {
 
     pub fn toggle_dev_mode(&mut self) {
         self.meta.toggle_dev_mode();
+    }
+
+    pub fn toggle_settings(&mut self) {
+        self.meta.toggle_settings();
+    }
+
+    pub fn next_settings_tab(&mut self) {
+        self.meta.next_settings_tab();
+    }
+
+    pub fn prev_settings_tab(&mut self) {
+        self.meta.prev_settings_tab();
     }
 
     pub fn toggle_clock_mode(&mut self) {
@@ -328,7 +392,7 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{MetaState, UiOffsets, UiState, UiStateSnapshot};
+    use super::{MetaState, SettingsTab, UiOffsets, UiState, UiStateSnapshot};
     use crate::scene::coords::WorldPos;
 
     #[test]
@@ -406,6 +470,8 @@ mod tests {
             meta: MetaState {
                 dev_mode: true,
                 anchored_clock: true,
+                settings_open: true,
+                settings_tab: SettingsTab::Theme,
             },
         };
 
@@ -423,6 +489,8 @@ mod tests {
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.dev_mode);
         assert!(round_trip.meta.anchored_clock);
+        assert!(round_trip.meta.settings_open);
+        assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
     }
 
     #[test]
@@ -451,5 +519,7 @@ mod tests {
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
         assert!(!snapshot.meta.dev_mode);
         assert!(!snapshot.meta.anchored_clock);
+        assert!(!snapshot.meta.settings_open);
+        assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
     }
 }

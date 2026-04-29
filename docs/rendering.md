@@ -21,6 +21,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - L10 - hero/entity
 - L100 - anchored clock
 - L300 - debug overlay
+- L400 - settings popup
 - L1000 - status/footer
 
 ## Rules
@@ -76,6 +77,7 @@ The active implementation treats camera as a viewport crop helper:
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - `anchored_clock` is a presentation flag: it chooses between the world-attached hero companion clock and the screen-attached HUD fallback clock
+- the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

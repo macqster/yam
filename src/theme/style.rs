@@ -1,3 +1,4 @@
+use ratatui::style::Modifier;
 use ratatui::style::Style;
 
 use super::palette;
@@ -26,9 +27,13 @@ pub fn footer_bar() -> Style {
 }
 
 pub fn camera_indicator_track() -> Style {
-    Style::default().fg(palette::CAMERA_TRACK)
+    Style::default()
+        .fg(palette::CAMERA_TRACK)
+        .add_modifier(Modifier::DIM)
 }
 
 pub fn camera_indicator_thumb() -> Style {
-    Style::default().fg(palette::CAMERA_THUMB)
+    Style::default()
+        .fg(palette::CAMERA_THUMB)
+        .add_modifier(Modifier::BOLD)
 }

@@ -188,8 +188,8 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
     let scrollbar_style = Scrollbar::new(ScrollbarOrientation::HorizontalTop)
         .begin_symbol(None)
         .end_symbol(None)
-        .track_symbol(Some("─"))
-        .thumb_symbol("▮")
+        .track_symbol(Some("·"))
+        .thumb_symbol("█")
         .track_style(theme_style::camera_indicator_track())
         .thumb_style(theme_style::camera_indicator_thumb());
     render_scrollbar(
@@ -202,8 +202,8 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
     let scrollbar_style = Scrollbar::new(ScrollbarOrientation::VerticalLeft)
         .begin_symbol(None)
         .end_symbol(None)
-        .track_symbol(Some("│"))
-        .thumb_symbol("▮")
+        .track_symbol(Some("·"))
+        .thumb_symbol("█")
         .track_style(theme_style::camera_indicator_track())
         .thumb_style(theme_style::camera_indicator_thumb());
     render_scrollbar(grid, vertical_area, scrollbar_style, &mut vertical_state);

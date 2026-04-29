@@ -39,6 +39,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 ## Pipeline
 
 - `runtime` receives input and ticks state
+- all scene rendering passes through `render_scene`
 - `render_scene` builds a temporary `Scene`
 - `Scene::render` uses the full terminal area for viewport and viewport rect values
 - `Scene::render` also computes a single read-only `RenderState` for hero/clock/debug values

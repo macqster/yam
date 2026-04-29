@@ -140,6 +140,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a second `UiState::hero_clock_attachment()` test to prove offset changes flow through the attachment object as expected
 - split the debug/clock control flags into a small `UiState::meta` substate, added a regression test proving metamechanics toggles do not affect attachment facts, and documented the subordinate metamechanics boundary in architecture/rendering/TODO
 - persisted the metamechanics toggles alongside the existing UI state bundle so debug/layout and anchored-clock preferences now survive reloads, with a snapshot roundtrip test covering the new state shape
+- added a legacy offsets-only load path test so the persisted UI snapshot still accepts old state files while defaulting metamechanics flags to false
 
 ## Log Rules
 

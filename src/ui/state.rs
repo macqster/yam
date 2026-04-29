@@ -260,10 +260,14 @@ impl UiState {
     fn load_snapshot() -> io::Result<UiStateSnapshot> {
         let path = Self::state_path();
         let data = fs::read_to_string(path)?;
-        if let Ok(snapshot) = serde_json::from_str::<UiStateSnapshot>(&data) {
+        Self::snapshot_from_json(&data)
+    }
+
+    fn snapshot_from_json(data: &str) -> io::Result<UiStateSnapshot> {
+        if let Ok(snapshot) = serde_json::from_str::<UiStateSnapshot>(data) {
             return Ok(snapshot);
         }
-        let offsets = serde_json::from_str::<UiOffsets>(&data)
+        let offsets = serde_json::from_str::<UiOffsets>(data)
             .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
         Ok(UiStateSnapshot {
             offsets,
@@ -418,5 +422,33 @@ mod tests {
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.debug_layout);
         assert!(round_trip.meta.anchored_clock);
+    }
+
+    #[test]
+    fn legacy_offsets_only_snapshot_defaults_meta() {
+        let legacy = serde_json::json!({
+            "camera_x": 3,
+            "camera_y": -4,
+            "hero_dx": -9,
+            "hero_dy": -8,
+            "clock_dx": 7,
+            "clock_dy": -6,
+            "clock_font": "small",
+            "hero_fps": 1.5
+        })
+        .to_string();
+
+        let snapshot = UiState::snapshot_from_json(&legacy).expect("legacy snapshot should load");
+
+        assert_eq!(snapshot.offsets.camera_x, 3);
+        assert_eq!(snapshot.offsets.camera_y, -4);
+        assert_eq!(snapshot.offsets.hero_dx, -9);
+        assert_eq!(snapshot.offsets.hero_dy, -8);
+        assert_eq!(snapshot.offsets.clock_dx, 7);
+        assert_eq!(snapshot.offsets.clock_dy, -6);
+        assert_eq!(snapshot.offsets.clock_font, "small");
+        assert_eq!(snapshot.offsets.hero_fps, 1.5);
+        assert!(!snapshot.meta.debug_layout);
+        assert!(!snapshot.meta.anchored_clock);
     }
 }

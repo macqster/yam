@@ -127,6 +127,8 @@ This file is append-only and historical only; current rules live in the active d
 - added further-development guidelines to `TODO.md` so new backlog items stay execution-only and continue to point at the owning contract docs
 - clarified in `docs/rendering.md` and `TODO.md` that all scene rendering continues through the existing `render_scene` / `Scene::render` pipeline
 - added a mask-semantics test proving the hero mask only blocks the field layer, and tightened the corresponding wording in the render and scene-model contracts
+- added a negative mask-semantics test proving the hero mask does not block non-field overlay layers
+- reinforced the scene layer mask contract with a direct overlay-layer negative test in `src/scene/mod.rs`
 
 ## Log Rules
 

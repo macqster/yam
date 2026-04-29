@@ -421,6 +421,50 @@ mod tests {
         assert_eq!(buffer.content[0].symbol(), " ");
     }
 
+    struct HudOverlayLayer;
+    impl Layer for HudOverlayLayer {
+        fn z_index(&self) -> i32 {
+            100
+        }
+
+        fn render_to_grid(
+            &self,
+            width: u16,
+            height: u16,
+            _world: &WorldState,
+            _ui: &UiState,
+            _fonts: &FontRegistry,
+            _render_state: &RenderState,
+        ) -> LayerOutput {
+            let mut grid = Grid::new(width, height);
+            if let Some(cell) = grid.cell_mut(0, 0) {
+                cell.symbol = 'U';
+            }
+            LayerOutput { grid, mask: None }
+        }
+    }
+
+    #[test]
+    fn hero_mask_does_not_block_non_field_layers() {
+        let layers: Vec<Box<dyn Layer>> = vec![
+            Box::new(MaskLayer),
+            Box::new(MaskedFieldLayer),
+            Box::new(HudOverlayLayer),
+        ];
+        let scene = Scene::new(layers);
+        let mut terminal = Terminal::new(TestBackend::new(2, 1)).expect("terminal should init");
+        let world = WorldState::new();
+        let ui = UiState::new();
+        let fonts = FontRegistry::new();
+
+        terminal
+            .draw(|frame| scene.render(frame, &world, &ui, &fonts))
+            .expect("scene render should succeed");
+
+        let buffer = terminal.backend().buffer();
+        assert_eq!(buffer.content[0].symbol(), "U");
+    }
+
     #[test]
     fn full_frame_render_is_deterministic_for_identical_inputs() {
         let backend = TestBackend::new(132, 36);

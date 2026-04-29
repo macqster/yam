@@ -27,6 +27,7 @@
 - `render -> world mutation`
 - `scene layers -> persistent state mutation`
 - `ui widgets -> world mutation`
+- `metamechanics -> world mutation outside the explicit UI state seam`
 
 ## Rendering Pipeline
 
@@ -45,6 +46,7 @@
 - scene rendering uses the full terminal area for viewport and viewport-rect values
 - the scene model contract lives in [`scene-model.md`](scene-model.md) and defines the deterministic layer/space/masking rules above ratatui
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
+- metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 
 ## Out of Scope
 

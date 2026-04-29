@@ -138,6 +138,7 @@ This file is append-only and historical only; current rules live in the active d
 - moved hero and clock attachment construction behind a `UiState` accessor so the frame builder reads one attachment source of truth
 - added a `UiState::hero_clock_attachment()` test and documented `UiState` as the runtime source of truth for hero, clock, and camera attachment inputs
 - added a second `UiState::hero_clock_attachment()` test to prove offset changes flow through the attachment object as expected
+- split the debug/clock control flags into a small `UiState::meta` substate, added a regression test proving metamechanics toggles do not affect attachment facts, and documented the subordinate metamechanics boundary in architecture/rendering/TODO
 
 ## Log Rules
 

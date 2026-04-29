@@ -23,7 +23,7 @@ impl Layer for DebugLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.debug_layout {
+        if !ui.meta.debug_layout {
             return LayerOutput { grid, mask: None };
         }
 

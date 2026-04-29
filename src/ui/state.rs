@@ -9,6 +9,22 @@ use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
 use crate::scene::entity::HeroClockAttachment;
 
+#[derive(Clone, Debug, Default)]
+pub struct MetaState {
+    pub debug_layout: bool,
+    pub anchored_clock: bool,
+}
+
+impl MetaState {
+    pub fn toggle_debug_layout(&mut self) {
+        self.debug_layout = !self.debug_layout;
+    }
+
+    pub fn toggle_clock_mode(&mut self) {
+        self.anchored_clock = !self.anchored_clock;
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct UiOffsets {
@@ -40,8 +56,7 @@ impl Default for UiOffsets {
 pub struct UiState {
     pub fps: f64,
     pub clock_font: ClockFont,
-    pub debug_layout: bool,
-    pub anchored_clock: bool,
+    pub meta: MetaState,
     pub offsets: UiOffsets,
     pub camera: Camera,
     pub hero: Hero,
@@ -56,9 +71,8 @@ impl UiState {
         camera.y = offsets.camera_y;
         Self {
             fps: 0.0,
-            debug_layout: false,
-            anchored_clock: false,
             clock_font: ClockFont::Gothic,
+            meta: MetaState::default(),
             offsets,
             camera,
             hero,
@@ -99,11 +113,11 @@ impl UiState {
     }
 
     pub fn toggle_debug_layout(&mut self) {
-        self.debug_layout = !self.debug_layout;
+        self.meta.toggle_debug_layout();
     }
 
     pub fn toggle_clock_mode(&mut self) {
-        self.anchored_clock = !self.anchored_clock;
+        self.meta.toggle_clock_mode();
     }
 
     pub fn hero_clock_attachment(&self) -> HeroClockAttachment {
@@ -332,5 +346,23 @@ mod tests {
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
         assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: 50, y: 10 });
         assert_eq!(attachment.clock_world(), WorldPos { x: 62, y: 7 });
+    }
+
+    #[test]
+    fn toggling_meta_does_not_change_attachment_facts() {
+        let mut ui = UiState::new();
+        let baseline = ui.hero_clock_attachment();
+
+        ui.toggle_debug_layout();
+        ui.toggle_clock_mode();
+
+        let after_toggle = ui.hero_clock_attachment();
+
+        assert_eq!(baseline.hero_world(), after_toggle.hero_world());
+        assert_eq!(
+            baseline.hero_visual_anchor(),
+            after_toggle.hero_visual_anchor()
+        );
+        assert_eq!(baseline.clock_world(), after_toggle.clock_world());
     }
 }

@@ -25,43 +25,19 @@ impl Layer for ClockLayer {
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let lines = clock_lines(ui, fonts);
-        let origin = clock_origin(ui.meta.anchored_clock, width, height, ctx, &lines);
-        if let Some((start_x, start_y)) = origin {
+        let screen_pos = ctx.clock_screen();
+        if is_visible(screen_pos, width, height, &lines) {
             for (i, line) in lines.iter().enumerate() {
                 write_string(
                     &mut grid,
-                    start_x,
-                    start_y + i as u16,
+                    screen_pos.x.max(0) as u16,
+                    screen_pos.y.max(0) as u16 + i as u16,
                     line,
                     Style::default(),
                 );
             }
         }
         LayerOutput { grid, mask: None }
-    }
-}
-
-fn clock_origin(
-    anchored_clock: bool,
-    width: u16,
-    height: u16,
-    ctx: &RenderState,
-    lines: &[String],
-) -> Option<(u16, u16)> {
-    if anchored_clock {
-        let screen_pos = ctx.clock_screen();
-        if is_visible(screen_pos, width, height, lines) {
-            Some((screen_pos.x.max(0) as u16, screen_pos.y.max(0) as u16))
-        } else {
-            None
-        }
-    } else {
-        let clock_width = lines
-            .iter()
-            .map(|l| l.chars().count() as i32)
-            .max()
-            .unwrap_or(0);
-        Some((width.saturating_sub(clock_width as u16 + 1), 0))
     }
 }
 
@@ -79,7 +55,7 @@ fn is_visible(pos: WorldPos, viewport_width: u16, viewport_height: u16, lines: &
 
 #[cfg(test)]
 mod tests {
-    use super::{clock_origin, is_visible};
+    use super::is_visible;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
     use crate::scene::coords::WorldPos;
@@ -87,7 +63,7 @@ mod tests {
     use ratatui::prelude::Rect;
 
     #[test]
-    fn anchored_clock_uses_projection_while_hud_clock_stays_screen_attached() {
+    fn clock_uses_projection_from_the_shared_render_state() {
         let lines = vec!["12:34".to_string()];
         let render_state = RenderState {
             world: WorldFrame {
@@ -113,11 +89,7 @@ mod tests {
             },
         };
 
-        let anchored = clock_origin(true, 124, 32, &render_state, &lines);
-        let hud = clock_origin(false, 124, 32, &render_state, &lines);
-
         assert!(is_visible(render_state.clock_screen(), 124, 32, &lines));
-        assert_eq!(anchored, Some((15, 15)));
-        assert_eq!(hud, Some((118, 0)));
+        assert_eq!(render_state.clock_screen(), WorldPos { x: 15, y: 15 });
     }
 }

@@ -100,8 +100,8 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState) {
         ],
         SettingsTab::Widgets => vec![
             format!("dev mode: {}", ui.meta.dev_mode),
-            format!("anchored clock: {}", ui.meta.anchored_clock),
             format!("settings open: {}", ui.meta.settings_open),
+            "clock: hero-attached world entity".to_string(),
         ],
         SettingsTab::Gif => vec![
             format!("hero fps: {:.1}", ui.offsets.hero_fps),
@@ -180,6 +180,6 @@ mod tests {
 
         assert!(text.contains("widgets"));
         assert!(text.contains("dev mode: true"));
-        assert!(text.contains("anchored clock: false"));
+        assert!(text.contains("clock: hero-attached world entity"));
     }
 }

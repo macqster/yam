@@ -13,7 +13,6 @@ use crate::scene::entity::hero_and_clock_poses;
 pub struct MetaState {
     #[serde(rename = "debug_layout")]
     pub dev_mode: bool,
-    pub anchored_clock: bool,
     pub settings_open: bool,
     pub settings_tab: SettingsTab,
 }
@@ -21,10 +20,6 @@ pub struct MetaState {
 impl MetaState {
     pub fn toggle_dev_mode(&mut self) {
         self.dev_mode = !self.dev_mode;
-    }
-
-    pub fn toggle_clock_mode(&mut self) {
-        self.anchored_clock = !self.anchored_clock;
     }
 
     pub fn toggle_settings(&mut self) {
@@ -186,10 +181,6 @@ impl UiState {
 
     pub fn prev_settings_tab(&mut self) {
         self.meta.prev_settings_tab();
-    }
-
-    pub fn toggle_clock_mode(&mut self) {
-        self.meta.toggle_clock_mode();
     }
 
     pub fn hero_clock_attachment(&self) -> crate::scene::entity::HeroClockAttachment {
@@ -442,7 +433,6 @@ mod tests {
         let baseline = ui.hero_clock_attachment();
 
         ui.toggle_dev_mode();
-        ui.toggle_clock_mode();
 
         let after_toggle = ui.hero_clock_attachment();
 
@@ -469,7 +459,6 @@ mod tests {
             },
             meta: MetaState {
                 dev_mode: true,
-                anchored_clock: true,
                 settings_open: true,
                 settings_tab: SettingsTab::Theme,
             },
@@ -488,7 +477,6 @@ mod tests {
         assert_eq!(round_trip.offsets.clock_font, "fender");
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.dev_mode);
-        assert!(round_trip.meta.anchored_clock);
         assert!(round_trip.meta.settings_open);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
     }
@@ -518,7 +506,6 @@ mod tests {
         assert_eq!(snapshot.offsets.clock_font, "small");
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
         assert!(!snapshot.meta.dev_mode);
-        assert!(!snapshot.meta.anchored_clock);
         assert!(!snapshot.meta.settings_open);
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
     }

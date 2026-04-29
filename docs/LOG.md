@@ -148,6 +148,8 @@ This file is append-only and historical only; current rules live in the active d
 - added a modal tabbed settings popup in the overlay layer, with `dev_mode` gating and tab sections for positions, widgets, gif, and theme values
 - inserted the settings popup between debug and footer in the active layer order and updated the layer-order contract to include its new `z_index = 400` tier
 - restored `UiState::hero_clock_attachment()` to the shared `hero_and_clock_poses(...)` helper so the attachment seam remains live and `cargo install` stays warning-free
+- corrected the clock contract back to a single world-attached hero entity and removed the temporary HUD fallback path so the debug/info panels now describe the real attachment behavior
+- removed the obsolete clock fallback toggle and updated the settings popup, docs, and clock layer so the clock is treated as a world entity only
 
 ## Log Rules
 

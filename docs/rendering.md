@@ -66,7 +66,7 @@ The active implementation treats camera as a viewport crop helper:
 - debug border sampling is a datum-centered world-space probe that is projected through the active camera; it is not HUD chrome
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly
-- the clock is world-ui: it follows the hero in world space and keeps its own relative offset
+- the clock is a world entity: it follows the hero in world space and keeps its own relative offset
 - the footer/status bar is hud-ui: it is screen-attached and does not inherit world motion
 - world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - fullscreen is a special case of the camera contract: when the viewport matches or exceeds the world extent, the visible crop should be static and centered on the world datum `(0, 0)`, even if debug controls still mutate the stored camera position
@@ -76,7 +76,6 @@ The active implementation treats camera as a viewport crop helper:
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
-- `anchored_clock` is a presentation flag: it chooses between the world-attached hero companion clock and the screen-attached HUD fallback clock
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.

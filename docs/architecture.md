@@ -48,7 +48,6 @@
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
-- `anchored_clock` is a metamechanics presentation flag: when enabled, the clock is rendered as a world-attached hero companion; when disabled, it falls back to screen-attached HUD placement
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 
 ## Out of Scope
@@ -60,7 +59,7 @@
 
 - field/background: `z_index = 0`
 - hero/entity: `z_index = 10`
-- clock/anchored UI: `z_index = 100`
+- clock/world entity: `z_index = 100`
 - debug overlay: `z_index = 300`
 - settings popup: `z_index = 400`
 - status/footer: `z_index = 1000`
@@ -95,7 +94,7 @@ The intended model is:
 - world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement
 - world-ui elements stay tied to world entities and follow the world contract
 - hud-ui elements stay tied to viewport/camera/terminal position and follow the screen contract
-- clock is treated as world-ui: it stays tied to the hero in world space and carries its own hero-relative offset
+- clock is treated as a world entity: it stays tied to the hero in world space and carries its own hero-relative offset
 - footer/status is treated as hud-ui: it lives in screen space alongside hotkeys and version/build labels
 - the repo now exposes explicit helpers for both sides of that split:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned

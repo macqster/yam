@@ -114,8 +114,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             } else if c == '-' {
                                 ui_state.decrease_hero_fps();
                             }
-                        } else if c == 'c' {
-                            ui_state.toggle_clock_mode();
                         }
                     }
                     KeyCode::BackTab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {

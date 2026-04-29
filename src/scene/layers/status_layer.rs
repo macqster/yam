@@ -25,7 +25,7 @@ impl Layer for StatusLayer {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
         let left_text = if ui.meta.dev_mode {
-            "q - quit   •   space - play/pause   •   . - step   •   d - debug   •   hjkl hero   •   HJKL clock   •   { } font"
+            "q - quit   •   space - play/pause   •   . - step   •   [d]ev   •   hjkl hero   •   HJKL clock   •   { } font"
         } else {
             "q - quit   •   space - play/pause   •   . - step"
         };

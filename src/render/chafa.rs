@@ -64,7 +64,6 @@ mod tests {
     #[test]
     fn hero_frame_buffer_has_multiple_frames() {
         let frames = hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
-        println!("LOADED FRAME COUNT: {}", frames.len());
         assert!(frames.len() > 1, "expected multiple hero frames");
     }
 

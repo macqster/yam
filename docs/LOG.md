@@ -141,6 +141,7 @@ This file is append-only and historical only; current rules live in the active d
 - split the debug/clock control flags into a small `UiState::meta` substate, added a regression test proving metamechanics toggles do not affect attachment facts, and documented the subordinate metamechanics boundary in architecture/rendering/TODO
 - persisted the metamechanics toggles alongside the existing UI state bundle so debug/layout and anchored-clock preferences now survive reloads, with a snapshot roundtrip test covering the new state shape
 - added a legacy offsets-only load path test so the persisted UI snapshot still accepts old state files while defaulting metamechanics flags to false
+- gave `anchored_clock` a concrete presentation meaning: it now switches the clock between a world-attached hero companion and a screen-attached HUD fallback, with a regression test covering both modes
 
 ## Log Rules
 

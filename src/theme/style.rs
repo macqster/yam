@@ -26,9 +26,9 @@ pub fn footer_bar() -> Style {
 }
 
 pub fn camera_indicator_track() -> Style {
-    Style::default().fg(palette::FOOTER_BG)
+    Style::default().fg(palette::CAMERA_TRACK)
 }
 
 pub fn camera_indicator_thumb() -> Style {
-    Style::default().fg(palette::FOOTER_THUMB)
+    Style::default().fg(palette::CAMERA_THUMB)
 }

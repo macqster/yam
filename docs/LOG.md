@@ -156,6 +156,8 @@ This file is append-only and historical only; current rules live in the active d
 - removed the redundant loaded-frame-count print from hero loading so the frame count stays visible only in the debug/info panel
 - highlighted the footer row as a full-width soft green bar with dark inverse text so the main scene footer reads as a proper bar instead of plain text
 - added passive camera/world scrollbar indicators to the dev-mode debug overlay at the third cell inward from the terminal edge, derived from `RenderState` and rendered read-only with ratatui scrollbars
+- corrected the scrollbar positioning math so the passive camera/world indicators track the actual viewport origin more faithfully, and recolored them dark blue to separate them from the footer bar
+- refined the scrollbar diagnostics to derive their size and placement from the visible crop so the bars describe camera/world position rather than reading like a scrollable panel
 
 ## Log Rules
 

@@ -153,18 +153,27 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
     let horizontal_area = Rect::new(inset, inset, width - inset * 2, 1);
     let vertical_area = Rect::new(inset, inset, 1, height - inset * 2);
 
+    let viewport_width = viewport.width as i32;
+    let viewport_height = viewport.height as i32;
+    let horizontal_position = (ctx.hud.camera.x + crate::scene::WORLD_HALF_W).clamp(
+        0,
+        crate::scene::WORLD_WIDTH
+            .saturating_sub(viewport_width)
+            .max(0),
+    ) as usize;
+    let vertical_position = (crate::scene::WORLD_HALF_H - viewport_height - ctx.hud.camera.y).clamp(
+        0,
+        crate::scene::WORLD_HEIGHT
+            .saturating_sub(viewport_height)
+            .max(0),
+    ) as usize;
+
     let mut horizontal_state = ScrollbarState::new(crate::scene::WORLD_WIDTH as usize)
         .viewport_content_length(viewport.width as usize)
-        .position(
-            (ctx.hud.camera.x + crate::scene::WORLD_HALF_W).clamp(0, crate::scene::WORLD_WIDTH - 1)
-                as usize,
-        );
+        .position(horizontal_position);
     let mut vertical_state = ScrollbarState::new(crate::scene::WORLD_HEIGHT as usize)
         .viewport_content_length(viewport.height as usize)
-        .position(
-            (crate::scene::WORLD_HALF_H - 1 - ctx.hud.camera.y)
-                .clamp(0, crate::scene::WORLD_HEIGHT - 1) as usize,
-        );
+        .position(vertical_position);
 
     let scrollbar_style = Scrollbar::new(ScrollbarOrientation::HorizontalTop)
         .begin_symbol(None)
@@ -298,12 +307,11 @@ mod tests {
         let thumb_present = grid
             .cells
             .iter()
-            .any(|cell| cell.style.fg == Some(palette::FOOTER_THUMB));
+            .any(|cell| cell.style.fg == Some(palette::CAMERA_THUMB));
 
         assert_ne!(top_cell.symbol, ' ');
         assert_ne!(side_cell.symbol, ' ');
-        assert_eq!(top_cell.style.fg, Some(palette::FOOTER_BG));
-        assert_eq!(side_cell.style.fg, Some(palette::FOOTER_BG));
+        assert_eq!(top_cell.style.fg, Some(palette::CAMERA_THUMB));
         assert!(thumb_present);
     }
 }

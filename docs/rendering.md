@@ -78,7 +78,7 @@ The active implementation treats camera as a viewport crop helper:
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
 - the footer bar is a full-width highlighted strip in soft dark green, and its text is rendered as dark inverse content on top of that bar
 - the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
-- the debug overlay can include passive camera/world scrollbar indicators anchored one cell inward from the terminal edge; they are read-only, derived from `RenderState`, and exist only as diagnostics
+- the debug overlay can include passive camera/world scrollbar indicators anchored one cell inward from the terminal edge; they are read-only, derived from `RenderState`, rendered in dark blue, and sized/positioned from the viewport origin and visible crop so they report camera/world placement rather than acting like a scrollable panel
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
 

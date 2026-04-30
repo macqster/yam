@@ -174,6 +174,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a hero-visible fact to the compact debug panel so the projected anchor can be distinguished from the actual in-frame footprint
 - changed the startup camera seed to manual pan so boot uses the balanced hero/clock composition instead of defaulting into follow-hero mode
 - retuned the manual boot camera seed to `(26, -5)` so the hero and clock both start inside the frame with a balanced composition
+- retuned the manual boot camera seed to `(-63, -17)` so the hero and clock start in the screenshot-aligned boot composition the repo now treats as default
 
 ## Log Rules
 

@@ -89,8 +89,12 @@ impl Layer for DebugLayer {
         }
 
         let hero = &ui.hero;
-        let hero_anchor = ctx.world.hero_world;
-        let hero_visual_anchor = ctx.world.hero_visual_anchor;
+        let hero_world = ctx.world.hero_world;
+        let hero_screen = world_to_screen(
+            ctx.world.hero_visual_anchor,
+            ctx.hud.camera.x,
+            ctx.hud.camera.y,
+        );
         let clock_world = ctx.world.clock_world;
         let clock_screen = ctx.clock_screen();
         let clock_visible = clock_screen.x >= 0
@@ -116,31 +120,19 @@ impl Layer for DebugLayer {
             format!("Hero FPS: {:.1}", ui.offsets.hero_fps),
             format!("Frame: {} / {}", hero.current_frame, hero.frames.len()),
             format!("Playing: {}", hero.playing),
-            format!("Hero anchor: ({}, {})", hero_anchor.x, hero_anchor.y),
-            format!(
-                "Hero visual anchor: ({}, {})",
-                hero_visual_anchor.x, hero_visual_anchor.y
-            ),
+            camera_mode.to_string(),
+            move_mode,
+            format!("Camera: ({}, {})", cam_x, cam_y),
+            format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
+            format!("Hero world: ({}, {})", hero_world.x, hero_world.y),
+            format!("Hero screen: ({}, {})", hero_screen.x, hero_screen.y),
             format!(
                 "Hero offset: ({}, {})",
                 ui.offsets.hero_dx, ui.offsets.hero_dy
             ),
             format!("Clock world: ({}, {})", clock_world.x, clock_world.y),
             format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
-            format!(
-                "Clock anchor: ({}, {})",
-                hero_visual_anchor.x, hero_visual_anchor.y
-            ),
-            format!(
-                "Clock offset: ({}, {})",
-                ui.offsets.clock_dx, ui.offsets.clock_dy
-            ),
-            format!("Clock final: ({}, {})", clock_screen.x, clock_screen.y),
             format!("Clock visible: {}", clock_visible),
-            camera_mode.to_string(),
-            move_mode,
-            format!("Camera: ({}, {})", cam_x, cam_y),
-            format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
         ];
         for (row, line) in lines.iter().enumerate() {
             write_string(
@@ -293,6 +285,7 @@ mod tests {
     use crate::scene::camera::Camera;
     use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
+    use crate::scene::Layer;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
     use crate::theme::palette;
     use ratatui::prelude::Rect;
@@ -352,6 +345,53 @@ mod tests {
         assert_ne!(top_cell.symbol, ' ');
         assert_ne!(side_cell.symbol, ' ');
         assert!(thumb_present);
+    }
+
+    #[test]
+    fn debug_panel_stays_compact_and_focuses_on_live_facts() {
+        let layer = super::DebugLayer;
+        let world = crate::core::world::WorldState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+        let ctx = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: true,
+                },
+            },
+        };
+        let mut ui = crate::ui::state::UiState::new();
+        ui.meta.dev_mode = true;
+
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("Camera mode: follow-hero"));
+        assert!(text.contains("Move mode: off (hero)"));
+        assert!(text.contains("Hero world:"));
+        assert!(text.contains("Hero screen:"));
+        assert!(text.contains("Clock world:"));
+        assert!(text.contains("Clock screen:"));
+        assert!(text.contains("Clock visible:"));
+        assert!(!text.contains("Hero anchor:"));
+        assert!(!text.contains("Hero visual anchor:"));
+        assert!(!text.contains("Clock final:"));
+        assert!(!text.contains("Clock anchor:"));
     }
 
     #[test]

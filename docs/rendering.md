@@ -117,6 +117,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero source GIF is `820x820` pixels and is rendered into a fixed `96x48` cell footprint.
 - That `96x48` target is the current layout result used to preserve the GIF's proportions in terminal cell space.
 - GIF subimage frames are expanded and flattened onto an opaque full `820x820` logical canvas before chafa rendering so partial frames, including frames 15 and 30, cannot stretch vertically.
+- The hero frame pipeline applies a small tone lift to low-luma red pixels before chafa conversion so dark reds stay visible in terminal output.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
 - Hero rendering uses the chafa-backed frame conversion path; cached-frame ownership remains a future migration option if measurable instability returns.

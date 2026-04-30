@@ -180,6 +180,7 @@ This file is append-only and historical only; current rules live in the active d
 - treated background-colored space cells as opaque compositor writes so modal popups clear the hero GIF instead of letting it bleed through the panel surface
 - documented a lighter verification rule: docs-only and wording-only changes use `cargo fmt --check`, while compositor/camera/overlay changes keep the full test suite
 - added a compact UI/metamechanics working-set snapshot to the active contracts so future UI work can resume from the current modal/camera split without rereading the full history
+- added a small hero-frame tone lift for low-luma reds before chafa conversion so dark reds stay visible in terminal output
 
 ## Log Rules
 

@@ -59,7 +59,10 @@ pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{decode_gif_frames, hero_frames, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH};
+    use super::{
+        decode_gif_frames, hero_frames, tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
+    };
+    use image::Rgba;
 
     #[test]
     fn hero_frame_buffer_has_multiple_frames() {
@@ -89,6 +92,21 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn dark_reds_get_lifted_before_chafa_conversion() {
+        let lifted = tone_lift_dark_reds(Rgba([42, 8, 6, 255]));
+        assert!(lifted[0] > 42);
+        assert!(lifted[1] >= 8);
+        assert!(lifted[2] >= 6);
+        assert_eq!(lifted[3], 255);
+    }
+
+    #[test]
+    fn neutral_dark_pixels_stay_neutral() {
+        let pixel = Rgba([18, 18, 18, 255]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
 }
 
 fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
@@ -116,7 +134,11 @@ fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {
         let target_x = left + x;
         let target_y = top + y;
         if target_x < canvas.0 && target_y < canvas.1 {
-            image.put_pixel(target_x, target_y, flatten_pixel(*pixel));
+            image.put_pixel(
+                target_x,
+                target_y,
+                tone_lift_dark_reds(flatten_pixel(*pixel)),
+            );
         }
     }
     image
@@ -139,6 +161,26 @@ fn flatten_pixel(pixel: Rgba<u8>) -> Rgba<u8> {
         blend(pixel[0], HERO_FRAME_BG[0]),
         blend(pixel[1], HERO_FRAME_BG[1]),
         blend(pixel[2], HERO_FRAME_BG[2]),
+        255,
+    ])
+}
+
+fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
+    let r = pixel[0];
+    let g = pixel[1];
+    let b = pixel[2];
+    let dominant_red = r.saturating_sub(g.max(b));
+    let luma = (r as u32 * 212 + g as u32 * 715 + b as u32 * 72) / 1000;
+
+    if dominant_red < 12 || luma >= 96 {
+        return pixel;
+    }
+
+    let lift = 28u16.saturating_sub(dominant_red as u16 / 2).max(10);
+    Rgba([
+        r.saturating_add(lift.min(255) as u8),
+        g.saturating_add((lift / 4).min(255) as u8),
+        b.saturating_add((lift / 6).min(255) as u8),
         255,
     ])
 }

@@ -161,3 +161,4 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] follow-hero camera mode stays centered on the world datum across terminal resizes, while manual pan mode remains clamped to world overscan.
 - [verify] the screenshot-aligned manual boot seed `(-63, -17)` remains distinct from the centered `follow-hero` runtime path, so boot composition and resize behavior stay separately owned.
 - [verify] docs-only and wording-only changes use `cargo fmt --check`, while compositor/camera/overlay changes use the full test suite before commit.
+- [verify] the UI / metamechanics working set remains summarized in `docs/architecture.md` and `docs/rendering.md`, so future UI work can resume from a compact handoff instead of rereading the changelog.

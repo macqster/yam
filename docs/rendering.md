@@ -91,6 +91,16 @@ The active implementation treats camera as a viewport crop helper:
 - the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target
 - the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
 
+## UI / Metamechanics Working Set
+
+- current state: the modal UI stack is `hotkeys` at `390`, `move` at `395`, and `settings` at `400`
+- current move grammar: `1/2/3` select the target and `hjkl` move it while move mode is open
+- current settings grammar: positions/widgets/gif/theme tabs are presentation-only and do not own world state
+- current modal surface: move/settings panels paint an opaque BTAS backdrop before the border and text are drawn, and opaque space+background cells clear the GIF underneath
+- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path
+- resume point later: if UI work resumes, start by editing values in the settings popup or by recording a default boot pose from move mode
+- this block should stay aligned with `docs/architecture.md` and the UI-related backlog entries
+
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 
 ## Masks

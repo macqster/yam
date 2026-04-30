@@ -59,6 +59,16 @@
 - the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3` select the active entity target and `hjkl` move that target while the popup is open
 
+## UI / Metamechanics Working Set
+
+- current state: `dev_mode` is the umbrella toggle, `h` opens hotkeys, `m` opens move, and `s` opens settings
+- current move grammar: `1/2/3` select the active target, `hjkl` move that target, and the popup itself stays modal
+- current settings grammar: tabbed positions/widgets/gif/theme controls stay presentation-only inside the modal popup
+- current modal surface: move/settings panels use an opaque BTAS backdrop so the hero GIF does not bleed through
+- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path
+- resume point later: the next UI work should either add editable settings values or a recorded default-start pose, but not a new authority layer
+- if this block changes, update the matching rendering note and the UI-related backlog items together
+
 ## Out of Scope
 
 - This document does not define conceptual scene categories; see [`scene-model.md`](scene-model.md).

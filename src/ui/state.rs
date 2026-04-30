@@ -140,8 +140,8 @@ pub struct UiOffsets {
 impl Default for UiOffsets {
     fn default() -> Self {
         Self {
-            camera_x: -69,
-            camera_y: -17,
+            camera_x: 26,
+            camera_y: -5,
             hero_dx: -110,
             hero_dy: -54,
             clock_dx: 96,
@@ -479,8 +479,8 @@ mod tests {
         let ui = UiState::new();
 
         assert!(!ui.camera.follow_hero);
-        assert_eq!(ui.offsets.camera_x, -69);
-        assert_eq!(ui.offsets.camera_y, -17);
+        assert_eq!(ui.offsets.camera_x, 26);
+        assert_eq!(ui.offsets.camera_y, -5);
         assert_eq!(ui.camera.x, ui.offsets.camera_x);
         assert_eq!(ui.camera.y, ui.offsets.camera_y);
     }

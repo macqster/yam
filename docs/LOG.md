@@ -173,6 +173,7 @@ This file is append-only and historical only; current rules live in the active d
 - simplified the default debug info panel to a smaller live-facts layout and moved the attachment derivation chain out of the default surface
 - added a hero-visible fact to the compact debug panel so the projected anchor can be distinguished from the actual in-frame footprint
 - changed the startup camera seed to manual pan so boot uses the balanced hero/clock composition instead of defaulting into follow-hero mode
+- retuned the manual boot camera seed to `(26, -5)` so the hero and clock both start inside the frame with a balanced composition
 
 ## Log Rules
 

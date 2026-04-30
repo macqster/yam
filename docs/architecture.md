@@ -96,7 +96,7 @@ The intended model is:
 - world space: simulation/object positions
 - camera: world-space origin of the visible crop, not the viewport itself
 - viewport: terminal-sized crop rectangle, not the camera itself
-- default startup camera state is manual pan with the stored seed `(-69, -17)` so the boot view stays on the visually balanced hero/clock composition
+- default startup camera state is manual pan with the stored seed `(26, -5)` so the boot view keeps the hero and clock in frame with a balanced composition
 - default follow-hero camera crops are centered on the world datum across resizes once follow-hero mode is enabled; manual pan mode is clamped to one cell of overscan beyond the world border/frame
 - the centered `124x32` follow-hero crop starts at camera `(-62, -16)`
 - anchor space: offsets relative to another rendered object

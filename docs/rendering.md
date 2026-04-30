@@ -85,6 +85,7 @@ The active implementation treats camera as a viewport crop helper:
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
 - modal move/settings overlays paint an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene
+- compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
 - the hotkeys popup is a modal overlay rendered between debug and move/settings; it lists the current developer controls without adding footer clutter
 - the move popup is a modal overlay rendered between hotkeys and settings; it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target

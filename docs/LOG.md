@@ -177,6 +177,7 @@ This file is append-only and historical only; current rules live in the active d
 - retuned the manual boot camera seed to `(-63, -17)` so the hero and clock start in the screenshot-aligned boot composition the repo now treats as default
 - documented the split between the screenshot-aligned manual boot seed `(-63, -17)` and the centered `follow-hero` runtime path so boot composition and resize behavior stay separately owned
 - added opaque BTAS-style backdrops to the move and settings popups so modal controls stay readable over the world
+- treated background-colored space cells as opaque compositor writes so modal popups clear the hero GIF instead of letting it bleed through the panel surface
 
 ## Log Rules
 

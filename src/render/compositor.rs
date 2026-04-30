@@ -117,6 +117,8 @@ pub fn write_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
 pub fn merge_cell(base: &mut Cell, top: &Cell) {
     if top.symbol != ' ' {
         base.symbol = top.symbol;
+    } else if top.style.bg.is_some() {
+        base.symbol = ' ';
     }
 
     if top.style.fg.is_some() {
@@ -255,5 +257,19 @@ mod tests {
 
         merge_grid(&mut base, &top, None);
         assert_eq!(base.cells[0].symbol, 'X');
+    }
+
+    #[test]
+    fn background_only_cells_can_opaque_overwrite_symbols() {
+        let mut base = Grid::new(1, 1);
+        base.cells[0].symbol = 'Y';
+
+        let mut top = Grid::new(1, 1);
+        top.cells[0].style.bg = Some(Color::Blue);
+
+        merge_grid(&mut base, &top, None);
+
+        assert_eq!(base.cells[0].symbol, ' ');
+        assert_eq!(base.cells[0].style.bg, Some(Color::Blue));
     }
 }

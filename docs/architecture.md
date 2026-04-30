@@ -52,7 +52,7 @@
 - modal move/settings popups paint an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal panels clear the GIF beneath them instead of tinting it through
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
-- the hero frame pipeline applies a small tone lift to low-luma red pixels before chafa conversion so dark reds stay visible in terminal output
+- the hero frame pipeline applies a small tone lift to low-luma red pixels before chafa conversion so dark reds stay visible in terminal output, and the styled Chafa spans are preserved when the frame is copied into the terminal buffer so the hero does not collapse to monochrome text
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described

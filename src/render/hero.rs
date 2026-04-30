@@ -172,6 +172,7 @@ fn render_lines_clipped(
     skip_cols: usize,
     skip_rows: usize,
 ) {
+    let max_width = frame.area().right().saturating_sub(start_x);
     for (i, line) in lines.iter().skip(skip_rows).enumerate() {
         let clipped = clip_line(line, skip_cols);
         let text = clipped
@@ -184,7 +185,7 @@ fn render_lines_clipped(
         }
         frame
             .buffer_mut()
-            .set_string(start_x, start_y + i as u16, text, Style::default());
+            .set_line(start_x, start_y + i as u16, &clipped, max_width);
     }
 }
 
@@ -193,30 +194,39 @@ fn normalize_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Li
 }
 
 fn normalize_line(line: Line<'static>, width: u16) -> Line<'static> {
-    let mut chars = Vec::new();
+    let mut remaining = width as usize;
+    let mut spans = Vec::new();
     for span in line.spans {
+        if remaining == 0 {
+            break;
+        }
+
+        let mut chars = String::new();
         for ch in span.content.chars() {
             let ch = match ch {
                 '\0' | '\r' | '\t' => ' ',
                 other => other,
             };
             chars.push(ch);
-            if chars.len() >= width as usize {
+            if chars.chars().count() >= remaining {
                 break;
             }
         }
-        if chars.len() >= width as usize {
-            break;
+
+        if chars.is_empty() {
+            continue;
         }
+
+        let count = chars.chars().count();
+        remaining = remaining.saturating_sub(count);
+        spans.push(Span::styled(chars, span.style));
     }
 
-    while chars.len() < width as usize {
-        chars.push(' ');
+    if remaining > 0 {
+        spans.push(Span::raw(" ".repeat(remaining)));
     }
 
-    let mut text = chars.into_iter().collect::<String>();
-    hard_lock_text(&mut text, width);
-    Line::from(vec![Span::raw(text)])
+    Line::from(spans)
 }
 
 fn padded_line(width: u16) -> Line<'static> {
@@ -235,26 +245,7 @@ fn hard_lock_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Li
         normalized.truncate(height as usize);
     }
     debug_assert_eq!(normalized.len(), height as usize);
-    for line in &mut normalized {
-        let mut text = line
-            .spans
-            .iter()
-            .map(|span| span.content.as_ref())
-            .collect::<String>();
-        hard_lock_text(&mut text, width);
-        debug_assert_eq!(text.chars().count(), width as usize);
-        *line = Line::from(vec![Span::raw(text)]);
-    }
     normalized
-}
-
-fn hard_lock_text(text: &mut String, width: u16) {
-    if text.chars().count() > width as usize {
-        *text = text.chars().take(width as usize).collect::<String>();
-    }
-    if text.chars().count() < width as usize {
-        text.push_str(&" ".repeat(width as usize - text.chars().count()));
-    }
 }
 
 fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {

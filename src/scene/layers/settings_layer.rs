@@ -101,6 +101,8 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState) {
         SettingsTab::Widgets => vec![
             format!("dev mode: {}", ui.meta.dev_mode),
             format!("settings open: {}", ui.meta.settings_open),
+            format!("move mode: {}", ui.meta.move_mode_open),
+            format!("move target: {}", ui.meta.move_target.title()),
             format!(
                 "camera mode: {}",
                 if ui.camera.follow_hero {
@@ -188,6 +190,8 @@ mod tests {
 
         assert!(text.contains("widgets"));
         assert!(text.contains("dev mode: true"));
+        assert!(text.contains("move mode: false"));
+        assert!(text.contains("move target: hero"));
         assert!(text.contains("clock: hero-attached world entity"));
     }
 }

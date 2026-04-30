@@ -102,6 +102,11 @@ impl Layer for DebugLayer {
         } else {
             "Camera mode: manual pan"
         };
+        let move_mode = format!(
+            "Move mode: {} ({})",
+            if ui.meta.move_mode_open { "on" } else { "off" },
+            ui.meta.move_target.title()
+        );
         let center_x = width as i32 / 2;
         let center_y = height as i32 / 2;
         let cam_dx = cam_x - center_x;
@@ -133,6 +138,7 @@ impl Layer for DebugLayer {
             format!("Clock final: ({}, {})", clock_screen.x, clock_screen.y),
             format!("Clock visible: {}", clock_visible),
             camera_mode.to_string(),
+            move_mode,
             format!("Camera: ({}, {})", cam_x, cam_y),
             format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
         ];

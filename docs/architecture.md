@@ -52,8 +52,11 @@
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug/info surface explicitly reports camera mode so follow-hero vs manual pan is visible when resize behavior is being checked
+- the debug/info surface explicitly reports move mode and the active move target so entity-edit checks stay visible alongside camera mode
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
-- the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and settings, and it lists the current developer controls without adding footer clutter
+- the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it lists the current developer controls without adding footer clutter
+- the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
+- the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3` select the active entity target and `hjkl` move that target while the popup is open
 
 ## Out of Scope
 
@@ -66,6 +69,8 @@
 - hero/entity: `z_index = 10`
 - clock/world entity: `z_index = 100`
 - debug overlay: `z_index = 300`
+- hotkeys popup: `z_index = 390`
+- move popup: `z_index = 395`
 - settings popup: `z_index = 400`
 - status/footer: `z_index = 1000`
 

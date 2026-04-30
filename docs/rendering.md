@@ -80,10 +80,14 @@ The active implementation treats camera as a viewport crop helper:
 - the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
 - the debug overlay can include passive camera/world scrollbar indicators anchored one cell inward from the terminal edge; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
 - the debug info panel explicitly reports camera mode so follow-hero vs manual pan is visible during resize checks
+- the debug info panel also reports move mode and the active move target so entity editing stays visible alongside camera checks
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
-- the hotkeys popup is a modal overlay rendered between debug and settings; it lists the current developer controls without adding footer clutter
+- the hotkeys popup is a modal overlay rendered between debug and move/settings; it lists the current developer controls without adding footer clutter
+- the move popup is a modal overlay rendered between hotkeys and settings; it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
+- the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target
+- the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

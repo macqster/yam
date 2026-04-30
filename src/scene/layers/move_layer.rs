@@ -5,11 +5,11 @@ use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 
-pub struct HotkeysLayer;
+pub struct MoveLayer;
 
-impl Layer for HotkeysLayer {
+impl Layer for MoveLayer {
     fn z_index(&self) -> i32 {
-        390
+        395
     }
 
     fn render_to_grid(
@@ -22,12 +22,12 @@ impl Layer for HotkeysLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.meta.dev_mode || !ui.meta.hotkeys_open {
+        if !ui.meta.dev_mode || !ui.meta.move_mode_open {
             return LayerOutput { grid, mask: None };
         }
 
-        let panel_width = width.min(44);
-        let panel_height = height.min(14);
+        let panel_width = width.min(52);
+        let panel_height = height.min(12);
         let panel_x = (width.saturating_sub(panel_width)) / 2;
         let panel_y = (height.saturating_sub(panel_height)) / 2;
 
@@ -36,23 +36,21 @@ impl Layer for HotkeysLayer {
             &mut grid,
             panel_x + 2,
             panel_y + 1,
-            "[h]otkeys",
+            "[m]ove",
             theme_style::panel_text(),
         );
 
         let lines = [
-            "[q] quit app",
-            "[d] toggle dev mode",
-            "[m] toggle move mode",
-            "  [1] hero",
-            "  [2] clock",
-            "  [3] weather (future)",
-            "[h/j/k/l] move selected target",
-            "[c] center camera",
-            "[s] toggle settings popup",
-            "[F5] next font",
-            "[space] play/pause",
-            "[.] step animation",
+            format!(
+                "mode: {}",
+                if ui.meta.move_mode_open { "on" } else { "off" }
+            ),
+            format!("target: {}", ui.meta.move_target.title()),
+            "[1] hero".to_string(),
+            "[2] clock".to_string(),
+            "[3] weather (future)".to_string(),
+            "hjkl move selected target".to_string(),
+            "[Esc] or [m] exit move mode".to_string(),
         ];
         for (row, line) in lines.iter().enumerate() {
             write_string(
@@ -98,7 +96,7 @@ fn write_border_cell(grid: &mut Grid, x: u16, y: u16, ch: char) {
 
 #[cfg(test)]
 mod tests {
-    use super::HotkeysLayer;
+    use super::MoveLayer;
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
@@ -110,8 +108,8 @@ mod tests {
     use ratatui::prelude::Rect;
 
     #[test]
-    fn hotkeys_overlay_requires_dev_mode_and_open_state() {
-        let layer = HotkeysLayer;
+    fn move_overlay_requires_dev_mode_and_open_state() {
+        let layer = MoveLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
         let render_state = RenderState {
@@ -143,16 +141,13 @@ mod tests {
         assert_eq!(closed.grid.cells[closed.grid.index(62, 16)].symbol, ' ');
 
         ui.meta.dev_mode = true;
-        ui.meta.hotkeys_open = true;
+        ui.meta.move_mode_open = true;
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert!(text.contains("[h]otkeys"));
-        assert!(text.contains("[c] center camera"));
-        assert!(text.contains("[s] toggle settings popup"));
-        assert!(text.contains("[m] toggle move mode"));
-        assert!(text.contains("[1] hero"));
-        assert!(text.contains("[2] clock"));
+        assert!(text.contains("[m]ove"));
+        assert!(text.contains("target: hero"));
+        assert!(text.contains("[3] weather (future)"));
     }
 }

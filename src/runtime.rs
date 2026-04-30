@@ -49,57 +49,81 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Char('q') => break 'run,
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
-                    KeyCode::Char('h') if ui_state.meta.dev_mode => ui_state.toggle_hotkeys(),
+                    KeyCode::Char('h')
+                        if ui_state.meta.dev_mode && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_hotkeys()
+                    }
+                    KeyCode::Char('m') if ui_state.meta.dev_mode => ui_state.toggle_move_mode(),
                     KeyCode::Char('s') if ui_state.meta.dev_mode => ui_state.toggle_settings(),
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
-                    KeyCode::Left if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
+                    KeyCode::Left
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
                         ui_state.move_camera_left();
                     }
-                    KeyCode::Right if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
+                    KeyCode::Right
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
                         ui_state.move_camera_right();
                     }
-                    KeyCode::Up if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
+                    KeyCode::Up
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
                         ui_state.move_camera_up();
                     }
-                    KeyCode::Down if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
+                    KeyCode::Down
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
                         ui_state.move_camera_down();
                     }
                     KeyCode::Tab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
                         ui_state.next_settings_tab();
                     }
                     KeyCode::Char(c) => {
-                        if ui_state.meta.dev_mode && !ui_state.meta.settings_open {
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.move_mode_open
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                        {
+                            match c {
+                                '1' => ui_state
+                                    .meta
+                                    .select_move_target(crate::ui::state::MoveTarget::Hero),
+                                '2' => ui_state
+                                    .meta
+                                    .select_move_target(crate::ui::state::MoveTarget::Clock),
+                                '3' => ui_state
+                                    .meta
+                                    .select_move_target(crate::ui::state::MoveTarget::Weather),
+                                'h' => ui_state.move_selected_target_left()?,
+                                'j' => ui_state.move_selected_target_down()?,
+                                'k' => ui_state.move_selected_target_up()?,
+                                'l' => ui_state.move_selected_target_right()?,
+                                _ => {}
+                            }
+                        } else if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open
+                        {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
                             let base = c.to_ascii_lowercase();
                             match base {
                                 'c' => ui_state.center_camera(),
-                                'h' => {
-                                    if is_shift || c.is_uppercase() {
-                                        ui_state.adjust_clock_offset(-1, 0)?
-                                    }
-                                }
-                                'j' => {
-                                    if is_shift || c.is_uppercase() {
-                                        ui_state.adjust_clock_offset(0, 1)?
-                                    } else {
-                                        ui_state.move_hero_offset_down()
-                                    }
-                                }
-                                'k' => {
-                                    if is_shift || c.is_uppercase() {
-                                        ui_state.adjust_clock_offset(0, -1)?
-                                    } else {
-                                        ui_state.move_hero_offset_up()
-                                    }
-                                }
-                                'l' => {
-                                    if is_shift || c.is_uppercase() {
-                                        ui_state.adjust_clock_offset(1, 0)?
-                                    } else {
-                                        ui_state.move_hero_offset_right()
-                                    }
-                                }
                                 _ => {}
                             }
                             if c == 'd' {
@@ -117,6 +141,9 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     KeyCode::BackTab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
                         ui_state.prev_settings_tab()
+                    }
+                    KeyCode::Esc if ui_state.meta.dev_mode && ui_state.meta.move_mode_open => {
+                        ui_state.toggle_move_mode();
                     }
                     KeyCode::F(5) if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
                         ui_state.next_font()

@@ -14,8 +14,10 @@ pub struct MetaState {
     #[serde(rename = "debug_layout")]
     pub dev_mode: bool,
     pub hotkeys_open: bool,
+    pub move_mode_open: bool,
     pub settings_open: bool,
     pub settings_tab: SettingsTab,
+    pub move_target: MoveTarget,
 }
 
 impl MetaState {
@@ -26,6 +28,15 @@ impl MetaState {
     pub fn toggle_hotkeys(&mut self) {
         self.hotkeys_open = !self.hotkeys_open;
         if self.hotkeys_open {
+            self.move_mode_open = false;
+            self.settings_open = false;
+        }
+    }
+
+    pub fn toggle_move_mode(&mut self) {
+        self.move_mode_open = !self.move_mode_open;
+        if self.move_mode_open {
+            self.hotkeys_open = false;
             self.settings_open = false;
         }
     }
@@ -34,7 +45,12 @@ impl MetaState {
         self.settings_open = !self.settings_open;
         if self.settings_open {
             self.hotkeys_open = false;
+            self.move_mode_open = false;
         }
+    }
+
+    pub fn select_move_target(&mut self, target: MoveTarget) {
+        self.move_target = target;
     }
 
     pub fn next_settings_tab(&mut self) {
@@ -43,6 +59,24 @@ impl MetaState {
 
     pub fn prev_settings_tab(&mut self) {
         self.settings_tab = self.settings_tab.prev();
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum MoveTarget {
+    #[default]
+    Hero,
+    Clock,
+    Weather,
+}
+
+impl MoveTarget {
+    pub fn title(self) -> &'static str {
+        match self {
+            MoveTarget::Hero => "hero",
+            MoveTarget::Clock => "clock",
+            MoveTarget::Weather => "weather",
+        }
     }
 }
 
@@ -186,6 +220,10 @@ impl UiState {
         self.meta.toggle_hotkeys();
     }
 
+    pub fn toggle_move_mode(&mut self) {
+        self.meta.toggle_move_mode();
+    }
+
     pub fn toggle_settings(&mut self) {
         self.meta.toggle_settings();
     }
@@ -215,24 +253,34 @@ impl UiState {
         )
     }
 
-    pub fn move_hero_offset_right(&mut self) {
-        self.offsets.hero_dx += 1;
-        self.save_state();
+    pub fn move_selected_target_left(&mut self) -> io::Result<()> {
+        self.move_selected_target(-1, 0)
     }
 
-    pub fn move_hero_offset_up(&mut self) {
-        self.offsets.hero_dy -= 1;
-        self.save_state();
+    pub fn move_selected_target_right(&mut self) -> io::Result<()> {
+        self.move_selected_target(1, 0)
     }
 
-    pub fn move_hero_offset_down(&mut self) {
-        self.offsets.hero_dy += 1;
-        self.save_state();
+    pub fn move_selected_target_up(&mut self) -> io::Result<()> {
+        self.move_selected_target(0, -1)
     }
 
-    pub fn adjust_clock_offset(&mut self, dx: i16, dy: i16) -> io::Result<()> {
-        self.offsets.clock_dx = (self.offsets.clock_dx + dx).clamp(-200, 200);
-        self.offsets.clock_dy = (self.offsets.clock_dy + dy).clamp(-200, 200);
+    pub fn move_selected_target_down(&mut self) -> io::Result<()> {
+        self.move_selected_target(0, 1)
+    }
+
+    pub fn move_selected_target(&mut self, dx: i16, dy: i16) -> io::Result<()> {
+        match self.meta.move_target {
+            MoveTarget::Hero => {
+                self.offsets.hero_dx += dx as i32;
+                self.offsets.hero_dy += dy as i32;
+            }
+            MoveTarget::Clock => {
+                self.offsets.clock_dx = (self.offsets.clock_dx + dx).clamp(-200, 200);
+                self.offsets.clock_dy = (self.offsets.clock_dy + dy).clamp(-200, 200);
+            }
+            MoveTarget::Weather => {}
+        }
         self.save_state();
         Ok(())
     }
@@ -382,7 +430,7 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{MetaState, SettingsTab, UiOffsets, UiState, UiStateSnapshot};
+    use super::{MetaState, MoveTarget, SettingsTab, UiOffsets, UiState, UiStateSnapshot};
     use crate::scene::coords::WorldPos;
 
     #[test]
@@ -432,10 +480,27 @@ mod tests {
         ui.toggle_hotkeys();
         assert!(ui.meta.hotkeys_open);
         assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.move_mode_open);
 
         ui.toggle_settings();
         assert!(ui.meta.settings_open);
         assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+    }
+
+    #[test]
+    fn move_mode_and_popups_are_mutually_exclusive() {
+        let mut ui = UiState::new();
+
+        ui.toggle_move_mode();
+        assert!(ui.meta.move_mode_open);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.settings_open);
+
+        ui.toggle_hotkeys();
+        assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.settings_open);
     }
 
     #[test]
@@ -481,6 +546,25 @@ mod tests {
     }
 
     #[test]
+    fn move_target_selection_changes_without_touching_attachment_facts() {
+        let mut ui = UiState::new();
+        let baseline = ui.hero_clock_attachment();
+
+        ui.toggle_move_mode();
+        ui.meta.select_move_target(MoveTarget::Clock);
+
+        let after_select = ui.hero_clock_attachment();
+
+        assert_eq!(baseline.hero_world(), after_select.hero_world());
+        assert_eq!(
+            baseline.hero_visual_anchor(),
+            after_select.hero_visual_anchor()
+        );
+        assert_eq!(baseline.clock_world(), after_select.clock_world());
+        assert_eq!(ui.meta.move_target, MoveTarget::Clock);
+    }
+
+    #[test]
     fn snapshot_round_trips_meta_and_offsets() {
         let snapshot = UiStateSnapshot {
             offsets: UiOffsets {
@@ -496,8 +580,10 @@ mod tests {
             meta: MetaState {
                 dev_mode: true,
                 hotkeys_open: false,
+                move_mode_open: true,
                 settings_open: true,
                 settings_tab: SettingsTab::Theme,
+                move_target: MoveTarget::Hero,
             },
         };
 
@@ -515,7 +601,9 @@ mod tests {
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.dev_mode);
         assert!(round_trip.meta.settings_open);
+        assert!(round_trip.meta.move_mode_open);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
+        assert_eq!(round_trip.meta.move_target, MoveTarget::Hero);
     }
 
     #[test]
@@ -543,7 +631,9 @@ mod tests {
         assert_eq!(snapshot.offsets.clock_font, "small");
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
         assert!(!snapshot.meta.dev_mode);
+        assert!(!snapshot.meta.move_mode_open);
         assert!(!snapshot.meta.settings_open);
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
+        assert_eq!(snapshot.meta.move_target, MoveTarget::Hero);
     }
 }

@@ -51,7 +51,7 @@
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
-- the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, clock world/screen position, and clock visibility
+- the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
 - the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it lists the current developer controls without adding footer clutter
 - the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it makes entity movement explicit with `1/2/3` selection and `hjkl` movement

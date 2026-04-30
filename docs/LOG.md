@@ -171,6 +171,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a dedicated hotkeys popup at `z_index = 390` and removed the long inline dev-mode footer controls so the footer stays compact while the modal lists current developer controls
 - added a dedicated move popup at `z_index = 395` with `1/2/3` target selection and `hjkl` movement, keeping entity editing explicit and out of the footer
 - simplified the default debug info panel to a smaller live-facts layout and moved the attachment derivation chain out of the default surface
+- added a hero-visible fact to the compact debug panel so the projected anchor can be distinguished from the actual in-frame footprint
 
 ## Log Rules
 

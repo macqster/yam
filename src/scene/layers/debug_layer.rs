@@ -95,6 +95,10 @@ impl Layer for DebugLayer {
             ctx.hud.camera.x,
             ctx.hud.camera.y,
         );
+        let hero_visible = hero_screen.x >= 0
+            && hero_screen.y >= 0
+            && hero_screen.x < width as i32
+            && hero_screen.y < height as i32;
         let clock_world = ctx.world.clock_world;
         let clock_screen = ctx.clock_screen();
         let clock_visible = clock_screen.x >= 0
@@ -126,6 +130,7 @@ impl Layer for DebugLayer {
             format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
             format!("Hero world: ({}, {})", hero_world.x, hero_world.y),
             format!("Hero screen: ({}, {})", hero_screen.x, hero_screen.y),
+            format!("Hero visible: {}", hero_visible),
             format!(
                 "Hero offset: ({}, {})",
                 ui.offsets.hero_dx, ui.offsets.hero_dy
@@ -385,6 +390,7 @@ mod tests {
         assert!(text.contains("Move mode: off (hero)"));
         assert!(text.contains("Hero world:"));
         assert!(text.contains("Hero screen:"));
+        assert!(text.contains("Hero visible:"));
         assert!(text.contains("Clock world:"));
         assert!(text.contains("Clock screen:"));
         assert!(text.contains("Clock visible:"));

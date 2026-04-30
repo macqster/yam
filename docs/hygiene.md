@@ -20,3 +20,4 @@
 - terminology is part of the contract surface; do not introduce synonyms for `world-space`, `screen-space`, `vines`, or `RenderState`
 - temp files and shared runtime artifacts used by tests or helpers should be isolated per run when practical
 - boundary changes should add a negative test when practical so forbidden behavior stays explicit
+- use `cargo fmt --check` for docs-only or wording-only changes; run the full test suite for compositor, camera, overlay, or other shared-rendering behavior changes

@@ -159,3 +159,5 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.
 - [verify] metamechanics remains a subordinate control/observation seam inside `ui/`; `dev_mode` may toggle presentation flags, but it does not own world state, projection, or render order.
 - [verify] follow-hero camera mode stays centered on the world datum across terminal resizes, while manual pan mode remains clamped to world overscan.
+- [verify] the screenshot-aligned manual boot seed `(-63, -17)` remains distinct from the centered `follow-hero` runtime path, so boot composition and resize behavior stay separately owned.
+- [verify] docs-only and wording-only changes use `cargo fmt --check`, while compositor/camera/overlay changes use the full test suite before commit.

@@ -239,7 +239,8 @@ mod tests {
 
     #[test]
     fn follow_hero_camera_centers_on_the_viewport() {
-        let ui = UiState::new();
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = true;
         let windowed = Rect::new(0, 0, 124, 32);
         let state = build_render_state(windowed, &ui);
 
@@ -333,7 +334,8 @@ mod tests {
 
     #[test]
     fn centered_follow_hero_camera_syncs_to_viewport_center() {
-        let ui = UiState::new();
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = true;
         let windowed = Rect::new(0, 0, 124, 32);
         let centered = build_render_state(windowed, &ui);
 

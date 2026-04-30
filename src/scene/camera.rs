@@ -16,7 +16,7 @@ impl Camera {
             y: 0,
             width: 0,
             height: 0,
-            follow_hero: true,
+            follow_hero: false,
         }
     }
 

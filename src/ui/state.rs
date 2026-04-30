@@ -453,6 +453,7 @@ mod tests {
     #[test]
     fn follow_hero_camera_syncs_to_viewport_center_without_disabling_follow_mode() {
         let mut ui = UiState::new();
+        ui.camera.follow_hero = true;
 
         ui.sync_camera_to_viewport_center(124, 32);
 
@@ -471,6 +472,17 @@ mod tests {
         ui.center_camera();
 
         assert!(ui.camera.follow_hero);
+    }
+
+    #[test]
+    fn ui_state_starts_in_manual_pan_with_the_default_seed() {
+        let ui = UiState::new();
+
+        assert!(!ui.camera.follow_hero);
+        assert_eq!(ui.offsets.camera_x, -69);
+        assert_eq!(ui.offsets.camera_y, -17);
+        assert_eq!(ui.camera.x, ui.offsets.camera_x);
+        assert_eq!(ui.camera.y, ui.offsets.camera_y);
     }
 
     #[test]

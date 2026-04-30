@@ -381,6 +381,7 @@ mod tests {
             },
         };
         let mut ui = crate::ui::state::UiState::new();
+        ui.camera.follow_hero = true;
         ui.meta.dev_mode = true;
 
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);

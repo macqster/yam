@@ -31,6 +31,7 @@ impl Layer for MoveLayer {
         let panel_x = (width.saturating_sub(panel_width)) / 2;
         let panel_y = (height.saturating_sub(panel_height)) / 2;
 
+        fill_panel_background(&mut grid, panel_x, panel_y, panel_width, panel_height);
         draw_border(&mut grid, panel_x, panel_y, panel_width, panel_height);
         write_string(
             &mut grid,
@@ -63,6 +64,18 @@ impl Layer for MoveLayer {
         }
 
         LayerOutput { grid, mask: None }
+    }
+}
+
+fn fill_panel_background(grid: &mut Grid, x: u16, y: u16, width: u16, height: u16) {
+    let style = theme_style::modal_panel();
+    for row in y..y.saturating_add(height) {
+        for col in x..x.saturating_add(width) {
+            if let Some(cell) = grid.cell_mut(col, row) {
+                cell.symbol = ' ';
+                cell.style = style;
+            }
+        }
     }
 }
 
@@ -149,5 +162,7 @@ mod tests {
         assert!(text.contains("[m]ove"));
         assert!(text.contains("target: hero"));
         assert!(text.contains("[3] weather (future)"));
+        let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
+        assert_eq!(center, Some(crate::theme::palette::MODAL_BG));
     }
 }

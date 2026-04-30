@@ -62,7 +62,7 @@ The active implementation treats camera as a viewport crop helper:
 - camera is the world-space origin of the visible crop
 - viewport is the terminal-sized crop rectangle that follows camera
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
-- the default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the hero and clock in the desired composition from boot
+- the default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the screenshot-aligned hero/clock composition from boot; this manual seed is distinct from the centered `follow-hero` runtime path
 - follow-hero camera mode keeps the visible crop centered on the world datum across resizes once it is enabled; manual pan mode is still clamped in runtime state and in `build_render_state(...)` so the visible crop can overscan the world border/frame by at most one cell on any edge
 - the centered `124x32` follow-hero crop uses camera `(-62, -16)`
 - debug border sampling is a datum-centered world-space probe that is projected through the active camera; it is not HUD chrome
@@ -84,6 +84,7 @@ The active implementation treats camera as a viewport crop helper:
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
+- modal move/settings overlays paint an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene
 - the hotkeys popup is a modal overlay rendered between debug and move/settings; it lists the current developer controls without adding footer clutter
 - the move popup is a modal overlay rendered between hotkeys and settings; it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target

@@ -49,6 +49,7 @@
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
+- modal move/settings popups paint an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
@@ -96,7 +97,7 @@ The intended model is:
 - world space: simulation/object positions
 - camera: world-space origin of the visible crop, not the viewport itself
 - viewport: terminal-sized crop rectangle, not the camera itself
-- default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the hero and clock in the desired composition from boot
+- default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the screenshot-aligned hero/clock composition from boot; this manual seed is distinct from the centered `follow-hero` runtime path
 - default follow-hero camera crops are centered on the world datum across resizes once follow-hero mode is enabled; manual pan mode is clamped to one cell of overscan beyond the world border/frame
 - the centered `124x32` follow-hero crop starts at camera `(-62, -16)`
 - anchor space: offsets relative to another rendered object

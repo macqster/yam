@@ -31,10 +31,23 @@ impl Layer for SettingsLayer {
         let panel_x = (width.saturating_sub(panel_width)) / 2;
         let panel_y = (height.saturating_sub(panel_height)) / 2;
 
+        fill_panel_background(&mut grid, panel_x, panel_y, panel_width, panel_height);
         draw_border(&mut grid, panel_x, panel_y, panel_width, panel_height);
         draw_tabs(&mut grid, panel_x + 2, panel_y + 1, ui.meta.settings_tab);
         draw_tab_body(&mut grid, panel_x + 2, panel_y + 3, panel_width - 4, ui);
         LayerOutput { grid, mask: None }
+    }
+}
+
+fn fill_panel_background(grid: &mut Grid, x: u16, y: u16, width: u16, height: u16) {
+    let style = theme_style::modal_panel();
+    for row in y..y.saturating_add(height) {
+        for col in x..x.saturating_add(width) {
+            if let Some(cell) = grid.cell_mut(col, row) {
+                cell.symbol = ' ';
+                cell.style = style;
+            }
+        }
     }
 }
 
@@ -193,5 +206,7 @@ mod tests {
         assert!(text.contains("move mode: false"));
         assert!(text.contains("move target: hero"));
         assert!(text.contains("clock: hero-attached world entity"));
+        let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
+        assert_eq!(center, Some(crate::theme::palette::MODAL_BG));
     }
 }

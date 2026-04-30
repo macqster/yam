@@ -175,6 +175,8 @@ This file is append-only and historical only; current rules live in the active d
 - changed the startup camera seed to manual pan so boot uses the balanced hero/clock composition instead of defaulting into follow-hero mode
 - retuned the manual boot camera seed to `(26, -5)` so the hero and clock both start inside the frame with a balanced composition
 - retuned the manual boot camera seed to `(-63, -17)` so the hero and clock start in the screenshot-aligned boot composition the repo now treats as default
+- documented the split between the screenshot-aligned manual boot seed `(-63, -17)` and the centered `follow-hero` runtime path so boot composition and resize behavior stay separately owned
+- added opaque BTAS-style backdrops to the move and settings popups so modal controls stay readable over the world
 
 ## Log Rules
 

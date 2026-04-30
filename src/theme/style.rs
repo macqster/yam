@@ -14,6 +14,12 @@ pub fn panel_text() -> Style {
         .fg(palette::PRIMARY_FG)
 }
 
+pub fn modal_panel() -> Style {
+    Style::default()
+        .bg(palette::MODAL_BG)
+        .fg(palette::PRIMARY_FG)
+}
+
 pub fn hero_overlay() -> Style {
     Style::default()
         .fg(palette::PRIMARY_FG)

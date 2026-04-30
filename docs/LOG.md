@@ -166,6 +166,7 @@ This file is append-only and historical only; current rules live in the active d
 - switched the camera/world gauge glyphs to a thinner `┄`/`═` horizontal pair and `┊`/`║` vertical pair for a cleaner diagnostic look
 - changed the default camera path so follow-hero mode stays centered on the world datum across terminal resizes instead of keeping the old top-left-leaning windowed baseline
 - surfaced the current camera mode in the debug/info panel and settings widgets so resize checks can distinguish follow-hero from manual pan immediately
+- added a `[c]amera` dev-mode hotkey that switches the camera back into centered follow-hero mode and surfaced that control in the footer and active contracts
 
 ## Log Rules
 

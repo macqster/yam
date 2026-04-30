@@ -52,7 +52,8 @@
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug/info surface explicitly reports camera mode so follow-hero vs manual pan is visible when resize behavior is being checked
-- the dev-mode footer includes a `[c]amera` hotkey that switches the camera back into centered follow-hero mode from manual pan
+- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
+- the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and settings, and it lists the current developer controls without adding footer clutter
 
 ## Out of Scope
 

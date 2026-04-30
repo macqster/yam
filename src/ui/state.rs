@@ -13,6 +13,7 @@ use crate::scene::entity::hero_and_clock_poses;
 pub struct MetaState {
     #[serde(rename = "debug_layout")]
     pub dev_mode: bool,
+    pub hotkeys_open: bool,
     pub settings_open: bool,
     pub settings_tab: SettingsTab,
 }
@@ -22,8 +23,18 @@ impl MetaState {
         self.dev_mode = !self.dev_mode;
     }
 
+    pub fn toggle_hotkeys(&mut self) {
+        self.hotkeys_open = !self.hotkeys_open;
+        if self.hotkeys_open {
+            self.settings_open = false;
+        }
+    }
+
     pub fn toggle_settings(&mut self) {
         self.settings_open = !self.settings_open;
+        if self.settings_open {
+            self.hotkeys_open = false;
+        }
     }
 
     pub fn next_settings_tab(&mut self) {
@@ -171,6 +182,10 @@ impl UiState {
         self.meta.toggle_dev_mode();
     }
 
+    pub fn toggle_hotkeys(&mut self) {
+        self.meta.toggle_hotkeys();
+    }
+
     pub fn toggle_settings(&mut self) {
         self.meta.toggle_settings();
     }
@@ -198,11 +213,6 @@ impl UiState {
                 y: self.offsets.clock_dy as i32,
             },
         )
-    }
-
-    pub fn move_hero_offset_left(&mut self) {
-        self.offsets.hero_dx -= 1;
-        self.save_state();
     }
 
     pub fn move_hero_offset_right(&mut self) {
@@ -416,6 +426,19 @@ mod tests {
     }
 
     #[test]
+    fn hotkeys_and_settings_popups_are_mutually_exclusive() {
+        let mut ui = UiState::new();
+
+        ui.toggle_hotkeys();
+        assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.settings_open);
+
+        ui.toggle_settings();
+        assert!(ui.meta.settings_open);
+        assert!(!ui.meta.hotkeys_open);
+    }
+
+    #[test]
     fn hero_clock_attachment_uses_ui_offsets_as_runtime_source_of_truth() {
         let ui = UiState::new();
         let attachment = ui.hero_clock_attachment();
@@ -472,6 +495,7 @@ mod tests {
             },
             meta: MetaState {
                 dev_mode: true,
+                hotkeys_open: false,
                 settings_open: true,
                 settings_tab: SettingsTab::Theme,
             },

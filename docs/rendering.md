@@ -80,9 +80,10 @@ The active implementation treats camera as a viewport crop helper:
 - the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
 - the debug overlay can include passive camera/world scrollbar indicators anchored one cell inward from the terminal edge; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
 - the debug info panel explicitly reports camera mode so follow-hero vs manual pan is visible during resize checks
-- the dev-mode footer includes a `[c]amera` hotkey that switches the camera back into centered follow-hero mode from manual pan
+- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
+- the hotkeys popup is a modal overlay rendered between debug and settings; it lists the current developer controls without adding footer clutter
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.
 

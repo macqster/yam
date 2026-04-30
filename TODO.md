@@ -128,6 +128,7 @@ This file is the repo-wide work order and stabilization checklist.
   - anchor integrity
   - rounding / jitter stability
 - [verify] frame-level render snapshots keep the footer/dev hint and other visible mode labels pinned to their current contract.
+- [verify] dev-mode footer stays compact while the `[h]otkeys` popup carries the longer developer control list.
 - [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/widgets/gif/theme tabs staying presentation-only.
 - [verify] the clock remains a world-attached hero entity; debug info must report its projected screen position without implying a screen-attached UI clock.
 - [inspect] audit the current projection path for any remaining split responsibilities.

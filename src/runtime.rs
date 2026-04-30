@@ -49,6 +49,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Char('q') => break 'run,
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
+                    KeyCode::Char('h') if ui_state.meta.dev_mode => ui_state.toggle_hotkeys(),
                     KeyCode::Char('s') if ui_state.meta.dev_mode => ui_state.toggle_settings(),
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
@@ -76,8 +77,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                                 'h' => {
                                     if is_shift || c.is_uppercase() {
                                         ui_state.adjust_clock_offset(-1, 0)?
-                                    } else {
-                                        ui_state.move_hero_offset_left()
                                     }
                                 }
                                 'j' => {

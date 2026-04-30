@@ -167,6 +167,8 @@ This file is append-only and historical only; current rules live in the active d
 - changed the default camera path so follow-hero mode stays centered on the world datum across terminal resizes instead of keeping the old top-left-leaning windowed baseline
 - surfaced the current camera mode in the debug/info panel and settings widgets so resize checks can distinguish follow-hero from manual pan immediately
 - added a `[c]amera` dev-mode hotkey that switches the camera back into centered follow-hero mode and surfaced that control in the footer and active contracts
+- split the dev-mode footer controls into a compact `[h]otkeys` popup, keeping the footer itself to the short quit/dev hint while the popup carries the longer control list
+- added a dedicated hotkeys popup at `z_index = 390` and removed the long inline dev-mode footer controls so the footer stays compact while the modal lists current developer controls
 
 ## Log Rules
 

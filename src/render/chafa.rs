@@ -12,6 +12,7 @@ use ratatui::text::{Line, Text};
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 const HERO_FRAME_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
+const HERO_RED_ANCHOR: Rgba<u8> = Rgba([114, 22, 15, 255]);
 pub const HERO_RENDER_WIDTH: u16 = 96;
 pub const HERO_RENDER_HEIGHT: u16 = 48;
 
@@ -96,9 +97,12 @@ mod tests {
     #[test]
     fn dark_reds_get_lifted_before_chafa_conversion() {
         let lifted = tone_lift_dark_reds(Rgba([42, 8, 6, 255]));
-        assert!(lifted[0] >= 56);
-        assert!(lifted[1] <= 13);
-        assert!(lifted[2] <= 10);
+        assert!(lifted[0] > 42);
+        assert!(lifted[0] <= 114);
+        assert!(lifted[1] >= 8);
+        assert!(lifted[1] <= 22);
+        assert!(lifted[2] >= 6);
+        assert!(lifted[2] <= 15);
         assert_eq!(lifted[3], 255);
     }
 
@@ -176,13 +180,17 @@ fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
         return pixel;
     }
 
-    let lift = 38u16.saturating_sub(dominant_red as u16 / 2).max(14);
+    let weight = (160u16 + (112u32.saturating_sub(luma)).min(48) as u16).min(224);
     Rgba([
-        r.saturating_add(lift.min(255) as u8),
-        g.saturating_add((lift / 8).min(255) as u8),
-        b.saturating_add((lift / 10).min(255) as u8),
+        mix_channel(r, HERO_RED_ANCHOR[0], weight),
+        mix_channel(g, HERO_RED_ANCHOR[1], weight),
+        mix_channel(b, HERO_RED_ANCHOR[2], weight),
         255,
     ])
+}
+
+fn mix_channel(src: u8, dst: u8, weight: u16) -> u8 {
+    (((src as u16 * (255 - weight)) + (dst as u16 * weight)) / 255) as u8
 }
 
 fn prepare_temp_frame_dir() -> PathBuf {

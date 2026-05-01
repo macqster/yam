@@ -192,6 +192,7 @@ This file is append-only and historical only; current rules live in the active d
 - rolled the hero renderer back to the earlier Chafa `rgb/average/none` path after the ditherit-style braille/source-color trial proved too blocky in the face area, while keeping the trial itself documented as historical context
 - repurposed the dev-mode `c` hotkey from follow-hero to camera reset, so it restores the screenshot-aligned manual boot seed `(-63, -17)` for the default scene
 - added a soft feature-freeze rule to hygiene and the active backlog so future work stays in polish/stability mode unless a bug or contract violation justifies new behavior
+- added a hero render regression test that exercises the buffer write path with styled spans so future hero rendering changes cannot silently flatten colorized output again
 
 ## Log Rules
 

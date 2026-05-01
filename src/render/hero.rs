@@ -270,6 +270,47 @@ fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
     Line::from(spans)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{draw_hero_at, Hero};
+    use ratatui::backend::TestBackend;
+    use ratatui::style::{Color, Style};
+    use ratatui::text::{Line, Span};
+    use ratatui::Terminal;
+
+    #[test]
+    fn hero_rendering_preserves_span_styles_into_the_terminal_buffer() {
+        let backend = TestBackend::new(4, 1);
+        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
+        let mut hero = Hero {
+            x: 0,
+            y: 0,
+            width: 4,
+            height: 1,
+            frames: vec![vec![Line::from(vec![Span::styled(
+                "RGB ",
+                Style::default().fg(Color::Rgb(114, 22, 15)),
+            )])]],
+            current_frame: 0,
+            playing: true,
+            step_once: false,
+        };
+
+        terminal
+            .draw(|frame| draw_hero_at(frame, &hero, 0, 0, 0, 0))
+            .expect("hero line should render");
+
+        let buffer = terminal.backend().buffer();
+        assert_eq!(buffer.content[0].symbol(), "R");
+        assert_eq!(buffer.content[1].symbol(), "G");
+        assert_eq!(buffer.content[0].style().fg, Some(Color::Rgb(114, 22, 15)));
+        assert_eq!(buffer.content[1].style().fg, Some(Color::Rgb(114, 22, 15)));
+
+        hero.step_animation();
+        assert!(hero.playing);
+    }
+}
+
 #[allow(dead_code)]
 pub fn draw_hero_debug(
     frame: &mut Frame,

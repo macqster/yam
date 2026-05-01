@@ -96,9 +96,9 @@ mod tests {
     #[test]
     fn dark_reds_get_lifted_before_chafa_conversion() {
         let lifted = tone_lift_dark_reds(Rgba([42, 8, 6, 255]));
-        assert!(lifted[0] > 42);
-        assert!(lifted[1] >= 8);
-        assert!(lifted[2] >= 6);
+        assert!(lifted[0] >= 56);
+        assert!(lifted[1] <= 13);
+        assert!(lifted[2] <= 10);
         assert_eq!(lifted[3], 255);
     }
 
@@ -172,15 +172,15 @@ fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
     let dominant_red = r.saturating_sub(g.max(b));
     let luma = (r as u32 * 212 + g as u32 * 715 + b as u32 * 72) / 1000;
 
-    if dominant_red < 12 || luma >= 96 {
+    if dominant_red < 10 || luma >= 112 {
         return pixel;
     }
 
-    let lift = 28u16.saturating_sub(dominant_red as u16 / 2).max(10);
+    let lift = 38u16.saturating_sub(dominant_red as u16 / 2).max(14);
     Rgba([
         r.saturating_add(lift.min(255) as u8),
-        g.saturating_add((lift / 4).min(255) as u8),
-        b.saturating_add((lift / 6).min(255) as u8),
+        g.saturating_add((lift / 8).min(255) as u8),
+        b.saturating_add((lift / 10).min(255) as u8),
         255,
     ])
 }

@@ -183,6 +183,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a small hero-frame tone lift for low-luma reds before chafa conversion so dark reds stay visible in terminal output
 - preserved the styled Chafa spans when copying hero frames into the terminal buffer so the hero no longer collapses to monochrome text
 - updated `hero_layer` so it preserves Chafa span styling when copying hero frames into the scene grid, keeping the hero colorized instead of flattening it to plain text
+- tightened the hero tone lift so dark reds stay visible without over-lifting the rest of the palette
 
 ## Log Rules
 

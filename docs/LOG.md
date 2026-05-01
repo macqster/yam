@@ -185,6 +185,7 @@ This file is append-only and historical only; current rules live in the active d
 - updated `hero_layer` so it preserves Chafa span styling when copying hero frames into the scene grid, keeping the hero colorized instead of flattening it to plain text
 - tightened the hero tone lift so dark reds stay visible without over-lifting the rest of the palette
 - remapped low-luma reds toward a fixed red anchor so the original red family survives Chafa without shifting the other colors
+- replaced the red anchor remap with a tight hue/saturation/value gate so only genuinely dark reds get a visibility lift while skin and orange tones stay unchanged
 
 ## Log Rules
 

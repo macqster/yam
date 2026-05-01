@@ -117,7 +117,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero source GIF is `820x820` pixels and is rendered into a fixed `96x48` cell footprint.
 - That `96x48` target is the current layout result used to preserve the GIF's proportions in terminal cell space.
 - GIF subimage frames are expanded and flattened onto an opaque full `820x820` logical canvas before chafa rendering so partial frames, including frames 15 and 30, cannot stretch vertically.
-- The hero frame pipeline remaps low-luma red pixels toward a fixed red anchor before chafa conversion so dark reds stay visible without changing the other colors, and `hero_layer` preserves the styled Chafa spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text.
+- The hero frame pipeline uses a tight hue/saturation/value gate before chafa conversion so only genuinely dark reds get a small visibility lift while skin tones and orange tones stay unchanged, and `hero_layer` preserves the styled Chafa spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
 - Hero rendering uses the chafa-backed frame conversion path; cached-frame ownership remains a future migration option if measurable instability returns.

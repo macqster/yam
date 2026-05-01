@@ -12,7 +12,6 @@ use ratatui::text::{Line, Text};
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 const HERO_FRAME_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
-const HERO_RED_ANCHOR: Rgba<u8> = Rgba([114, 22, 15, 255]);
 pub const HERO_RENDER_WIDTH: u16 = 96;
 pub const HERO_RENDER_HEIGHT: u16 = 48;
 
@@ -96,19 +95,31 @@ mod tests {
 
     #[test]
     fn dark_reds_get_lifted_before_chafa_conversion() {
-        let lifted = tone_lift_dark_reds(Rgba([42, 8, 6, 255]));
-        assert!(lifted[0] > 42);
-        assert!(lifted[0] <= 114);
-        assert!(lifted[1] >= 8);
-        assert!(lifted[1] <= 22);
-        assert!(lifted[2] >= 6);
-        assert!(lifted[2] <= 15);
+        let lifted = tone_lift_dark_reds(Rgba([114, 22, 15, 255]));
+        assert!(lifted[0] >= 114);
+        assert!(lifted[1] >= 22);
+        assert!(lifted[2] >= 15);
+        assert!(lifted[0] <= 132);
+        assert!(lifted[1] <= 34);
+        assert!(lifted[2] <= 26);
         assert_eq!(lifted[3], 255);
     }
 
     #[test]
     fn neutral_dark_pixels_stay_neutral() {
         let pixel = Rgba([18, 18, 18, 255]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
+
+    #[test]
+    fn warm_skin_tones_stay_neutral() {
+        let pixel = Rgba([180, 120, 90, 255]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
+
+    #[test]
+    fn bright_orange_tones_stay_neutral() {
+        let pixel = Rgba([200, 40, 20, 255]);
         assert_eq!(tone_lift_dark_reds(pixel), pixel);
     }
 }
@@ -173,24 +184,62 @@ fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
     let r = pixel[0];
     let g = pixel[1];
     let b = pixel[2];
-    let dominant_red = r.saturating_sub(g.max(b));
-    let luma = (r as u32 * 212 + g as u32 * 715 + b as u32 * 72) / 1000;
+    let (hue, saturation, value) = rgb_to_hsv(r, g, b);
 
-    if dominant_red < 10 || luma >= 112 {
+    if !is_dark_red(hue, saturation, value) {
         return pixel;
     }
 
-    let weight = (160u16 + (112u32.saturating_sub(luma)).min(48) as u16).min(224);
-    Rgba([
-        mix_channel(r, HERO_RED_ANCHOR[0], weight),
-        mix_channel(g, HERO_RED_ANCHOR[1], weight),
-        mix_channel(b, HERO_RED_ANCHOR[2], weight),
-        255,
-    ])
+    let value = (value + 0.08).min(0.45);
+    let saturation = (saturation * 1.02).min(1.0);
+    let (r, g, b) = hsv_to_rgb(hue, saturation, value);
+    Rgba([r, g, b, 255])
 }
 
-fn mix_channel(src: u8, dst: u8, weight: u16) -> u8 {
-    (((src as u16 * (255 - weight)) + (dst as u16 * weight)) / 255) as u8
+fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
+    let red_hue = hue <= 20.0 || hue >= 340.0;
+    red_hue && saturation >= 0.45 && value <= 0.42
+}
+
+fn rgb_to_hsv(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
+    let r = r as f32 / 255.0;
+    let g = g as f32 / 255.0;
+    let b = b as f32 / 255.0;
+
+    let max = r.max(g.max(b));
+    let min = r.min(g.min(b));
+    let delta = max - min;
+
+    let hue = if delta == 0.0 {
+        0.0
+    } else if max == r {
+        60.0 * ((g - b) / delta).rem_euclid(6.0)
+    } else if max == g {
+        60.0 * (((b - r) / delta) + 2.0)
+    } else {
+        60.0 * (((r - g) / delta) + 4.0)
+    };
+
+    let saturation = if max == 0.0 { 0.0 } else { delta / max };
+    (hue.rem_euclid(360.0), saturation, max)
+}
+
+fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (u8, u8, u8) {
+    let c = value * saturation;
+    let x = c * (1.0 - ((hue / 60.0).rem_euclid(2.0) - 1.0).abs());
+    let m = value - c;
+
+    let (r1, g1, b1) = match hue {
+        h if h < 60.0 => (c, x, 0.0),
+        h if h < 120.0 => (x, c, 0.0),
+        h if h < 180.0 => (0.0, c, x),
+        h if h < 240.0 => (0.0, x, c),
+        h if h < 300.0 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+
+    let to_u8 = |channel: f32| ((channel + m).clamp(0.0, 1.0) * 255.0).round() as u8;
+    (to_u8(r1), to_u8(g1), to_u8(b1))
 }
 
 fn prepare_temp_frame_dir() -> PathBuf {

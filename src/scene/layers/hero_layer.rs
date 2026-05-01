@@ -5,7 +5,7 @@ use crate::render::mask::Mask;
 use crate::scene::coords::world_to_screen;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
-use ratatui::prelude::*;
+use ratatui::text::{Line, Span};
 
 pub struct HeroLayer;
 
@@ -49,17 +49,25 @@ impl Layer for HeroLayer {
             let clip_cols = screen.x.clamp(i32::MIN, 0).unsigned_abs() as usize;
             let draw_x = screen.x.max(0) as u16;
             let draw_y = screen.y as u16;
-            let clipped_row = row.chars().skip(clip_cols).collect::<String>();
-            write_string(&mut grid, draw_x, draw_y, &clipped_row, Style::default());
-            for (col_idx, ch) in clipped_row.chars().enumerate() {
-                let x = draw_x as usize + col_idx;
-                let y = draw_y as usize;
-                if x >= mask.width || y >= mask.height {
+            let clipped_row = clip_line(&row, clip_cols);
+            let mut cursor_x = draw_x;
+            for span in clipped_row.spans {
+                let content = span.content.as_ref();
+                if content.is_empty() {
                     continue;
                 }
-                if ch != ' ' {
-                    mask.set(x, y, false);
+                write_string(&mut grid, cursor_x, draw_y, content, span.style);
+                for (col_idx, ch) in content.chars().enumerate() {
+                    let x = cursor_x as usize + col_idx;
+                    let y = draw_y as usize;
+                    if x >= mask.width || y >= mask.height {
+                        continue;
+                    }
+                    if ch != ' ' {
+                        mask.set(x, y, false);
+                    }
                 }
+                cursor_x = cursor_x.saturating_add(content.chars().count() as u16);
             }
         }
 
@@ -70,58 +78,75 @@ impl Layer for HeroLayer {
     }
 }
 
-fn normalize_lines(
-    lines: Vec<ratatui::text::Line<'static>>,
-    width: u16,
-    height: u16,
-) -> Vec<String> {
+fn normalize_lines(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Line<'static>> {
     let mut normalized = Vec::with_capacity(height as usize);
     for line in lines.into_iter().take(height as usize) {
         normalized.push(normalize_line(line, width));
     }
     while normalized.len() < height as usize {
-        normalized.push(" ".repeat(width as usize));
+        normalized.push(Line::from(vec![Span::raw(" ".repeat(width as usize))]));
     }
     if normalized.len() > height as usize {
         normalized.truncate(height as usize);
     }
     debug_assert_eq!(normalized.len(), height as usize);
-    for line in &mut normalized {
-        hard_lock_text(line, width);
-    }
     normalized
 }
 
-fn normalize_line(line: ratatui::text::Line<'static>, width: u16) -> String {
-    let mut chars = Vec::new();
+fn normalize_line(line: Line<'static>, width: u16) -> Line<'static> {
+    let mut remaining = width as usize;
+    let mut spans = Vec::new();
     for span in line.spans {
+        if remaining == 0 {
+            break;
+        }
+
+        let mut chars = String::new();
         for ch in span.content.chars() {
             let ch = match ch {
                 '\0' | '\r' | '\t' => ' ',
                 other => other,
             };
             chars.push(ch);
-            if chars.len() >= width as usize {
+            if chars.chars().count() >= remaining {
                 break;
             }
         }
-        if chars.len() >= width as usize {
-            break;
+
+        if chars.is_empty() {
+            continue;
+        }
+
+        let count = chars.chars().count();
+        remaining = remaining.saturating_sub(count);
+        spans.push(Span::styled(chars, span.style));
+    }
+
+    if remaining > 0 {
+        spans.push(Span::raw(" ".repeat(remaining)));
+    }
+
+    Line::from(spans)
+}
+
+fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
+    let mut remaining = skip_cols;
+    let mut spans = Vec::new();
+
+    for span in &line.spans {
+        let content = span.content.as_ref();
+        let content_width = content.chars().count();
+        if remaining >= content_width {
+            remaining -= content_width;
+            continue;
+        }
+
+        let clipped = content.chars().skip(remaining).collect::<String>();
+        remaining = 0;
+        if !clipped.is_empty() {
+            spans.push(Span::styled(clipped, span.style));
         }
     }
 
-    while chars.len() < width as usize {
-        chars.push(' ');
-    }
-
-    chars.into_iter().collect::<String>()
-}
-
-fn hard_lock_text(text: &mut String, width: u16) {
-    if text.chars().count() > width as usize {
-        *text = text.chars().take(width as usize).collect::<String>();
-    }
-    if text.chars().count() < width as usize {
-        text.push_str(&" ".repeat(width as usize - text.chars().count()));
-    }
+    Line::from(spans)
 }

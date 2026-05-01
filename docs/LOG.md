@@ -182,6 +182,7 @@ This file is append-only and historical only; current rules live in the active d
 - added a compact UI/metamechanics working-set snapshot to the active contracts so future UI work can resume from the current modal/camera split without rereading the full history
 - added a small hero-frame tone lift for low-luma reds before chafa conversion so dark reds stay visible in terminal output
 - preserved the styled Chafa spans when copying hero frames into the terminal buffer so the hero no longer collapses to monochrome text
+- updated `hero_layer` so it preserves Chafa span styling when copying hero frames into the scene grid, keeping the hero colorized instead of flattening it to plain text
 
 ## Log Rules
 

@@ -153,8 +153,8 @@ impl Layer for DebugLayer {
 }
 
 fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &RenderState) {
-    let inset = 2;
-    if width <= inset * 2 || height <= inset * 2 {
+    let inset = 0;
+    if width == 0 || height == 0 {
         return;
     }
 
@@ -171,8 +171,8 @@ fn draw_camera_scrollbars(grid: &mut Grid, width: u16, height: u16, ctx: &Render
         (crate::scene::WORLD_WIDTH + crate::scene::CAMERA_OVERSCAN_CELLS * 2) as usize;
     let vertical_content_length =
         (crate::scene::WORLD_HEIGHT + crate::scene::CAMERA_OVERSCAN_CELLS * 2) as usize;
-    let horizontal_area = Rect::new(inset, inset, width - inset * 2, 1);
-    let vertical_area = Rect::new(inset, inset, 1, height - inset * 2);
+    let horizontal_area = Rect::new(inset, inset, width, 1);
+    let vertical_area = Rect::new(inset, inset, 1, height);
 
     let horizontal_position = scrollbar_position(
         ctx.hud.camera.x,
@@ -310,7 +310,7 @@ mod tests {
     }
 
     #[test]
-    fn camera_scrollbars_render_in_the_third_cell_inward() {
+    fn camera_scrollbars_render_on_the_outer_frame() {
         let mut grid = crate::render::compositor::Grid::new(124, 32);
         let ctx = RenderState {
             world: WorldFrame {
@@ -338,8 +338,8 @@ mod tests {
 
         draw_camera_scrollbars(&mut grid, 124, 32, &ctx);
 
-        let top_row = 2;
-        let left_col = 2;
+        let top_row = 0;
+        let left_col = 0;
         let top_cell = &grid.cells[grid.index(left_col, top_row)];
         let side_cell = &grid.cells[grid.index(left_col, top_row + 1)];
         let thumb_present = grid

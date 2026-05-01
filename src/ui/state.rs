@@ -290,7 +290,11 @@ impl UiState {
     }
 
     pub fn center_camera(&mut self) {
-        self.camera.follow_hero = true;
+        self.camera.follow_hero = false;
+        self.offsets.camera_x = UiOffsets::default().camera_x;
+        self.offsets.camera_y = UiOffsets::default().camera_y;
+        self.camera.x = self.offsets.camera_x;
+        self.camera.y = self.offsets.camera_y;
         self.save_state();
     }
 
@@ -471,7 +475,9 @@ mod tests {
 
         ui.center_camera();
 
-        assert!(ui.camera.follow_hero);
+        assert!(!ui.camera.follow_hero);
+        assert_eq!(ui.camera.x, -63);
+        assert_eq!(ui.camera.y, -17);
     }
 
     #[test]

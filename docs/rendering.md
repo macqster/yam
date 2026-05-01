@@ -79,15 +79,16 @@ The active implementation treats camera as a viewport crop helper:
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
 - the footer bar is a full-width highlighted strip in soft dark green, and its text is rendered as dark inverse content on top of that bar
 - the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
-- the debug overlay can include passive camera/world scrollbar indicators anchored one cell inward from the terminal edge; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
+- the debug overlay can include passive camera/world scrollbar indicators anchored to the outermost terminal row/column; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
 - the debug info panel stays compact and reports only the live control facts needed for resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
+- `[c]enter` restores the screenshot-aligned manual boot seed `(-63, -17)` so the default scene can return to its boot composition without switching into follow-hero mode
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
-- the settings popup is a modal overlay rendered in the overlay layer; it uses tabbed sections for positions, widgets, gif, and theme values
-- modal move/settings overlays paint an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene
+- the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, widgets, gif, and theme values
+- modal hotkeys/move/settings overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
-- the hotkeys popup is a modal overlay rendered between debug and move/settings; it lists the current developer controls without adding footer clutter
-- the move popup is a modal overlay rendered between hotkeys and settings; it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
+- the hotkeys popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter
+- the move popup is a modal overlay rendered between hotkeys and settings; it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target
 - the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
 
@@ -117,7 +118,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero source GIF is `820x820` pixels and is rendered into a fixed `96x48` cell footprint.
 - That `96x48` target is the current layout result used to preserve the GIF's proportions in terminal cell space.
 - GIF subimage frames are expanded and flattened onto an opaque full `820x820` logical canvas before chafa rendering so partial frames, including frames 15 and 30, cannot stretch vertically.
-- The hero frame pipeline currently uses Chafa with `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` so dark reds are preserved by the conversion step before any pixel-side correction, and `hero_layer` preserves the styled Chafa spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text.
+- The hero frame pipeline currently uses Chafa with `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` so dark reds are preserved by the conversion step before any pixel-side correction, and `hero_layer` preserves the styled spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text. The ditherit-style braille/source-color trial is retained only as a documented experiment in the log because it improved red retention but introduced unacceptable blocking and edge smearing in the face area.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
 - Hero rendering uses the chafa-backed frame conversion path; cached-frame ownership remains a future migration option if measurable instability returns.

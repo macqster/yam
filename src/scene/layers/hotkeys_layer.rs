@@ -1,6 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
+use crate::scene::layers::modal::{paint_modal_shell, ModalFrame};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -26,20 +27,10 @@ impl Layer for HotkeysLayer {
             return LayerOutput { grid, mask: None };
         }
 
-        let panel_width = width.min(44);
-        let panel_height = height.min(14);
-        let panel_x = (width.saturating_sub(panel_width)) / 2;
-        let panel_y = (height.saturating_sub(panel_height)) / 2;
+        let frame = ModalFrame::centered(width, height, 68, 16);
+        paint_modal_shell(&mut grid, frame, "[h]otkeys");
 
-        draw_border(&mut grid, panel_x, panel_y, panel_width, panel_height);
-        write_string(
-            &mut grid,
-            panel_x + 2,
-            panel_y + 1,
-            "[h]otkeys",
-            theme_style::panel_text(),
-        );
-
+        let (body_x, body_y) = frame.body_origin();
         let lines = [
             "[q] quit app",
             "[d] toggle dev mode",
@@ -48,7 +39,7 @@ impl Layer for HotkeysLayer {
             "  [2] clock",
             "  [3] weather (future)",
             "[h/j/k/l] move selected target",
-            "[c] center camera",
+            "[c] center boot pose",
             "[s] toggle settings popup",
             "[F5] next font",
             "[space] play/pause",
@@ -57,42 +48,14 @@ impl Layer for HotkeysLayer {
         for (row, line) in lines.iter().enumerate() {
             write_string(
                 &mut grid,
-                panel_x + 2,
-                panel_y + 3 + row as u16,
+                body_x,
+                body_y + row as u16,
                 line,
                 theme_style::panel_text(),
             );
         }
 
         LayerOutput { grid, mask: None }
-    }
-}
-
-fn draw_border(grid: &mut Grid, x: u16, y: u16, width: u16, height: u16) {
-    if width < 2 || height < 2 {
-        return;
-    }
-    let right = x + width - 1;
-    let bottom = y + height - 1;
-    for cx in x..=right {
-        write_border_cell(grid, cx, y, if cx == x || cx == right { '+' } else { '-' });
-        write_border_cell(
-            grid,
-            cx,
-            bottom,
-            if cx == x || cx == right { '+' } else { '-' },
-        );
-    }
-    for cy in y + 1..bottom {
-        write_border_cell(grid, x, cy, '|');
-        write_border_cell(grid, right, cy, '|');
-    }
-}
-
-fn write_border_cell(grid: &mut Grid, x: u16, y: u16, ch: char) {
-    if let Some(cell) = grid.cell_mut(x, y) {
-        cell.symbol = ch;
-        cell.style = theme_style::panel_text();
     }
 }
 
@@ -149,10 +112,11 @@ mod tests {
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains("[h]otkeys"));
-        assert!(text.contains("[c] center camera"));
+        assert!(text.contains("[c] center boot pose"));
         assert!(text.contains("[s] toggle settings popup"));
         assert!(text.contains("[m] toggle move mode"));
         assert!(text.contains("[1] hero"));
         assert!(text.contains("[2] clock"));
+        assert!(text.contains("[space] play/pause"));
     }
 }

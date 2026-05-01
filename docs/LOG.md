@@ -187,9 +187,17 @@ This file is append-only and historical only; current rules live in the active d
 - remapped low-luma reds toward a fixed red anchor so the original red family survives Chafa without shifting the other colors
 - replaced the red anchor remap with a tight hue/saturation/value gate so only genuinely dark reds get a visibility lift while skin and orange tones stay unchanged
 - switched the hero Chafa configuration to `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` as the first quantization experiment for recovering dark reds before any pixel-side correction
+- split the hero pipeline into braille glyph generation plus per-cell source color sampling so dark-red cells can survive without broad palette remapping
+- documented the ditherit-style hero rendering trial as a partial success: it preserves more dark reds, but the braille-cell sampling also smudges the face and edges enough that the strategy remains experimental rather than final
+- rolled the hero renderer back to the earlier Chafa `rgb/average/none` path after the ditherit-style braille/source-color trial proved too blocky in the face area, while keeping the trial itself documented as historical context
+- repurposed the dev-mode `c` hotkey from follow-hero to camera reset, so it restores the screenshot-aligned manual boot seed `(-63, -17)` for the default scene
+- added a soft feature-freeze rule to hygiene and the active backlog so future work stays in polish/stability mode unless a bug or contract violation justifies new behavior
 
 ## Log Rules
 
 - append entries in date order
 - keep entries factual and short
 - record material repository changes, not speculative notes
+- [2026-05-01] Unified the hotkeys/move/settings popup shell so the modal family shares one centered BTAS-style backdrop, border, and sizing contract
+- [2026-05-01] Moved the camera/world debug scrollbars from the inset gauge track to the outermost terminal row/column so the indicator frame now hugs the screen edge
+- [2026-05-01] Cut release `0.3.1` after the modal-shell, camera, debug-overlay, and hero-rendering polish pass

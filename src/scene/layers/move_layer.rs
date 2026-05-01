@@ -1,6 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
+use crate::scene::layers::modal::{paint_modal_shell, ModalFrame};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -26,20 +27,8 @@ impl Layer for MoveLayer {
             return LayerOutput { grid, mask: None };
         }
 
-        let panel_width = width.min(52);
-        let panel_height = height.min(12);
-        let panel_x = (width.saturating_sub(panel_width)) / 2;
-        let panel_y = (height.saturating_sub(panel_height)) / 2;
-
-        fill_panel_background(&mut grid, panel_x, panel_y, panel_width, panel_height);
-        draw_border(&mut grid, panel_x, panel_y, panel_width, panel_height);
-        write_string(
-            &mut grid,
-            panel_x + 2,
-            panel_y + 1,
-            "[m]ove",
-            theme_style::panel_text(),
-        );
+        let frame = ModalFrame::centered(width, height, 68, 12);
+        paint_modal_shell(&mut grid, frame, "[m]ove");
 
         let lines = [
             format!(
@@ -53,57 +42,18 @@ impl Layer for MoveLayer {
             "hjkl move selected target".to_string(),
             "[Esc] or [m] exit move mode".to_string(),
         ];
+        let (body_x, body_y) = frame.body_origin();
         for (row, line) in lines.iter().enumerate() {
             write_string(
                 &mut grid,
-                panel_x + 2,
-                panel_y + 3 + row as u16,
+                body_x,
+                body_y + row as u16,
                 line,
                 theme_style::panel_text(),
             );
         }
 
         LayerOutput { grid, mask: None }
-    }
-}
-
-fn fill_panel_background(grid: &mut Grid, x: u16, y: u16, width: u16, height: u16) {
-    let style = theme_style::modal_panel();
-    for row in y..y.saturating_add(height) {
-        for col in x..x.saturating_add(width) {
-            if let Some(cell) = grid.cell_mut(col, row) {
-                cell.symbol = ' ';
-                cell.style = style;
-            }
-        }
-    }
-}
-
-fn draw_border(grid: &mut Grid, x: u16, y: u16, width: u16, height: u16) {
-    if width < 2 || height < 2 {
-        return;
-    }
-    let right = x + width - 1;
-    let bottom = y + height - 1;
-    for cx in x..=right {
-        write_border_cell(grid, cx, y, if cx == x || cx == right { '+' } else { '-' });
-        write_border_cell(
-            grid,
-            cx,
-            bottom,
-            if cx == x || cx == right { '+' } else { '-' },
-        );
-    }
-    for cy in y + 1..bottom {
-        write_border_cell(grid, x, cy, '|');
-        write_border_cell(grid, right, cy, '|');
-    }
-}
-
-fn write_border_cell(grid: &mut Grid, x: u16, y: u16, ch: char) {
-    if let Some(cell) = grid.cell_mut(x, y) {
-        cell.symbol = ch;
-        cell.style = theme_style::panel_text();
     }
 }
 

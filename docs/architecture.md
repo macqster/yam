@@ -49,15 +49,17 @@
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
-- modal move/settings popups paint an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content
+- modal move/settings/hotkeys popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal panels clear the GIF beneath them instead of tinting it through
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
-- the hero frame pipeline currently uses Chafa with `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` so dark reds are preserved by the conversion step before any pixel-side correction, and `hero_layer` preserves the styled Chafa spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text
-- the debug overlay may also show passive scrollbar indicators for camera/world position, anchored one cell inward from the terminal edge, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
+- the hero frame pipeline currently uses Chafa with `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` so dark reds are preserved by the conversion step before any pixel-side correction, and `hero_layer` preserves the styled spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text. The ditherit-style braille/source-color trial is documented only as a historical experiment because it improved red retention but introduced unacceptable blocking and edge smearing in the face area
+- the debug overlay may also show passive scrollbar indicators for camera/world position, anchored to the outermost terminal row/column, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
-- the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it lists the current developer controls without adding footer clutter
-- the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it makes entity movement explicit with `1/2/3` selection and `hjkl` movement
+- `[c]enter` is the dev-mode camera reset control: it restores the screenshot-aligned manual boot seed `(-63, -17)` rather than switching into follow-hero mode
+- the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current developer controls without adding footer clutter
+- the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
+- the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, widgets, gif, and theme values
 - the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3` select the active entity target and `hjkl` move that target while the popup is open
 
 ## UI / Metamechanics Working Set

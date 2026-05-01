@@ -122,6 +122,7 @@ This file is the repo-wide work order and stabilization checklist.
 
 ## 8. Concrete Next Steps
 
+- [verify] the repo remains in soft feature freeze mode: only polish, stability, bug fixes, and contract repairs move forward unless a stronger justification is documented.
 - [verify] add or tighten tests for:
   - resize invariance
   - camera projection consistency
@@ -131,6 +132,7 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] dev-mode footer stays compact while the `[h]otkeys` popup carries the longer developer control list.
 - [verify] move mode keeps entity movement behind the `[m]ove` popup, with `1/2/3` selecting targets and `hjkl` moving only the active target.
 - [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/widgets/gif/theme tabs staying presentation-only.
+- [verify] hotkeys, move, and settings continue to share one centered modal shell so popup styling and geometry do not drift apart.
 - [verify] the clock remains a world-attached hero entity; debug info must report its projected screen position without implying a screen-attached UI clock.
 - [inspect] audit the current projection path for any remaining split responsibilities.
 - [verify] use the bug taxonomy as a checklist for missing regression coverage.

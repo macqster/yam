@@ -179,28 +179,6 @@ fn flatten_pixel(pixel: Rgba<u8>) -> Rgba<u8> {
         255,
     ])
 }
-
-fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
-    let r = pixel[0];
-    let g = pixel[1];
-    let b = pixel[2];
-    let (hue, saturation, value) = rgb_to_hsv(r, g, b);
-
-    if !is_dark_red(hue, saturation, value) {
-        return pixel;
-    }
-
-    let value = (value + 0.08).min(0.45);
-    let saturation = (saturation * 1.02).min(1.0);
-    let (r, g, b) = hsv_to_rgb(hue, saturation, value);
-    Rgba([r, g, b, 255])
-}
-
-fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
-    let red_hue = hue <= 20.0 || hue >= 340.0;
-    red_hue && saturation >= 0.45 && value <= 0.42
-}
-
 fn rgb_to_hsv(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
     let r = r as f32 / 255.0;
     let g = g as f32 / 255.0;
@@ -240,6 +218,27 @@ fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (u8, u8, u8) {
 
     let to_u8 = |channel: f32| ((channel + m).clamp(0.0, 1.0) * 255.0).round() as u8;
     (to_u8(r1), to_u8(g1), to_u8(b1))
+}
+
+fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
+    let r = pixel[0];
+    let g = pixel[1];
+    let b = pixel[2];
+    let (hue, saturation, value) = rgb_to_hsv(r, g, b);
+
+    if !is_dark_red(hue, saturation, value) {
+        return pixel;
+    }
+
+    let value = (value + 0.08).min(0.45);
+    let saturation = (saturation * 1.02).min(1.0);
+    let (r, g, b) = hsv_to_rgb(hue, saturation, value);
+    Rgba([r, g, b, 255])
+}
+
+fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
+    let red_hue = hue <= 20.0 || hue >= 340.0;
+    red_hue && saturation >= 0.45 && value <= 0.42
 }
 
 fn prepare_temp_frame_dir() -> PathBuf {

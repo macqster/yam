@@ -48,6 +48,7 @@
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
+- turning `dev_mode` off closes any open hotkeys, move, or settings modal state so the modal family cannot stay latched outside the dev surface
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 - modal move/settings/hotkeys popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal panels clear the GIF beneath them instead of tinting it through

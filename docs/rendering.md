@@ -82,6 +82,7 @@ The active implementation treats camera as a viewport crop helper:
 - the debug overlay can include passive camera/world scrollbar indicators anchored to the outermost terminal row/column; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
 - the debug info panel stays compact and reports only the live control facts needed for resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
 - the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
+- leaving `dev_mode` closes any open hotkeys, move, or settings modal state so the modal stack cannot reappear latched when the dev surface is restored
 - `[c]enter` restores the screenshot-aligned manual boot seed `(-63, -17)` so the default scene can return to its boot composition without switching into follow-hero mode
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, widgets, gif, and theme values

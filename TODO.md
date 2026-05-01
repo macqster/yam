@@ -98,11 +98,9 @@ This file is the repo-wide work order and stabilization checklist.
 ### 5.4 Main Scene Vines Checklist
 
 - [verify] vines are added only after the scene is stable under resize.
-- [verify] vines remain world-attached scene content, not HUD or overlay chrome.
-- [verify] vines reuse the single projection path and the shared `RenderState` contract.
-- [verify] vine layering remains deterministic relative to scaffold, hero, and background.
-- [verify] collision / masking rules prevent vine geometry drift.
-- [verify] vine work stops if it destabilizes the hero or footer contracts.
+- [verify] vines remain world-attached scene content and reuse the single projection path.
+- [verify] vines keep the hero/footer contracts stable and stop if they introduce layout drift.
+- [verify] add negative tests for any vine interaction that could blur world/HUD boundaries.
 
 ## 6. Ratatui Research Follow-Ups
 
@@ -145,6 +143,7 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] invariants and determinism checks stay referenced from `docs/scene-model.md`.
 - [verify] greenhouse integration rules stay in `docs/scene-model.md`.
 - [verify] render-time validation goals stay in the active backlog here without duplicating contract text.
+- [verify] vine-specific design notes should stay in the owning docs; keep this backlog to execution and regression checks.
 
 ## 10. Further Development Guidelines
 

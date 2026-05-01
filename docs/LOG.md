@@ -202,3 +202,5 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-01] Unified the hotkeys/move/settings popup shell so the modal family shares one centered BTAS-style backdrop, border, and sizing contract
 - [2026-05-01] Moved the camera/world debug scrollbars from the inset gauge track to the outermost terminal row/column so the indicator frame now hugs the screen edge
 - [2026-05-01] Cut release `0.3.1` after the modal-shell, camera, debug-overlay, and hero-rendering polish pass
+- [2026-05-01] Pruned the vines backlog wording so `TODO.md` stays execution-only and the vines contract stays in the owning docs
+- [2026-05-01] Made `dev_mode` a stronger umbrella by closing hotkeys, move, and settings modal state when dev mode turns off

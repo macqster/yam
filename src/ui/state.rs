@@ -23,6 +23,11 @@ pub struct MetaState {
 impl MetaState {
     pub fn toggle_dev_mode(&mut self) {
         self.dev_mode = !self.dev_mode;
+        if !self.dev_mode {
+            self.hotkeys_open = false;
+            self.move_mode_open = false;
+            self.settings_open = false;
+        }
     }
 
     pub fn toggle_hotkeys(&mut self) {
@@ -504,6 +509,25 @@ mod tests {
         assert!(ui.meta.settings_open);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
+    }
+
+    #[test]
+    fn disabling_dev_mode_closes_all_modal_overlays() {
+        let mut ui = UiState::new();
+
+        ui.toggle_dev_mode();
+        ui.toggle_hotkeys();
+        ui.toggle_move_mode();
+        ui.toggle_settings();
+        assert!(ui.meta.dev_mode);
+        assert!(ui.meta.settings_open);
+
+        ui.toggle_dev_mode();
+
+        assert!(!ui.meta.dev_mode);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.settings_open);
     }
 
     #[test]

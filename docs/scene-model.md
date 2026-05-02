@@ -53,9 +53,9 @@ Rules:
 
 - hero and clock are world-attached systems, not HUD systems
 - the clock follows the hero in world space and carries its own relative offset
-- guides are world-attached semantic primitives: for now they are linework-only points, lines, polylines, and outline shapes that future vines and other world systems can query and that the debug overlay can visualize, but they are not raster masks or filled solids; sprites and solid masks are future work
-- the guide / line generator is project-wide, not vines-only: it should support guide drawing, future mask edges, rulers, and other world-space annotations
-- linework guides should be expressed with a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](soft-line-atlas.md) for shallow/stroke transitions and longer world-spanning lines, not with filled blocks or raster masks
+- guides are world-attached semantic primitives: for now they are linework-only points, lines, polylines, and outline shapes that future vines and other world systems can query and that the debug overlay can visualize, but they are not raster masks or filled solids; each guide has its own label and may belong to an optional named group, and guide sets are modeled explicitly so collections can be addressed as named groupings as well as individual primitives; guide sets should be created through the core guide API, not by render layers; sprites and solid masks are future work
+- the guide / line generator is project-wide, not vines-only: it supports guide drawing now and should remain suitable for future mask edges, rulers, and other world-space annotations, and it must remain capable of generating any line in any direction across the full YAM world size
+- linework guides are rendered through a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](soft-line-atlas.md) for shallow/stroke transitions and longer world-spanning lines, not with filled blocks or raster masks; the engine target is universal line coverage across the full YAM world size, using the grammar key `LineFamily -> LengthBucket -> Direction -> PhaseRole -> CellBand -> LocalStep`
 - UI is screen-attached presentation, not world-attached simulation state
 
 ## Presentation Layers

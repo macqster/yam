@@ -217,3 +217,26 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-02] Added a soft-line atlas document for the 10x1..10x5 direction families so linework can stay directionally unambiguous during future guide/vine work
 - [2026-05-02] Extended the soft-line atlas with longer slope families so the guide engine has a documented path for world-spanning lines, not only short primitives
 - [2026-05-02] Reframed the line generator as a project-wide guide/mask tool with a Bresenham geometry layer and glyph-appearance layer, not only a vines helper
+- [2026-05-02] Extracted the shared soft-line rasterizer into `core::guide_line` and wired the debug guide visualization path through it so guide rendering and the debug probe use one line engine
+- [2026-05-02] Ingested the first ASCII Draw Studio sample sets and folded their inferred long-line cadence into `docs/soft-line-atlas.md` as a sample-derived grammar note
+- [2026-05-02] Cross-referenced `filled_soft_line_slope_form_v0_1.md` alongside the straight-primitive samples in `docs/soft-line-atlas.md` so the inferred grammar points at both study sources
+- [2026-05-02] Added a first-pass inferred bucket table to `docs/soft-line-atlas.md` so the sample-backed line grammar is recorded as explicit family/cadence hypotheses
+- [2026-05-02] Updated the soft-line contracts to state the real target plainly: the guide engine must generate any line in any direction across the full YAM world size
+- [2026-05-02] Added a v1 grammar key to the soft-line atlas so the line engine selection order is explicit: `LineFamily -> LengthBucket -> Direction -> PhaseRole -> LocalStep`
+- [2026-05-02] Added explicit Rust-side line grammar types in `core::guide_line` so the atlas key now has a code-facing classifier and dispatch path
+- [2026-05-02] Replaced the line glyph branch tree with a literal atlas table in `core::guide_line` so the grammar is editable as data instead of only as match logic
+- [2026-05-02] Expanded the soft-line atlas notes with explicit calibration buckets for `10x2`, `10x3`, `10x4`, `10x5`, `7x2`, `8x3`, `9x4`, and `6x5` so the longer sample families stay visible in the contract
+- [2026-05-02] Retargeted the debug soft-line probe to a long shallow calibration line so the visible test line now exercises the sampled long-span cadence more directly
+- [2026-05-02] Restored the debug soft-line probe to the canonical mirrored `64x10` calibration span `(-28, 22) -> (36, 12)` so the probe matches the manual sample target again
+- [2026-05-02] Tuned the `64x10` long-shallow glyph cadence toward the canonical `--''` / `__. -` reference so the probe stops collapsing into mostly underscores
+- [2026-05-02] Documented the remaining `64x10` smooth-line fidelity gap in the soft-line atlas and render contract so the long-shallow grammar issue stays explicit while the engine is still being tuned
+- [2026-05-02] Added a cadence-driven long-shallow fallback in `core::guide_line` so the canonical `64x10` probe can express a clearer entry / ramp / core / exit rhythm before the local-step fallback takes over
+- [2026-05-02] Added the mirrored `64x10` long-shallow calibration probe in the debug surface so both directions can be compared side by side during cadence tuning
+- [2026-05-02] Made long-shallow punctuation slope-sign aware so the glyph lean can match cell directionality instead of reading as generic filler punctuation
+- [2026-05-02] Added a coarse `CellBand` to the line grammar key so glyph choice can also reflect top / middle / bottom placement inside the terminal cell, not only slope and cadence
+- [2026-05-02] Exposed a soft-band readout in the debug panel for the canonical probe so the new `CellBand` classifier can be inspected while line cadence tuning continues
+- [2026-05-02] Switched `CellBand` classification to use the stroke’s sub-cell position relative to the ideal segment so glyph placement can reflect where the line actually sits inside the cell
+- [2026-05-02] Documented the remaining `64x10` failure modes after the latest screenshot pass: segmented silhouette, weak band/glyph correlation, and insufficient resemblance to the manual reference despite the new cadence and band scaffolding
+- [2026-05-02] Added explicit labels and optional groups to `Guide` so guide primitives can be addressed individually and as part of larger named sets, which shifts the guide contract toward composable guide/mask groups instead of anonymous strokes
+- [2026-05-02] Added `GuideSet` to `GuideState` so named guide collections can be stored and queried explicitly instead of being inferred only through per-guide groups
+- [2026-05-02] Added `GuideSet::new(...)` and `GuideState::add_set(...)` so named guide collections have a small construction API instead of requiring direct vector mutation

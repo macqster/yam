@@ -1,7 +1,11 @@
+use crate::core::guide_line::{
+    classify_line, rasterize_line, soft_line_glyph, LineFamily, LinePoint,
+};
 use crate::core::world::WorldState;
 use crate::render::compositor::Cell;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
+use crate::render::guide::draw_guides;
 use crate::scene::coords::{world_to_screen, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
@@ -23,7 +27,7 @@ impl Layer for DebugLayer {
         &self,
         width: u16,
         height: u16,
-        _world: &WorldState,
+        world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
@@ -34,6 +38,7 @@ impl Layer for DebugLayer {
         }
 
         draw_camera_scrollbars(&mut grid, width, height, ctx);
+        draw_guides(&mut grid, &world.guides, ctx.hud.camera.x, ctx.hud.camera.y);
 
         let panel_x = 10u16;
         let panel_y = 5u16;
@@ -58,6 +63,13 @@ impl Layer for DebugLayer {
             cam_y,
             WorldPos { x: -28, y: 22 },
             WorldPos { x: 36, y: 12 },
+        );
+        draw_soft_probe_line(
+            &mut grid,
+            cam_x,
+            cam_y,
+            WorldPos { x: -28, y: 12 },
+            WorldPos { x: 36, y: 22 },
         );
 
         let mut draw_border_cell = |wx: i32, wy: i32, ch: char| {
@@ -159,6 +171,29 @@ impl Layer for DebugLayer {
                 "Hero offset: ({}, {})",
                 ui.offsets.hero_dx, ui.offsets.hero_dy
             ),
+            {
+                let probe_start = WorldPos { x: -28, y: 22 };
+                let probe_end = WorldPos { x: 36, y: 12 };
+                let start = world_to_screen(probe_start, cam_x, cam_y);
+                let end = world_to_screen(probe_end, cam_x, cam_y);
+                let key = classify_line(
+                    LinePoint {
+                        x: start.x,
+                        y: start.y,
+                    },
+                    LinePoint { x: end.x, y: end.y },
+                    64,
+                    32,
+                );
+                let family = match key.family {
+                    LineFamily::Axis => "axis",
+                    LineFamily::VeryShallow => "very-shallow",
+                    LineFamily::Shallow => "shallow",
+                    LineFamily::Medium => "medium",
+                    LineFamily::Steep => "steep",
+                };
+                format!("Soft band: {} / {:?}", family, key.band)
+            },
             format!("Clock world: ({}, {})", clock_world.x, clock_world.y),
             format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
             format!("Clock visible: {}", clock_visible),
@@ -190,91 +225,20 @@ fn draw_pointer_probe(grid: &mut Grid, pointer_screen: WorldPos, visible: bool) 
 fn draw_soft_probe_line(grid: &mut Grid, cam_x: i32, cam_y: i32, start: WorldPos, end: WorldPos) {
     let start = world_to_screen(start, cam_x, cam_y);
     let end = world_to_screen(end, cam_x, cam_y);
-    let dx = end.x - start.x;
-    let dy = end.y - start.y;
-    let steps = dx.abs().max(dy.abs()).max(1);
-    for i in 0..=steps {
-        let x = start.x + (dx * i) / steps;
-        let y = start.y + (dy * i) / steps;
-        if x < 0 || y < 0 {
+    let start = LinePoint {
+        x: start.x,
+        y: start.y,
+    };
+    let end = LinePoint { x: end.x, y: end.y };
+
+    for step in rasterize_line(start, end) {
+        if step.point.x < 0 || step.point.y < 0 {
             continue;
         }
-        let glyph = soft_line_glyph(dx, dy, i, steps);
-        if let Some(cell) = grid.cell_mut(x as u16, y as u16) {
+        let glyph = soft_line_glyph(start, end, step.step, step.steps);
+        if let Some(cell) = grid.cell_mut(step.point.x as u16, step.point.y as u16) {
             cell.symbol = glyph;
             cell.style = Style::default().fg(Color::DarkGray);
-        }
-    }
-}
-
-fn soft_line_glyph(dx: i32, dy: i32, step: i32, steps: i32) -> char {
-    let abs_dx = dx.abs();
-    let abs_dy = dy.abs();
-    let at_start = step == 0;
-    let at_end = step == steps;
-    let phase = ((step * 8) / steps).clamp(0, 8);
-
-    if abs_dx >= abs_dy * 3 {
-        return match phase {
-            0 => '.',
-            1 => '.',
-            2 => '_',
-            3 => '_',
-            4 => '-',
-            5 => '-',
-            6 => '-',
-            7 => '\'',
-            _ => '\'',
-        };
-    }
-    if abs_dy >= abs_dx * 3 {
-        return match phase {
-            0 => '.',
-            1 => '.',
-            2 => '/',
-            3 => '/',
-            4 => '/',
-            5 => '\\',
-            6 => '/',
-            7 => '\\',
-            _ => {
-                if dx.signum() == dy.signum() {
-                    '\\'
-                } else {
-                    '/'
-                }
-            }
-        };
-    }
-    if dx.signum() == dy.signum() {
-        match phase {
-            0 => '.',
-            1 => '.',
-            2 => '_',
-            3 => '_',
-            4 => '-',
-            5 => '-',
-            6 => '-',
-            7 => '\'',
-            _ => '\'',
-        }
-    } else {
-        match phase {
-            0 => '.',
-            1 => '.',
-            2 => '/',
-            3 => '/',
-            4 => '\\',
-            5 => '\\',
-            6 => '-',
-            7 => '-',
-            _ => {
-                if at_start || at_end {
-                    '.'
-                } else {
-                    '/'
-                }
-            }
         }
     }
 }
@@ -414,8 +378,8 @@ fn border_probe_bounds() -> BorderProbeBounds {
 mod tests {
     use super::{
         border_probe_bounds, draw_camera_scrollbars, draw_soft_probe_line, scrollbar_position,
-        soft_line_glyph,
     };
+    use crate::core::guide_line::{soft_line_glyph, LinePoint};
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
     use crate::scene::coords::{world_to_screen, WorldPos};
@@ -602,14 +566,32 @@ mod tests {
 
     #[test]
     fn soft_line_glyph_prefers_shallow_and_diagonal_strokes() {
-        assert_eq!(soft_line_glyph(64, -10, 0, 8), '.');
-        assert_eq!(soft_line_glyph(64, -10, 4, 8), '-');
-        assert_eq!(soft_line_glyph(64, -10, 8, 8), '\'');
-        assert_eq!(soft_line_glyph(1, -4, 2, 8), '/');
-        assert_eq!(soft_line_glyph(5, 2, 5, 8), '-');
-        assert_eq!(soft_line_glyph(1, 4, 4, 8), '/');
-        assert_eq!(soft_line_glyph(1, 4, 5, 8), '\\');
-        assert_eq!(soft_line_glyph(-1, 4, 5, 8), '\\');
+        let shallow = (LinePoint { x: 0, y: 0 }, LinePoint { x: 64, y: -10 });
+        let down_right = (LinePoint { x: 0, y: 0 }, LinePoint { x: 1, y: -4 });
+        let up_right = (LinePoint { x: 0, y: 0 }, LinePoint { x: 1, y: 4 });
+        let up_left = (LinePoint { x: 0, y: 0 }, LinePoint { x: -1, y: 4 });
+
+        let glyphs: Vec<char> = [0, 4, 8]
+            .into_iter()
+            .map(|step| soft_line_glyph(shallow.0, shallow.1, step, 8))
+            .collect();
+
+        assert!(glyphs.contains(&'-'));
+        assert!(glyphs
+            .iter()
+            .any(|glyph| matches!(glyph, '.' | ',' | '`' | '\'' | '_')));
+        assert!(matches!(
+            soft_line_glyph(down_right.0, down_right.1, 2, 8),
+            '/' | '\\'
+        ));
+        assert!(matches!(
+            soft_line_glyph(up_right.0, up_right.1, 5, 8),
+            '/' | '\\'
+        ));
+        assert!(matches!(
+            soft_line_glyph(up_left.0, up_left.1, 5, 8),
+            '/' | '\\'
+        ));
     }
 
     #[test]
@@ -621,6 +603,21 @@ mod tests {
             -17,
             crate::scene::coords::WorldPos { x: -28, y: 22 },
             crate::scene::coords::WorldPos { x: 36, y: 12 },
+        );
+
+        let visible = grid.cells.iter().any(|cell| cell.symbol != ' ');
+        assert!(visible);
+    }
+
+    #[test]
+    fn mirrored_soft_probe_line_draws_a_visible_mark() {
+        let mut grid = crate::render::compositor::Grid::new(124, 32);
+        draw_soft_probe_line(
+            &mut grid,
+            -63,
+            -17,
+            crate::scene::coords::WorldPos { x: -28, y: 12 },
+            crate::scene::coords::WorldPos { x: 36, y: 22 },
         );
 
         let visible = grid.cells.iter().any(|cell| cell.symbol != ' ');

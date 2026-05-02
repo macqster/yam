@@ -36,6 +36,8 @@ pub struct GuideStyle {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Guide {
     pub id: u32,
+    pub label: String,
+    pub group: Option<String>,
     pub kind: GuideKind,
     pub anchor: GuidePoint,
     pub shape: GuideShape,
@@ -44,14 +46,34 @@ pub struct Guide {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct GuideSet {
+    pub label: String,
+    pub guides: Vec<u32>,
+}
+
+impl GuideSet {
+    #[allow(dead_code)]
+    pub fn new(label: impl Into<String>, guides: impl Into<Vec<u32>>) -> Self {
+        Self {
+            label: label.into(),
+            guides: guides.into(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct GuideState {
     pub guides: Vec<Guide>,
+    pub sets: Vec<GuideSet>,
 }
 
 impl GuideState {
     #[allow(dead_code)]
     pub fn new() -> Self {
-        Self { guides: Vec::new() }
+        Self {
+            guides: Vec::new(),
+            sets: Vec::new(),
+        }
     }
 
     #[allow(dead_code)]
@@ -62,6 +84,47 @@ impl GuideState {
     #[allow(dead_code)]
     pub fn guide_by_id(&self, id: u32) -> Option<&Guide> {
         self.guides.iter().find(|guide| guide.id == id)
+    }
+
+    #[allow(dead_code)]
+    pub fn guide_by_label(&self, label: &str) -> Option<&Guide> {
+        self.guides.iter().find(|guide| guide.label == label)
+    }
+
+    #[allow(dead_code)]
+    pub fn guides_in_group(&self, group: &str) -> Vec<&Guide> {
+        self.guides
+            .iter()
+            .filter(move |guide| guide.group.as_deref() == Some(group))
+            .collect()
+    }
+
+    #[allow(dead_code)]
+    pub fn guide_set(&self, label: &str) -> Option<&GuideSet> {
+        self.sets.iter().find(|set| set.label == label)
+    }
+
+    #[allow(dead_code)]
+    pub fn add_set(&mut self, set: GuideSet) {
+        self.sets.push(set);
+    }
+
+    #[allow(dead_code)]
+    pub fn guides_in_set(&self, label: &str) -> Vec<&Guide> {
+        let Some(set) = self.guide_set(label) else {
+            return Vec::new();
+        };
+        set.guides
+            .iter()
+            .filter_map(|id| self.guide_by_id(*id))
+            .collect()
+    }
+
+    #[allow(dead_code)]
+    pub fn set_contains(&self, set_label: &str, guide_id: u32) -> bool {
+        self.guide_set(set_label)
+            .map(|set| set.guides.contains(&guide_id))
+            .unwrap_or(false)
     }
 }
 
@@ -126,6 +189,8 @@ mod tests {
         let mut state = GuideState::new();
         state.guides.push(Guide {
             id: 1,
+            label: "datum".to_string(),
+            group: Some("world-anchors".to_string()),
             kind: GuideKind::Datum,
             anchor: GuidePoint { x: 0, y: 0 },
             shape: GuideShape::Point,
@@ -138,6 +203,8 @@ mod tests {
         });
         state.guides.push(Guide {
             id: 2,
+            label: "waypoint".to_string(),
+            group: Some("world-anchors".to_string()),
             kind: GuideKind::Waypoint,
             anchor: GuidePoint { x: 10, y: 0 },
             shape: GuideShape::Point,
@@ -153,6 +220,10 @@ mod tests {
         assert_eq!(ids, vec![1]);
         assert!(state.guide_by_id(1).is_some());
         assert!(state.guide_by_id(2).is_some());
+        state.add_set(GuideSet::new("world-anchors", vec![1, 2]));
+        assert!(state.guide_set("world-anchors").is_some());
+        assert_eq!(state.guides_in_set("world-anchors").len(), 2);
+        assert!(state.set_contains("world-anchors", 1));
     }
 
     #[test]
@@ -160,6 +231,8 @@ mod tests {
         let mut state = GuideState::new();
         state.guides.push(Guide {
             id: 1,
+            label: "datum".to_string(),
+            group: Some("world-anchors".to_string()),
             kind: GuideKind::Datum,
             anchor: GuidePoint { x: 0, y: 0 },
             shape: GuideShape::Point,
@@ -172,6 +245,8 @@ mod tests {
         });
         state.guides.push(Guide {
             id: 2,
+            label: "waypoint".to_string(),
+            group: Some("world-anchors".to_string()),
             kind: GuideKind::Waypoint,
             anchor: GuidePoint { x: 12, y: 0 },
             shape: GuideShape::Point,

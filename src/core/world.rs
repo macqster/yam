@@ -1,4 +1,4 @@
-use crate::core::{entity::Entity, grid::Grid};
+use crate::core::{entity::Entity, grid::Grid, guide::GuideState};
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -25,6 +25,7 @@ pub struct WorldState {
     pub grid: Grid,
     pub entities: Vec<Entity>,
     pub fields: Fields,
+    pub guides: GuideState,
     pub tick: u64,
 }
 
@@ -37,6 +38,7 @@ impl WorldState {
             grid: Grid::new(width, height),
             entities: Vec::new(),
             fields: Fields::new(width, height),
+            guides: GuideState::new(),
             tick: 0,
         }
     }

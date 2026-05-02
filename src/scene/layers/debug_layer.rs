@@ -52,6 +52,14 @@ impl Layer for DebugLayer {
         // the frame is defined in world space and projected through the current camera.
         let border = border_probe_bounds();
 
+        draw_soft_probe_line(
+            &mut grid,
+            cam_x,
+            cam_y,
+            WorldPos { x: -28, y: 22 },
+            WorldPos { x: 36, y: 12 },
+        );
+
         let mut draw_border_cell = |wx: i32, wy: i32, ch: char| {
             let screen = world_to_screen(WorldPos { x: wx, y: wy }, cam_x, cam_y);
             if screen.x < 0 || screen.y < 0 || screen.x >= screen_w || screen.y >= screen_h {
@@ -99,6 +107,17 @@ impl Layer for DebugLayer {
             && hero_screen.y >= 0
             && hero_screen.x < width as i32
             && hero_screen.y < height as i32;
+        let pointer_world = WorldPos {
+            x: ui.offsets.pointer_x,
+            y: ui.offsets.pointer_y,
+        };
+        let pointer_screen = world_to_screen(pointer_world, ctx.hud.camera.x, ctx.hud.camera.y);
+        let pointer_visible = ui.meta.pointer_probe_open
+            && ui.pointer_blink_on
+            && pointer_screen.x >= 0
+            && pointer_screen.y >= 0
+            && pointer_screen.x < width as i32
+            && pointer_screen.y < height as i32;
         let clock_world = ctx.world.clock_world;
         let clock_screen = ctx.clock_screen();
         let clock_visible = clock_screen.x >= 0
@@ -126,6 +145,11 @@ impl Layer for DebugLayer {
             format!("Playing: {}", hero.playing),
             camera_mode.to_string(),
             move_mode,
+            if ui.meta.pointer_probe_open {
+                format!("Pointer: on ({}, {})", pointer_world.x, pointer_world.y)
+            } else {
+                "Pointer: off".to_string()
+            },
             format!("Camera: ({}, {})", cam_x, cam_y),
             format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
             format!("Hero world: ({}, {})", hero_world.x, hero_world.y),
@@ -148,7 +172,110 @@ impl Layer for DebugLayer {
                 Style::default().fg(Color::Green),
             );
         }
+        draw_pointer_probe(&mut grid, pointer_screen, pointer_visible);
         LayerOutput { grid, mask: None }
+    }
+}
+
+fn draw_pointer_probe(grid: &mut Grid, pointer_screen: WorldPos, visible: bool) {
+    if !visible {
+        return;
+    }
+    if let Some(cell) = grid.cell_mut(pointer_screen.x as u16, pointer_screen.y as u16) {
+        cell.symbol = '+';
+        cell.style = theme_style::pointer_probe();
+    }
+}
+
+fn draw_soft_probe_line(grid: &mut Grid, cam_x: i32, cam_y: i32, start: WorldPos, end: WorldPos) {
+    let start = world_to_screen(start, cam_x, cam_y);
+    let end = world_to_screen(end, cam_x, cam_y);
+    let dx = end.x - start.x;
+    let dy = end.y - start.y;
+    let steps = dx.abs().max(dy.abs()).max(1);
+    for i in 0..=steps {
+        let x = start.x + (dx * i) / steps;
+        let y = start.y + (dy * i) / steps;
+        if x < 0 || y < 0 {
+            continue;
+        }
+        let glyph = soft_line_glyph(dx, dy, i, steps);
+        if let Some(cell) = grid.cell_mut(x as u16, y as u16) {
+            cell.symbol = glyph;
+            cell.style = Style::default().fg(Color::DarkGray);
+        }
+    }
+}
+
+fn soft_line_glyph(dx: i32, dy: i32, step: i32, steps: i32) -> char {
+    let abs_dx = dx.abs();
+    let abs_dy = dy.abs();
+    let at_start = step == 0;
+    let at_end = step == steps;
+    let phase = ((step * 8) / steps).clamp(0, 8);
+
+    if abs_dx >= abs_dy * 3 {
+        return match phase {
+            0 => '.',
+            1 => '.',
+            2 => '_',
+            3 => '_',
+            4 => '-',
+            5 => '-',
+            6 => '-',
+            7 => '\'',
+            _ => '\'',
+        };
+    }
+    if abs_dy >= abs_dx * 3 {
+        return match phase {
+            0 => '.',
+            1 => '.',
+            2 => '/',
+            3 => '/',
+            4 => '/',
+            5 => '\\',
+            6 => '/',
+            7 => '\\',
+            _ => {
+                if dx.signum() == dy.signum() {
+                    '\\'
+                } else {
+                    '/'
+                }
+            }
+        };
+    }
+    if dx.signum() == dy.signum() {
+        match phase {
+            0 => '.',
+            1 => '.',
+            2 => '_',
+            3 => '_',
+            4 => '-',
+            5 => '-',
+            6 => '-',
+            7 => '\'',
+            _ => '\'',
+        }
+    } else {
+        match phase {
+            0 => '.',
+            1 => '.',
+            2 => '/',
+            3 => '/',
+            4 => '\\',
+            5 => '\\',
+            6 => '-',
+            7 => '-',
+            _ => {
+                if at_start || at_end {
+                    '.'
+                } else {
+                    '/'
+                }
+            }
+        }
     }
 }
 
@@ -285,10 +412,13 @@ fn border_probe_bounds() -> BorderProbeBounds {
 
 #[cfg(test)]
 mod tests {
-    use super::{border_probe_bounds, draw_camera_scrollbars, scrollbar_position};
+    use super::{
+        border_probe_bounds, draw_camera_scrollbars, draw_soft_probe_line, scrollbar_position,
+        soft_line_glyph,
+    };
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
+    use crate::scene::coords::{world_to_screen, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
@@ -383,12 +513,15 @@ mod tests {
         let mut ui = crate::ui::state::UiState::new();
         ui.camera.follow_hero = true;
         ui.meta.dev_mode = true;
+        ui.meta.pointer_probe_open = true;
+        ui.pointer_blink_on = true;
 
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains("Camera mode: follow-hero"));
         assert!(text.contains("Move mode: off (hero)"));
+        assert!(text.contains("Pointer: on (0, 0)"));
         assert!(text.contains("Hero world:"));
         assert!(text.contains("Hero screen:"));
         assert!(text.contains("Hero visible:"));
@@ -399,6 +532,52 @@ mod tests {
         assert!(!text.contains("Hero visual anchor:"));
         assert!(!text.contains("Clock final:"));
         assert!(!text.contains("Clock anchor:"));
+    }
+
+    #[test]
+    fn pointer_probe_renders_a_distinguishable_marker_on_the_world_grid() {
+        let layer = super::DebugLayer;
+        let world = crate::core::world::WorldState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+        let ctx = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: -63,
+                    y: -17,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = crate::ui::state::UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.pointer_probe_open = true;
+        ui.pointer_blink_on = true;
+        ui.offsets.pointer_x = 0;
+        ui.offsets.pointer_y = 0;
+
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+        let pointer_screen =
+            world_to_screen(WorldPos { x: 0, y: 0 }, ctx.hud.camera.x, ctx.hud.camera.y);
+        let cell = &output.grid.cells[output
+            .grid
+            .index(pointer_screen.x as u16, pointer_screen.y as u16)];
+
+        assert_eq!(cell.symbol, '+');
+        assert_eq!(cell.style.fg, Some(crate::theme::palette::POINTER_PROBE));
     }
 
     #[test]
@@ -419,5 +598,32 @@ mod tests {
             scrollbar_position(camera_max, camera_min, camera_max, world_width),
             world_width.saturating_sub(1)
         );
+    }
+
+    #[test]
+    fn soft_line_glyph_prefers_shallow_and_diagonal_strokes() {
+        assert_eq!(soft_line_glyph(64, -10, 0, 8), '.');
+        assert_eq!(soft_line_glyph(64, -10, 4, 8), '-');
+        assert_eq!(soft_line_glyph(64, -10, 8, 8), '\'');
+        assert_eq!(soft_line_glyph(1, -4, 2, 8), '/');
+        assert_eq!(soft_line_glyph(5, 2, 5, 8), '-');
+        assert_eq!(soft_line_glyph(1, 4, 4, 8), '/');
+        assert_eq!(soft_line_glyph(1, 4, 5, 8), '\\');
+        assert_eq!(soft_line_glyph(-1, 4, 5, 8), '\\');
+    }
+
+    #[test]
+    fn soft_probe_line_draws_a_visible_mark() {
+        let mut grid = crate::render::compositor::Grid::new(124, 32);
+        draw_soft_probe_line(
+            &mut grid,
+            -63,
+            -17,
+            crate::scene::coords::WorldPos { x: -28, y: 22 },
+            crate::scene::coords::WorldPos { x: 36, y: 12 },
+        );
+
+        let visible = grid.cells.iter().any(|cell| cell.symbol != ' ');
+        assert!(visible);
     }
 }

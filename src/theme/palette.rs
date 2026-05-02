@@ -11,3 +11,4 @@ pub const FOOTER_FG: Color = Color::Rgb(8, 12, 8);
 pub const MODAL_BG: Color = Color::Rgb(14, 18, 30);
 pub const CAMERA_TRACK: Color = Color::Rgb(0, 61, 165);
 pub const CAMERA_THUMB: Color = Color::Rgb(76, 126, 219);
+pub const POINTER_PROBE: Color = Color::Rgb(255, 196, 64);

@@ -12,6 +12,7 @@
 ## Core Rules
 
 - `core/` - data only, no UI, no terminal, no rendering
+- `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
 - `systems/` - mutate `WorldState` only, no rendering
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, and final text conversion
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
@@ -38,6 +39,7 @@
   - `world`: hero and clock attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
 - `UiState` owns the runtime attachment offsets that feed the hero/clock attachment object
+- `WorldState` owns `GuideState` so world-attached guide primitives stay in simulation data, not UI state
 - hero and clock attachment facts are computed through explicit `scene::entity::HeroClockAttachment` produced by `scene::entity::hero_and_clock_poses(...)`
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`
@@ -53,11 +55,17 @@
 - modal move/settings/hotkeys popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal panels clear the GIF beneath them instead of tinting it through
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
+- guides are world-attached semantic primitives owned by `WorldState`; for now they are linework-only primitives (points, lines, polylines, and outline shapes) that the debug overlay may visualize and vines may query, but they are not raster masks or solid fills
+- the guide / line generator is project-wide, not vines-only: it should support guide drawing, future mask edges, rulers, and other world-space annotations with the same world-space contract
+- linework guides should be expressed with a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](soft-line-atlas.md) for shallow/stroke transitions and longer world-spanning lines, not with filled blocks or raster masks
 - the hero frame pipeline currently uses Chafa with `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` so dark reds are preserved by the conversion step before any pixel-side correction, and `hero_layer` preserves the styled spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text. The ditherit-style braille/source-color trial is documented only as a historical experiment because it improved red retention but introduced unacceptable blocking and edge smearing in the face area
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored to the outermost terminal row/column, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
-- the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
-- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
-- `[c]enter` is the dev-mode camera reset control: it restores the screenshot-aligned manual boot seed `(-63, -17)` rather than switching into follow-hero mode
+- the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
+- the debug overlay may also temporarily draw a faint soft-line probe for linework testing, using the atlas in [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be evaluated against real world coordinates before vines or other world annotations consume it; the same atlas also defines the longer slope families used to cover full-world line spans
+- the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, pointer probe state/absolute position, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
+- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering, the pointer probe, and other developer controls are described
+- `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
+- `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
 - the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current developer controls without adding footer clutter
 - the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, widgets, gif, and theme values
@@ -69,8 +77,11 @@
 - current move grammar: `1/2/3` select the active target, `hjkl` move that target, and the popup itself stays modal
 - current settings grammar: tabbed positions/widgets/gif/theme controls stay presentation-only inside the modal popup
 - current modal surface: move/settings panels use an opaque BTAS backdrop so the hero GIF does not bleed through
-- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path
-- resume point later: the next UI work should either add editable settings values or a recorded default-start pose, but not a new authority layer
+- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position
+- current guide model: `WorldState` owns `GuideState`, which stores linework-only world-space annotations for future vines, masks, rulers, and debug visualization; sprites and solid masks are explicitly future work
+- current guide line grammar: soft linework should follow [`docs/soft-line-atlas.md`](soft-line-atlas.md), with a Bresenham-style geometry layer plus a glyph-appearance layer, plus slope-aware stroke selection and `|` / `:`-style vertical emphasis for guide axes and rulers; curves and turns should be constructed as connected segments rather than filled shapes
+- current pointer probe: `p` toggles a dev-only blinking world-space pointer that can be moved with arrow keys and is surfaced as an absolute position in the debug info panel
+- resume point later: the next UI work should either add editable settings values or refine the camera-home flow, but not add a new authority layer
 - if this block changes, update the matching rendering note and the UI-related backlog items together
 
 ## Out of Scope

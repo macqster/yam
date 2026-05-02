@@ -35,8 +35,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let fonts = FontRegistry::new();
     let world_tick = Duration::from_millis(250);
     let frame_time = Duration::from_secs_f64(1.0 / 120.0);
+    let pointer_blink = Duration::from_millis(420);
     let mut last_world_tick = Instant::now();
     let mut last_hero_tick = Instant::now();
+    let mut last_pointer_blink = Instant::now();
     'run: loop {
         let frame_start = Instant::now();
 
@@ -49,6 +51,22 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Char('q') => break 'run,
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
+                    KeyCode::Char('C')
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.store_camera_home();
+                    }
+                    KeyCode::Char('p')
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_pointer_probe();
+                    }
                     KeyCode::Char('h')
                         if ui_state.meta.dev_mode && !ui_state.meta.move_mode_open =>
                     {
@@ -64,7 +82,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open =>
                     {
-                        ui_state.move_camera_left();
+                        if ui_state.meta.pointer_probe_open {
+                            ui_state.move_pointer_left();
+                        } else {
+                            ui_state.move_camera_left();
+                        }
                     }
                     KeyCode::Right
                         if ui_state.meta.dev_mode
@@ -72,7 +94,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open =>
                     {
-                        ui_state.move_camera_right();
+                        if ui_state.meta.pointer_probe_open {
+                            ui_state.move_pointer_right();
+                        } else {
+                            ui_state.move_camera_right();
+                        }
                     }
                     KeyCode::Up
                         if ui_state.meta.dev_mode
@@ -80,7 +106,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open =>
                     {
-                        ui_state.move_camera_up();
+                        if ui_state.meta.pointer_probe_open {
+                            ui_state.move_pointer_up();
+                        } else {
+                            ui_state.move_camera_up();
+                        }
                     }
                     KeyCode::Down
                         if ui_state.meta.dev_mode
@@ -88,7 +118,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open =>
                     {
-                        ui_state.move_camera_down();
+                        if ui_state.meta.pointer_probe_open {
+                            ui_state.move_pointer_down();
+                        } else {
+                            ui_state.move_camera_down();
+                        }
                     }
                     KeyCode::Tab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
                         ui_state.next_settings_tab();
@@ -123,7 +157,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
                             let base = c.to_ascii_lowercase();
                             match base {
-                                'c' => ui_state.center_camera(),
+                                'c' => ui_state.recall_camera_home(),
                                 _ => {}
                             }
                             if c == 'd' {
@@ -163,6 +197,16 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         if frame_start.duration_since(last_hero_tick) >= hero_frame_time {
             ui_state.hero.tick();
             last_hero_tick = frame_start;
+        }
+
+        if ui_state.meta.dev_mode && ui_state.meta.pointer_probe_open {
+            if frame_start.duration_since(last_pointer_blink) >= pointer_blink {
+                ui_state.pointer_blink_on = !ui_state.pointer_blink_on;
+                last_pointer_blink = frame_start;
+            }
+        } else {
+            ui_state.pointer_blink_on = true;
+            last_pointer_blink = frame_start;
         }
 
         terminal.autoresize().ok();

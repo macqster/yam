@@ -101,6 +101,7 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] vines remain world-attached scene content and reuse the single projection path.
 - [verify] vines keep the hero/footer contracts stable and stop if they introduce layout drift.
 - [verify] add negative tests for any vine interaction that could blur world/HUD boundaries.
+- [verify] world-space guide primitives live in `GuideState` as linework-only vectors/streams/curves and stay separate from raster masks or filled sprites; debug visualization should project them rather than reinterpreting them as pixels, and the project-wide guide/mask generator should keep a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](docs/soft-line-atlas.md) for the 10x1..10x5 and longer world-span direction families.
 
 ## 6. Ratatui Research Follow-Ups
 
@@ -121,6 +122,7 @@ This file is the repo-wide work order and stabilization checklist.
 ## 8. Concrete Next Steps
 
 - [verify] the repo remains in soft feature freeze mode: only polish, stability, bug fixes, and contract repairs move forward unless a stronger justification is documented.
+- [verify] before any new feature work starts, the pre-new-feature gate is green: modal/UI state is clean, camera behavior is explicit, hero rendering is stable, docs/logs match the contract, and the relevant regression tests pass.
 - [verify] add or tighten tests for:
   - resize invariance
   - camera projection consistency
@@ -128,6 +130,7 @@ This file is the repo-wide work order and stabilization checklist.
   - rounding / jitter stability
 - [verify] frame-level render snapshots keep the footer/dev hint and other visible mode labels pinned to their current contract.
 - [verify] dev-mode footer stays compact while the `[h]otkeys` popup carries the longer developer control list.
+- [verify] the dev-only pointer probe stays discoverable through the hotkeys popup and remains a blinking world-space marker with absolute-position reporting in the debug panel.
 - [verify] move mode keeps entity movement behind the `[m]ove` popup, with `1/2/3` selecting targets and `hjkl` moving only the active target.
 - [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/widgets/gif/theme tabs staying presentation-only.
 - [verify] hotkeys, move, and settings continue to share one centered modal shell so popup styling and geometry do not drift apart.
@@ -162,4 +165,4 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] follow-hero camera mode stays centered on the world datum across terminal resizes, while manual pan mode remains clamped to world overscan.
 - [verify] the screenshot-aligned manual boot seed `(-63, -17)` remains distinct from the centered `follow-hero` runtime path, so boot composition and resize behavior stay separately owned.
 - [verify] docs-only and wording-only changes use `cargo fmt --check`, while compositor/camera/overlay changes use the full test suite before commit.
-- [verify] the UI / metamechanics working set remains summarized in `docs/architecture.md` and `docs/rendering.md`, so future UI work can resume from a compact handoff instead of rereading the changelog.
+- [verify] the UI / metamechanics working set remains summarized in `docs/architecture.md` and `docs/rendering.md`, so future UI work can resume from a compact handoff instead of rereading the changelog; keep the `C`/`c` camera-home contract documented there as the current boot/home split.

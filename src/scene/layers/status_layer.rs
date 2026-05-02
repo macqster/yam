@@ -26,7 +26,7 @@ impl Layer for StatusLayer {
         let footer_y = footer_row(height);
         paint_footer_row(&mut grid, footer_y, width);
         let left_text = if ui.meta.dev_mode {
-            "  [q]uit   •   [d]ev mode   •   [h]otkeys   •   [m]ove   •   [c]enter"
+            "  [q]uit   •   [d]ev mode   •   [h]otkeys   •   [m]ove   •   [p]ointer   •   [C]/[c] camera home"
         } else {
             "  [q]uit   •   [d]ev mode"
         };
@@ -189,7 +189,8 @@ mod tests {
         assert!(text.contains("  [q]uit   •   [d]ev mode"));
         assert!(text.contains("[h]otkeys"));
         assert!(text.contains("[m]ove"));
-        assert!(text.contains("[c]enter"));
+        assert!(text.contains("[p]ointer"));
+        assert!(text.contains("[C]/[c] camera home"));
         assert!(!text.contains("[space] play/pause"));
         assert!(!text.contains("[.] step"));
     }

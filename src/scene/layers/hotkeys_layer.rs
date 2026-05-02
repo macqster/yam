@@ -27,7 +27,7 @@ impl Layer for HotkeysLayer {
             return LayerOutput { grid, mask: None };
         }
 
-        let frame = ModalFrame::centered(width, height, 68, 16);
+        let frame = ModalFrame::centered(width, height, 68, 17);
         paint_modal_shell(&mut grid, frame, "[h]otkeys");
 
         let (body_x, body_y) = frame.body_origin();
@@ -39,7 +39,9 @@ impl Layer for HotkeysLayer {
             "  [2] clock",
             "  [3] weather (future)",
             "[h/j/k/l] move selected target",
-            "[c] center boot pose",
+            "[C] store camera home",
+            "[c] recall camera home",
+            "[p] toggle pointer probe",
             "[s] toggle settings popup",
             "[F5] next font",
             "[space] play/pause",
@@ -112,7 +114,9 @@ mod tests {
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains("[h]otkeys"));
-        assert!(text.contains("[c] center boot pose"));
+        assert!(text.contains("[C] store camera home"));
+        assert!(text.contains("[c] recall camera home"));
+        assert!(text.contains("[p] toggle pointer probe"));
         assert!(text.contains("[s] toggle settings popup"));
         assert!(text.contains("[m] toggle move mode"));
         assert!(text.contains("[1] hero"));

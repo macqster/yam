@@ -9,4 +9,5 @@
 pub mod cell;
 pub mod entity;
 pub mod grid;
+pub mod guide;
 pub mod world;

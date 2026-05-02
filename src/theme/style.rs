@@ -43,3 +43,9 @@ pub fn camera_indicator_thumb() -> Style {
         .fg(palette::CAMERA_THUMB)
         .add_modifier(Modifier::BOLD)
 }
+
+pub fn pointer_probe() -> Style {
+    Style::default()
+        .fg(palette::POINTER_PROBE)
+        .add_modifier(Modifier::BOLD)
+}

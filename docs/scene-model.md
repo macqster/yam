@@ -41,6 +41,7 @@ The scene is composed of these systems:
 
 - Hero
 - Clock
+- Guides
 - Vines
 - Scaffold
 - Particles
@@ -52,6 +53,9 @@ Rules:
 
 - hero and clock are world-attached systems, not HUD systems
 - the clock follows the hero in world space and carries its own relative offset
+- guides are world-attached semantic primitives: for now they are linework-only points, lines, polylines, and outline shapes that future vines and other world systems can query and that the debug overlay can visualize, but they are not raster masks or filled solids; sprites and solid masks are future work
+- the guide / line generator is project-wide, not vines-only: it should support guide drawing, future mask edges, rulers, and other world-space annotations
+- linework guides should be expressed with a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](soft-line-atlas.md) for shallow/stroke transitions and longer world-spanning lines, not with filled blocks or raster masks
 - UI is screen-attached presentation, not world-attached simulation state
 
 ## Presentation Layers
@@ -89,6 +93,7 @@ Rules:
 - screen-space: terminal cell coordinates
 - anchor-space: offsets relative to another rendered object
 - vines: the world-attached growth systems that occupy the growth-system layer
+- guides: world-space annotations and constraints that vines may query or follow
 
 ## Camera Model
 

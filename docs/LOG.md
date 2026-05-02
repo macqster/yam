@@ -204,3 +204,16 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-01] Cut release `0.3.1` after the modal-shell, camera, debug-overlay, and hero-rendering polish pass
 - [2026-05-01] Pruned the vines backlog wording so `TODO.md` stays execution-only and the vines contract stays in the owning docs
 - [2026-05-01] Made `dev_mode` a stronger umbrella by closing hotkeys, move, and settings modal state when dev mode turns off
+- [2026-05-01] Added a pre-new-feature gate to hygiene and TODO so future feature work starts from a clean modal/camera/hero/doc/test baseline
+- [2026-05-01] Split the dev-mode camera hotkey into `C` store / `c` recall so the manual camera home can be saved and restored explicitly
+- [2026-05-01] Added a dev-only blinking pointer probe that moves with arrow keys and reports its absolute world position in the debug panel, with footer and hotkeys entry points
+- [2026-05-01] Added world-space guide primitives to `WorldState` as the first guide/coordinates layer for future vines, with docs updated to keep them distinct from raster masks
+- [2026-05-02] Narrowed the guide contract to linework-only primitives for now, keeping sprites and solid masks explicitly future work
+- [2026-05-02] Folded the soft line reference into the guide contract so linework now has an explicit slope-aware glyph grammar for points, rulers, vectors, streams, and curves
+- [2026-05-02] Added a temporary soft-line probe to the debug overlay so the new linework grammar can be tested in-world at specific coordinates
+- [2026-05-02] Upgraded the soft-line probe to use a punctuation ramp so shallow strokes read closer to the ASCII linework reference instead of flattening to `.` and `-`
+- [2026-05-02] Extended the soft-line probe into a broader punctuation ramp so linework can express gentler stroke transitions instead of only dot/dash traces
+- [2026-05-02] Tightened the soft-line probe back to a sparse reference-shaped ramp so the current probe matches the desired `. _ - '`-style line profile more closely
+- [2026-05-02] Added a soft-line atlas document for the 10x1..10x5 direction families so linework can stay directionally unambiguous during future guide/vine work
+- [2026-05-02] Extended the soft-line atlas with longer slope families so the guide engine has a documented path for world-spanning lines, not only short primitives
+- [2026-05-02] Reframed the line generator as a project-wide guide/mask tool with a Bresenham geometry layer and glyph-appearance layer, not only a vines helper

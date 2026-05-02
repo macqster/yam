@@ -37,6 +37,9 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - `RenderState` is split into `world` and `hud` sections to keep world-pinned attachments separate from screen-attached overlays
 - shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement
 - the clock is a world entity: debug/info panels report its projected screen position, but they do not define it
+- guide primitives live in `WorldState` and may be projected or visualized by debug layers, but for now they are linework-only world-space annotations rather than raster masks or solid fills; sprites and solid masks stay future work
+- the guide / line generator is project-wide, not vines-only: it should be suitable for guide drawing, future mask edges, rulers, and other world annotations that need deterministic world-space coverage
+- linework rendering should follow [`docs/soft-line-atlas.md`](soft-line-atlas.md), with a Bresenham-style geometry layer and a glyph-appearance layer, using a small slope-aware glyph grammar with `|` / `:` for vertical emphasis so rulers, vectors, and curves read as directional strokes instead of block fills
 
 ## Pipeline
 
@@ -76,14 +79,19 @@ The active implementation treats camera as a viewport crop helper:
 - `RenderState::clock_screen()` is the shared projected clock position used by both the clock layer and the debug overlay
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
+- `GuideState` in `core/guide.rs` is the queryable world-space guide store that future vines can use for linework primitives such as points, lines, polylines, and outline shapes
 - footer placement is intentionally the bottom row of the HUD frame via `footer_row(height)`
 - the footer bar is a full-width highlighted strip in soft dark green, and its text is rendered as dark inverse content on top of that bar
 - the default footer help is a compact `[q]uit • [d]ev mode` hint with the version stamp right-aligned, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
 - the debug overlay can include passive camera/world scrollbar indicators anchored to the outermost terminal row/column; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
-- the debug info panel stays compact and reports only the live control facts needed for resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
-- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering and other developer controls are described
+- the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
+- the debug overlay may also temporarily render a faint soft-line probe for linework testing, using [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be exercised against real world coordinates; that atlas also covers longer slope families for full-world lines and future guide/mask edge drawing
+- the pointer probe is the preferred absolute coordinate reference for guide authoring and future vines placement work
+- the debug info panel stays compact and reports only the live control facts needed for resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, pointer probe state/absolute position, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
+- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering, the pointer probe, and other developer controls are described
 - leaving `dev_mode` closes any open hotkeys, move, or settings modal state so the modal stack cannot reappear latched when the dev surface is restored
-- `[c]enter` restores the screenshot-aligned manual boot seed `(-63, -17)` so the default scene can return to its boot composition without switching into follow-hero mode
+- `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
+- `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, widgets, gif, and theme values
 - modal hotkeys/move/settings overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
@@ -92,6 +100,7 @@ The active implementation treats camera as a viewport crop helper:
 - the move popup is a modal overlay rendered between hotkeys and settings; it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target
 - the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
+- the hotkeys popup now also lists the pointer probe so the dev-only probe is discoverable without widening the footer again
 
 ## UI / Metamechanics Working Set
 
@@ -99,8 +108,9 @@ The active implementation treats camera as a viewport crop helper:
 - current move grammar: `1/2/3` select the target and `hjkl` move it while move mode is open
 - current settings grammar: positions/widgets/gif/theme tabs are presentation-only and do not own world state
 - current modal surface: move/settings panels paint an opaque BTAS backdrop before the border and text are drawn, and opaque space+background cells clear the GIF underneath
-- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path
-- resume point later: if UI work resumes, start by editing values in the settings popup or by recording a default boot pose from move mode
+- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position
+- current pointer probe: `p` toggles a dev-only blinking world-space pointer that can be moved with arrow keys and is surfaced as an absolute position in the debug info panel
+- resume point later: if UI work resumes, start by editing values in the settings popup or by refining the camera-home store/recall flow from the dev-mode controls
 - this block should stay aligned with `docs/architecture.md` and the UI-related backlog entries
 
 This is the contract the current code follows. It is intentionally narrower than the older projection notes in the research bundle, which discuss center-based camera framing.

@@ -22,3 +22,4 @@
 - boundary changes should add a negative test when practical so forbidden behavior stays explicit
 - use `cargo fmt --check` for docs-only or wording-only changes; run the full test suite for compositor, camera, overlay, or other shared-rendering behavior changes
 - soft feature freeze: prefer polish and stability work only; avoid new features unless they fix a correctness bug, a regression, or a contract violation
+- pre-new-feature gate: before starting any new feature, verify the modal/UI state is clean, camera behavior is explicit, hero rendering is stable, docs/logs match the current contract, and the relevant regression tests still pass

@@ -10,12 +10,14 @@ use crate::scene::camera::Camera;
 use crate::scene::entity::hero_and_clock_poses;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct MetaState {
     #[serde(rename = "debug_layout")]
     pub dev_mode: bool,
     pub hotkeys_open: bool,
     pub move_mode_open: bool,
     pub settings_open: bool,
+    pub pointer_probe_open: bool,
     pub settings_tab: SettingsTab,
     pub move_target: MoveTarget,
 }
@@ -27,6 +29,7 @@ impl MetaState {
             self.hotkeys_open = false;
             self.move_mode_open = false;
             self.settings_open = false;
+            self.pointer_probe_open = false;
         }
     }
 
@@ -35,6 +38,7 @@ impl MetaState {
         if self.hotkeys_open {
             self.move_mode_open = false;
             self.settings_open = false;
+            self.pointer_probe_open = false;
         }
     }
 
@@ -43,6 +47,7 @@ impl MetaState {
         if self.move_mode_open {
             self.hotkeys_open = false;
             self.settings_open = false;
+            self.pointer_probe_open = false;
         }
     }
 
@@ -51,6 +56,16 @@ impl MetaState {
         if self.settings_open {
             self.hotkeys_open = false;
             self.move_mode_open = false;
+            self.pointer_probe_open = false;
+        }
+    }
+
+    pub fn toggle_pointer_probe(&mut self) {
+        self.pointer_probe_open = !self.pointer_probe_open;
+        if self.pointer_probe_open {
+            self.hotkeys_open = false;
+            self.move_mode_open = false;
+            self.settings_open = false;
         }
     }
 
@@ -134,6 +149,10 @@ struct UiStateSnapshot {
 pub struct UiOffsets {
     pub camera_x: i32,
     pub camera_y: i32,
+    pub camera_home_x: i32,
+    pub camera_home_y: i32,
+    pub pointer_x: i32,
+    pub pointer_y: i32,
     pub hero_dx: i32,
     pub hero_dy: i32,
     pub clock_dx: i16,
@@ -147,6 +166,10 @@ impl Default for UiOffsets {
         Self {
             camera_x: -63,
             camera_y: -17,
+            camera_home_x: -63,
+            camera_home_y: -17,
+            pointer_x: 0,
+            pointer_y: 0,
             hero_dx: -210,
             hero_dy: -81,
             clock_dx: 96,
@@ -164,6 +187,7 @@ pub struct UiState {
     pub offsets: UiOffsets,
     pub camera: Camera,
     pub hero: Hero,
+    pub pointer_blink_on: bool,
 }
 
 impl UiState {
@@ -180,6 +204,7 @@ impl UiState {
             offsets,
             camera,
             hero,
+            pointer_blink_on: true,
         }
     }
 
@@ -192,6 +217,7 @@ impl UiState {
         }
         state.camera.x = state.offsets.camera_x;
         state.camera.y = state.offsets.camera_y;
+        state.pointer_blink_on = true;
         state
     }
 
@@ -231,6 +257,10 @@ impl UiState {
 
     pub fn toggle_settings(&mut self) {
         self.meta.toggle_settings();
+    }
+
+    pub fn toggle_pointer_probe(&mut self) {
+        self.meta.toggle_pointer_probe();
     }
 
     pub fn next_settings_tab(&mut self) {
@@ -290,14 +320,40 @@ impl UiState {
         Ok(())
     }
 
+    pub fn move_pointer_left(&mut self) {
+        self.offsets.pointer_x -= 1;
+        self.save_state();
+    }
+
+    pub fn move_pointer_right(&mut self) {
+        self.offsets.pointer_x += 1;
+        self.save_state();
+    }
+
+    pub fn move_pointer_up(&mut self) {
+        self.offsets.pointer_y -= 1;
+        self.save_state();
+    }
+
+    pub fn move_pointer_down(&mut self) {
+        self.offsets.pointer_y += 1;
+        self.save_state();
+    }
+
     pub fn toggle_follow_hero(&mut self) {
         self.camera.follow_hero = !self.camera.follow_hero;
     }
 
-    pub fn center_camera(&mut self) {
+    pub fn store_camera_home(&mut self) {
+        self.offsets.camera_home_x = self.offsets.camera_x;
+        self.offsets.camera_home_y = self.offsets.camera_y;
+        self.save_state();
+    }
+
+    pub fn recall_camera_home(&mut self) {
         self.camera.follow_hero = false;
-        self.offsets.camera_x = UiOffsets::default().camera_x;
-        self.offsets.camera_y = UiOffsets::default().camera_y;
+        self.offsets.camera_x = self.offsets.camera_home_x;
+        self.offsets.camera_y = self.offsets.camera_home_y;
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
         self.save_state();
@@ -474,24 +530,48 @@ mod tests {
     }
 
     #[test]
-    fn center_camera_enables_follow_hero_mode() {
+    fn store_camera_home_records_the_current_camera_position() {
         let mut ui = UiState::new();
-        ui.camera.follow_hero = false;
+        ui.offsets.camera_x = -18;
+        ui.offsets.camera_y = 9;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
 
-        ui.center_camera();
+        ui.store_camera_home();
 
-        assert!(!ui.camera.follow_hero);
-        assert_eq!(ui.camera.x, -63);
-        assert_eq!(ui.camera.y, -17);
+        assert_eq!(ui.offsets.camera_home_x, -18);
+        assert_eq!(ui.offsets.camera_home_y, 9);
     }
 
     #[test]
-    fn ui_state_starts_in_manual_pan_with_the_default_seed() {
+    fn recall_camera_home_restores_the_saved_camera_position() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_home_x = -21;
+        ui.offsets.camera_home_y = 7;
+        ui.offsets.camera_x = 50;
+        ui.offsets.camera_y = -12;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+        ui.camera.follow_hero = true;
+
+        ui.recall_camera_home();
+
+        assert!(!ui.camera.follow_hero);
+        assert_eq!(ui.offsets.camera_x, -21);
+        assert_eq!(ui.offsets.camera_y, 7);
+        assert_eq!(ui.camera.x, -21);
+        assert_eq!(ui.camera.y, 7);
+    }
+
+    #[test]
+    fn ui_state_starts_with_the_default_home_seed() {
         let ui = UiState::new();
 
         assert!(!ui.camera.follow_hero);
         assert_eq!(ui.offsets.camera_x, -63);
         assert_eq!(ui.offsets.camera_y, -17);
+        assert_eq!(ui.offsets.camera_home_x, -63);
+        assert_eq!(ui.offsets.camera_home_y, -17);
         assert_eq!(ui.camera.x, ui.offsets.camera_x);
         assert_eq!(ui.camera.y, ui.offsets.camera_y);
     }
@@ -504,11 +584,13 @@ mod tests {
         assert!(ui.meta.hotkeys_open);
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.pointer_probe_open);
 
         ui.toggle_settings();
         assert!(ui.meta.settings_open);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.pointer_probe_open);
     }
 
     #[test]
@@ -528,6 +610,7 @@ mod tests {
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
         assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
     }
 
     #[test]
@@ -538,9 +621,28 @@ mod tests {
         assert!(ui.meta.move_mode_open);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
 
         ui.toggle_hotkeys();
         assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
+    }
+
+    #[test]
+    fn pointer_probe_and_popups_are_mutually_exclusive() {
+        let mut ui = UiState::new();
+
+        ui.toggle_pointer_probe();
+        assert!(ui.meta.pointer_probe_open);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.settings_open);
+
+        ui.toggle_hotkeys();
+        assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.pointer_probe_open);
         assert!(!ui.meta.move_mode_open);
         assert!(!ui.meta.settings_open);
     }
@@ -612,6 +714,10 @@ mod tests {
             offsets: UiOffsets {
                 camera_x: 12,
                 camera_y: -8,
+                camera_home_x: -63,
+                camera_home_y: -17,
+                pointer_x: 15,
+                pointer_y: -2,
                 hero_dx: -91,
                 hero_dy: -43,
                 clock_dx: 77,
@@ -624,6 +730,7 @@ mod tests {
                 hotkeys_open: false,
                 move_mode_open: true,
                 settings_open: true,
+                pointer_probe_open: true,
                 settings_tab: SettingsTab::Theme,
                 move_target: MoveTarget::Hero,
             },
@@ -635,6 +742,10 @@ mod tests {
 
         assert_eq!(round_trip.offsets.camera_x, 12);
         assert_eq!(round_trip.offsets.camera_y, -8);
+        assert_eq!(round_trip.offsets.camera_home_x, -63);
+        assert_eq!(round_trip.offsets.camera_home_y, -17);
+        assert_eq!(round_trip.offsets.pointer_x, 15);
+        assert_eq!(round_trip.offsets.pointer_y, -2);
         assert_eq!(round_trip.offsets.hero_dx, -91);
         assert_eq!(round_trip.offsets.hero_dy, -43);
         assert_eq!(round_trip.offsets.clock_dx, 77);
@@ -644,6 +755,7 @@ mod tests {
         assert!(round_trip.meta.dev_mode);
         assert!(round_trip.meta.settings_open);
         assert!(round_trip.meta.move_mode_open);
+        assert!(round_trip.meta.pointer_probe_open);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
         assert_eq!(round_trip.meta.move_target, MoveTarget::Hero);
     }
@@ -666,6 +778,10 @@ mod tests {
 
         assert_eq!(snapshot.offsets.camera_x, 3);
         assert_eq!(snapshot.offsets.camera_y, -4);
+        assert_eq!(snapshot.offsets.camera_home_x, -63);
+        assert_eq!(snapshot.offsets.camera_home_y, -17);
+        assert_eq!(snapshot.offsets.pointer_x, 0);
+        assert_eq!(snapshot.offsets.pointer_y, 0);
         assert_eq!(snapshot.offsets.hero_dx, -9);
         assert_eq!(snapshot.offsets.hero_dy, -8);
         assert_eq!(snapshot.offsets.clock_dx, 7);
@@ -675,7 +791,49 @@ mod tests {
         assert!(!snapshot.meta.dev_mode);
         assert!(!snapshot.meta.move_mode_open);
         assert!(!snapshot.meta.settings_open);
+        assert!(!snapshot.meta.pointer_probe_open);
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
         assert_eq!(snapshot.meta.move_target, MoveTarget::Hero);
+    }
+
+    #[test]
+    fn store_and_recall_camera_home_round_trip_the_current_manual_position() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -18;
+        ui.offsets.camera_y = 9;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+        ui.camera.follow_hero = true;
+
+        ui.store_camera_home();
+        ui.offsets.camera_x = 7;
+        ui.offsets.camera_y = -12;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+        ui.camera.follow_hero = true;
+
+        ui.recall_camera_home();
+
+        assert!(!ui.camera.follow_hero);
+        assert_eq!(ui.offsets.camera_home_x, -18);
+        assert_eq!(ui.offsets.camera_home_y, 9);
+        assert_eq!(ui.offsets.camera_x, -18);
+        assert_eq!(ui.offsets.camera_y, 9);
+        assert_eq!(ui.camera.x, -18);
+        assert_eq!(ui.camera.y, 9);
+    }
+
+    #[test]
+    fn pointer_probe_moves_and_persists_as_world_coordinates() {
+        let mut ui = UiState::new();
+
+        ui.toggle_pointer_probe();
+        ui.move_pointer_right();
+        ui.move_pointer_up();
+        ui.move_pointer_up();
+
+        assert!(ui.meta.pointer_probe_open);
+        assert_eq!(ui.offsets.pointer_x, 1);
+        assert_eq!(ui.offsets.pointer_y, -2);
     }
 }

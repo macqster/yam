@@ -10,6 +10,8 @@ This repository contains the active Rust runtime tree for YAM-Rust.
 
 YAM is a centered, datum-first Rust terminal simulation engine for a main visualiser scene and a greenhouse simulation space, driven by explicit world-space projection, spatial debugging, and a shared terminology glossary.
 
+The app boots in a `124x32` Ghostty frame, which is the current starting frame size.
+
 Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render contracts point back to it rather than redefining terms inline.
 
 ## Main Scene

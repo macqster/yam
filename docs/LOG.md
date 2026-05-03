@@ -307,3 +307,13 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-03] Broadened the docs index label for `docs/glossary.md` so it reads as the YAM terminology source of truth rather than only a plant/spatial glossary
 - [2026-05-03] Recorded Lua as a bounded optional scripting/plugin layer for species authoring or debug/dev tools, while keeping Rust as the host for canonical state and render ownership
 - [2026-05-03] Recorded the Rust-first tool split: keep runtime simulation/rendering in Rust, and allow non-Rust sidecars only for botanical research, registry authoring, or offline analysis when they clearly help
+- [2026-05-03] Marked the current scene/render behavior as aligned with the active contracts, leaving the spatial relation split as a consolidation task rather than a drift bug
+- [2026-05-03] Narrowed the spatial-layer target to a minimal first cut: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers
+- [2026-05-03] Added a low-risk extraction sketch for the spatial layer so `coords`, `entity`, `guide`, and `render/guide` can be consolidated in pieces instead of by a big-bang refactor
+- [2026-05-03] Sketched the first canonical spatial API surface with `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver`
+- [2026-05-03] Mapped the proposed spatial API onto the current modules so the eventual extraction has a concrete mechanical path
+- [2026-05-03] Added a stepwise migration order for the spatial consolidation so the new layer can land behind existing tests and shims
+- [2026-05-03] Marked the spatial audit as done for now: behavior matches the contracts, and the remaining work is a planned consolidation into `core/spatial`
+- [2026-05-03] Recorded a preliminary weak-spot audit note: `Space::Anchor` currently resolves like world space, and the projection API still uses `WorldPos` for both world and screen results
+- [2026-05-03] Clarified that the Ghostty `124x32` window size is also the YAM boot/start frame size when the app opens
+- [2026-05-03] Updated the front door and docs index so they both say YAM boots in the `124x32` Ghostty starting frame

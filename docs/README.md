@@ -12,7 +12,7 @@
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
 - [`rendering.md`](rendering.md) - render order contract
 - [`release-model.md`](release-model.md) - branch and release policy
-- [`config.md`](config.md) - scene config ownership note
+- [`config.md`](config.md) - scene config ownership note and the `124x32` boot/start frame size
 ## Notes
 
 - `docs/` is the active documentation surface.

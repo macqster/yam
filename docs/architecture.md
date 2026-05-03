@@ -216,6 +216,33 @@ The intended model is:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
 - the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
+- the smallest useful canonical spatial relation layer should likely own four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
+- the lowest-risk extraction plan is likely:
+  - `scene/coords.rs` keeps world/screen coordinate primitives and the basic transform helpers until the new layer is stable
+  - `scene/entity.rs` keeps attachment composition helpers while entity-specific pose math is still simple
+  - `core/guide.rs` keeps guide data and guide-set lookup as the canonical guide store
+  - `render/guide.rs` stays render-only and consumes the guide store through projection helpers instead of redefining relations
+  - the new canonical spatial relation layer should eventually absorb only the shared resolver logic, not the render helpers or the raw data structs on day one
+- the first canonical spatial API surface should probably be small and explicit:
+  - `SpatialPoint` for world-space coordinates
+  - `SpatialAnchor` for attachment origins
+  - `SpatialAttachment` for anchor-plus-offset resolution
+  - `SpatialProjection` for world-to-screen and screen-to-world helpers
+  - `SpatialGuideIndex` for guide and guide-set lookup
+  - `SpatialResolver` for the shared relation glue that ties those pieces together
+- the likely mapping from today’s modules to that surface is:
+  - `scene/coords.rs` -> `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, and `SpatialProjection`
+  - `scene/entity.rs` -> attachment composition helpers that can later collapse into `SpatialAttachment`
+  - `core/guide.rs` -> `SpatialGuideIndex` and the raw guide/guide-set data model
+  - `render/guide.rs` -> render-only consumers of `SpatialGuideIndex` and `SpatialProjection`
+  - the future `core/spatial` module -> `SpatialResolver` and any shared relation logic that should not live in render code
+- the safest migration order is likely:
+  1. introduce `core/spatial` with the new shared types and resolver helpers, while keeping the old modules as compatibility shims
+  2. move shared projection and attachment math into the new layer without changing the visible contracts
+  3. switch guide lookup consumers to the new `SpatialGuideIndex` surface while preserving `GuideState` storage
+  4. redirect render guide drawing through the new projection helpers
+  5. only then retire the old helper paths once the tests and docs are all pointing at the new canonical layer
+- each migration step should be guarded by the existing projection, resize, guide-set, and render-determinism tests before the old helper is removed
 - the footer row is intentionally the bottom terminal row of the full terminal frame, while the world itself occupies the `212x56` playfield above it; `footer_row(height)` encodes that contract
 - projection is defined in `docs/scene-model.md` and applied by the renderer
 

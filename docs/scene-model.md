@@ -61,6 +61,20 @@ Rules:
 - the soft-line drawing engine is expected to become exhaustive for the world: every possible world-space line direction and span should be representable without falling back to block fills or ad hoc exceptions
 - the pointer probe is the practical authoring aid for linework: it should be usable to record precise coordinates for guides, points, and masks while the guide system remains world-attached and queryable; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
 - the intended end-state is a single spatial relation graph that can express absolute datum guides, relative anchors, masks, and organism guidance paths for growth, movement, and lifecycle state without duplicating attachment math across systems
+- the smallest canonical spatial layer should start with datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers; masks and organism guidance can remain layered concerns until the base relation layer is proven
+- the first canonical spatial API surface should stay narrow: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob
+- the likely module mapping is:
+  - `scene/coords.rs` for point and projection primitives
+  - `scene/entity.rs` for attachment composition
+  - `core/guide.rs` for the guide index and guide-set storage
+  - `render/guide.rs` for render-only guide visualization
+  - `core/spatial` for the eventual shared resolver layer
+- the safest migration order is:
+  1. add the new shared spatial types without changing visible output
+  2. move projection and attachment math behind the new resolver
+  3. update guide lookup consumers to the guide index abstraction
+  4. reroute guide rendering through the new projection helpers
+  5. remove old paths only after the projection, guide, and render tests still pass
 - the spatial model should lean on Cartesian and Euclidean logic where possible, because signed axes, centered datum math, and direct distance reasoning make world authoring and placement easier to reason about
 - the plant-side morphology model should stay graph-based and segment-based: plants are growth programs that emit geometry, built from repeating metamers under meristem-driven rules rather than from one universal vine-shaped template
 - the project's plant-structure thinking has historical inspiration from `cbonsai`, and that lineage should remain visible as a useful constraint even as YAM grows beyond a single bonsai-style plant into a broader greenhouse and multi-species model

@@ -19,8 +19,8 @@ Date: 2026-04-27
 
 - [resolved] The current runtime behavior matches the active scene/render contracts for the world/footer split, dev-mode gating, and guide-set handling; the remaining work is consolidation of the spatial relation layer rather than drift correction.
   - evidence: `src/scene/mod.rs`, `src/runtime.rs`, `src/core/guide.rs`, `src/render/guide.rs`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`
-- [resolved] The spatial split has a documented minimal API, module mapping, and migration order, so the remaining work is now a planned refactor into `core/spatial` rather than an open architectural ambiguity.
-  - evidence: `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`
+- [resolved] The spatial split now has a first canonical `core/spatial` cut in code, with a minimal API surface and a documented migration order; the remaining work is incremental expansion, not a fresh design.
+  - evidence: `src/core/spatial.rs`, `src/scene/coords.rs`, `src/scene/entity.rs`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`
 - [resolved] `scene-model.md` is the canonical conceptual scene contract filename.
 - [resolved] `docs/architecture.md` now points at `scene-model.md`.
 - [resolved] `TODO.md` is restored as the active backlog at the root.

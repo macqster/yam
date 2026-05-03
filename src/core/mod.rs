@@ -11,4 +11,5 @@ pub mod entity;
 pub mod grid;
 pub mod guide;
 pub mod guide_line;
+pub mod spatial;
 pub mod world;

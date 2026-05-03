@@ -1,8 +1,6 @@
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct WorldPos {
-    pub x: i32,
-    pub y: i32,
-}
+pub use crate::core::spatial::{
+    SpatialPoint as WorldPos, SpatialProjection as Projection, SpatialResolver,
+};
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
@@ -31,10 +29,7 @@ pub struct Element {
 }
 
 pub fn anchor_to_world(anchor: WorldPos, offset: WorldPos) -> WorldPos {
-    WorldPos {
-        x: anchor.x + offset.x,
-        y: anchor.y + offset.y,
-    }
+    SpatialResolver::anchor_to_world(anchor, offset)
 }
 
 /// World-ui resolves in world space and stays pinned to its world attachment.
@@ -50,18 +45,12 @@ pub fn resolve_hud_ui(screen: WorldPos) -> WorldPos {
 }
 
 pub fn world_to_screen(world: WorldPos, camera_x: i32, camera_y: i32) -> WorldPos {
-    WorldPos {
-        x: world.x - camera_x,
-        y: world.y - camera_y,
-    }
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, 0)).world_to_screen(world)
 }
 
 #[allow(dead_code)]
 pub fn screen_to_world(screen: WorldPos, camera_x: i32, camera_y: i32) -> WorldPos {
-    WorldPos {
-        x: screen.x + camera_x,
-        y: screen.y + camera_y,
-    }
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, 0)).screen_to_world(screen)
 }
 
 #[allow(dead_code)]

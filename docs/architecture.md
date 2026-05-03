@@ -13,7 +13,7 @@
 
 - `core/` - data only, no UI, no terminal, no rendering
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
-- `core/spatial` - planned canonical home for world/screen/anchor transforms, attachment chains, and relation resolution across rulers, guides, masks, and organism behavior
+- `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers and will absorb more relation logic over time
 - `systems/` - mutate `WorldState` only, no rendering
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, and final text conversion
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
@@ -216,14 +216,14 @@ The intended model is:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
 - the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
-- the smallest useful canonical spatial relation layer should likely own four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
+- the smallest useful canonical spatial relation layer now owns four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
 - the lowest-risk extraction plan is likely:
   - `scene/coords.rs` keeps world/screen coordinate primitives and the basic transform helpers until the new layer is stable
   - `scene/entity.rs` keeps attachment composition helpers while entity-specific pose math is still simple
   - `core/guide.rs` keeps guide data and guide-set lookup as the canonical guide store
   - `render/guide.rs` stays render-only and consumes the guide store through projection helpers instead of redefining relations
   - the new canonical spatial relation layer should eventually absorb only the shared resolver logic, not the render helpers or the raw data structs on day one
-- the first canonical spatial API surface should probably be small and explicit:
+- the first canonical spatial API surface is now present and should stay small and explicit:
   - `SpatialPoint` for world-space coordinates
   - `SpatialAnchor` for attachment origins
   - `SpatialAttachment` for anchor-plus-offset resolution

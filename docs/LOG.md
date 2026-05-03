@@ -313,6 +313,7 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-03] Sketched the first canonical spatial API surface with `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver`
 - [2026-05-03] Mapped the proposed spatial API onto the current modules so the eventual extraction has a concrete mechanical path
 - [2026-05-03] Added a stepwise migration order for the spatial consolidation so the new layer can land behind existing tests and shims
+- [2026-05-03] Landed the first `core/spatial` cut in code and updated the docs to describe it as the active canonical relation layer first pass
 - [2026-05-03] Marked the spatial audit as done for now: behavior matches the contracts, and the remaining work is a planned consolidation into `core/spatial`
 - [2026-05-03] Recorded a preliminary weak-spot audit note: `Space::Anchor` currently resolves like world space, and the projection API still uses `WorldPos` for both world and screen results
 - [2026-05-03] Clarified that the Ghostty `124x32` window size is also the YAM boot/start frame size when the app opens

@@ -232,12 +232,12 @@ The active implementation treats camera as a viewport crop helper:
 - world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - the world datum is the shared absolute reference for rulers, guides, masks, and organism guidance; screen space remains a separate terminal projection layer
 - the smallest canonical spatial layer should stay narrow at first: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers are the minimum shared contract before masks and organism guidance become first-class relation types
-- the first canonical spatial API surface should stay narrow here too: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model
+- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model
 - the likely module mapping from render’s point of view is:
   - `scene/coords.rs` supplies the coordinate/projection primitives
   - `core/guide.rs` supplies the queryable guide index and guide sets
   - `render/guide.rs` stays render-only and consumes those primitives
-  - `core/spatial` should eventually own the shared resolver logic so render does not need to know relation details
+  - `core/spatial` already owns the shared resolver first cut so render does not need to know relation details
 - the safest migration order from the renderer’s point of view is:
   1. keep the current render output unchanged while the shared spatial layer appears
   2. move only relation math into the new resolver, not the grid composition logic

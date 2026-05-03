@@ -156,9 +156,8 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                         {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
                             let base = c.to_ascii_lowercase();
-                            match base {
-                                'c' => ui_state.recall_camera_home(),
-                                _ => {}
+                            if base == 'c' {
+                                ui_state.recall_camera_home();
                             }
                             if c == 'd' {
                                 ui_state.toggle_dev_mode();

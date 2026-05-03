@@ -125,9 +125,7 @@ pub fn classify_line(start: LinePoint, end: LinePoint, steps: i32, step: i32) ->
         PhaseRole::Entry
     } else if step == steps {
         PhaseRole::Exit
-    } else if step <= steps / 3 {
-        PhaseRole::Transition
-    } else if step >= (steps * 2) / 3 {
+    } else if step <= steps / 3 || step >= (steps * 2) / 3 {
         PhaseRole::Transition
     } else {
         PhaseRole::Core

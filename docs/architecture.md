@@ -13,11 +13,17 @@
 
 - `core/` - data only, no UI, no terminal, no rendering
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
+- `core/spatial` - planned canonical home for world/screen/anchor transforms, attachment chains, and relation resolution across rulers, guides, masks, and organism behavior
 - `systems/` - mutate `WorldState` only, no rendering
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, and final text conversion
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
 - `ui/` - runtime UI state, persisted offsets/settings, screen-space widgets, and temporary scene adapter
 - `runtime.rs` - event loop, input, tick, and render orchestration only
+- Rust should remain the runtime and simulation core because it already owns the deterministic frame loop, scene layers, world state, and render contracts; other tools should be justified by whether they improve data authoring, offline analysis, or botanical research rather than by fashion
+- if a non-Rust tool is useful, it should usually live outside the hot path: Python or notebooks can help with offline botanical research or exploratory data analysis, and structured data files or a small database can help with species registries and journals without moving the runtime core out of Rust
+- the external-tool rule of thumb is simple: keep real-time simulation, rendering, and UI in Rust; allow sidecar tools only for research, registry authoring, batch processing, or one-off inspection that would be awkward in the live terminal app
+- Lua is a plausible optional extension layer if we want compact species scripts or debug/dev plugins, but it should remain bounded and Rust-hosted: scripts can define species presets, authoring helpers, or overlay behavior, while Rust keeps the canonical state, determinism, and render ownership
+- if Lua is introduced, it should be treated as a plugin/script layer for data-driven flora authoring and tooling, not as the owner of world mutation, render orchestration, or the primary simulation loop
 
 ## Forbidden Coupling
 
@@ -47,9 +53,22 @@
 - ratatui receives one final `Paragraph` for the frame
 - scene rendering uses the full terminal area for viewport and viewport-rect values
 - the scene model contract lives in [`scene-model.md`](scene-model.md) and defines the deterministic layer/space/masking rules above ratatui
+- the layer order is a hard precedence ladder: world base first, world props next, world-tied debug/dev assets after that, HUD after world, and modal overlays last
+- overwrite priority follows numeric `z_index` inside that ladder, so world-tied diagnostic assets can intentionally overwrite world props without becoming HUD content
+- masks only gate explicit compositor writes; they do not create a second ordering system
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
+- day-to-day debug visibility is distinct from dev-mode control surfaces: everyday debug overlays may remain available during normal use, while deeper mutation/editing controls stay gated behind dev mode
+- keyboard interaction should follow stable muscle-memory conventions from ASCII TUIs and roguelike workflows, with explicit modes, discoverable hints, and predictable key reuse
+- the interface should prefer semantic structure over decorative novelty so future plant stats, morphology data, and lifecycle variables remain readable at high density
+- a command palette or similar action hub is the preferred discoverability fallback for rare actions, entity jumps, and overlay toggles
+- the interface mode map should remain stable and explicit:
+  - `normal`: day-to-day scene use, lightweight HUD, and everyday debug visibility
+  - `inspect`: focus, entity detail, and drill-down reading
+  - `debug`: diagnostic overlays that are safe to leave available in normal use
+  - `dev`: gated mutation/editing controls and simulation tooling
+  - `command palette`: search/fallback discovery for rare actions and jumps
 - turning `dev_mode` off closes any open hotkeys, move, or settings modal state so the modal family cannot stay latched outside the dev surface
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 - modal move/settings/hotkeys popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
@@ -57,6 +76,62 @@
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 - guides are world-attached semantic primitives owned by `WorldState`; for now they are linework-only primitives (points, lines, polylines, and outline shapes) that the debug overlay visualizes and vines may query, but they are not raster masks or solid fills; each guide carries its own label, may belong to an optional named group, and the state also carries named `GuideSet` collections so larger guide groups can be addressed explicitly
 - the guide / line generator is project-wide, not vines-only: it supports guide drawing now and should remain suitable for future mask edges, rulers, and other world-space annotations with the same world-space contract, and it must remain capable of generating any line in any direction across the full YAM world size
+- the broader spatial system should be able to describe absolute world datum guidance and relative attachment guidance for plantlife, flowers, vines, and other organisms without forcing those behaviors through render-only helpers
+- YAM should provision for two main simulation spaces: the main scene visualiser and the greenhouse/lab space, with the greenhouse expected to host multiple distinct flora species rather than a single vine-like organism type
+- plant simulation must support procedurally growing organisms with different anatomies and morphologies, so vines are one family in a larger flora system rather than an accidental singularity
+- the spatial system should lean on Cartesian and Euclidean logic where possible, because signed axes, centered datum math, and direct distance reasoning make world authoring and placement easier to reason about
+- the soft-line renderer and pointer probe should be treated as one authoring workflow: pointer records exact coordinates for guides, points, masks, and other spatial relations, and the line engine makes those relations visible in world space; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
+- the practical guide workflow is point-first: capture exact coordinates with the pointer, compose them into lines/polylines/outlines, then validate the result with the soft-line renderer before treating it as stable world structure
+- the current capture UI is deliberately narrow: pointer probe for exact world coordinates, debug/info for readout, hotkeys for discoverability, and move mode for explicit world-attached repositioning
+- the UI should also expose read-only preview lists for guide sets and subsets so grouped geometry, such as a polyline outline used for a mask shape, can be inspected without mutation
+- the flora architecture should follow a hybrid graph-plus-segment model: plant state is a growth graph of organs, while geometry is emitted as Euclidean segments and outlines under deterministic rules
+- the project's plant-structure thinking has historical inspiration from `cbonsai`, and that lineage should remain visible as a useful constraint even as YAM grows beyond a single bonsai-style plant into a broader greenhouse and multi-species model
+- inspiration lineage for the current plant/UI thinking can stay short and explicit:
+  - `cbonsai` for compact plant growth, branching, and readable terminal botany
+  - `Dwarf Fortress` for ASCII-era muscle memory, dense inspectable state, and strong world-model thinking
+  - `Cataclysm: DDA` for keyboard-first survival UI, modal discipline, and practical terminal ergonomics
+- the terminology should stay consistent with the flora model: `metamer` for repeating structural units, `internode` for segments, `meristem` for growth points, `axis` for branch systems, `insertion` for organ attachment, and `node` reserved as a provisional plant-term pending further research
+- the first implementation targets should be small and inspectable: the Y-shaped tree-stump scaffold, a guide-following vine family, and a monstera-like plant with large leaf organs
+- a minimal Rust-shaped plant model can stay small and explicit: `Plant` owns species and lifecycle state, `Axis` owns a growth branch and ordered metamers, `Metamer` carries one internode and organ attachments, `Meristem` represents an active growth point, and `Organ` covers leaf/flower/fruit/branch outputs; the geometry layer should be derived from this state rather than owning it
+- a minimal lifecycle update loop can stay equally small: `Seed -> Growth -> Mature -> Senescent -> Decay`, with active meristems driving growth steps, species rules choosing new metamers or organs, and geometry being regenerated from state each tick
+- organ state should remain explicit and inspectable: buds, leaves, flowers, and fruit can each progress through `bud -> growing -> mature -> aging -> dead` without requiring the whole plant to collapse into a single global state
+- the greenhouse/lab space should be the place where lifecycle tuning becomes visible, while the main scene can keep the current prototypes comparatively static and readable
+- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; a species registry or database layer should hold species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
+- the species registry should be read-heavy and simulation-friendly: it can store canonical species metadata, but per-plant runtime state stays with the living organism instance in `WorldState` or its flora subsystem
+- each life-form should also have a dedicated log-journal so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
+- a life-form journal should stay compact and event-oriented: lifecycle transitions, growth steps, organ births/removals, environment influences, damage/pruning, and debug annotations are the highest-value entries
+- the journal should be human-readable first and machine-friendly second, so greenhouse inspection can scan it quickly without losing deterministic simulation detail
+- the species registry payload should stay compact and reusable: species id/name, morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels are the highest-value fields
+- the registry should not store per-instance life history; that belongs in the individual plant journal and runtime state
+- the state/stat/journal/registry layer may deserve its own dedicated render mode in the future, distinct from the main scene and greenhouse, if the inspection burden grows enough to justify a specialized view
+- an alternative UI strategy is a per-life-form popup window that shows the organism’s relevant data and allows limited tweaks such as growth rate or lifecycle length, while keeping the underlying state registry-backed and the journal per-instance
+- comparison rule of thumb: a dedicated mode fits large-scale registry browsing and greenhouse administration; per-life-form popups fit quick inspection or light tuning; lightweight debug overlays fit routine day-to-day checks when the organism count is still manageable
+- the registry taxonomy can be kept explicit by grouping fields into anatomy defaults, growth rules, visual phenotype ranges, lifecycle tuning, and debug labels; this makes the same registry useful for generation, emulation, and inspection without overloading one field bucket
+- botanical basics should remain a reference point for species design: if a morphology term, growth rule, or anatomy field is unclear, the registry should be informed by real plant structure before the term is committed to YAM
+- terminology authority should be explicit:
+  - `strict` terms are botanically grounded and should match standard plant meaning as closely as practical
+  - `inferred` terms are YAM-specific design interpretations built from real plant structure and terminal constraints
+  - `provisional` terms are placeholders that may change once the plant model or spatial terminology is researched further
+- plant-language references live in [`docs/glossary.md`](glossary.md); this contract only needs the YAM-specific rule that `node` stays reserved for plant morphology/anatomy and the spatial side should continue to use points, anchors, guides, lines, and polylines
+- a concrete species-entry checklist can help keep the registry consistent: `species_id`, `display_name`, `habit/form`, `anatomy defaults`, `morphology notes`, `branching pattern`, `internode length`, `leaf distribution`, `growth rate`, `tropism rules`, `lifecycle tuning`, `allowed organs`, `debug labels`, and `journal hints`
+- the current prototype targets should be treated as concrete morphological briefs: the tree-stump scaffold is a 3-5 cell-thick bark-textured support with a fork just below the hero, the vine family is a border-aware sprawling growth form with a thick main stem and smaller branches, and the monstera-like plant is a multi-stem growth area with big fenestrated leaves and species-specific lifecycle behavior
+- example species entry: the Y-shaped tree-stump scaffold can be modeled as a woody support habit with a short trunk, one early fork below the hero, thick bark-textured segments, dead or minimal meristems, and a structural role rather than active canopy growth; this is an inference inspired by woody stem/meristem basics, not a claim that the scaffold is a real species
+- the scaffold should be treated as a pre-rendered hero-support remnant in the main scene: a dead or senescent trunk-like form with one stable fork under the hero GIF, minimal lifecycle behavior, and only very light moss growth over the bark while vines can later attach and partially overgrow it
+- the scaffold should not behave like a normal active plant: its lifecycle can be fixed or nearly fixed, with the primary requirement being structural stability, bark texture, and readable Y-shaped support geometry
+- example species entry: the vine family can be modeled as a climbing or sprawling habit with an active apical meristem, long internodes, optional lateral meristems, border-awareness, and the ability to produce leaves, flowers, and possibly fruit along the main stem; this is an inference inspired by climbing plant and node/internode basics
+- example species entry: the monstera-like plant can be modeled as an aroid-style climbing or self-supporting form with multiple stems from one growth area, large fenestrated leaves, aerial/climbing tendencies, and a lifecycle that can produce flowers and fruit later in development; this is an inference inspired by Monstera morphology rather than a direct species copy
+- a species-entry template can stay consistent by filling these fields for each prototype: `species_id`, `display_name`, `habit/form`, `support strategy`, `stem/axis plan`, `growth-tip behavior`, `branching pattern`, `internode range`, `leaf shape/distribution`, `organ outputs`, `life-state defaults`, `registry tags`, `journal hints`, and `inspection notes`
+- a botanical species-template should keep a few fields separate from general registry data: `taxonomic inspiration`, `support habit`, `growth mode`, `leaf architecture`, `reproductive strategy`, `life cycle notes`, and `ecology cues`; this helps keep the registry grounded while still remaining a YAM-specific abstraction
+- compact species template examples:
+  - tree-stump scaffold: `species_id = yam.scaffold.stump_v1`, `display_name = bifurcated stump scaffold`, `habit/form = woody support`, `support strategy = fixed hero anchor`, `stem/axis plan = short trunk with one fork`, `growth-tip behavior = minimal/dead`, `branching pattern = one early Y-fork`, `leaf shape/distribution = none or negligible`, `organ outputs = structural only`, `life-state defaults = dead-or-senescent`, `registry tags = scaffold, support, hero-anchor, bark`, `inspection notes = pre-rendered, stable fork, moss-only lifecycle, vine attachment zones`
+  - vine family: `species_id = yam.vine.border_v1`, `display_name = border-aware vine family`, `habit/form = climbing/sprawling`, `support strategy = border-aware guide-following`, `stem/axis plan = long main stem plus optional laterals`, `growth-tip behavior = active apical meristem`, `branching pattern = opportunistic side branches`, `leaf shape/distribution = repeat along stem`, `organ outputs = leaf, flower, fruit optional`, `life-state defaults = dynamic`, `registry tags = vine, climbing, border-aware, guided`, `inspection notes = gravity response, wall avoidance, mask interaction, thick main stem`
+  - monstera-like plant: `species_id = yam.floral.monstera_like_v1`, `display_name = fenestrated multi-stem flora`, `habit/form = aroid-like climber or self-supporting multi-stem`, `support strategy = multiple stems from one growth area`, `stem/axis plan = several axes from a base`, `growth-tip behavior = active and species-specific`, `branching pattern = sparse to moderate`, `leaf shape/distribution = large fenestrated leaves`, `organ outputs = leaf, flower, fruit possible`, `life-state defaults = active growth`, `registry tags = monstera-like, fenestrated, multi-stem, aroid-inspired`, `inspection notes = leaf size, perforation, stem count, lifecycle pacing`
+- example species entry: the Y-shaped tree-stump scaffold can be modeled as a woody support habit with a short trunk, one early fork below the hero, thick bark-textured segments, dead or minimal meristems, and a structural role rather than active canopy growth; this is an inference inspired by woody stem/meristem basics, not a claim that the scaffold is a real species
+- example species entry: the vine family can be modeled as a climbing or sprawling habit with an active apical meristem, long internodes, optional lateral meristems, border-awareness, and the ability to produce leaves, flowers, and possibly fruit along the main stem; this is an inference inspired by climbing plant and node/internode basics
+- example species entry: the monstera-like plant can be modeled as an aroid-style climbing or self-supporting form with multiple stems from one growth area, large fenestrated leaves, aerial/climbing tendencies, and a lifecycle that can produce flowers and fruit later in development; this is an inference inspired by Monstera morphology rather than a direct species copy
+- the main scene is the live visualiser/screensaver composition: hero GIF, tree-stump hero scaffolding with a Y-shaped fork under the hero, clock widget, weather widget, and procedurally generated vines that frame the composition organically
+- the greenhouse is the early conceptual multi-room simulation space: rooms, labs, pots, bowls, and controlled-environment biome themes for developing and simulating plant lifecycles
+- current flora prototypes include tree-stump scaffolding pre-generated at boot, tropical framing vines, and a monstera-like plant with large aesthetic growing leaves
 - linework guides are rendered through a shared Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](soft-line-atlas.md) for shallow/stroke transitions and longer world-spanning lines, not with filled blocks or raster masks; the engine target is universal line coverage across the full YAM world size, using the grammar key `LineFamily -> LengthBucket -> Direction -> PhaseRole -> LocalStep`
 - the hero frame pipeline currently uses Chafa with `--color-space=rgb`, `--color-extractor=average`, and `--dither=none` so dark reds are preserved by the conversion step before any pixel-side correction, and `hero_layer` preserves the styled spans when it copies the frame into the scene grid so the hero does not collapse to monochrome text. The ditherit-style braille/source-color trial is documented only as a historical experiment because it improved red retention but introduced unacceptable blocking and edge smearing in the face area
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored to the outermost terminal row/column, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
@@ -69,6 +144,7 @@
 - the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current developer controls without adding footer clutter
 - the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
 - the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, widgets, gif, and theme values
+- the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, `hotkeys`/`move`/`settings` are mutually exclusive modal surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
 - the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3` select the active entity target and `hjkl` move that target while the popup is open
 
 ## UI / Metamechanics Working Set
@@ -112,31 +188,35 @@
 The intended model is:
 
 - datum/origin: `(0, 0)`
-- world is centered around the datum
+- world space is Euclidean and centered on the datum
 - the world quadrants are sign-defined around that datum:
   - top-left: `(-x, -y)`
   - top-right: `(x, -y)`
   - bottom-left: `(-x, y)`
   - bottom-right: `(x, y)`
 - world coordinates use Cartesian orientation: `x` increases to the right, `y` increases upward
+- the world datum is the shared absolute reference point for guides, anchors, masks, and organism behavior
 - terminal/screen coordinates use the usual terminal orientation: `x` increases to the right, `y` increases downward
 - world space: simulation/object positions
 - camera: world-space origin of the visible crop, not the viewport itself
 - viewport: terminal-sized crop rectangle, not the camera itself
+- static full-screen world size: `212x56`
+- terminal full-screen frame: `212x57`, with the bottom row reserved for the footer
 - default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the screenshot-aligned hero/clock composition from boot; this manual seed is distinct from the centered `follow-hero` runtime path
 - default follow-hero camera crops are centered on the world datum across resizes once follow-hero mode is enabled; manual pan mode is clamped to one cell of overscan beyond the world border/frame
 - the centered `124x32` follow-hero crop starts at camera `(-62, -16)`
 - anchor space: offsets relative to another rendered object
 - screen space: fixed terminal overlay positions
-- world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement
+- world border and HUD border each keep a 1-cell inset where needed for symmetry and future UI placement, and HUD layout may still consult the shared world-spacing model for alignment rules even though it remains screen-attached at render time
 - world-ui elements stay tied to world entities and follow the world contract
 - hud-ui elements stay tied to viewport/camera/terminal position and follow the screen contract
 - clock is treated as a world entity: it stays tied to the hero in world space and carries its own hero-relative offset
 - footer/status is treated as hud-ui: it lives in screen space alongside hotkeys and version/build labels
 - the repo now exposes explicit helpers for both sides of that split:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
-- `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent
-- the footer row is intentionally the bottom terminal row; `footer_row(height)` encodes that contract
+- `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
+- the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
+- the footer row is intentionally the bottom terminal row of the full terminal frame, while the world itself occupies the `212x56` playfield above it; `footer_row(height)` encodes that contract
 - projection is defined in `docs/scene-model.md` and applied by the renderer
 
 ## Hero Geometry Contract
@@ -149,7 +229,7 @@ The intended model is:
 - hero visual center should cross the datum, while the rendered cell footprint remains `96x48`
 - the world retains a 1-cell inset boundary for world-ui border work, and the active HUD/border layout also preserves a 1-cell inset for overlay/UI work
 - world-ui should not be repositioned by camera semantics after it is anchored in world space
-- hud-ui should not inherit world coordinates directly; it should use viewport/screen positioning
+- hud-ui should not inherit world coordinates directly; it should use viewport/screen positioning while still borrowing the shared spacing model for consistent offsets, insets, and alignment
 - the debug border probe is a datum-centered world-border indicator that is rendered in world space and therefore moves with camera panning
 
 The remaining architectural gap is that `coords::Space` is not yet the authoritative resolver for all placement paths. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.

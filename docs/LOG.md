@@ -2,6 +2,42 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-05-03
+
+- revised the active architecture docs to describe one canonical spatial relation layer for world datum, relative anchors, guides, masks, and organism guidance, and corrected the flowers typo in the broader plantlife framing
+- updated the audit snapshot with the remaining spatial-model split so the current risk notes match the present code layout
+- clarified the active coordinate contract so YAM world space is explicitly Euclidean with a centered `(0, 0)` datum, while screen space remains a separate terminal projection
+- recorded the Ghostty baseline typography notes in `docs/config.md` so the current font and cell-metric tuning assumptions stay alongside the `124x32` startup size
+- noted that HUD/UI layout may still depend on the shared world-spacing model for offsets and alignment, even though final HUD placement remains screen-attached
+- split the top-level YAM definition into an implemented-today description and an intended-architecture description so the docs stay honest about what is already coded versus what is still emergent
+- surfaced the implemented-vs-intended YAM definition in the repo front door and docs index so the distinction is visible before readers descend into the deeper contracts
+- compressed the front-door YAM definition into a single slogan plus a short non-goals list to keep the repo identity concise and scan-friendly
+- redefined YAM around two simulation spaces, the main scene visualiser and the greenhouse/lab space, and clarified that flora simulation must support multiple organism anatomies instead of treating vines as a singular special case
+- named the concrete main-scene composition and greenhouse concept phases, including the current flora prototypes for tree-stump scaffolding, tropical vines, and a monstera-like plant
+- fixed the world/fullscreen size contract to `212x56` world cells plus one reserved footer row in the `212x57` terminal frame, and updated the border/footer tests accordingly
+- formalized the renderer precedence ladder so world base, world props, world-tied debug/dev assets, HUD, and modal overlays have explicit overwrite priority instead of relying on incidental z-index behavior
+- added an interface contract for keyboard-first muscle-memory controls, everyday-vs-dev debug separation, semantic visual hygiene, and a command-palette discoverability path based on the CLI/TUI research pass
+- added an explicit interface mode map for `normal`, `inspect`, `debug`, `dev`, and `command palette` so everyday use, drill-down reading, diagnostics, and editing/tooling stay cleanly separated
+- tightened the mode-to-input contract so the docs now distinguish normal, inspect, debug, dev, and command-palette behavior from the concrete dev hotkeys already implemented in the runtime surface
+- added an explicit screen-zone contract for the main scene, HUD/footer, debug/inspect, and modal overlay regions so the layout vocabulary stays stable across render and scene docs
+- added a visible-content map for the main scene, HUD/footer, debug/inspect, and modal overlay regions so new UI or diagnostic elements can be assigned before they are implemented
+- tightened the visible-content map so the footer stays one-line only, debug/inspect stays factual rather than command-heavy, and modal overlays remain the only place for the denser action vocabulary
+- added an explicit modal-vocabulary contract so hotkeys, move, settings, pointer, and camera-home actions stay grouped according to the controls that are already implemented in code
+- reconciled the UI docs with the runtime input loop so the modal gating, dev-only probe motion, and camera-home actions are described as currently enforced behavior rather than loose future intent
+- clarified that the soft-line renderer is meant to cover every world-space line and that the pointer probe is the practical authoring tool for recording precise coordinates for guides, nodes, masks, and other spatial relations
+- noted that the spatial model should lean on Cartesian and Euclidean logic where possible so world-space authoring stays practical and easier to reason about
+- added an explicit guide capture workflow so the pointer records coordinates first, then points/nodes/lines/masks are composed and validated with the soft-line renderer
+- added an explicit capture UI contract so guide placement uses the pointer, debug/info panel, hotkeys, and move mode without turning the HUD into an editor
+- added a read-only guide-set preview requirement so guide sets and subsets can be inspected, including mask-outline polylines, without making the UI mutable
+- reserved the term `nodes` for plant morphology/anatomy systems for now, and removed it from the spatial guide-capture contract pending further terminology research
+- corrected the main-scene scaffold description so the tree-stump hero support is explicitly a Y-shaped fork under the hero GIF
+- ingested the flora morphology survey into the live contracts as a hybrid graph-plus-segment model with metamer/internode/meristem terminology and small prototype targets for the first implementation
+- added a minimal Rust-shaped plant data sketch so the flora model stays implementable as Plant/Axis/Metamer/Meristem/Organ state with derived geometry
+- added a minimal lifecycle sketch so plants can progress through Seed/Growth/Mature/Senescent/Decay while organs advance through their own states and geometry is regenerated from plant state each tick
+- clarified that each plant organism is an independent life-form and that YAM likely needs a read-heavy species registry/database layer for species traits, growth rules, and other reusable simulation data
+- added the dedicated per-life-form log-journal requirement so lifecycle events and debugging notes can be tracked per organism
+- defined the per-life-form journal payload as a compact event log centered on lifecycle transitions, growth steps, organ changes, environmental effects, pruning, and debug annotations
+
 ## 2026-04-26
 
 - added `docs/SCENE_MODEL.md` to formalize the deterministic scene layer above ratatui, including layer order, coordinate spaces, masking, and the frame pipeline
@@ -240,3 +276,33 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-02] Added explicit labels and optional groups to `Guide` so guide primitives can be addressed individually and as part of larger named sets, which shifts the guide contract toward composable guide/mask groups instead of anonymous strokes
 - [2026-05-02] Added `GuideSet` to `GuideState` so named guide collections can be stored and queried explicitly instead of being inferred only through per-guide groups
 - [2026-05-02] Added `GuideSet::new(...)` and `GuideState::add_set(...)` so named guide collections have a small construction API instead of requiring direct vector mutation
+- [2026-05-03] Defined the species-registry payload as compact reusable metadata for morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels
+- [2026-05-03] Noted that the state/stat/journal/registry layer may eventually merit its own dedicated render mode alongside the main scene and greenhouse if inspection needs grow
+- [2026-05-03] Noted an alternative per-life-form popup UI strategy for inspecting organism data and making limited tweaks like growth rate or lifecycle length
+- [2026-05-03] Added a simple comparison rule of thumb for the three inspection paths: dedicated mode for registry-scale browsing, popup windows for quick tuning, and lightweight debug overlays for routine checks
+- [2026-05-03] Added a registry taxonomy note grouping species fields into anatomy defaults, growth rules, phenotype ranges, lifecycle tuning, and debug labels
+- [2026-05-03] Added a botanical-basics reminder so species terms and morphology fields stay grounded in real plant structure before they are committed to YAM
+- [2026-05-03] Added a species-entry checklist with fields for species id, display name, habit/form, anatomy defaults, morphology notes, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, debug labels, and journal hints
+- [2026-05-03] Added concrete morphological briefs for the current prototypes: the bark-textured Y-shaped tree-stump scaffold, border-aware sprawling vines, and the multi-stem fenestrated monstera-like plant
+- [2026-05-03] Added example species entries informed by botanical consults, with each prototype explicitly labeled as an inference rather than a direct copy of a real species
+- [2026-05-03] Added a botanical species-template split so registry data keeps taxonomic inspiration, support habit, growth mode, leaf architecture, reproductive strategy, life cycle notes, and ecology cues separate from generic fields
+- [2026-05-03] Tightened the three example species into explicit registry-style entries with ids, support strategy, stem plan, growth-tip behavior, branching pattern, organ outputs, lifecycle defaults, registry tags, and inspection notes
+- [2026-05-03] Clarified the scaffold as a pre-rendered dead-or-senescent hero support remnant with only minimal moss growth, stable bark texture, and later vine attachment/overgrowth
+- [2026-05-03] Filled the first species-template examples for the Y-shaped tree-stump scaffold, border-aware vine family, and monstera-like multi-stem plant
+- [2026-05-03] Canonized a plant anatomy and morphology glossary so stem, branch, stub, node, internode, leaf, meristem, axis, insertion, and organ mean the same thing across architecture, scene, and rendering docs
+- [2026-05-03] Added a compact working plant-vocabulary table mapping each botanical term to its YAM meaning and intended use
+- [2026-05-03] Extended the working plant vocabulary with bud, petiole, petal, root, crown, canopy, flower, and fruit so structural, growth, and reproductive language stays distinct
+- [2026-05-03] Noted the project's historical inspiration from `cbonsai` so the plant-structure lineage stays visible as YAM expands into a broader greenhouse and multi-species model
+- [2026-05-03] Added a short inspiration lineage block naming `cbonsai`, `Dwarf Fortress`, and `Cataclysm: DDA` as the main plant/UI ancestry references
+- [2026-05-03] Added a terminology-authority legend so plant terms can be marked as strict, inferred, or provisional
+- [2026-05-03] Added explicit term labels for the current glossary entries so the repo can distinguish strict botanical terms, YAM-inferred terms, and provisional placeholders
+- [2026-05-03] Added a dedicated `docs/glossary.md` so plant anatomy, morphology, and spatial terminology have a single canonical reference page
+- [2026-05-03] Removed duplicated glossary prose from the main contracts and replaced it with a pointer to `docs/glossary.md`
+- [2026-05-03] Expanded the glossary with scene/UI terms for camera, viewport, HUD, suite, overlay, world space, screen space, frame, layout, and panel
+- [2026-05-03] Extended the glossary with layer, zone, modal, footer, status bar, debug overlay, inspect, dev mode, command palette, main scene, and greenhouse terms
+- [2026-05-03] Renamed the glossary to a broader YAM glossary and added `shell` for the shared modal container vocabulary
+- [2026-05-03] Updated the front door to point to `docs/glossary.md` as the shared terminology source of truth and to reflect the current terminology contract more directly
+- [2026-05-03] Added a front-door note saying the glossary owns shared terminology and that duplicate term definitions should not be reintroduced into the contracts
+- [2026-05-03] Trimmed the front-door YAM definition slightly so the README reads more tightly while keeping the glossary/source-of-truth note intact
+- [2026-05-03] Recorded Lua as a bounded optional scripting/plugin layer for species authoring or debug/dev tools, while keeping Rust as the host for canonical state and render ownership
+- [2026-05-03] Recorded the Rust-first tool split: keep runtime simulation/rendering in Rust, and allow non-Rust sidecars only for botanical research, registry authoring, or offline analysis when they clearly help

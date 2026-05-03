@@ -18,6 +18,10 @@
 - if a concept appears in more than one active doc, one doc must be canonical and the others must link to it
 - any behavior change must update the owning contract doc in the same change
 - terminology is part of the contract surface; do not introduce synonyms for `world-space`, `screen-space`, `vines`, or `RenderState`
+- visual hygiene matters: preserve legibility for glyphs, letters, numerals, stats, and dense simulation data; avoid decorative clutter that harms scanability
+- prefer existing Rust/ratatui tools, plugins, and scripts where they keep the interface cleaner and more maintainable
+- keep Rust as the runtime core unless a different tool clearly improves research, registry authoring, or offline analysis; sidecar tools are acceptable for botanical research, species data preparation, and batch inspection, but they should not replace the live simulation/render path
+- Lua plugins or scripts are acceptable as a bounded extension layer for species authoring or debug/dev tooling, provided Rust remains the host, the canonical state owner, and the deterministic runtime path stays unchanged
 - temp files and shared runtime artifacts used by tests or helpers should be isolated per run when practical
 - boundary changes should add a negative test when practical so forbidden behavior stays explicit
 - use `cargo fmt --check` for docs-only or wording-only changes; run the full test suite for compositor, camera, overlay, or other shared-rendering behavior changes

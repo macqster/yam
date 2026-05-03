@@ -70,6 +70,7 @@ mod tests {
     #[test]
     fn footer_uses_bottom_row_for_any_height() {
         assert_eq!(footer_row(57), 56);
+        assert_eq!(footer_row(56), 55);
         assert_eq!(footer_row(36), 35);
         assert_eq!(footer_row(1), 0);
         assert_eq!(footer_row(0), 0);

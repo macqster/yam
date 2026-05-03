@@ -399,7 +399,7 @@ mod tests {
         assert_eq!(border.bottom, -WORLD_HALF_H);
         assert_eq!(border.mid_x, 0);
         assert_eq!(border.mid_y, 0);
-        assert_eq!(border.top - border.bottom, crate::scene::WORLD_HEIGHT - 2);
+        assert_eq!(border.top - border.bottom, crate::scene::WORLD_HEIGHT - 1);
         assert_eq!(border.right - border.left, crate::scene::WORLD_WIDTH - 1);
     }
 

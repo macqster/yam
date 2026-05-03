@@ -7,8 +7,9 @@
 - [`LOG.md`](LOG.md) - current repository log
 - [`hygiene.md`](hygiene.md) - repo hygiene rules
 - [`audit.md`](audit.md) - current repo audit
+- [`glossary.md`](glossary.md) - plant anatomy/morphology and spatial terminology
+- [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
-- [`architecture.md`](architecture.md) - implementation architecture contract
 - [`rendering.md`](rendering.md) - render order contract
 - [`release-model.md`](release-model.md) - branch and release policy
 - [`config.md`](config.md) - scene config ownership note
@@ -17,6 +18,9 @@
 - `docs/` is the active documentation surface.
 - `README.md` is the repo front door; `docs/README.md` is the docs map.
 - If unsure where to make a change, start here.
+- `README.md` carries the one-line YAM slogan and non-goals; `docs/architecture.md` and `docs/scene-model.md` carry the detailed contracts.
+- `docs/glossary.md` is the shared terminology source of truth; the other docs should point back to it instead of redefining terms.
+- if a term looks shared or ambiguous, check `docs/glossary.md` before extending a contract doc.
 - historical reconstruction notes were consolidated into the current docs set.
 - uppercase markdown filenames are reserved for the highest-visibility entry points; lower-case names are preferred for most active contracts and archive reports.
 

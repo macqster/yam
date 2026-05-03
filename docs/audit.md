@@ -8,6 +8,8 @@ Date: 2026-04-27
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
 - [medium] Projection and camera semantics now have shared projection, resize round-trip, and viewport-origin helper tests.
   - evidence: `docs/architecture.md`, `docs/rendering.md`, `src/render/render_state.rs`, `src/scene/mod.rs`
+- [medium] The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.
+  - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
 
 ## Recently Resolved
 

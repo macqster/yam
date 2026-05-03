@@ -16,7 +16,7 @@ pub mod layers;
 pub mod viewport;
 
 pub const WORLD_WIDTH: i32 = 212;
-pub const WORLD_HEIGHT: i32 = 57;
+pub const WORLD_HEIGHT: i32 = 56;
 pub const WORLD_HALF_W: i32 = WORLD_WIDTH / 2;
 pub const WORLD_HALF_H: i32 = WORLD_HEIGHT / 2;
 pub const CAMERA_OVERSCAN_CELLS: i32 = 1;

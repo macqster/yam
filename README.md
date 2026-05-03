@@ -6,9 +6,46 @@ Terminal scene engine in Rust.
 
 This repository contains the active Rust runtime tree for YAM-Rust.
 
+## What YAM Is
+
+YAM is a centered, datum-first Rust terminal simulation engine for a main visualiser scene and a greenhouse simulation space, driven by explicit world-space projection, spatial debugging, and a shared terminology glossary.
+
+Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render contracts point back to it rather than redefining terms inline.
+
+## Main Scene
+
+- hero GIF
+- tree-stump-like hero scaffolding for the animated figure to sit on
+- clock widget
+- weather widget
+- procedurally generated vines as the organic frame of the composition
+
+## Greenhouse
+
+- separate rooms and labs for plant development
+- pots and bowls for growth procedures
+- controlled-environment and biome-like themes
+- multiple flora species with distinct anatomy and lifecycle behavior
+
+## Current Flora
+
+- pre-generated tree-stump hero scaffolding at boot
+- tropical vines framing the composition
+- monstera-like plant with large aesthetic growing leaves
+
+## Non-Goals
+
+- not a generic text UI toolkit
+- not a screen-space-only layout engine
+- not a second camera/viewport authority
+- not a raster mask or fill system in place of world-space spatial relations
+- not a single-vine special case; flora are a family of procedurally growing organisms with distinct anatomies and morphologies
+- not a place to redefine core terms in multiple docs when [`docs/glossary.md`](docs/glossary.md) already owns the vocabulary
+
 ## Quick Links
 
 - [`docs/README.md`](docs/README.md) - docs map
+- [`docs/glossary.md`](docs/glossary.md) - shared terminology source of truth
 - [`TODO.md`](TODO.md) - active backlog
 - [`docs/LOG.md`](docs/LOG.md) - append-only repo log
 - [`docs/scene-model.md`](docs/scene-model.md) - deterministic scene model
@@ -31,6 +68,7 @@ The active work order lives in [`TODO.md`](TODO.md).
 ## Working Rules
 
 - keep changes logged in `docs/LOG.md`
+- keep terminology aligned with `docs/glossary.md`
 - keep build output out of the repository
 - avoid reintroducing old runtime artifacts unless explicitly needed
 - reserve uppercase markdown filenames for the repo front door and other high-visibility entry points

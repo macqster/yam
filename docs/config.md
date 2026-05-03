@@ -18,6 +18,13 @@
 
 This note owns the active, repo-tracked default scene configuration for the visualizer / experimental tooling path.
 
+## Terminal Baseline
+
+- Ghostty default config currently uses `JetBrainsMono Nerd Font` with ligatures enabled, `font-size = 12`, and `font-thicken = true`
+- `adjust-cell-height` is currently commented out, with `8%` noted as the candidate value if cell metrics need tuning later
+- the default Ghostty window size is `124x32` cells
+- these settings are environment notes for layout and glyph-appearance tuning, not Rust runtime source of truth
+
 ## What It Controls
 
 - clock font and formats

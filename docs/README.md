@@ -7,7 +7,7 @@
 - [`LOG.md`](LOG.md) - current repository log
 - [`hygiene.md`](hygiene.md) - repo hygiene rules
 - [`audit.md`](audit.md) - current repo audit
-- [`glossary.md`](glossary.md) - plant anatomy/morphology and spatial terminology
+- [`glossary.md`](glossary.md) - YAM glossary and terminology source of truth
 - [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
 - [`rendering.md`](rendering.md) - render order contract

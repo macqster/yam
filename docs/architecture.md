@@ -13,7 +13,7 @@
 
 - `core/` - data only, no UI, no terminal, no rendering
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
-- `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers and will absorb more relation logic over time
+- `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers and the guide index abstraction that now feeds the render/debug guide path, and will absorb more relation logic over time
 - `systems/` - mutate `WorldState` only, no rendering
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, and final text conversion
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition

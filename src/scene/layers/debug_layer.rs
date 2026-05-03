@@ -1,6 +1,7 @@
 use crate::core::guide_line::{
     classify_line, rasterize_line, soft_line_glyph, LineFamily, LinePoint,
 };
+use crate::core::spatial::SpatialGuideIndex;
 use crate::core::world::WorldState;
 use crate::render::compositor::Cell;
 use crate::render::compositor::{write_string, Grid};
@@ -38,7 +39,12 @@ impl Layer for DebugLayer {
         }
 
         draw_camera_scrollbars(&mut grid, width, height, ctx);
-        draw_guides(&mut grid, &world.guides, ctx.hud.camera.x, ctx.hud.camera.y);
+        draw_guides(
+            &mut grid,
+            SpatialGuideIndex::new(&world.guides),
+            ctx.hud.camera.x,
+            ctx.hud.camera.y,
+        );
 
         let panel_x = 10u16;
         let panel_y = 5u16;

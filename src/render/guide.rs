@@ -1,13 +1,23 @@
-use crate::core::guide::{Guide, GuidePoint, GuideShape, GuideState};
+use crate::core::guide::{Guide, GuidePoint, GuideShape};
 use crate::core::guide_line::{glyph_for_line_step, rasterize_line, LinePoint};
+use crate::core::spatial::SpatialGuideIndex;
 use crate::render::compositor::Grid;
 use crate::scene::coords::{world_to_screen, WorldPos};
 use crate::theme::style;
 use ratatui::prelude::Color;
 use ratatui::style::Style;
 
-pub fn draw_guides(grid: &mut Grid, guides: &GuideState, camera_x: i32, camera_y: i32) {
-    for guide in guides.enabled_guides().filter(|guide| guide.style.visible) {
+pub fn draw_guides(
+    grid: &mut Grid,
+    guide_index: SpatialGuideIndex<'_>,
+    camera_x: i32,
+    camera_y: i32,
+) {
+    for guide in guide_index
+        .guides
+        .enabled_guides()
+        .filter(|guide| guide.style.visible)
+    {
         draw_guide(grid, guide, camera_x, camera_y);
     }
 }

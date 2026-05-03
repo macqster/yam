@@ -304,6 +304,7 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-03] Updated the front door to point to `docs/glossary.md` as the shared terminology source of truth and to reflect the current terminology contract more directly
 - [2026-05-03] Added a front-door note saying the glossary owns shared terminology and that duplicate term definitions should not be reintroduced into the contracts
 - [2026-05-03] Trimmed the front-door YAM definition slightly so the README reads more tightly while keeping the glossary/source-of-truth note intact
+- [2026-05-03] Wired the debug guide renderer through `SpatialGuideIndex` directly and updated the contracts to say the shared guide index is now a live runtime consumer, not just a migration target
 - [2026-05-03] Broadened the docs index label for `docs/glossary.md` so it reads as the YAM terminology source of truth rather than only a plant/spatial glossary
 - [2026-05-03] Recorded Lua as a bounded optional scripting/plugin layer for species authoring or debug/dev tools, while keeping Rust as the host for canonical state and render ownership
 - [2026-05-03] Recorded the Rust-first tool split: keep runtime simulation/rendering in Rust, and allow non-Rust sidecars only for botanical research, registry authoring, or offline analysis when they clearly help

@@ -62,7 +62,7 @@ Rules:
 - the pointer probe is the practical authoring aid for linework: it should be usable to record precise coordinates for guides, points, and masks while the guide system remains world-attached and queryable; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
 - the intended end-state is a single spatial relation graph that can express absolute datum guides, relative anchors, masks, and organism guidance paths for growth, movement, and lifecycle state without duplicating attachment math across systems
 - the smallest canonical spatial layer should start with datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers; masks and organism guidance can remain layered concerns until the base relation layer is proven
-- the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob
+- the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
 - the likely module mapping is:
   - `scene/coords.rs` for point and projection primitives
   - `scene/entity.rs` for attachment composition

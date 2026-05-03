@@ -232,7 +232,7 @@ The active implementation treats camera as a viewport crop helper:
 - world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - the world datum is the shared absolute reference for rulers, guides, masks, and organism guidance; screen space remains a separate terminal projection layer
 - the smallest canonical spatial layer should stay narrow at first: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers are the minimum shared contract before masks and organism guidance become first-class relation types
-- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model
+- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model, and the debug guide renderer already consumes `SpatialGuideIndex` directly
 - the likely module mapping from render’s point of view is:
   - `scene/coords.rs` supplies the coordinate/projection primitives
   - `core/guide.rs` supplies the queryable guide index and guide sets

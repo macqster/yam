@@ -103,10 +103,25 @@ impl SpatialResolver {
         }
     }
 
+    pub fn world_to_screen_point(&self, world: SpatialPoint) -> SpatialScreenPoint {
+        let screen = self.world_to_screen(world);
+        SpatialScreenPoint {
+            x: screen.x as u16,
+            y: screen.y as u16,
+        }
+    }
+
     pub fn screen_to_world(&self, screen: SpatialPoint) -> SpatialPoint {
         SpatialPoint {
             x: screen.x + self.projection.camera_x,
             y: screen.y + self.projection.camera_y,
+        }
+    }
+
+    pub fn screen_to_world_point(&self, screen: SpatialScreenPoint) -> SpatialPoint {
+        SpatialPoint {
+            x: screen.x as i32 + self.projection.camera_x,
+            y: screen.y as i32 + self.projection.camera_y,
         }
     }
 }
@@ -142,6 +157,15 @@ mod tests {
         let screen = resolver.world_to_screen(world);
         assert_eq!(screen, SpatialPoint::new(106, 5));
         assert_eq!(resolver.screen_to_world(screen), world);
+    }
+
+    #[test]
+    fn projection_round_trips_explicit_screen_points() {
+        let resolver = SpatialResolver::new(SpatialProjection::new(30, 10, 124, 32));
+        let world = SpatialPoint::new(136, 15);
+        let screen = resolver.world_to_screen_point(world);
+        assert_eq!(screen, SpatialScreenPoint { x: 106, y: 5 });
+        assert_eq!(resolver.screen_to_world_point(screen), world);
     }
 
     #[test]

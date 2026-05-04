@@ -45,6 +45,11 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] geometry drift from per-frame glyph remapping stays minimized.
 - [verify] the renderer keeps a distinct “hero frame representation” concept.
 - [verify] cached-frame or internal grid migration is revisited only if the chafa-backed baseline fails stabilization checkpoints again.
+- [inspect] define the future `HeroFrameSet` cache contract before replacing or bypassing the active chafa-backed path.
+- [inspect] define the intermediate `CellGrid` correction format with glyph, foreground color, optional background color, and mask/style metadata before building manual editor tooling.
+- [inspect] prototype `.xp` export/import only after `CellGrid` exists, with explicit braille font/tile mapping and round-trip validation for glyph/color fidelity.
+- [inspect] evaluate custom hero rendering as an offline compiler path with separate monochrome braille shape and color-assignment passes, not as live scene rendering.
+- [verify] any custom braille renderer encodes actual `2x4` dot occupancy before color assignment; density-ramp glyph mapping is not sufficient for Chafa-like hero fidelity.
 
 ### 4.1 Hero GIF Checklist
 
@@ -55,6 +60,10 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] hero rendering stays deterministic across resize and scene stabilisation checkpoints.
 - [verify] `scene_config.json` stays aligned with the active hero asset and footprint defaults that the runtime currently expects.
 - [verify] hero rendering uses the chafa-backed baseline unless a measured regression justifies cached-frame migration.
+- [inspect] preserve room for curated pre-generated frame corrections, including targeted lifts, region-specific color policy, and cell/frame stabilization when they improve the fixed hero asset.
+- [inspect] treat third-party ANSI editors as references or interchange helpers unless they prove Unicode braille, truecolor, animation, and lossless per-cell round-tripping.
+- [inspect] treat REXPaint/CrossOver as an optional manual editing experiment, not the canonical source of edited hero frames.
+- [verify] Ansizalizer/ansipx-style custom glyph ramps stay documented as rejected for final hero quality unless a future experiment proves face/silhouette fidelity comparable to Chafa.
 
 ## 5. Implementation Order
 

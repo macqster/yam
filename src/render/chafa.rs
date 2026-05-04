@@ -47,12 +47,12 @@ pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
 
 pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
     let frames = decode_gif_frames(HERO_GIF_PATH);
-    let temp_dir = prepare_temp_frame_dir();
+    let temp_dir = TempFrameDir::new();
     frames
         .into_iter()
         .enumerate()
         .map(|(frame_index, frame)| {
-            render_image_frame(&temp_dir, frame_index, &frame, width, height)
+            render_image_frame(temp_dir.path(), frame_index, &frame, width, height)
         })
         .collect()
 }
@@ -121,6 +121,24 @@ mod tests {
     fn bright_orange_tones_stay_neutral() {
         let pixel = Rgba([200, 40, 20, 255]);
         assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
+
+    #[test]
+    fn temp_frame_dir_is_removed_on_drop() {
+        let path = {
+            let temp_dir = super::TempFrameDir::new();
+            let path = temp_dir.path().to_path_buf();
+            assert!(
+                path.exists(),
+                "temp frame dir should exist during render batch"
+            );
+            path
+        };
+
+        assert!(
+            !path.exists(),
+            "temp frame dir should be removed when the render batch ends"
+        );
     }
 }
 
@@ -251,6 +269,28 @@ fn prepare_temp_frame_dir() -> PathBuf {
     fs::create_dir_all(&temp_dir)
         .unwrap_or_else(|err| panic!("failed to create temp frame dir {temp_dir:?}: {err}"));
     temp_dir
+}
+
+struct TempFrameDir {
+    path: PathBuf,
+}
+
+impl TempFrameDir {
+    fn new() -> Self {
+        Self {
+            path: prepare_temp_frame_dir(),
+        }
+    }
+
+    fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for TempFrameDir {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.path);
+    }
 }
 
 fn render_image_frame(

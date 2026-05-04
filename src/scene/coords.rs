@@ -1,6 +1,7 @@
 pub use crate::core::spatial::{
     SpatialPoint as WorldPos, SpatialProjection as Projection, SpatialResolver,
 };
+use crate::core::world::WorldState;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
@@ -54,10 +55,18 @@ pub fn screen_to_world(screen: WorldPos, camera_x: i32, camera_y: i32) -> WorldP
 }
 
 #[allow(dead_code)]
-pub fn resolve_position(element: &Element, camera_x: i32, camera_y: i32) -> WorldPos {
+pub fn resolve_position(
+    element: &Element,
+    world: &WorldState,
+    camera_x: i32,
+    camera_y: i32,
+) -> WorldPos {
     match element.space {
         Space::World => world_to_screen(element.position, camera_x, camera_y),
-        Space::Anchor(_) => world_to_screen(element.position, camera_x, camera_y),
+        Space::Anchor(id) => world.entity_world(id.0).map_or_else(
+            || world_to_screen(element.position, camera_x, camera_y),
+            |anchor| world_to_screen(anchor, camera_x, camera_y),
+        ),
         Space::Screen => element.position,
     }
 }
@@ -89,6 +98,7 @@ mod tests {
         let panel = WorldPos { x: 10, y: 5 };
         let camera_a = WorldPos { x: 0, y: 0 };
         let camera_b = WorldPos { x: 80, y: 20 };
+        let world = crate::core::world::WorldState::new();
 
         assert_eq!(
             resolve_position(
@@ -96,6 +106,7 @@ mod tests {
                     space: Space::Screen,
                     position: panel
                 },
+                &world,
                 camera_a.x,
                 camera_a.y
             ),
@@ -107,6 +118,7 @@ mod tests {
                     space: Space::Screen,
                     position: panel
                 },
+                &world,
                 camera_b.x,
                 camera_b.y
             ),
@@ -147,6 +159,7 @@ mod tests {
         let camera_b = WorldPos { x: 30, y: 10 };
         let hud_a = WorldPos { x: 8, y: 3 };
         let hud_b = WorldPos { x: 8, y: 3 };
+        let world = crate::core::world::WorldState::new();
 
         let hero_visual_anchor = resolve_world_ui(hero_world, hero_offset);
         let clock_world = anchor_to_world(hero_visual_anchor, clock_offset);
@@ -154,14 +167,53 @@ mod tests {
         assert_eq!(hero_visual_anchor, WorldPos { x: 40, y: 6 });
         assert_eq!(clock_world, WorldPos { x: 136, y: 15 });
         assert_eq!(
-            world_to_screen(hero_visual_anchor, camera_a.x, camera_a.y),
+            resolve_position(
+                &Element {
+                    space: Space::World,
+                    position: hero_visual_anchor
+                },
+                &world,
+                camera_a.x,
+                camera_a.y
+            ),
             WorldPos { x: 40, y: 6 }
         );
         assert_eq!(
-            world_to_screen(hero_visual_anchor, camera_b.x, camera_b.y),
+            resolve_position(
+                &Element {
+                    space: Space::World,
+                    position: hero_visual_anchor
+                },
+                &world,
+                camera_b.x,
+                camera_b.y
+            ),
             WorldPos { x: 10, y: -4 }
         );
         assert_eq!(resolve_hud_ui(hud_a), hud_b);
+    }
+
+    #[test]
+    fn anchored_position_uses_world_entity_identity_when_available() {
+        let mut world = crate::core::world::WorldState::new();
+        world.entities.push(crate::core::entity::Entity {
+            id: 7,
+            x: 150,
+            y: 60,
+            age: 1,
+        });
+
+        let resolved = resolve_position(
+            &Element {
+                space: Space::Anchor(EntityId(7)),
+                position: WorldPos { x: -999, y: -999 },
+            },
+            &world,
+            30,
+            10,
+        );
+
+        assert_eq!(resolved, WorldPos { x: 120, y: 50 });
     }
 
     #[test]

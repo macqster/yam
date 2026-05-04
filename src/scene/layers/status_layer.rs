@@ -2,9 +2,10 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::{Layer, LayerOutput, RenderState};
-use crate::theme::style as theme_style;
+use crate::theme::palette;
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
+use ratatui::style::Style;
 
 pub struct StatusLayer;
 
@@ -24,16 +25,16 @@ impl Layer for StatusLayer {
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
-        paint_footer_row(&mut grid, footer_y, width);
         let left_text = if ui.meta.dev_mode {
-            "  [q]uit   •   [d]ev mode   •   [h]otkeys   •   [m]ove   •   [p]ointer   •   [C]/[c] camera home"
+            " [q]uit  •  [d]ev  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [C]/[c] camera home"
         } else {
-            "  [q]uit   •   [d]ev mode"
+            " [q]uit  •  [d]ev"
         };
         let right_text = build_status_label();
-        let footer_style = theme_style::footer_bar();
+        let footer_style = Style::default()
+            .fg(palette::FOOTER_FG);
         write_string(&mut grid, 0, footer_y, left_text, footer_style);
-        let stamp_width = right_text.chars().count() as u16 + 2;
+        let stamp_width = right_text.chars().count() as u16 + 1;
         let x = width.saturating_sub(stamp_width);
         write_string(&mut grid, x, footer_y, &right_text, footer_style);
         LayerOutput { grid, mask: None }
@@ -42,16 +43,6 @@ impl Layer for StatusLayer {
 
 fn footer_row(height: u16) -> u16 {
     height.saturating_sub(1)
-}
-
-fn paint_footer_row(grid: &mut Grid, y: u16, width: u16) {
-    let style = theme_style::footer_bar();
-    for x in 0..width {
-        if let Some(cell) = grid.cell_mut(x, y) {
-            cell.symbol = ' ';
-            cell.style = style;
-        }
-    }
 }
 
 #[cfg(test)]
@@ -77,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn footer_row_is_color_highlighted_across_the_full_width() {
+    fn footer_row_uses_plain_text_across_the_full_width() {
         let layer = StatusLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
@@ -110,8 +101,8 @@ mod tests {
         let first = &output.grid.cells[output.grid.index(0, row)];
         let middle = &output.grid.cells[output.grid.index(50, row)];
 
-        assert_eq!(first.style.bg, Some(crate::theme::palette::FOOTER_BG));
-        assert_eq!(middle.style.bg, Some(crate::theme::palette::FOOTER_BG));
+        assert_eq!(first.style.bg, None);
+        assert_eq!(middle.style.bg, None);
         assert_eq!(first.style.fg, Some(crate::theme::palette::FOOTER_FG));
         assert_eq!(middle.style.fg, Some(crate::theme::palette::FOOTER_FG));
     }
@@ -148,7 +139,7 @@ mod tests {
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert!(text.contains("  [q]uit   •   [d]ev mode"));
+        assert!(text.contains(" [q]uit  •  [d]ev"));
         assert!(text.contains(&build_status_label()));
         assert!(!text.contains("space - play/pause"));
         assert!(!text.contains(". - step"));
@@ -187,7 +178,7 @@ mod tests {
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert!(text.contains("  [q]uit   •   [d]ev mode"));
+        assert!(text.contains(" [q]uit  •  [d]ev"));
         assert!(text.contains("[h]otkeys"));
         assert!(text.contains("[m]ove"));
         assert!(text.contains("[p]ointer"));

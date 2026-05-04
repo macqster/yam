@@ -63,6 +63,9 @@ Rules:
 - the intended end-state is a single spatial relation graph that can express absolute datum guides, relative anchors, masks, and organism guidance paths for growth, movement, and lifecycle state without duplicating attachment math across systems
 - the smallest canonical spatial layer should start with datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers; masks and organism guidance can remain layered concerns until the base relation layer is proven
 - the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
+- the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
+- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `WorldState` when an entity is present, so anchor identity is partly real in the live path even though the spatial layer still has legacy seams
+- that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move entity-backed relation logic fully into `core/spatial`
 - the likely module mapping is:
   - `scene/coords.rs` for point and projection primitives
   - `scene/entity.rs` for attachment composition
@@ -318,7 +321,7 @@ The higher-level presentation stack maps this as:
 - world below HUD below overlay
 - overlays are modal when active
 - footer and passive indicators belong to the HUD, not the overlay
-- the current visible runtime controls are intentionally narrow: `[d]ev mode` in the footer, with `[h]otkeys`, `[m]ove`, `[s]ettings`, `[p]ointer`, `[C]` store camera home, `[c]` recall camera home, and `F5` available once dev mode is active
+- the current visible runtime controls are intentionally narrow: `[d]ev` in the footer, rendered in BTAS-grey, with `[h]otkeys`, `[m]ove`, `[s]ettings`, `[p]ointer`, `[C]` store camera home, `[c]` recall camera home, and `F5` available once dev mode is active
 
 ## Masking and Occlusion
 

@@ -8,11 +8,12 @@
 - [`hygiene.md`](hygiene.md) - repo hygiene rules
 - [`audit.md`](audit.md) - current repo audit
 - [`glossary.md`](glossary.md) - YAM glossary and terminology source of truth
+- [`theme.md`](theme.md) - reusable BTAS theme contract for the architecture
 - [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
 - [`rendering.md`](rendering.md) - render order contract
 - [`release-model.md`](release-model.md) - branch and release policy
-- [`config.md`](config.md) - scene config ownership note and the `124x32` boot/start frame size
+- [`config.md`](config.md) - scene config ownership note and the current Ghostty boot/start frame note
 ## Notes
 
 - `docs/` is the active documentation surface.

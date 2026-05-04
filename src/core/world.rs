@@ -1,4 +1,5 @@
 use crate::core::{entity::Entity, grid::Grid, guide::GuideState};
+use crate::scene::coords::WorldPos;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -41,5 +42,15 @@ impl WorldState {
             guides: GuideState::new(),
             tick: 0,
         }
+    }
+
+    pub fn entity_world(&self, id: u32) -> Option<WorldPos> {
+        self.entities
+            .iter()
+            .find(|entity| entity.id == id)
+            .map(|entity| WorldPos {
+                x: entity.x as i32,
+                y: entity.y as i32,
+            })
     }
 }

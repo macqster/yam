@@ -168,6 +168,7 @@ This file is append-only and historical only; current rules live in the active d
 - extracted explicit `scene::entity::hero_and_clock_poses(...)` plus smaller pose helpers for attachment math and updated the architecture and backlog docs to point at them
 - made chafa temp frame directories unique per render batch to avoid parallel-test collisions while preserving the existing hero rendering contract
 - reran the render suite after the temp-dir fix and confirmed the chafa hero tests still pass under parallel execution
+- added owned cleanup for chafa temp frame directories and a regression test proving each temporary render batch is removed after use
 - added backlog guidance for negative tests and run-isolated temp/shared-state artifacts, plus a matching hygiene rule
 - added a boundary-change guideline for explicit negative tests in hygiene and the active backlog
 - wrapped hero and clock attachment math in a named `scene::entity::HeroClockAttachment` to make the extraction seam more explicit and keep the hero/clock pairing as one attachment object
@@ -226,6 +227,11 @@ This file is append-only and historical only; current rules live in the active d
 - split the hero pipeline into braille glyph generation plus per-cell source color sampling so dark-red cells can survive without broad palette remapping
 - documented the ditherit-style hero rendering trial as a partial success: it preserves more dark reds, but the braille-cell sampling also smudges the face and edges enough that the strategy remains experimental rather than final
 - rolled the hero renderer back to the earlier Chafa `rgb/average/none` path after the ditherit-style braille/source-color trial proved too blocky in the face area, while keeping the trial itself documented as historical context
+- recorded `LachlanArthur/Braille-ASCII-Art` as a future hero-renderer reference for explicit `2x4` braille dot packing and error-diffusion comparison without changing the active Chafa-backed baseline
+- documented the desired hero-rendering direction as an offline compiler pipeline that separates monochrome braille shape decisions from color assignment, supports curated pre-generated frame corrections, and emits a stable `HeroFrameSet` cache for runtime use
+- incorporated the ANSI-tooling research conclusion that YAM needs a structured per-cell `CellGrid` correction layer between ANSI/converter output and the final `HeroFrameSet`, because existing editors do not cover Unicode braille, truecolor, animation, and surgical cell edits together
+- documented the REXPaint/CrossOver path as an optional `.xp` manual-editing experiment behind `CellGrid`, with braille font/tile mapping and round-trip validation required before edited frames can feed `HeroFrameSet`
+- documented the Ansizalizer/ansipx trial as a failed Chafa-replacement direction: truecolor output must be converted to 256-color for Durdraw, and custom/full-braille glyph ramps produce density texture rather than the `2x4` dot-mask geometry needed for hero face and silhouette fidelity
 - repurposed the dev-mode `c` hotkey from follow-hero to camera reset, so it restores the screenshot-aligned manual boot seed `(-63, -17)` for the default scene
 - added a soft feature-freeze rule to hygiene and the active backlog so future work stays in polish/stability mode unless a bug or contract violation justifies new behavior
 - added a hero render regression test that exercises the buffer write path with styled spans so future hero rendering changes cannot silently flatten colorized output again
@@ -305,10 +311,34 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-03] Added a front-door note saying the glossary owns shared terminology and that duplicate term definitions should not be reintroduced into the contracts
 - [2026-05-03] Trimmed the front-door YAM definition slightly so the README reads more tightly while keeping the glossary/source-of-truth note intact
 - [2026-05-03] Wired the debug guide renderer through `SpatialGuideIndex` directly and updated the contracts to say the shared guide index is now a live runtime consumer, not just a migration target
+- [2026-05-04] Recorded that the recent hero-rendering test run was unsuccessful and should remain a cautionary experiment rather than a baseline path
+- [2026-05-04] Marked the hero-rendering pipeline as one of the current weak spots: the active Chafa path is stable, but the offline compiler / `CellGrid` direction is still an experiment rather than a replacement baseline
+- [2026-05-04] Ranked the current weak seams in the audit: spatial relation consolidation is the highest-priority gap, hero rendering is second, and the flora runtime is still a broader implementation target
+- [2026-05-04] Added explicit screen-point projection helpers to `core/spatial` so the spatial layer has a clearer world/screen split while retaining compatibility wrappers for the older world-point path
+- [2026-05-04] Narrowed the spatial audit language around anchors: `Space::Anchor(EntityId)` still needs a registry-backed resolution path, so anchor identity remains a planned follow-on rather than a currently-resolved runtime relation
+- [2026-05-04] Made the compatibility layer world-aware for anchor resolution: `scene/coords.rs` now consults `WorldState` entities when `Space::Anchor(EntityId)` is present, so anchor identity is partially real rather than purely declarative
+- [2026-05-04] Clarified that the new anchor lookup remains a compatibility path and that the long-term goal is to move the entity-backed relation logic into `core/spatial`
+- [2026-05-04] Recorded the current Ghostty hidden-titlebar baseline as `window-width = 120`, `window-height = 30`, which opens to about `124x21` usable cells on the current macOS setup
+- [2026-05-04] Updated the Ghostty hidden-titlebar baseline to `window-height = 31`; the current setup now opens to about `124x32` usable cells instead of the earlier `124x21` note
+- [2026-05-04 14:51:57 CEST] Recorded the current YAM screenshot as the golden frame reference for the Ghostty baseline: hidden titlebar, `120x31` config, and the present `124x32` usable-cell capture
+- [2026-05-04] Lightened the footer contract so the runtime footer is plain text without a green bar and the visible dev hint is now `[d]ev` instead of `[d]ev mode`
+- [2026-05-04] Removed the now-unused footer bar palette/style helpers after the footer switched to plain text, and updated the footer tests to match the shorter `[d]ev` label
+- [2026-05-04] Tuned the footer text to a dimmed BTAS-grey (`Rgb(26, 31, 38)` with dim modifier) so the footer reads lighter while staying readable
+- [2026-05-04] Learned from a footer mismatch that `yam-install && yam-rust` can still surface an older installed binary if the executable hash/build stamp does not change; future visual checks should confirm `yam-rust --version` and build stamp after reinstall before treating a screenshot as current
+- [2026-05-04] Fixed the source-side footer spacing bug after screenshot inspection showed the compact `[q]uit  •  [d]ev` spacing had not actually been applied in `status_layer.rs`; the dev-mode footer hint now uses tighter spacing too
+- [2026-05-04] Reinstalled `yam-rust` through `scripts/update.sh` and confirmed that the build stamp stays stable when the git/source hash is unchanged, so runtime identity alone is not enough to prove a visual refresh unless the footer output is also rechecked
 - [2026-05-03] Broadened the docs index label for `docs/glossary.md` so it reads as the YAM terminology source of truth rather than only a plant/spatial glossary
 - [2026-05-03] Recorded Lua as a bounded optional scripting/plugin layer for species authoring or debug/dev tools, while keeping Rust as the host for canonical state and render ownership
 - [2026-05-03] Recorded the Rust-first tool split: keep runtime simulation/rendering in Rust, and allow non-Rust sidecars only for botanical research, registry authoring, or offline analysis when they clearly help
 - [2026-05-03] Marked the current scene/render behavior as aligned with the active contracts, leaving the spatial relation split as a consolidation task rather than a drift bug
+- [2026-05-04] Removed the footer `DIM` modifier so the BTAS-grey tone can be evaluated without a second styling layer; this should help distinguish a true palette mismatch from a terminal/font perception issue
+- [2026-05-04] Darkened the footer BTAS-grey a little further (`Rgb(20, 24, 30)`) to see whether the footer reads as subdued enough without needing background tinting or dimming
+- [2026-05-04] Temporarily set the footer foreground to an unmistakable magenta diagnostic color so we can verify whether Ghostty and the runtime are honoring footer text styling end-to-end before choosing the final BTAS-grey tone
+- [2026-05-04] Confirmed via screenshot that Ghostty and the runtime honor footer styling end-to-end; restored the footer from the magenta diagnostic to a subdued grey (`Rgb(96, 102, 110)`) now that the color path has been proven
+- [2026-05-04] Final footer lesson: the visible problem was a mix of source spacing drift and style perception, but the render pipeline itself was healthy; the working solution is the compact footer grammar (`[q]uit  •  [d]ev`) with a subdued grey foreground and no background tint or dim modifier
+- [2026-05-04] Codified the BTAS palette as a reusable architecture theme layer with a canonical `BTAS` palette bundle, semantic palette aliases, and shared style helpers so the whole YAM stack can reuse the same visual vocabulary
+- [2026-05-04] Added a dedicated `docs/theme.md` and a canonical `src/theme/btas.rs` bundle so the BTAS palette can be reused as one shared theme contract across panels, modal shells, hero overlays, camera indicators, pointers, and footer text
+- [2026-05-04] Trimmed the footer to a single leading/trailing cell of padding so the compact footer grammar reads tighter without changing the color or the no-background contract
 - [2026-05-03] Narrowed the spatial-layer target to a minimal first cut: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers
 - [2026-05-03] Added a low-risk extraction sketch for the spatial layer so `coords`, `entity`, `guide`, and `render/guide` can be consolidated in pieces instead of by a big-bang refactor
 - [2026-05-03] Sketched the first canonical spatial API surface with `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver`

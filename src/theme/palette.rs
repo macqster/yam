@@ -11,7 +11,6 @@ pub const ACCENT: Color = BTAS.process_cyan;
 pub const MARKER: Color = BTAS.pms_113;
 #[allow(dead_code)]
 pub const HERO_BG: Color = BTAS.black;
-pub const FOOTER_FG: Color = BTAS.pms_430;
 #[allow(dead_code)]
 pub const MODAL_BG: Color = BTAS.pms_432;
 #[allow(dead_code)]

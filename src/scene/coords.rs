@@ -6,8 +6,8 @@ use crate::core::world::WorldState;
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
 pub struct ScreenPos {
-    pub x: u16,
-    pub y: u16,
+    pub x: i32,
+    pub y: i32,
 }
 
 #[allow(dead_code)]
@@ -30,7 +30,7 @@ pub struct Element {
 }
 
 pub fn anchor_to_world(anchor: WorldPos, offset: WorldPos) -> WorldPos {
-    SpatialResolver::anchor_to_world(anchor, offset)
+    SpatialResolver::resolve_anchor(anchor, offset)
 }
 
 /// World-ui resolves in world space and stays pinned to its world attachment.
@@ -43,6 +43,53 @@ pub fn resolve_world_ui(anchor: WorldPos, offset: WorldPos) -> WorldPos {
 #[allow(dead_code)]
 pub fn resolve_hud_ui(screen: WorldPos) -> WorldPos {
     screen
+}
+
+#[allow(dead_code)]
+pub fn resolve_anchored_position(
+    world: &WorldState,
+    id: EntityId,
+    fallback_world: WorldPos,
+    camera_x: i32,
+    camera_y: i32,
+) -> ScreenPos {
+    let anchor = world.entity_world(id.0);
+    let resolved =
+        SpatialResolver::resolve_anchor_or_world(anchor, fallback_world, WorldPos { x: 0, y: 0 });
+    resolve_projected_position(resolved, camera_x, camera_y)
+}
+
+#[allow(dead_code)]
+pub fn resolve_projected_position(position: WorldPos, camera_x: i32, camera_y: i32) -> ScreenPos {
+    let screen = world_to_screen(position, camera_x, camera_y);
+    ScreenPos {
+        x: screen.x,
+        y: screen.y,
+    }
+}
+
+#[allow(dead_code)]
+pub fn resolve_screen_position(position: WorldPos, _camera_x: i32, _camera_y: i32) -> ScreenPos {
+    ScreenPos {
+        x: position.x,
+        y: position.y,
+    }
+}
+
+#[allow(dead_code)]
+pub fn resolve_element_screen_position(
+    element: &Element,
+    world: &WorldState,
+    camera_x: i32,
+    camera_y: i32,
+) -> ScreenPos {
+    match element.space {
+        Space::World => resolve_projected_position(element.position, camera_x, camera_y),
+        Space::Anchor(id) => {
+            resolve_anchored_position(world, id, element.position, camera_x, camera_y)
+        }
+        Space::Screen => resolve_screen_position(element.position, camera_x, camera_y),
+    }
 }
 
 pub fn world_to_screen(world: WorldPos, camera_x: i32, camera_y: i32) -> WorldPos {
@@ -61,13 +108,10 @@ pub fn resolve_position(
     camera_x: i32,
     camera_y: i32,
 ) -> WorldPos {
-    match element.space {
-        Space::World => world_to_screen(element.position, camera_x, camera_y),
-        Space::Anchor(id) => world.entity_world(id.0).map_or_else(
-            || world_to_screen(element.position, camera_x, camera_y),
-            |anchor| world_to_screen(anchor, camera_x, camera_y),
-        ),
-        Space::Screen => element.position,
+    let screen = resolve_element_screen_position(element, world, camera_x, camera_y);
+    WorldPos {
+        x: screen.x,
+        y: screen.y,
     }
 }
 

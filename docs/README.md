@@ -9,6 +9,7 @@
 - [`audit.md`](audit.md) - current repo audit
 - [`glossary.md`](glossary.md) - YAM glossary and terminology source of truth
 - [`theme.md`](theme.md) - reusable BTAS theme contract for the architecture
+- [`vines.md`](vines.md) - pre-runtime ownership contract for future vine work
 - [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
 - [`rendering.md`](rendering.md) - render order contract
@@ -20,6 +21,9 @@
 - `README.md` is the repo front door; `docs/README.md` is the docs map.
 - If unsure where to make a change, start here.
 - `README.md` carries the one-line YAM slogan and non-goals; `docs/architecture.md` and `docs/scene-model.md` carry the detailed contracts.
+- `TODO.md` should stay execution-focused, `docs/audit.md` should stay risk-focused, and `docs/LOG.md` should stay append-only.
+- `docs/LOG.md` prefers day headers with inline timestamps for new entries; older history stays intact unless a maintenance pass explicitly needs to refine it.
+- current project priority is stability and efficiency first, with hero GIF aesthetics held steady and flora deferred until the system is prepared for it.
 - `docs/glossary.md` is the shared terminology source of truth; the other docs should point back to it instead of redefining terms.
 - if a term looks shared or ambiguous, check `docs/glossary.md` before extending a contract doc.
 - historical reconstruction notes were consolidated into the current docs set.
@@ -36,6 +40,7 @@
 - Conceptual behavior changes -> `docs/scene-model.md`
 - Ownership and architecture changes -> `docs/architecture.md`
 - Rendering and layer-order changes -> `docs/rendering.md`
+- Vine ownership and readiness changes -> `docs/vines.md`
 - Work order and validation changes -> `TODO.md`
 - Risk and status changes -> `docs/audit.md`
 

@@ -92,7 +92,7 @@ impl Layer for DebugLayer {
             }
             if let Some(cell) = grid.cell_mut(screen.x as u16, screen.y as u16) {
                 cell.symbol = ch;
-                cell.style = Style::default().fg(Color::DarkGray);
+                cell.style = theme_style::guide_trace();
             }
         };
 
@@ -210,7 +210,7 @@ impl Layer for DebugLayer {
                 panel_x,
                 panel_y + row as u16,
                 line,
-                Style::default().fg(Color::Green),
+                theme_style::debug_text(),
             );
         }
         draw_pointer_probe(&mut grid, pointer_screen, pointer_visible);
@@ -244,7 +244,7 @@ fn draw_soft_probe_line(grid: &mut Grid, cam_x: i32, cam_y: i32, start: WorldPos
         let glyph = soft_line_glyph(start, end, step.step, step.steps);
         if let Some(cell) = grid.cell_mut(step.point.x as u16, step.point.y as u16) {
             cell.symbol = glyph;
-            cell.style = Style::default().fg(Color::DarkGray);
+            cell.style = theme_style::guide_trace();
         }
     }
 }

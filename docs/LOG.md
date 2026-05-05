@@ -2,6 +2,13 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+Logging rule:
+- Prefer day headers in the form `## YYYY-MM-DD` for grouping.
+- Prefer inline timestamps in the form `[HH:MM]` for entries within a day.
+- New entries should use a full date and time stamp whenever practical, especially when the exact sequence within a day matters.
+- Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
+- Prefer append-only additions over rewriting older lines.
+
 ## 2026-05-03
 
 - revised the active architecture docs to describe one canonical spatial relation layer for world datum, relative anchors, guides, masks, and organism guidance, and corrected the flowers typo in the broader plantlife framing
@@ -339,6 +346,20 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-04] Codified the BTAS palette as a reusable architecture theme layer with a canonical `BTAS` palette bundle, semantic palette aliases, and shared style helpers so the whole YAM stack can reuse the same visual vocabulary
 - [2026-05-04] Added a dedicated `docs/theme.md` and a canonical `src/theme/btas.rs` bundle so the BTAS palette can be reused as one shared theme contract across panels, modal shells, hero overlays, camera indicators, pointers, and footer text
 - [2026-05-04] Trimmed the footer to a single leading/trailing cell of padding so the compact footer grammar reads tighter without changing the color or the no-background contract
+- [2026-05-04] Moved the footer styling fully onto the BTAS helper path so the status bar follows the same theme contract as the rest of the UI surfaces instead of using a raw palette alias directly
+- [2026-05-04] Folded the remaining obvious debug/UI raw colors into BTAS helpers too: the small debug panel now uses a BTAS debug-text style, while guide traces use a shared BTAS trace style instead of ad hoc green/dark-gray literals
+- [2026-05-04] Documented the remaining raw-color literals as intentional low-level render/test exceptions: hero-art calibration and compositor-level tests may keep precise literals when the goal is to verify rendering behavior rather than define a reusable UI surface
+- [2026-05-04] Tightened the spatial compatibility layer again so `resolve_anchored_position(...)` now returns screen space directly, making the anchor helper explicit instead of forcing another world-shaped hop in the compatibility path
+- [2026-05-04] Continued the spatial cleanup by adding an explicit screen-point constructor in `core/spatial` and using it in the scene compatibility layer so the screen branch is a little less fuzzy without breaking the existing world-point callers
+- [2026-05-04] Tightened the screen compatibility path one step further by introducing `resolve_screen_position(...)` in `scene/coords.rs`, so the screen branch now passes through the dedicated `ScreenPos` type before being bridged back to the legacy world-shaped compatibility return
+- [2026-05-04] Continued the spatial consolidation by adding `SpatialResolver::resolve_anchor(...)` and routing `scene/coords.rs`'s anchor helper through it so the anchor math lives more centrally in `core/spatial`
+- [2026-05-04] Extracted `resolve_anchored_position(...)` in `scene/coords.rs` so entity-backed anchor resolution is named and isolated instead of being inlined inside the `Space::Anchor` match arm
+- [2026-05-04] Added `SpatialResolver::resolve_anchor_or_world(...)` so the shared spatial layer now owns the anchor-or-fallback resolution shape, and `scene/coords.rs` routes the compatibility path through that central helper
+- [2026-05-04] Recorded the current spatial compatibility contract: anchor and screen branches now have dedicated helpers, while `resolve_position(...)` stays as the legacy world-shaped bridge for older call sites until the rest of the tree is migrated
+- [2026-05-04] Added `resolve_element_screen_position(...)` so the compatibility layer has an explicit screen-returning helper, and `resolve_position(...)` now delegates through that bridge instead of rebuilding the screen branch inline
+- [2026-05-04] Added a ranked top-five weak-area summary to the audit: spatial relations remain the top seam, followed by hero rendering, flora runtime, theme convergence, and docs/runtime synchronization
+- [2026-05-04] Reasserted the current project priority: stability and efficiency first, hero GIF aesthetics frozen for now, flora deferred until systematic preparation is in place, and cross-cutting coherence across UI/theme/docs to be improved before new features
+- [2026-05-04] Propagated the stability-first priority into the front door and docs map so the repository overview now explicitly says the active focus is stability/efficiency, with hero aesthetics held steady and flora deferred
 - [2026-05-03] Narrowed the spatial-layer target to a minimal first cut: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers
 - [2026-05-03] Added a low-risk extraction sketch for the spatial layer so `coords`, `entity`, `guide`, and `render/guide` can be consolidated in pieces instead of by a big-bang refactor
 - [2026-05-03] Sketched the first canonical spatial API surface with `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver`
@@ -349,3 +370,24 @@ This file is append-only and historical only; current rules live in the active d
 - [2026-05-03] Recorded a preliminary weak-spot audit note: `Space::Anchor` currently resolves like world space, and the projection API still uses `WorldPos` for both world and screen results
 - [2026-05-03] Clarified that the Ghostty `124x32` window size is also the YAM boot/start frame size when the app opens
 - [2026-05-03] Updated the front door and docs index so they both say YAM boots in the `124x32` Ghostty starting frame
+
+## 2026-05-04
+
+- [15:00] tightened the log format guidance so future entries should prefer day headers with inline timestamps while the existing append-only history stays intact
+- [15:10] tied the repo coordination contract together across `README.md`, `docs/README.md`, `TODO.md`, `docs/audit.md`, and `docs/LOG.md` so the backlog stays execution-focused, the audit stays risk-focused, and the log stays append-only
+- [15:15] cleaned a docs-index duplication so `docs/README.md` now lists `TODO.md` only once while preserving the coordination contract between the front door, backlog, audit, and append-only log
+- [15:20] aligned the priority wording in `docs/README.md` with the front-door README so the stability-first contract reads the same in both places
+- [15:25] reflected the log-format rule in `docs/README.md` so the docs map now points to the day-header-plus-inline-timestamp shape for future log entries
+- [15:30] removed timezone suffixes from the active log timestamps so the append-only history now uses plain `[HH:MM]` inline stamps under day headers
+
+## 2026-05-05
+
+- [05:14] continued the stability-first maintenance pass with a fresh day entry so the append-only log can keep the coordination, audit, and backlog contracts moving forward in a clean timestamped shape
+- [06:58] aligned the audit priority wording with the front door and docs map so the stability-first contract now reads consistently across README, docs/README, and docs/audit
+- [07:18] made the audit priority line match the front-door wording exactly so the hero/flora stability-first contract reads the same across README, docs/README, and docs/audit
+- [07:25] fixed a real spatial compatibility bug: projected world and anchor paths were collapsing signed off-screen coordinates too early, so `scene::coords` now keeps a signed `ScreenPos`, projects world/anchor elements through the proper screen helper, and leaves screen-attached values camera-invariant; the full `scene::coords` test group is green again
+- [07:29] added a vines readiness gate to the audit and backlog, removed stale spatial `node` wording from the guide-capture flow, and cleaned a duplicate spatial API bullet so vine work has clearer preconditions before implementation begins
+- [07:37] updated the footer row regression test to match the current no-band footer contract: only written footer text carries the BTAS foreground style, while unwritten cells remain plain
+- [07:54] reran the full Rust test suite after the vines-readiness and footer-test cleanup; `cargo test --quiet` is green with 83 passing tests
+- [10:05] added `docs/vines.md` as the pre-runtime vine ownership contract and linked it from the README, docs map, audit, backlog, scene model, and rendering contract so vine work has one place for readiness and ownership rules before implementation begins
+- [10:21] completed a pre-commit hygiene pass for the spatial/theme/docs/vines-readiness batch: `scripts/check.sh` passed and `cargo test --quiet` passed with 83 tests

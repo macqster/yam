@@ -48,6 +48,7 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 - [`docs/README.md`](docs/README.md) - docs map
 - [`docs/glossary.md`](docs/glossary.md) - shared terminology source of truth
+- [`docs/vines.md`](docs/vines.md) - pre-runtime vine ownership contract
 - [`TODO.md`](TODO.md) - active backlog
 - [`docs/LOG.md`](docs/LOG.md) - append-only repo log
 - [`docs/scene-model.md`](docs/scene-model.md) - deterministic scene model
@@ -65,7 +66,9 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 ## Current Work
 
-The active work order lives in [`TODO.md`](TODO.md).
+The active work order lives in [`TODO.md`](TODO.md), the current risk snapshot lives in [`docs/audit.md`](docs/audit.md), and the append-only record of decisions lives in [`docs/LOG.md`](docs/LOG.md).
+
+Current priority is stability and efficiency first, with hero GIF aesthetics held steady and flora deferred until the system is prepared for it.
 
 ## Working Rules
 
@@ -87,3 +90,4 @@ The active work order lives in [`TODO.md`](TODO.md).
 - run `scripts/check.sh` before committing
 - `cargo clippy -- -D warnings` must pass without warnings
 - keep active behavior contracts in the relevant docs under `docs/`
+- keep `TODO.md` execution-focused, `docs/audit.md` risk-focused, and `docs/LOG.md` append-only

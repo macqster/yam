@@ -79,14 +79,32 @@ impl BtasTheme {
     }
 
     pub fn camera_indicator_track(self) -> Style {
-        Style::default().fg(self.pms_293).add_modifier(Modifier::DIM)
+        Style::default()
+            .fg(self.pms_293)
+            .add_modifier(Modifier::DIM)
     }
 
     pub fn camera_indicator_thumb(self) -> Style {
-        Style::default().fg(self.pms_292).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.pms_292)
+            .add_modifier(Modifier::BOLD)
     }
 
     pub fn pointer_probe(self) -> Style {
-        Style::default().fg(self.pms_156).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.pms_156)
+            .add_modifier(Modifier::BOLD)
+    }
+
+    pub fn footer_text(self) -> Style {
+        Style::default().fg(self.pms_430)
+    }
+
+    pub fn debug_text(self) -> Style {
+        Style::default().fg(self.pms_340)
+    }
+
+    pub fn guide_trace(self) -> Style {
+        Style::default().fg(self.pms_430)
     }
 }

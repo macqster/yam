@@ -31,3 +31,15 @@ pub fn camera_indicator_thumb() -> Style {
 pub fn pointer_probe() -> Style {
     BTAS.pointer_probe()
 }
+
+pub fn footer_text() -> Style {
+    BTAS.footer_text()
+}
+
+pub fn debug_text() -> Style {
+    BTAS.debug_text()
+}
+
+pub fn guide_trace() -> Style {
+    BTAS.guide_trace()
+}

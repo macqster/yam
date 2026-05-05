@@ -2,6 +2,14 @@
 
 This file is the repo-wide work order and stabilization checklist.
 
+Coordination contract:
+
+- keep this file execution-focused
+- keep risk and status notes in `docs/audit.md`
+- keep the historical record in `docs/LOG.md`
+- if a TODO item becomes mainly a risk note, move it to the audit
+- if a TODO item becomes historical, record the closure in the log and remove it here
+
 ## 1. Scene Model and Presentation Contract
 
 - [verify] `docs/scene-model.md` and `docs/architecture.md` remain the source of truth for world, HUD, and overlay behavior.
@@ -110,6 +118,9 @@ This file is the repo-wide work order and stabilization checklist.
 - [verify] vines remain world-attached scene content and reuse the single projection path.
 - [verify] vines keep the hero/footer contracts stable and stop if they introduce layout drift.
 - [verify] add negative tests for any vine interaction that could blur world/HUD boundaries.
+- [verify] keep `scene::coords` signed projection, anchor identity, and screen-attached invariance tests green before adding vine rendering or growth state.
+- [inspect] keep the minimal vine ownership contract in [`docs/vines.md`](docs/vines.md) current before implementation: vine state belongs to world/flora state, guide lookup belongs to the spatial layer, and render layers only visualize resolved geometry.
+- [verify] do not make vines depend on raster masks, filled sprites, or empty-cell masking until the mask contract is promoted beyond explicit linework/outline guides.
 - [verify] world-space guide primitives live in `GuideState` as linework-only vectors/streams/curves and stay separate from raster masks or filled sprites; debug visualization should project them rather than reinterpreting them as pixels, and the project-wide guide/mask generator should keep a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](docs/soft-line-atlas.md) for the 10x1..10x5 and longer world-span direction families.
 
 ## 6. Ratatui Research Follow-Ups

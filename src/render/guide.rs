@@ -4,8 +4,6 @@ use crate::core::spatial::SpatialGuideIndex;
 use crate::render::compositor::Grid;
 use crate::scene::coords::{world_to_screen, WorldPos};
 use crate::theme::style;
-use ratatui::prelude::Color;
-use ratatui::style::Style;
 
 pub fn draw_guides(
     grid: &mut Grid,
@@ -100,7 +98,7 @@ fn draw_guide(grid: &mut Grid, guide: &Guide, camera_x: i32, camera_y: i32) {
                         grid.cell_mut((center.x + dx) as u16, (center.y + dy) as u16)
                     {
                         cell.symbol = guide.style.glyph;
-                        cell.style = Style::default().fg(Color::DarkGray);
+                        cell.style = style::guide_trace();
                     }
                 }
             }
@@ -165,7 +163,7 @@ fn draw_segment(
         };
         if let Some(cell) = grid.cell_mut(step.point.x as u16, step.point.y as u16) {
             cell.symbol = ch;
-            cell.style = Style::default().fg(Color::DarkGray);
+            cell.style = style::guide_trace();
         }
     }
 }

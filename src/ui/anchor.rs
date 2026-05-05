@@ -28,5 +28,8 @@ pub fn resolve_anchor(
         Anchor::BottomLeft | Anchor::BottomRight => height.saturating_sub(element_h),
         Anchor::Center => height.saturating_sub(element_h) / 2,
     };
-    ScreenPos { x, y }
+    ScreenPos {
+        x: x.into(),
+        y: y.into(),
+    }
 }

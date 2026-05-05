@@ -2,10 +2,9 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::{Layer, LayerOutput, RenderState};
-use crate::theme::palette;
+use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
-use ratatui::style::Style;
 
 pub struct StatusLayer;
 
@@ -31,8 +30,7 @@ impl Layer for StatusLayer {
             " [q]uit  •  [d]ev"
         };
         let right_text = build_status_label();
-        let footer_style = Style::default()
-            .fg(palette::FOOTER_FG);
+        let footer_style = theme_style::footer_text();
         write_string(&mut grid, 0, footer_y, left_text, footer_style);
         let stamp_width = right_text.chars().count() as u16 + 1;
         let x = width.saturating_sub(stamp_width);
@@ -68,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn footer_row_uses_plain_text_across_the_full_width() {
+    fn footer_row_styles_only_written_text() {
         let layer = StatusLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
@@ -103,8 +101,8 @@ mod tests {
 
         assert_eq!(first.style.bg, None);
         assert_eq!(middle.style.bg, None);
-        assert_eq!(first.style.fg, Some(crate::theme::palette::FOOTER_FG));
-        assert_eq!(middle.style.fg, Some(crate::theme::palette::FOOTER_FG));
+        assert_eq!(first.style.fg, Some(crate::theme::btas::BTAS.pms_430));
+        assert_eq!(middle.style.fg, None);
     }
 
     #[test]

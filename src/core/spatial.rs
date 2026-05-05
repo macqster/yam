@@ -96,6 +96,20 @@ impl SpatialResolver {
         Self::anchor_to_world(attachment.anchor.point, attachment.offset)
     }
 
+    pub fn resolve_anchor(anchor: SpatialPoint, offset: SpatialPoint) -> SpatialPoint {
+        Self::anchor_to_world(anchor, offset)
+    }
+
+    pub fn resolve_anchor_or_world(
+        anchor: Option<SpatialPoint>,
+        fallback_world: SpatialPoint,
+        offset: SpatialPoint,
+    ) -> SpatialPoint {
+        anchor
+            .map(|anchor| Self::resolve_anchor(anchor, offset))
+            .unwrap_or(fallback_world)
+    }
+
     pub fn world_to_screen(&self, world: SpatialPoint) -> SpatialPoint {
         SpatialPoint {
             x: world.x - self.projection.camera_x,
@@ -122,6 +136,13 @@ impl SpatialResolver {
         SpatialPoint {
             x: screen.x as i32 + self.projection.camera_x,
             y: screen.y as i32 + self.projection.camera_y,
+        }
+    }
+
+    pub fn screen_point(&self, screen_x: i32, screen_y: i32) -> SpatialScreenPoint {
+        SpatialScreenPoint {
+            x: screen_x.max(0) as u16,
+            y: screen_y.max(0) as u16,
         }
     }
 }

@@ -62,7 +62,6 @@ Rules:
 - the pointer probe is the practical authoring aid for linework: it should be usable to record precise coordinates for guides, points, and masks while the guide system remains world-attached and queryable; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
 - the intended end-state is a single spatial relation graph that can express absolute datum guides, relative anchors, masks, and organism guidance paths for growth, movement, and lifecycle state without duplicating attachment math across systems
 - the smallest canonical spatial layer should start with datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers; masks and organism guidance can remain layered concerns until the base relation layer is proven
-- the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
 - the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
 - the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `WorldState` when an entity is present, so anchor identity is partly real in the live path even though the spatial layer still has legacy seams
 - that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move entity-backed relation logic fully into `core/spatial`
@@ -124,6 +123,7 @@ Rules:
 - the main scene is the live visualiser space: hero GIF, clock plus weather widget, and procedurally generated flora under the same world-datum contract
 - the greenhouse is a separate simulation space for rooms, labs, and multiple flora species, with each organism allowed its own anatomy, morphology, and growth behavior
 - vines are one flora family, not a singular architectural exception, and the system must make room for other procedurally growing plant organisms with different shapes and lifecycle rules
+- vine ownership and readiness details live in [`docs/vines.md`](vines.md); the scene model should keep vines world-attached and should not let render layers own vine lifecycle state
 - the main scene should be treated as the live visualiser/screensaver composition, with hero GIF, tree-stump-like hero scaffolding split into a Y-shaped fork under the hero, clock widget, weather widget, and procedurally generated vines acting as the organic frame around the composition
 - the greenhouse remains an early conceptual simulation space for rooms, labs, pots, bowls, and controlled-environment biome themes where different plant organisms can be developed and their lifecycle simulated
 - current flora concepts include pre-generated tree-stump scaffolding at boot, tropical vines framing the composition, and a monstera-like plant with large aesthetic growing leaves
@@ -153,7 +153,7 @@ Rules:
 The practical authoring flow for world relations is:
 
 1. move the pointer probe to an exact world coordinate
-2. record the coordinate as a guide point, node, or anchor
+2. record the coordinate as a guide point or anchor
 3. connect recorded coordinates into a line or polyline when a path is needed
 4. wrap recorded points into an outline when a mask or bounded region is needed
 5. visualize the result with the soft-line renderer before it is treated as a stable spatial primitive

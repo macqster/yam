@@ -240,39 +240,10 @@ impl Layer for DebugLayer {
                 theme_style::debug_text(),
             );
         }
-        for wx in border.left..=border.right {
-            let ch = if wx == border.left || wx == border.mid_x || wx == border.right {
-                '+'
-            } else {
-                '-'
-            };
-            draw_border_cell(
+        if ui.meta.world_frame_visible {
+            draw_world_frame(
                 &mut grid,
-                wx,
-                border.top,
-                ch,
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-                screen_w,
-                screen_h,
-            );
-            draw_border_cell(
-                &mut grid,
-                wx,
-                border.mid_y,
-                ch,
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-                screen_w,
-                screen_h,
-            );
-            draw_border_cell(
-                &mut grid,
-                wx,
-                border.bottom,
-                ch,
+                border,
                 cam_x,
                 cam_y,
                 ctx.hud.camera.height,
@@ -280,36 +251,21 @@ impl Layer for DebugLayer {
                 screen_h,
             );
         }
-
-        for wy in border.bottom + 1..border.top {
-            let ch = if wy == border.mid_y { '+' } else { '|' };
-            draw_border_cell(
+        if ui.meta.world_axis_visible {
+            draw_world_axis(
                 &mut grid,
-                border.left,
-                wy,
-                ch,
+                border,
                 cam_x,
                 cam_y,
                 ctx.hud.camera.height,
                 screen_w,
                 screen_h,
             );
-            draw_border_cell(
+        }
+        if ui.meta.world_datum_visible {
+            draw_world_datum(
                 &mut grid,
-                border.mid_x,
-                wy,
-                ch,
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-                screen_w,
-                screen_h,
-            );
-            draw_border_cell(
-                &mut grid,
-                border.right,
-                wy,
-                ch,
+                border,
                 cam_x,
                 cam_y,
                 ctx.hud.camera.height,
@@ -320,6 +276,133 @@ impl Layer for DebugLayer {
         draw_pointer_probe(&mut grid, pointer_screen, pointer_visible);
         LayerOutput { grid, mask: None }
     }
+}
+
+fn draw_world_frame(
+    grid: &mut Grid,
+    border: BorderProbeBounds,
+    cam_x: i32,
+    cam_y: i32,
+    viewport_height: u16,
+    screen_w: i32,
+    screen_h: i32,
+) {
+    for wx in border.left..=border.right {
+        let ch = if wx == border.left || wx == border.right {
+            '+'
+        } else {
+            '-'
+        };
+        draw_border_cell(
+            grid,
+            wx,
+            border.top,
+            ch,
+            cam_x,
+            cam_y,
+            viewport_height,
+            screen_w,
+            screen_h,
+        );
+        draw_border_cell(
+            grid,
+            wx,
+            border.bottom,
+            ch,
+            cam_x,
+            cam_y,
+            viewport_height,
+            screen_w,
+            screen_h,
+        );
+    }
+
+    for wy in border.bottom + 1..border.top {
+        draw_border_cell(
+            grid,
+            border.left,
+            wy,
+            '|',
+            cam_x,
+            cam_y,
+            viewport_height,
+            screen_w,
+            screen_h,
+        );
+        draw_border_cell(
+            grid,
+            border.right,
+            wy,
+            '|',
+            cam_x,
+            cam_y,
+            viewport_height,
+            screen_w,
+            screen_h,
+        );
+    }
+}
+
+fn draw_world_axis(
+    grid: &mut Grid,
+    border: BorderProbeBounds,
+    cam_x: i32,
+    cam_y: i32,
+    viewport_height: u16,
+    screen_w: i32,
+    screen_h: i32,
+) {
+    for wx in border.left..=border.right {
+        let ch = if wx == border.mid_x { '+' } else { '-' };
+        draw_border_cell(
+            grid,
+            wx,
+            border.mid_y,
+            ch,
+            cam_x,
+            cam_y,
+            viewport_height,
+            screen_w,
+            screen_h,
+        );
+    }
+
+    for wy in border.bottom + 1..border.top {
+        let ch = if wy == border.mid_y { '+' } else { '|' };
+        draw_border_cell(
+            grid,
+            border.mid_x,
+            wy,
+            ch,
+            cam_x,
+            cam_y,
+            viewport_height,
+            screen_w,
+            screen_h,
+        );
+    }
+}
+
+fn draw_world_datum(
+    grid: &mut Grid,
+    border: BorderProbeBounds,
+    cam_x: i32,
+    cam_y: i32,
+    viewport_height: u16,
+    screen_w: i32,
+    screen_h: i32,
+) {
+    draw_border_cell(
+        grid,
+        border.mid_x,
+        border.mid_y,
+        '+',
+        cam_x,
+        cam_y,
+        viewport_height,
+        screen_w,
+        screen_h,
+    );
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -522,7 +605,8 @@ fn border_probe_bounds() -> BorderProbeBounds {
 #[cfg(test)]
 mod tests {
     use super::{
-        border_probe_bounds, draw_camera_scrollbars, draw_soft_probe_line, scrollbar_position,
+        border_probe_bounds, draw_camera_scrollbars, draw_soft_probe_line, draw_world_axis,
+        draw_world_datum, draw_world_frame, scrollbar_position,
     };
     use crate::core::guide_line::{soft_line_glyph, LinePoint};
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
@@ -621,6 +705,78 @@ mod tests {
         draw_camera_scrollbars(&mut grid, 212, 57, &ctx);
 
         assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
+    }
+
+    #[test]
+    fn world_frame_and_axis_are_independent_debug_overlays() {
+        let border = border_probe_bounds();
+        let mut frame_grid = crate::render::compositor::Grid::new(212, 57);
+        draw_world_frame(&mut frame_grid, border, -106, -28, 56, 212, 57);
+        let center = world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
+        let top_center = world_to_screen(
+            WorldPos {
+                x: 0,
+                y: border.top,
+            },
+            -106,
+            -28,
+            56,
+        );
+        assert_eq!(
+            frame_grid.cells[frame_grid.index(center.x as u16, center.y as u16)].symbol,
+            ' '
+        );
+        assert_eq!(
+            frame_grid.cells[frame_grid.index(top_center.x as u16, top_center.y as u16)].symbol,
+            '-'
+        );
+
+        let mut axis_grid = crate::render::compositor::Grid::new(212, 57);
+        draw_world_axis(&mut axis_grid, border, -106, -28, 56, 212, 57);
+        let top_left = world_to_screen(
+            WorldPos {
+                x: border.left,
+                y: border.top,
+            },
+            -106,
+            -28,
+            56,
+        );
+        assert_eq!(
+            axis_grid.cells[axis_grid.index(center.x as u16, center.y as u16)].symbol,
+            '+'
+        );
+        assert_eq!(
+            axis_grid.cells[axis_grid.index(top_left.x as u16, top_left.y as u16)].symbol,
+            ' '
+        );
+    }
+
+    #[test]
+    fn world_datum_is_independent_from_frame_and_axis() {
+        let border = border_probe_bounds();
+        let center = world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
+        let mut datum_grid = crate::render::compositor::Grid::new(212, 57);
+        draw_world_datum(&mut datum_grid, border, -106, -28, 56, 212, 57);
+
+        assert_eq!(
+            datum_grid.cells[datum_grid.index(center.x as u16, center.y as u16)].symbol,
+            '+'
+        );
+
+        let top_center = world_to_screen(
+            WorldPos {
+                x: 0,
+                y: border.top,
+            },
+            -106,
+            -28,
+            56,
+        );
+        assert_eq!(
+            datum_grid.cells[datum_grid.index(top_center.x as u16, top_center.y as u16)].symbol,
+            ' '
+        );
     }
 
     #[test]

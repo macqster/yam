@@ -73,6 +73,9 @@
   - `dev`: gated mutation/editing controls and simulation tooling
   - `command palette`: search/fallback discovery for rare actions and jumps
 - turning `dev_mode` off closes any open hotkeys, move, or settings modal state so the modal family cannot stay latched outside the dev surface
+- the settings modal is world-aware: it should only expose controls for assets and overlays that actually exist in the active world mode, instead of pretending every scene surface is always loaded
+- the world debug overlay is split into three independent surfaces: the rectangular world frame/border, the datum-centered crosshair/axis, and the world datum marker at `(0, 0)`; settings may toggle them separately without coupling their draw logic
+- `Esc` should act as a direct close affordance for transient dev popups like settings and move, while still canceling in-row edit mode first when the settings editor is actively buffering a value
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
 - the settings popup should behave like a compact list UI: `Tab` changes tabs, `Up/Down` moves the active row within the current tab, and the active row should be called out with a clear background highlight rather than punctuation-heavy markers
 - in the `positions` tab, `Enter` opens a buffered edit mode for the active row, `Left/Right` switches between the `x` and `y` fields, typed numeric input edits the focused field, `Enter` commits, and `Esc` cancels

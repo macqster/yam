@@ -103,15 +103,11 @@ pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Erro
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open =>
                     {
-                        if ui_state.settings_edit.active {
-                            ui_state.commit_settings_edit()?;
-                        } else {
-                            let size = terminal.size()?;
-                            ui_state.begin_settings_edit_with_viewport(
-                                size.width,
-                                size.height.saturating_sub(1),
-                            );
-                        }
+                        let size = terminal.size()?;
+                        ui_state.activate_selected_setting_with_viewport(
+                            size.width,
+                            size.height.saturating_sub(1),
+                        )?;
                     }
                     KeyCode::Esc
                         if ui_state.meta.dev_mode
@@ -119,6 +115,13 @@ pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Erro
                             && ui_state.settings_edit.active =>
                     {
                         ui_state.cancel_settings_edit();
+                    }
+                    KeyCode::Esc
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && !ui_state.settings_edit.active =>
+                    {
+                        ui_state.close_settings();
                     }
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
@@ -276,7 +279,7 @@ pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Erro
                         ui_state.settings_edit_backspace();
                     }
                     KeyCode::Esc if ui_state.meta.dev_mode && ui_state.meta.move_mode_open => {
-                        ui_state.toggle_move_mode();
+                        ui_state.close_move_mode();
                     }
                     KeyCode::F(5) if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
                         ui_state.next_font()

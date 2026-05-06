@@ -426,3 +426,11 @@ Logging rule:
 - [19:02] made the positions editor respect fullscreen/world-fit constraints: when the active viewport already covers the full world, the camera row now renders as locked/disabled and `Enter` will not open camera editing, matching the existing no-scrollbar/no-meaningful-pan behavior
 - [19:09] simplified the locked camera row copy to a passive `camera: [locked in fullscreen]` status line so the disabled state no longer pretends to expose editable `x/y` fields
 - [19:14] polished the locked-row presentation so the selected disabled camera row now uses one coherent muted-grey-on-blue style instead of splitting the row highlight from the text color
+
+## 2026-05-06
+
+- [15:19] split the world debug overlay into two real surfaces instead of one coupled drawing pass: the rectangular world frame/border and the datum-centered crosshair/axis can now be toggled independently, and the settings modal gained a dedicated `ui` tab with row toggles for both
+- [15:20] made the settings modal more world-aware by keeping the new `ui` overlay controls available across worlds while continuing to hide main-scene-only hero/clock position and gif controls in sandbox
+- [15:33] extended the `ui` tab with a third overlay toggle for the world datum marker at `(0, 0)`, keeping the datum independent from both the frame and the axis instead of folding it into either surface
+- [15:35] tightened the popup affordance flow so `Esc` now directly closes the settings and move popups, while still canceling buffered settings-field editing before it dismisses the whole settings modal
+- [15:48] cut release `0.3.2` after the settings-modal maturation pass: world-aware settings, independent world-overlay toggles for frame/axis/datum, darker BTAS row highlight polish, and better popup-exit behavior are now part of the release surface

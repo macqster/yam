@@ -28,7 +28,7 @@ impl Layer for SettingsLayer {
         }
 
         let frame = ModalFrame::centered(width, height, 68, 14);
-        paint_modal_shell(&mut grid, frame, "[s]ettings");
+        paint_modal_shell(&mut grid, frame, "settings");
         let body_x = frame.x + 2;
         let body_y = frame.y + 3;
         draw_tabs(&mut grid, body_x, frame.y + 1, ui.meta.settings_tab);
@@ -40,7 +40,7 @@ impl Layer for SettingsLayer {
 fn draw_tabs(grid: &mut Grid, x: u16, y: u16, active: SettingsTab) {
     let tabs = [
         SettingsTab::Positions,
-        SettingsTab::Widgets,
+        SettingsTab::Ui,
         SettingsTab::Gif,
         SettingsTab::Theme,
     ];
@@ -60,41 +60,9 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState, ctx:
     let camera_locked =
         crate::scene::viewport_covers_full_world(ctx.hud.camera.width, ctx.hud.camera.height);
     let lines = match ui.meta.settings_tab {
-        SettingsTab::Positions => vec![
-            if camera_locked {
-                "camera: [locked in fullscreen]".to_string()
-            } else {
-                format_axis_line("camera", ui.offsets.camera_x, ui.offsets.camera_y, ui, 0)
-            },
-            format_axis_line("hero offset", ui.offsets.hero_dx, ui.offsets.hero_dy, ui, 1),
-            format_axis_line(
-                "clock offset",
-                ui.offsets.clock_dx as i32,
-                ui.offsets.clock_dy as i32,
-                ui,
-                2,
-            ),
-        ],
-        SettingsTab::Widgets => vec![
-            format!("dev mode: {}", ui.meta.dev_mode),
-            format!("settings open: {}", ui.meta.settings_open),
-            format!("move mode: {}", ui.meta.move_mode_open),
-            format!("move target: {}", ui.meta.move_target.title()),
-            format!(
-                "camera mode: {}",
-                if ui.camera.follow_hero {
-                    "follow-hero"
-                } else {
-                    "manual pan"
-                }
-            ),
-            "clock: hero-attached world entity".to_string(),
-        ],
-        SettingsTab::Gif => vec![
-            format!("hero fps: {:.1}", ui.offsets.hero_fps),
-            format!("clock font: {}", ui.offsets.clock_font),
-            "hero render: chafa-backed".to_string(),
-        ],
+        SettingsTab::Positions => position_lines(ui, camera_locked),
+        SettingsTab::Ui => ui_lines(ui),
+        SettingsTab::Gif => gif_lines(ui),
         SettingsTab::Theme => vec![
             "theme: active runtime palette".to_string(),
             "theme editing can be wired in later".to_string(),
@@ -128,6 +96,74 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState, ctx:
         if selected && ui.meta.settings_tab == SettingsTab::Positions && !row_disabled {
             maybe_draw_active_axis_field(grid, x, row_y, width, ui, row as u16);
         }
+    }
+}
+
+fn position_lines(ui: &UiState, camera_locked: bool) -> Vec<String> {
+    let mut lines = vec![if camera_locked {
+        "camera: [locked in fullscreen]".to_string()
+    } else {
+        format_axis_line("camera", ui.offsets.camera_x, ui.offsets.camera_y, ui, 0)
+    }];
+
+    if ui.world_has_scene_companions() {
+        lines.push(format_axis_line(
+            "hero offset",
+            ui.offsets.hero_dx,
+            ui.offsets.hero_dy,
+            ui,
+            1,
+        ));
+        lines.push(format_axis_line(
+            "clock offset",
+            ui.offsets.clock_dx as i32,
+            ui.offsets.clock_dy as i32,
+            ui,
+            2,
+        ));
+    }
+
+    lines
+}
+
+fn ui_lines(ui: &UiState) -> Vec<String> {
+    vec![
+        format!(
+            "world frame/border: {}",
+            if ui.meta.world_frame_visible {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        ),
+        format!(
+            "world crosshair/axis: {}",
+            if ui.meta.world_axis_visible {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        ),
+        format!(
+            "world datum: {}",
+            if ui.meta.world_datum_visible {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        ),
+    ]
+}
+
+fn gif_lines(ui: &UiState) -> Vec<String> {
+    if ui.world_has_scene_companions() {
+        vec![
+            format!("hero fps: {:.1}", ui.offsets.hero_fps),
+            format!("clock font: {}", ui.offsets.clock_font),
+            "hero render: chafa-backed".to_string(),
+        ]
+    } else {
+        vec!["no hero or clock assets in sandbox".to_string()]
     }
 }
 
@@ -252,16 +288,15 @@ mod tests {
 
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
-        ui.meta.settings_tab = crate::ui::state::SettingsTab::Widgets;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Ui;
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert!(text.contains("widgets"));
-        assert!(text.contains("dev mode: true"));
-        assert!(text.contains("move mode: false"));
-        assert!(text.contains("move target: hero"));
-        assert!(text.contains("clock: hero-attached world entity"));
+        assert!(text.contains("ui"));
+        assert!(text.contains("world frame/border: enabled"));
+        assert!(text.contains("world crosshair/axis: enabled"));
+        assert!(text.contains("world datum: enabled"));
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
         assert_eq!(center, Some(crate::theme::palette::MODAL_BG));
     }
@@ -304,8 +339,52 @@ mod tests {
         let selected_bg = open.grid.cells[open.grid.index(30, 13)].style.bg;
         let unselected_bg = open.grid.cells[open.grid.index(30, 12)].style.bg;
 
-        assert_eq!(selected_bg, Some(crate::theme::palette::CAMERA_THUMB));
+        assert_eq!(selected_bg, Some(crate::theme::palette::CAMERA_TRACK));
         assert_eq!(unselected_bg, Some(crate::theme::palette::MODAL_BG));
+    }
+
+    #[test]
+    fn ui_tab_reflects_world_overlay_toggle_state() {
+        let layer = SettingsLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Ui;
+        ui.meta.world_frame_visible = false;
+        ui.meta.world_axis_visible = true;
+        ui.meta.world_datum_visible = false;
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("world frame/border: disabled"));
+        assert!(text.contains("world crosshair/axis: enabled"));
+        assert!(text.contains("world datum: disabled"));
     }
 
     #[test]
@@ -389,5 +468,89 @@ mod tests {
         assert!(text.contains("camera: [locked in fullscreen]"));
         let row_bg = open.grid.cells[open.grid.index(74, 25)].style.bg;
         assert_eq!(row_bg, Some(crate::theme::palette::MODAL_BG));
+    }
+
+    #[test]
+    fn sandbox_positions_tab_hides_main_scene_only_offsets() {
+        let layer = SettingsLayer;
+        let world = WorldState::for_sandbox();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 0,
+                    y: 0,
+                    width: 212,
+                    height: 56,
+                },
+                viewport_rect: Rect::new(0, 0, 212, 56),
+                camera: Camera {
+                    x: -106,
+                    y: -28,
+                    width: 212,
+                    height: 56,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = UiState::new();
+        ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Positions;
+
+        let open = layer.render_to_grid(212, 57, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("camera: [locked in fullscreen]"));
+        assert!(!text.contains("hero offset:"));
+        assert!(!text.contains("clock offset:"));
+    }
+
+    #[test]
+    fn sandbox_gif_tab_reports_missing_scene_assets() {
+        let layer = SettingsLayer;
+        let world = WorldState::for_sandbox();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 0,
+                    y: 0,
+                    width: 212,
+                    height: 56,
+                },
+                viewport_rect: Rect::new(0, 0, 212, 56),
+                camera: Camera {
+                    x: -106,
+                    y: -28,
+                    width: 212,
+                    height: 56,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = UiState::new();
+        ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Gif;
+
+        let open = layer.render_to_grid(212, 57, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("no hero or clock assets in sandbox"));
+        assert!(!text.contains("hero fps:"));
+        assert!(!text.contains("clock font:"));
     }
 }

@@ -44,7 +44,7 @@ pub fn debug_text() -> Style {
 pub fn settings_selected_row() -> Style {
     Style::default()
         .fg(palette::PRIMARY_FG)
-        .bg(palette::CAMERA_THUMB)
+        .bg(palette::CAMERA_TRACK)
 }
 
 pub fn settings_active_field() -> Style {
@@ -64,7 +64,7 @@ pub fn settings_disabled_row() -> Style {
 pub fn settings_disabled_row_selected() -> Style {
     Style::default()
         .fg(palette::BTAS_GREY_DISABLED)
-        .bg(palette::CAMERA_THUMB)
+        .bg(palette::CAMERA_TRACK)
         .add_modifier(Modifier::DIM)
 }
 

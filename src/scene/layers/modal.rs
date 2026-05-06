@@ -1,4 +1,3 @@
-use crate::render::compositor::write_string;
 use crate::render::compositor::Grid;
 use crate::theme::style as theme_style;
 
@@ -37,13 +36,7 @@ impl ModalFrame {
 pub fn paint_modal_shell(grid: &mut Grid, frame: ModalFrame, title: &str) {
     fill_panel_background(grid, frame);
     draw_border(grid, frame);
-    write_string(
-        grid,
-        frame.x + 2,
-        frame.y + 1,
-        title,
-        theme_style::panel_text(),
-    );
+    draw_border_title(grid, frame, title);
 }
 
 fn fill_panel_background(grid: &mut Grid, frame: ModalFrame) {
@@ -89,6 +82,24 @@ fn draw_border(grid: &mut Grid, frame: ModalFrame) {
     for cy in frame.y + 1..bottom {
         write_border_cell(grid, frame.x, cy, '|');
         write_border_cell(grid, right, cy, '|');
+    }
+}
+
+fn draw_border_title(grid: &mut Grid, frame: ModalFrame, title: &str) {
+    if frame.width <= 6 || title.is_empty() {
+        return;
+    }
+    let decorated = format!("< {} >", title);
+    let title_width = decorated.chars().count() as u16;
+    if title_width >= frame.width.saturating_sub(2) {
+        return;
+    }
+    let x = frame.x + (frame.width.saturating_sub(title_width)) / 2;
+    for (offset, ch) in decorated.chars().enumerate() {
+        if let Some(cell) = grid.cell_mut(x + offset as u16, frame.y) {
+            cell.symbol = ch;
+            cell.style = theme_style::panel_text();
+        }
     }
 }
 

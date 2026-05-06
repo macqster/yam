@@ -21,6 +21,9 @@ pub struct MetaState {
     pub move_mode_open: bool,
     pub settings_open: bool,
     pub pointer_probe_open: bool,
+    pub world_frame_visible: bool,
+    pub world_axis_visible: bool,
+    pub world_datum_visible: bool,
     pub settings_tab: SettingsTab,
     pub settings_cursor: SettingsCursor,
     pub move_target: MoveTarget,
@@ -36,6 +39,9 @@ impl MetaState {
             move_mode_open: false,
             settings_open: false,
             pointer_probe_open: false,
+            world_frame_visible: true,
+            world_axis_visible: true,
+            world_datum_visible: true,
             settings_tab: SettingsTab::default(),
             settings_cursor: SettingsCursor::default(),
             move_target: MoveTarget::default(),
@@ -131,14 +137,6 @@ impl MetaState {
             self.selected_settings_row().saturating_sub(1),
         );
     }
-
-    pub fn select_next_settings_row(&mut self) {
-        let max_row = self.settings_tab.item_count().saturating_sub(1) as u16;
-        self.settings_cursor.set_row(
-            self.settings_tab,
-            self.selected_settings_row().saturating_add(1).min(max_row),
-        );
-    }
 }
 
 impl Default for MetaState {
@@ -176,7 +174,8 @@ impl MoveTarget {
 pub enum SettingsTab {
     #[default]
     Positions,
-    Widgets,
+    #[serde(alias = "Widgets")]
+    Ui,
     Gif,
     Theme,
 }
@@ -184,8 +183,8 @@ pub enum SettingsTab {
 impl SettingsTab {
     pub fn next(self) -> Self {
         match self {
-            SettingsTab::Positions => SettingsTab::Widgets,
-            SettingsTab::Widgets => SettingsTab::Gif,
+            SettingsTab::Positions => SettingsTab::Ui,
+            SettingsTab::Ui => SettingsTab::Gif,
             SettingsTab::Gif => SettingsTab::Theme,
             SettingsTab::Theme => SettingsTab::Positions,
         }
@@ -194,8 +193,8 @@ impl SettingsTab {
     pub fn prev(self) -> Self {
         match self {
             SettingsTab::Positions => SettingsTab::Theme,
-            SettingsTab::Widgets => SettingsTab::Positions,
-            SettingsTab::Gif => SettingsTab::Widgets,
+            SettingsTab::Ui => SettingsTab::Positions,
+            SettingsTab::Gif => SettingsTab::Ui,
             SettingsTab::Theme => SettingsTab::Gif,
         }
     }
@@ -203,7 +202,7 @@ impl SettingsTab {
     pub fn title(self) -> &'static str {
         match self {
             SettingsTab::Positions => "positions",
-            SettingsTab::Widgets => "widgets",
+            SettingsTab::Ui => "ui",
             SettingsTab::Gif => "gif",
             SettingsTab::Theme => "theme",
         }
@@ -212,7 +211,7 @@ impl SettingsTab {
     pub fn item_count(self) -> usize {
         match self {
             SettingsTab::Positions => 3,
-            SettingsTab::Widgets => 6,
+            SettingsTab::Ui => 3,
             SettingsTab::Gif => 3,
             SettingsTab::Theme => 3,
         }
@@ -231,7 +230,7 @@ impl SettingsCursor {
     pub fn row(self, tab: SettingsTab) -> u16 {
         match tab {
             SettingsTab::Positions => self.positions,
-            SettingsTab::Widgets => self.widgets,
+            SettingsTab::Ui => self.widgets,
             SettingsTab::Gif => self.gif,
             SettingsTab::Theme => self.theme,
         }
@@ -240,7 +239,7 @@ impl SettingsCursor {
     pub fn set_row(&mut self, tab: SettingsTab, row: u16) {
         match tab {
             SettingsTab::Positions => self.positions = row,
-            SettingsTab::Widgets => self.widgets = row,
+            SettingsTab::Ui => self.widgets = row,
             SettingsTab::Gif => self.gif = row,
             SettingsTab::Theme => self.theme = row,
         }
@@ -424,29 +423,43 @@ impl UiState {
         if self.meta.active_world_kind() != WorldKind::Sandbox {
             self.pointer_blink_on = true;
         }
+        self.clamp_settings_cursor_to_world();
         self.save_state();
     }
 
     pub fn next_settings_tab(&mut self) {
         self.meta.next_settings_tab();
+        self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
         self.save_state();
     }
 
     pub fn prev_settings_tab(&mut self) {
         self.meta.prev_settings_tab();
+        self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
         self.save_state();
     }
 
     pub fn select_prev_settings_row(&mut self) {
         self.meta.select_prev_settings_row();
+        self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
         self.save_state();
     }
 
     pub fn select_next_settings_row(&mut self) {
-        self.meta.select_next_settings_row();
+        let max_row = self
+            .settings_item_count(self.meta.settings_tab)
+            .saturating_sub(1) as u16;
+        let next = self
+            .meta
+            .selected_settings_row()
+            .saturating_add(1)
+            .min(max_row);
+        self.meta
+            .settings_cursor
+            .set_row(self.meta.settings_tab, next);
         self.settings_edit.clear();
         self.save_state();
     }
@@ -460,6 +473,9 @@ impl UiState {
 
     pub fn begin_settings_edit_with_viewport(&mut self, viewport_width: u16, viewport_height: u16) {
         if self.meta.settings_tab != SettingsTab::Positions {
+            return;
+        }
+        if !self.world_has_scene_companions() && self.meta.selected_settings_row() > 0 {
             return;
         }
         if self.meta.selected_settings_row() == 0
@@ -484,10 +500,47 @@ impl UiState {
         self.settings_edit.clear();
     }
 
+    pub fn activate_selected_setting_with_viewport(
+        &mut self,
+        viewport_width: u16,
+        viewport_height: u16,
+    ) -> io::Result<()> {
+        match self.meta.settings_tab {
+            SettingsTab::Positions => {
+                if self.settings_edit.active {
+                    self.commit_settings_edit()
+                } else {
+                    self.begin_settings_edit_with_viewport(viewport_width, viewport_height);
+                    Ok(())
+                }
+            }
+            SettingsTab::Ui => {
+                match self.meta.selected_settings_row() {
+                    0 => self.meta.world_frame_visible = !self.meta.world_frame_visible,
+                    1 => self.meta.world_axis_visible = !self.meta.world_axis_visible,
+                    2 => self.meta.world_datum_visible = !self.meta.world_datum_visible,
+                    _ => {}
+                }
+                self.save_state();
+                Ok(())
+            }
+            SettingsTab::Gif | SettingsTab::Theme => Ok(()),
+        }
+    }
+
     pub fn toggle_settings_edit_field(&mut self) {
         if self.settings_edit.active {
             self.settings_edit.field = self.settings_edit.field.other();
         }
+    }
+
+    pub fn close_move_mode(&mut self) {
+        self.meta.move_mode_open = false;
+    }
+
+    pub fn close_settings(&mut self) {
+        self.meta.settings_open = false;
+        self.settings_edit.clear();
     }
 
     pub fn settings_edit_backspace(&mut self) {
@@ -560,6 +613,31 @@ impl UiState {
         match self.settings_edit.field {
             SettingsAxisField::X => &mut self.settings_edit.x_buffer,
             SettingsAxisField::Y => &mut self.settings_edit.y_buffer,
+        }
+    }
+
+    pub fn world_has_scene_companions(&self) -> bool {
+        self.meta.active_world_kind() == WorldKind::MainScene
+    }
+
+    pub fn settings_item_count(&self, tab: SettingsTab) -> usize {
+        match (self.meta.active_world_kind(), tab) {
+            (WorldKind::Sandbox, SettingsTab::Positions) => 1,
+            (WorldKind::Sandbox, SettingsTab::Gif) => 1,
+            _ => tab.item_count(),
+        }
+    }
+
+    fn clamp_settings_cursor_to_world(&mut self) {
+        for tab in [
+            SettingsTab::Positions,
+            SettingsTab::Ui,
+            SettingsTab::Gif,
+            SettingsTab::Theme,
+        ] {
+            let max_row = self.settings_item_count(tab).saturating_sub(1) as u16;
+            let current = self.meta.settings_cursor.row(tab);
+            self.meta.settings_cursor.set_row(tab, current.min(max_row));
         }
     }
 
@@ -1038,6 +1116,9 @@ mod tests {
                 move_mode_open: true,
                 settings_open: true,
                 pointer_probe_open: true,
+                world_frame_visible: false,
+                world_axis_visible: true,
+                world_datum_visible: false,
                 settings_tab: SettingsTab::Theme,
                 settings_cursor: SettingsCursor {
                     positions: 1,
@@ -1070,6 +1151,9 @@ mod tests {
         assert!(round_trip.meta.settings_open);
         assert!(round_trip.meta.move_mode_open);
         assert!(round_trip.meta.pointer_probe_open);
+        assert!(!round_trip.meta.world_frame_visible);
+        assert!(round_trip.meta.world_axis_visible);
+        assert!(!round_trip.meta.world_datum_visible);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
         assert_eq!(round_trip.meta.settings_cursor.positions, 1);
         assert_eq!(round_trip.meta.settings_cursor.widgets, 2);
@@ -1110,6 +1194,9 @@ mod tests {
         assert!(!snapshot.meta.move_mode_open);
         assert!(!snapshot.meta.settings_open);
         assert!(!snapshot.meta.pointer_probe_open);
+        assert!(snapshot.meta.world_frame_visible);
+        assert!(snapshot.meta.world_axis_visible);
+        assert!(snapshot.meta.world_datum_visible);
         assert!(snapshot.meta.vines_visible);
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
         assert_eq!(snapshot.meta.settings_cursor, SettingsCursor::default());
@@ -1253,5 +1340,39 @@ mod tests {
         ui.begin_settings_edit_with_viewport(212, 56);
 
         assert!(!ui.settings_edit.active);
+    }
+
+    #[test]
+    fn sandbox_settings_item_counts_hide_main_scene_only_controls() {
+        let mut ui = UiState::new();
+        ui.meta.active_world = WorldKindSnapshot::Sandbox;
+
+        assert_eq!(ui.settings_item_count(SettingsTab::Positions), 1);
+        assert_eq!(ui.settings_item_count(SettingsTab::Ui), 3);
+        assert_eq!(ui.settings_item_count(SettingsTab::Gif), 1);
+        assert_eq!(ui.settings_item_count(SettingsTab::Theme), 3);
+    }
+
+    #[test]
+    fn ui_settings_toggle_world_overlay_flags() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Ui;
+        ui.meta.settings_cursor.widgets = 0;
+
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("ui toggle should succeed");
+        assert!(!ui.meta.world_frame_visible);
+        assert!(ui.meta.world_axis_visible);
+        assert!(ui.meta.world_datum_visible);
+
+        ui.meta.settings_cursor.widgets = 1;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("ui toggle should succeed");
+        assert!(!ui.meta.world_axis_visible);
+
+        ui.meta.settings_cursor.widgets = 2;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("ui toggle should succeed");
+        assert!(!ui.meta.world_datum_visible);
     }
 }

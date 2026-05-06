@@ -37,6 +37,7 @@ cp "$ROOT/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 cp "$ROOT/fastfetch/startup.zsh" "$HOME/.config/fastfetch/startup.zsh"
 cp "$ROOT/bin/fastfetch-chafa" "$HOME/.local/bin/fastfetch-chafa"
 cp "$ROOT/bin/yam" "$HOME/.local/bin/yam"
+cp "$ROOT/bin/yam-sandbox" "$HOME/.local/bin/yam-sandbox"
 cp "$ROOT/chafa/chafa_lab.sh" "$HOME/.local/share/fastfetch-chafa/chafa_lab.sh"
 cp "$ROOT/assets/ives_yam.png" "$HOME/.local/share/fastfetch-chafa/assets/ives_yam.png"
 rm -rf "$HOME/.local/share/yam-visualizer/.venv" \
@@ -49,6 +50,7 @@ cp -R "$ROOT/visualizer/." "$HOME/.local/share/yam-visualizer/"
 
 chmod +x "$HOME/.local/bin/fastfetch-chafa" \
          "$HOME/.local/bin/yam" \
+         "$HOME/.local/bin/yam-sandbox" \
          "$HOME/.local/share/fastfetch-chafa/chafa_lab.sh" \
          "$HOME/.local/share/yam-visualizer/run_visualizer.sh" \
          "$HOME/.config/fastfetch/startup.zsh"
@@ -74,6 +76,8 @@ Next steps:
   4. Reopen Ghostty.
   5. Launch the visualizer any time with:
      yam
+     Or launch the sandbox directly with:
+     yam-sandbox
      By default this now prefers ~/_git/yam/visualizer when that repo exists.
 
 Repo source of truth:

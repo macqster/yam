@@ -29,6 +29,7 @@ Date: 2026-04-27
 - Keep vines independent of raster masks, filled sprites, or empty-cell masking until the mask contract is explicitly promoted.
 - Keep the current hero GIF aesthetics and footer contract stable while testing vine placement around them.
 - Clean terminology drift before implementation: spatial capture uses points, anchors, guides, lines, and polylines; `node` remains reserved for plant morphology/anatomy.
+- Readiness validation on 2026-05-05: targeted Phase 0 checks are green for spatial projection, guide-set lookup, anchor identity, footer/HUD invariance, and resize round-trip behavior; the remaining risk is architectural consolidation, not an active regression.
 
 ## Coordination Contract
 

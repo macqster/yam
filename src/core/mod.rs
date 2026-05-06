@@ -8,6 +8,7 @@
 
 pub mod cell;
 pub mod entity;
+pub mod flora;
 pub mod grid;
 pub mod guide;
 pub mod guide_line;

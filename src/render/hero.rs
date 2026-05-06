@@ -19,6 +19,7 @@ pub struct Hero {
 }
 
 impl Hero {
+    #[cfg_attr(test, allow(dead_code))]
     pub fn new(world_width: usize, world_height: usize) -> Self {
         // The source hero GIF is square (820x820); the terminal render target is intentionally
         // downscaled to a fixed 96x48 cell footprint to compensate for terminal cell aspect.
@@ -59,6 +60,24 @@ impl Hero {
             width,
             height,
             frames: normalized_frames,
+            current_frame: 0,
+            playing: true,
+            step_once: false,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn test_stub(world_width: usize, world_height: usize) -> Self {
+        let frame = vec![Line::from(vec![Span::styled(
+            "stub",
+            theme_style::hero_overlay(),
+        )])];
+        Self {
+            x: (world_width / 2) as i32,
+            y: (world_height / 2) as i32,
+            width: 4,
+            height: 1,
+            frames: vec![frame],
             current_frame: 0,
             playing: true,
             step_once: false,
@@ -189,10 +208,12 @@ fn render_lines_clipped(
     }
 }
 
+#[cfg_attr(test, allow(dead_code))]
 fn normalize_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Line<'static>> {
     hard_lock_frame(lines, width, height)
 }
 
+#[cfg_attr(test, allow(dead_code))]
 fn normalize_line(line: Line<'static>, width: u16) -> Line<'static> {
     let mut remaining = width as usize;
     let mut spans = Vec::new();
@@ -229,10 +250,12 @@ fn normalize_line(line: Line<'static>, width: u16) -> Line<'static> {
     Line::from(spans)
 }
 
+#[cfg_attr(test, allow(dead_code))]
 fn padded_line(width: u16) -> Line<'static> {
     Line::from(vec![Span::raw(" ".repeat(width as usize))])
 }
 
+#[cfg_attr(test, allow(dead_code))]
 fn hard_lock_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Line<'static>> {
     let mut normalized = Vec::with_capacity(height as usize);
     for line in lines.into_iter().take(height as usize) {

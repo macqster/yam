@@ -6,6 +6,7 @@ use super::btas::BTAS;
 pub const PANEL_BG: Color = BTAS.pms_432;
 #[allow(dead_code)]
 pub const PRIMARY_FG: Color = BTAS.pms_427;
+pub const BTAS_GREY_DISABLED: Color = BTAS.pms_430;
 #[allow(dead_code)]
 pub const ACCENT: Color = BTAS.process_cyan;
 pub const MARKER: Color = BTAS.pms_113;

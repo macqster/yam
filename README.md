@@ -62,6 +62,8 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 - `yam-rust` is the installed command
 - `yam-install` rebuilds and reinstalls the binary
+- `yam-sandbox` launches the sparse sandbox world directly
+- the expected local routine is `yam-install && yam` for the main scene or `yam-install && yam-sandbox` for the sandbox
 - `q` exits
 
 ## Current Work

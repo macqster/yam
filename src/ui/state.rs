@@ -4,25 +4,44 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::core::world::WorldKind;
 use crate::render::fonts::ClockFont;
 use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
 use crate::scene::entity::hero_and_clock_poses;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct MetaState {
     #[serde(rename = "debug_layout")]
     pub dev_mode: bool,
+    pub active_world: WorldKindSnapshot,
+    pub vines_visible: bool,
     pub hotkeys_open: bool,
     pub move_mode_open: bool,
     pub settings_open: bool,
     pub pointer_probe_open: bool,
     pub settings_tab: SettingsTab,
+    pub settings_cursor: SettingsCursor,
     pub move_target: MoveTarget,
 }
 
 impl MetaState {
+    pub fn new() -> Self {
+        Self {
+            dev_mode: false,
+            active_world: WorldKindSnapshot::MainScene,
+            vines_visible: true,
+            hotkeys_open: false,
+            move_mode_open: false,
+            settings_open: false,
+            pointer_probe_open: false,
+            settings_tab: SettingsTab::default(),
+            settings_cursor: SettingsCursor::default(),
+            move_target: MoveTarget::default(),
+        }
+    }
+
     pub fn toggle_dev_mode(&mut self) {
         self.dev_mode = !self.dev_mode;
         if !self.dev_mode {
@@ -73,6 +92,27 @@ impl MetaState {
         self.move_target = target;
     }
 
+    pub fn toggle_vines_visible(&mut self) {
+        self.vines_visible = !self.vines_visible;
+    }
+
+    pub fn active_world_kind(&self) -> WorldKind {
+        match self.active_world {
+            WorldKindSnapshot::MainScene => WorldKind::MainScene,
+            WorldKindSnapshot::Sandbox => WorldKind::Sandbox,
+        }
+    }
+
+    pub fn cycle_world_kind(&mut self) {
+        self.active_world = match self.active_world {
+            WorldKindSnapshot::MainScene => WorldKindSnapshot::Sandbox,
+            WorldKindSnapshot::Sandbox => WorldKindSnapshot::MainScene,
+        };
+        if self.active_world == WorldKindSnapshot::MainScene {
+            self.pointer_probe_open = false;
+        }
+    }
+
     pub fn next_settings_tab(&mut self) {
         self.settings_tab = self.settings_tab.next();
     }
@@ -80,6 +120,38 @@ impl MetaState {
     pub fn prev_settings_tab(&mut self) {
         self.settings_tab = self.settings_tab.prev();
     }
+
+    pub fn selected_settings_row(&self) -> u16 {
+        self.settings_cursor.row(self.settings_tab)
+    }
+
+    pub fn select_prev_settings_row(&mut self) {
+        self.settings_cursor.set_row(
+            self.settings_tab,
+            self.selected_settings_row().saturating_sub(1),
+        );
+    }
+
+    pub fn select_next_settings_row(&mut self) {
+        let max_row = self.settings_tab.item_count().saturating_sub(1) as u16;
+        self.settings_cursor.set_row(
+            self.settings_tab,
+            self.selected_settings_row().saturating_add(1).min(max_row),
+        );
+    }
+}
+
+impl Default for MetaState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum WorldKindSnapshot {
+    #[default]
+    MainScene,
+    Sandbox,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
@@ -136,6 +208,74 @@ impl SettingsTab {
             SettingsTab::Theme => "theme",
         }
     }
+
+    pub fn item_count(self) -> usize {
+        match self {
+            SettingsTab::Positions => 3,
+            SettingsTab::Widgets => 6,
+            SettingsTab::Gif => 3,
+            SettingsTab::Theme => 3,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct SettingsCursor {
+    pub positions: u16,
+    pub widgets: u16,
+    pub gif: u16,
+    pub theme: u16,
+}
+
+impl SettingsCursor {
+    pub fn row(self, tab: SettingsTab) -> u16 {
+        match tab {
+            SettingsTab::Positions => self.positions,
+            SettingsTab::Widgets => self.widgets,
+            SettingsTab::Gif => self.gif,
+            SettingsTab::Theme => self.theme,
+        }
+    }
+
+    pub fn set_row(&mut self, tab: SettingsTab, row: u16) {
+        match tab {
+            SettingsTab::Positions => self.positions = row,
+            SettingsTab::Widgets => self.widgets = row,
+            SettingsTab::Gif => self.gif = row,
+            SettingsTab::Theme => self.theme = row,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum SettingsAxisField {
+    #[default]
+    X,
+    Y,
+}
+
+impl SettingsAxisField {
+    pub fn other(self) -> Self {
+        match self {
+            Self::X => Self::Y,
+            Self::Y => Self::X,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct SettingsEditState {
+    pub active: bool,
+    pub row: u16,
+    pub field: SettingsAxisField,
+    pub x_buffer: String,
+    pub y_buffer: String,
+}
+
+impl SettingsEditState {
+    pub fn clear(&mut self) {
+        *self = Self::default();
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -170,10 +310,10 @@ impl Default for UiOffsets {
             camera_home_y: -17,
             pointer_x: 0,
             pointer_y: 0,
-            hero_dx: -210,
-            hero_dy: -81,
-            clock_dx: 96,
-            clock_dy: 9,
+            hero_dx: -218,
+            hero_dy: -39,
+            clock_dx: 95,
+            clock_dy: -10,
             clock_font: "gothic".to_string(),
             hero_fps: 2.0,
         }
@@ -188,11 +328,12 @@ pub struct UiState {
     pub camera: Camera,
     pub hero: Hero,
     pub pointer_blink_on: bool,
+    pub settings_edit: SettingsEditState,
 }
 
 impl UiState {
     pub fn new() -> Self {
-        let hero = Hero::new(300, 120);
+        let hero = default_hero();
         let offsets = UiOffsets::default();
         let mut camera = Camera::new();
         camera.x = offsets.camera_x;
@@ -200,11 +341,12 @@ impl UiState {
         Self {
             fps: 0.0,
             clock_font: ClockFont::Gothic,
-            meta: MetaState::default(),
+            meta: MetaState::new(),
             offsets,
             camera,
             hero,
             pointer_blink_on: true,
+            settings_edit: SettingsEditState::default(),
         }
     }
 
@@ -245,6 +387,9 @@ impl UiState {
 
     pub fn toggle_dev_mode(&mut self) {
         self.meta.toggle_dev_mode();
+        if !self.meta.dev_mode {
+            self.settings_edit.clear();
+        }
     }
 
     pub fn toggle_hotkeys(&mut self) {
@@ -257,18 +402,165 @@ impl UiState {
 
     pub fn toggle_settings(&mut self) {
         self.meta.toggle_settings();
+        if !self.meta.settings_open {
+            self.settings_edit.clear();
+        }
     }
 
     pub fn toggle_pointer_probe(&mut self) {
         self.meta.toggle_pointer_probe();
     }
 
+    pub fn toggle_vines_visible(&mut self) {
+        self.meta.toggle_vines_visible();
+    }
+
+    pub fn active_world_kind(&self) -> WorldKind {
+        self.meta.active_world_kind()
+    }
+
+    pub fn cycle_world_kind(&mut self) {
+        self.meta.cycle_world_kind();
+        if self.meta.active_world_kind() != WorldKind::Sandbox {
+            self.pointer_blink_on = true;
+        }
+        self.save_state();
+    }
+
     pub fn next_settings_tab(&mut self) {
         self.meta.next_settings_tab();
+        self.settings_edit.clear();
+        self.save_state();
     }
 
     pub fn prev_settings_tab(&mut self) {
         self.meta.prev_settings_tab();
+        self.settings_edit.clear();
+        self.save_state();
+    }
+
+    pub fn select_prev_settings_row(&mut self) {
+        self.meta.select_prev_settings_row();
+        self.settings_edit.clear();
+        self.save_state();
+    }
+
+    pub fn select_next_settings_row(&mut self) {
+        self.meta.select_next_settings_row();
+        self.settings_edit.clear();
+        self.save_state();
+    }
+
+    pub fn begin_settings_edit(&mut self) {
+        self.begin_settings_edit_with_viewport(
+            crate::scene::WORLD_WIDTH as u16,
+            crate::scene::WORLD_HEIGHT as u16,
+        );
+    }
+
+    pub fn begin_settings_edit_with_viewport(&mut self, viewport_width: u16, viewport_height: u16) {
+        if self.meta.settings_tab != SettingsTab::Positions {
+            return;
+        }
+        if self.meta.selected_settings_row() == 0
+            && crate::scene::viewport_covers_full_world(viewport_width, viewport_height)
+        {
+            return;
+        }
+        let (x, y) = match self.meta.selected_settings_row() {
+            0 => (self.offsets.camera_x, self.offsets.camera_y),
+            1 => (self.offsets.hero_dx, self.offsets.hero_dy),
+            2 => (self.offsets.clock_dx as i32, self.offsets.clock_dy as i32),
+            _ => return,
+        };
+        self.settings_edit.active = true;
+        self.settings_edit.row = self.meta.selected_settings_row();
+        self.settings_edit.field = SettingsAxisField::X;
+        self.settings_edit.x_buffer = x.to_string();
+        self.settings_edit.y_buffer = y.to_string();
+    }
+
+    pub fn cancel_settings_edit(&mut self) {
+        self.settings_edit.clear();
+    }
+
+    pub fn toggle_settings_edit_field(&mut self) {
+        if self.settings_edit.active {
+            self.settings_edit.field = self.settings_edit.field.other();
+        }
+    }
+
+    pub fn settings_edit_backspace(&mut self) {
+        if !self.settings_edit.active {
+            return;
+        }
+        self.active_settings_buffer_mut().pop();
+    }
+
+    pub fn settings_edit_insert_char(&mut self, ch: char) {
+        if !self.settings_edit.active || !matches!(ch, '0'..='9' | '-') {
+            return;
+        }
+        let buffer = self.active_settings_buffer_mut();
+        if ch == '-' {
+            if buffer.is_empty() {
+                buffer.push(ch);
+            }
+            return;
+        }
+        buffer.push(ch);
+    }
+
+    pub fn commit_settings_edit(&mut self) -> io::Result<()> {
+        if !self.settings_edit.active {
+            self.begin_settings_edit();
+            return Ok(());
+        }
+
+        let parse_axis = |value: &str| -> Option<i32> {
+            if value.is_empty() || value == "-" {
+                None
+            } else {
+                value.parse::<i32>().ok()
+            }
+        };
+
+        let Some(x) = parse_axis(&self.settings_edit.x_buffer) else {
+            return Ok(());
+        };
+        let Some(y) = parse_axis(&self.settings_edit.y_buffer) else {
+            return Ok(());
+        };
+
+        match self.settings_edit.row {
+            0 => {
+                self.offsets.camera_x = x;
+                self.offsets.camera_y = y;
+                self.camera.follow_hero = false;
+                self.camera.x = x;
+                self.camera.y = y;
+            }
+            1 => {
+                self.offsets.hero_dx = x;
+                self.offsets.hero_dy = y;
+            }
+            2 => {
+                self.offsets.clock_dx = x.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+                self.offsets.clock_dy = y.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+            }
+            _ => {}
+        }
+
+        self.settings_edit.clear();
+        self.save_state();
+        Ok(())
+    }
+
+    fn active_settings_buffer_mut(&mut self) -> &mut String {
+        match self.settings_edit.field {
+            SettingsAxisField::X => &mut self.settings_edit.x_buffer,
+            SettingsAxisField::Y => &mut self.settings_edit.y_buffer,
+        }
     }
 
     pub fn hero_clock_attachment(&self) -> crate::scene::entity::HeroClockAttachment {
@@ -297,11 +589,11 @@ impl UiState {
     }
 
     pub fn move_selected_target_up(&mut self) -> io::Result<()> {
-        self.move_selected_target(0, -1)
+        self.move_selected_target(0, 1)
     }
 
     pub fn move_selected_target_down(&mut self) -> io::Result<()> {
-        self.move_selected_target(0, 1)
+        self.move_selected_target(0, -1)
     }
 
     pub fn move_selected_target(&mut self, dx: i16, dy: i16) -> io::Result<()> {
@@ -331,12 +623,12 @@ impl UiState {
     }
 
     pub fn move_pointer_up(&mut self) {
-        self.offsets.pointer_y -= 1;
+        self.offsets.pointer_y += 1;
         self.save_state();
     }
 
     pub fn move_pointer_down(&mut self) {
-        self.offsets.pointer_y += 1;
+        self.offsets.pointer_y -= 1;
         self.save_state();
     }
 
@@ -405,14 +697,14 @@ impl UiState {
 
     pub fn move_camera_up(&mut self) {
         self.camera.follow_hero = false;
-        self.offsets.camera_y -= 1;
+        self.offsets.camera_y += 1;
         self.camera.y = self.offsets.camera_y;
         self.save_state();
     }
 
     pub fn move_camera_down(&mut self) {
         self.camera.follow_hero = false;
-        self.offsets.camera_y += 1;
+        self.offsets.camera_y -= 1;
         self.camera.y = self.offsets.camera_y;
         self.save_state();
     }
@@ -485,6 +777,16 @@ impl UiState {
     }
 }
 
+#[cfg(test)]
+fn default_hero() -> Hero {
+    Hero::test_stub(300, 120)
+}
+
+#[cfg(not(test))]
+fn default_hero() -> Hero {
+    Hero::new(300, 120)
+}
+
 fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
     if min > max {
         -(viewport_len / 2)
@@ -495,7 +797,10 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{MetaState, MoveTarget, SettingsTab, UiOffsets, UiState, UiStateSnapshot};
+    use super::{
+        MetaState, MoveTarget, SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState,
+        UiStateSnapshot, WorldKindSnapshot,
+    };
     use crate::scene::coords::WorldPos;
 
     #[test]
@@ -653,8 +958,8 @@ mod tests {
         let attachment = ui.hero_clock_attachment();
 
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
-        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -60, y: -21 });
-        assert_eq!(attachment.clock_world(), WorldPos { x: 36, y: -12 });
+        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -68, y: 21 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 27, y: 11 });
     }
 
     #[test]
@@ -727,11 +1032,19 @@ mod tests {
             },
             meta: MetaState {
                 dev_mode: true,
+                active_world: WorldKindSnapshot::Sandbox,
+                vines_visible: false,
                 hotkeys_open: false,
                 move_mode_open: true,
                 settings_open: true,
                 pointer_probe_open: true,
                 settings_tab: SettingsTab::Theme,
+                settings_cursor: SettingsCursor {
+                    positions: 1,
+                    widgets: 2,
+                    gif: 0,
+                    theme: 1,
+                },
                 move_target: MoveTarget::Hero,
             },
         };
@@ -753,10 +1066,15 @@ mod tests {
         assert_eq!(round_trip.offsets.clock_font, "fender");
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.dev_mode);
+        assert!(!round_trip.meta.vines_visible);
         assert!(round_trip.meta.settings_open);
         assert!(round_trip.meta.move_mode_open);
         assert!(round_trip.meta.pointer_probe_open);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
+        assert_eq!(round_trip.meta.settings_cursor.positions, 1);
+        assert_eq!(round_trip.meta.settings_cursor.widgets, 2);
+        assert_eq!(round_trip.meta.settings_cursor.gif, 0);
+        assert_eq!(round_trip.meta.settings_cursor.theme, 1);
         assert_eq!(round_trip.meta.move_target, MoveTarget::Hero);
     }
 
@@ -792,7 +1110,9 @@ mod tests {
         assert!(!snapshot.meta.move_mode_open);
         assert!(!snapshot.meta.settings_open);
         assert!(!snapshot.meta.pointer_probe_open);
+        assert!(snapshot.meta.vines_visible);
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
+        assert_eq!(snapshot.meta.settings_cursor, SettingsCursor::default());
         assert_eq!(snapshot.meta.move_target, MoveTarget::Hero);
     }
 
@@ -826,6 +1146,7 @@ mod tests {
     #[test]
     fn pointer_probe_moves_and_persists_as_world_coordinates() {
         let mut ui = UiState::new();
+        ui.meta.active_world = WorldKindSnapshot::Sandbox;
 
         ui.toggle_pointer_probe();
         ui.move_pointer_right();
@@ -834,6 +1155,103 @@ mod tests {
 
         assert!(ui.meta.pointer_probe_open);
         assert_eq!(ui.offsets.pointer_x, 1);
-        assert_eq!(ui.offsets.pointer_y, -2);
+        assert_eq!(ui.offsets.pointer_y, 2);
+    }
+
+    #[test]
+    fn vines_visibility_defaults_on_and_can_be_toggled() {
+        let mut ui = UiState::new();
+
+        assert!(ui.meta.vines_visible);
+        ui.toggle_vines_visible();
+        assert!(!ui.meta.vines_visible);
+        ui.toggle_vines_visible();
+        assert!(ui.meta.vines_visible);
+    }
+
+    #[test]
+    fn world_space_up_controls_increase_y_across_targets() {
+        let mut ui = UiState::new();
+        ui.offsets.hero_dy = 0;
+        ui.offsets.clock_dy = 0;
+        ui.offsets.pointer_y = 0;
+        ui.offsets.camera_y = 0;
+        ui.camera.y = 0;
+
+        ui.meta.select_move_target(MoveTarget::Hero);
+        ui.move_selected_target_up()
+            .expect("hero move should succeed");
+        assert_eq!(ui.offsets.hero_dy, 1);
+        ui.move_selected_target_down()
+            .expect("hero move should succeed");
+        assert_eq!(ui.offsets.hero_dy, 0);
+
+        ui.meta.select_move_target(MoveTarget::Clock);
+        ui.move_selected_target_up()
+            .expect("clock move should succeed");
+        assert_eq!(ui.offsets.clock_dy, 1);
+        ui.move_selected_target_down()
+            .expect("clock move should succeed");
+        assert_eq!(ui.offsets.clock_dy, 0);
+
+        ui.move_pointer_up();
+        assert_eq!(ui.offsets.pointer_y, 1);
+        ui.move_pointer_down();
+        assert_eq!(ui.offsets.pointer_y, 0);
+
+        ui.move_camera_up();
+        assert_eq!(ui.offsets.camera_y, 1);
+        assert_eq!(ui.camera.y, 1);
+        ui.move_camera_down();
+        assert_eq!(ui.offsets.camera_y, 0);
+        assert_eq!(ui.camera.y, 0);
+    }
+
+    #[test]
+    fn positions_settings_edit_commits_camera_values() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = SettingsTab::Positions;
+
+        ui.commit_settings_edit()
+            .expect("begin edit should succeed");
+        assert!(ui.settings_edit.active);
+        assert_eq!(ui.settings_edit.row, 0);
+
+        ui.settings_edit.x_buffer = "-105".to_string();
+        ui.settings_edit.y_buffer = "-28".to_string();
+        ui.commit_settings_edit()
+            .expect("commit edit should succeed");
+
+        assert!(!ui.settings_edit.active);
+        assert_eq!(ui.offsets.camera_x, -105);
+        assert_eq!(ui.offsets.camera_y, -28);
+        assert_eq!(ui.camera.x, -105);
+        assert_eq!(ui.camera.y, -28);
+    }
+
+    #[test]
+    fn positions_settings_edit_switches_active_axis_field() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Positions;
+        ui.begin_settings_edit();
+
+        assert_eq!(ui.settings_edit.field, SettingsAxisField::X);
+        ui.toggle_settings_edit_field();
+        assert_eq!(ui.settings_edit.field, SettingsAxisField::Y);
+        ui.toggle_settings_edit_field();
+        assert_eq!(ui.settings_edit.field, SettingsAxisField::X);
+    }
+
+    #[test]
+    fn camera_settings_edit_does_not_open_when_viewport_already_covers_the_full_world() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Positions;
+        ui.meta.settings_cursor.positions = 0;
+
+        ui.begin_settings_edit_with_viewport(212, 56);
+
+        assert!(!ui.settings_edit.active);
     }
 }

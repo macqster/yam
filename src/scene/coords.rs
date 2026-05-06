@@ -52,16 +52,22 @@ pub fn resolve_anchored_position(
     fallback_world: WorldPos,
     camera_x: i32,
     camera_y: i32,
+    viewport_height: u16,
 ) -> ScreenPos {
     let anchor = world.entity_world(id.0);
     let resolved =
         SpatialResolver::resolve_anchor_or_world(anchor, fallback_world, WorldPos { x: 0, y: 0 });
-    resolve_projected_position(resolved, camera_x, camera_y)
+    resolve_projected_position(resolved, camera_x, camera_y, viewport_height)
 }
 
 #[allow(dead_code)]
-pub fn resolve_projected_position(position: WorldPos, camera_x: i32, camera_y: i32) -> ScreenPos {
-    let screen = world_to_screen(position, camera_x, camera_y);
+pub fn resolve_projected_position(
+    position: WorldPos,
+    camera_x: i32,
+    camera_y: i32,
+    viewport_height: u16,
+) -> ScreenPos {
+    let screen = world_to_screen(position, camera_x, camera_y, viewport_height);
     ScreenPos {
         x: screen.x,
         y: screen.y,
@@ -82,23 +88,43 @@ pub fn resolve_element_screen_position(
     world: &WorldState,
     camera_x: i32,
     camera_y: i32,
+    viewport_height: u16,
 ) -> ScreenPos {
     match element.space {
-        Space::World => resolve_projected_position(element.position, camera_x, camera_y),
-        Space::Anchor(id) => {
-            resolve_anchored_position(world, id, element.position, camera_x, camera_y)
+        Space::World => {
+            resolve_projected_position(element.position, camera_x, camera_y, viewport_height)
         }
+        Space::Anchor(id) => resolve_anchored_position(
+            world,
+            id,
+            element.position,
+            camera_x,
+            camera_y,
+            viewport_height,
+        ),
         Space::Screen => resolve_screen_position(element.position, camera_x, camera_y),
     }
 }
 
-pub fn world_to_screen(world: WorldPos, camera_x: i32, camera_y: i32) -> WorldPos {
-    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, 0)).world_to_screen(world)
+pub fn world_to_screen(
+    world: WorldPos,
+    camera_x: i32,
+    camera_y: i32,
+    viewport_height: u16,
+) -> WorldPos {
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
+        .world_to_screen(world)
 }
 
 #[allow(dead_code)]
-pub fn screen_to_world(screen: WorldPos, camera_x: i32, camera_y: i32) -> WorldPos {
-    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, 0)).screen_to_world(screen)
+pub fn screen_to_world(
+    screen: WorldPos,
+    camera_x: i32,
+    camera_y: i32,
+    viewport_height: u16,
+) -> WorldPos {
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
+        .screen_to_world(screen)
 }
 
 #[allow(dead_code)]
@@ -107,8 +133,10 @@ pub fn resolve_position(
     world: &WorldState,
     camera_x: i32,
     camera_y: i32,
+    viewport_height: u16,
 ) -> WorldPos {
-    let screen = resolve_element_screen_position(element, world, camera_x, camera_y);
+    let screen =
+        resolve_element_screen_position(element, world, camera_x, camera_y, viewport_height);
     WorldPos {
         x: screen.x,
         y: screen.y,
@@ -125,16 +153,17 @@ mod tests {
         let hero_offset = WorldPos { x: -110, y: -54 };
         let clock_offset = WorldPos { x: 96, y: 9 };
         let camera = WorldPos { x: 30, y: 10 };
+        let viewport_height = 32;
 
         let hero_visual_anchor = anchor_to_world(hero_world, hero_offset);
         let clock_world = anchor_to_world(hero_visual_anchor, clock_offset);
-        let clock_screen = world_to_screen(clock_world, camera.x, camera.y);
-        let hero_screen = world_to_screen(hero_visual_anchor, camera.x, camera.y);
+        let clock_screen = world_to_screen(clock_world, camera.x, camera.y, viewport_height);
+        let hero_screen = world_to_screen(hero_visual_anchor, camera.x, camera.y, viewport_height);
 
         assert_eq!(hero_visual_anchor, WorldPos { x: 40, y: 6 });
         assert_eq!(clock_world, WorldPos { x: 136, y: 15 });
-        assert_eq!(hero_screen, WorldPos { x: 10, y: -4 });
-        assert_eq!(clock_screen, WorldPos { x: 106, y: 5 });
+        assert_eq!(hero_screen, WorldPos { x: 10, y: 35 });
+        assert_eq!(clock_screen, WorldPos { x: 106, y: 26 });
     }
 
     #[test]
@@ -152,7 +181,8 @@ mod tests {
                 },
                 &world,
                 camera_a.x,
-                camera_a.y
+                camera_a.y,
+                32,
             ),
             panel
         );
@@ -164,7 +194,8 @@ mod tests {
                 },
                 &world,
                 camera_b.x,
-                camera_b.y
+                camera_b.y,
+                32,
             ),
             panel
         );
@@ -218,9 +249,10 @@ mod tests {
                 },
                 &world,
                 camera_a.x,
-                camera_a.y
+                camera_a.y,
+                32,
             ),
-            WorldPos { x: 40, y: 6 }
+            WorldPos { x: 40, y: 25 }
         );
         assert_eq!(
             resolve_position(
@@ -230,9 +262,10 @@ mod tests {
                 },
                 &world,
                 camera_b.x,
-                camera_b.y
+                camera_b.y,
+                32,
             ),
-            WorldPos { x: 10, y: -4 }
+            WorldPos { x: 10, y: 35 }
         );
         assert_eq!(resolve_hud_ui(hud_a), hud_b);
     }
@@ -255,9 +288,10 @@ mod tests {
             &world,
             30,
             10,
+            32,
         );
 
-        assert_eq!(resolved, WorldPos { x: 120, y: 50 });
+        assert_eq!(resolved, WorldPos { x: 120, y: -19 });
     }
 
     #[test]

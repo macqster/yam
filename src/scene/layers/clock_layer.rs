@@ -1,4 +1,4 @@
-use crate::core::world::WorldState;
+use crate::core::world::{WorldKind, WorldState};
 use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
@@ -18,12 +18,15 @@ impl Layer for ClockLayer {
         &self,
         width: u16,
         height: u16,
-        _world: &WorldState,
+        world: &WorldState,
         ui: &UiState,
         fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
+        if world.kind != WorldKind::MainScene {
+            return LayerOutput { grid, mask: None };
+        }
         let lines = clock_lines(ui, fonts);
         let screen_pos = ctx.clock_screen();
         if is_visible(screen_pos, width, height, &lines) {
@@ -90,6 +93,6 @@ mod tests {
         };
 
         assert!(is_visible(render_state.clock_screen(), 124, 32, &lines));
-        assert_eq!(render_state.clock_screen(), WorldPos { x: 15, y: 15 });
+        assert_eq!(render_state.clock_screen(), WorldPos { x: 15, y: 16 });
     }
 }

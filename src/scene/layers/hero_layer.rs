@@ -1,4 +1,4 @@
-use crate::core::world::WorldState;
+use crate::core::world::{WorldKind, WorldState};
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
@@ -18,12 +18,15 @@ impl Layer for HeroLayer {
         &self,
         width: u16,
         height: u16,
-        _world: &WorldState,
+        world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
+        if world.kind != WorldKind::MainScene {
+            return LayerOutput { grid, mask: None };
+        }
         let hero = &ui.hero;
         let hero_x = ctx.world.hero_visual_anchor.x;
         let hero_y = ctx.world.hero_visual_anchor.y;
@@ -34,11 +37,12 @@ impl Layer for HeroLayer {
         let mut mask = Mask::new(width as usize, height as usize);
 
         for (row_idx, row) in normalized.into_iter().enumerate() {
-            let py = hero_y + row_idx as i32;
+            let py = hero_y - row_idx as i32;
             let screen = world_to_screen(
                 crate::scene::coords::WorldPos { x: hero_x, y: py },
                 cam_x,
                 cam_y,
+                ctx.hud.camera.height,
             );
             if screen.y < 0 {
                 continue;

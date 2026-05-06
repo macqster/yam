@@ -107,4 +107,12 @@ impl BtasTheme {
     pub fn guide_trace(self) -> Style {
         Style::default().fg(self.pms_430)
     }
+
+    pub fn vine_stem(self, healthy: bool) -> Style {
+        if healthy {
+            Style::default().fg(self.pms_345)
+        } else {
+            Style::default().fg(self.pms_465)
+        }
+    }
 }

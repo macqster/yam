@@ -105,9 +105,10 @@ pub fn render_scene(frame: &mut Frame<'_>, world: &WorldState, ui: &UiState, fon
 }
 
 pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
-    let camera = camera_for_frame(full, ui);
-    let viewport = Viewport::from_camera(&camera, full.width, full.height);
-    let viewport_rect = full;
+    let world_rect = Rect::new(full.x, full.y, full.width, full.height.saturating_sub(1));
+    let camera = camera_for_frame(world_rect, ui);
+    let viewport = Viewport::from_camera(&camera, world_rect.width, world_rect.height);
+    let viewport_rect = world_rect;
     let attachment = ui.hero_clock_attachment();
     let hero_world = attachment.hero_world();
     let hero_visual_anchor = attachment.hero_visual_anchor();
@@ -141,6 +142,10 @@ fn camera_for_frame(full: Rect, ui: &UiState) -> crate::scene::camera::Camera {
 
 fn is_fullscreen_like(full: Rect) -> bool {
     full.width as i32 >= WORLD_WIDTH && full.height as i32 >= WORLD_HEIGHT
+}
+
+pub fn viewport_covers_full_world(viewport_width: u16, viewport_height: u16) -> bool {
+    viewport_width as i32 >= WORLD_WIDTH && viewport_height as i32 >= WORLD_HEIGHT
 }
 
 fn clamp_camera_to_world_overscan(camera: &mut crate::scene::camera::Camera) {
@@ -216,8 +221,8 @@ mod tests {
         assert_eq!(full_state.world.clock_world, win_state.world.clock_world);
         assert_eq!(full_state.hud.viewport_rect.width, fullscreen.width);
         assert_eq!(win_state.hud.viewport_rect.width, windowed.width);
-        assert_eq!(full_state.hud.viewport_rect.height, fullscreen.height);
-        assert_eq!(win_state.hud.viewport_rect.height, windowed.height);
+        assert_eq!(full_state.hud.viewport_rect.height, fullscreen.height - 1);
+        assert_eq!(win_state.hud.viewport_rect.height, windowed.height - 1);
     }
 
     #[test]
@@ -232,9 +237,9 @@ mod tests {
         let state = build_render_state(fullscreen, &ui);
 
         assert_eq!(state.hud.camera.width, fullscreen.width);
-        assert_eq!(state.hud.camera.height, fullscreen.height);
+        assert_eq!(state.hud.camera.height, fullscreen.height - 1);
         assert_eq!(state.hud.camera.x, -(fullscreen.width as i32) / 2);
-        assert_eq!(state.hud.camera.y, -(fullscreen.height as i32) / 2);
+        assert_eq!(state.hud.camera.y, -((fullscreen.height - 1) as i32) / 2);
     }
 
     #[test]
@@ -245,9 +250,9 @@ mod tests {
         let state = build_render_state(windowed, &ui);
 
         assert_eq!(state.hud.camera.width, windowed.width);
-        assert_eq!(state.hud.camera.height, windowed.height);
+        assert_eq!(state.hud.camera.height, windowed.height - 1);
         assert_eq!(state.hud.camera.x, -(windowed.width as i32) / 2);
-        assert_eq!(state.hud.camera.y, -(windowed.height as i32) / 2);
+        assert_eq!(state.hud.camera.y, -((windowed.height - 1) as i32) / 2);
     }
 
     #[test]
@@ -263,9 +268,9 @@ mod tests {
         let state = build_render_state(windowed, &ui);
 
         assert_eq!(state.hud.camera.width, windowed.width);
-        assert_eq!(state.hud.camera.height, windowed.height);
+        assert_eq!(state.hud.camera.height, windowed.height - 1);
         assert_eq!(state.hud.camera.x, -107);
-        assert_eq!(state.hud.camera.y, -3);
+        assert_eq!(state.hud.camera.y, -4);
     }
 
     #[test]
@@ -304,7 +309,7 @@ mod tests {
         );
         assert_eq!(
             fullscreen_state.hud.camera.y,
-            -(fullscreen.height as i32) / 2
+            -((fullscreen.height - 1) as i32) / 2
         );
         assert_eq!(
             round_tripped_state.hud.camera.x,
@@ -340,7 +345,7 @@ mod tests {
         let centered = build_render_state(windowed, &ui);
 
         assert_eq!(centered.hud.camera.x, -62);
-        assert_eq!(centered.hud.camera.y, -16);
+        assert_eq!(centered.hud.camera.y, -15);
     }
 
     #[test]
@@ -348,7 +353,7 @@ mod tests {
         let layers = build_ui_layers();
         let z_indices: Vec<i32> = layers.iter().map(|layer| layer.z_index()).collect();
 
-        assert_eq!(z_indices, vec![0, 10, 100, 300, 390, 395, 400, 1000]);
+        assert_eq!(z_indices, vec![0, 10, 20, 100, 300, 390, 395, 400, 1000]);
     }
 
     struct MaskedFieldLayer;
@@ -515,6 +520,55 @@ mod tests {
     }
 
     #[test]
+    fn vine_layer_renders_world_attached_segments_in_frame_output() {
+        let backend = TestBackend::new(132, 36);
+        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
+        let world = crate::core::world::WorldState::new();
+        let ui = UiState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+
+        terminal
+            .draw(|frame| render_scene(frame, &world, &ui, &fonts))
+            .expect("frame should render");
+
+        let buffer = terminal.backend().buffer();
+        let has_vine_trace = buffer
+            .content
+            .iter()
+            .any(|cell| matches!(cell.symbol(), "~" | "/" | "\\" | "|" | "-"));
+
+        assert!(has_vine_trace);
+    }
+
+    #[test]
+    fn vine_layer_does_not_write_into_the_footer_row() {
+        let backend = TestBackend::new(132, 36);
+        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
+        let world = crate::core::world::WorldState::new();
+        let ui = UiState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+
+        terminal
+            .draw(|frame| render_scene(frame, &world, &ui, &fonts))
+            .expect("frame should render");
+
+        let buffer = terminal.backend().buffer();
+        let footer_y = buffer.area.height.saturating_sub(1) as usize;
+        let footer_start = footer_y * buffer.area.width as usize;
+        let footer_end = footer_start + buffer.area.width as usize;
+        let footer_line: String = buffer.content[footer_start..footer_end]
+            .iter()
+            .map(|cell| cell.symbol().to_string())
+            .collect();
+
+        assert!(footer_line.contains("[q]uit"));
+        assert!(!footer_line.contains("~"));
+        assert!(!footer_line.contains("/"));
+        assert!(!footer_line.contains("\\"));
+        assert!(!footer_line.contains("#"));
+    }
+
+    #[test]
     fn clock_screen_uses_active_render_state_projection() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = 30;
@@ -528,6 +582,7 @@ mod tests {
             state.world.clock_world,
             state.hud.camera.x,
             state.hud.camera.y,
+            state.hud.camera.height,
         );
 
         assert_eq!(state.clock_screen(), expected);

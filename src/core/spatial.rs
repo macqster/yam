@@ -1,4 +1,4 @@
-use crate::core::guide::{GuideSet, GuideState};
+use crate::core::guide::{Guide, GuideSet, GuideState};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct SpatialPoint {
@@ -111,9 +111,10 @@ impl SpatialResolver {
     }
 
     pub fn world_to_screen(&self, world: SpatialPoint) -> SpatialPoint {
+        let top = self.projection.camera_y + self.projection.height as i32 - 1;
         SpatialPoint {
             x: world.x - self.projection.camera_x,
-            y: world.y - self.projection.camera_y,
+            y: top - world.y,
         }
     }
 
@@ -126,16 +127,18 @@ impl SpatialResolver {
     }
 
     pub fn screen_to_world(&self, screen: SpatialPoint) -> SpatialPoint {
+        let top = self.projection.camera_y + self.projection.height as i32 - 1;
         SpatialPoint {
             x: screen.x + self.projection.camera_x,
-            y: screen.y + self.projection.camera_y,
+            y: top - screen.y,
         }
     }
 
     pub fn screen_to_world_point(&self, screen: SpatialScreenPoint) -> SpatialPoint {
+        let top = self.projection.camera_y + self.projection.height as i32 - 1;
         SpatialPoint {
             x: screen.x as i32 + self.projection.camera_x,
-            y: screen.y as i32 + self.projection.camera_y,
+            y: top - screen.y as i32,
         }
     }
 
@@ -155,6 +158,10 @@ impl<'a> SpatialGuideIndex<'a> {
 
     pub fn guide_set(&self, label: &str) -> Option<&GuideSet> {
         self.guides.guide_set(label)
+    }
+
+    pub fn guides_in_set(&self, label: &str) -> Vec<&Guide> {
+        self.guides.guides_in_set(label)
     }
 }
 
@@ -176,7 +183,7 @@ mod tests {
         let resolver = SpatialResolver::new(SpatialProjection::new(30, 10, 124, 32));
         let world = SpatialPoint::new(136, 15);
         let screen = resolver.world_to_screen(world);
-        assert_eq!(screen, SpatialPoint::new(106, 5));
+        assert_eq!(screen, SpatialPoint::new(106, 26));
         assert_eq!(resolver.screen_to_world(screen), world);
     }
 
@@ -185,7 +192,7 @@ mod tests {
         let resolver = SpatialResolver::new(SpatialProjection::new(30, 10, 124, 32));
         let world = SpatialPoint::new(136, 15);
         let screen = resolver.world_to_screen_point(world);
-        assert_eq!(screen, SpatialScreenPoint { x: 106, y: 5 });
+        assert_eq!(screen, SpatialScreenPoint { x: 106, y: 26 });
         assert_eq!(resolver.screen_to_world_point(screen), world);
     }
 

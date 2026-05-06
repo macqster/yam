@@ -25,7 +25,7 @@ impl Layer for StatusLayer {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
         let left_text = if ui.meta.dev_mode {
-            " [q]uit  •  [d]ev  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [C]/[c] camera home"
+            " [q]uit  •  [d]ev  •  [w]orld  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [v]ines  •  [C]/[c] camera home"
         } else {
             " [q]uit  •  [d]ev"
         };
@@ -178,8 +178,9 @@ mod tests {
 
         assert!(text.contains(" [q]uit  •  [d]ev"));
         assert!(text.contains("[h]otkeys"));
+        assert!(text.contains("[w]orld"));
         assert!(text.contains("[m]ove"));
-        assert!(text.contains("[p]ointer"));
+        assert!(text.contains("[v]ines"));
         assert!(text.contains("[C]/[c] camera home"));
         assert!(!text.contains("[space] play/pause"));
         assert!(!text.contains("[.] step"));

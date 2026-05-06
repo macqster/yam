@@ -39,7 +39,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         run("bash", &["scripts/update.sh"]);
         return Ok(());
     }
-    runtime::run()
+    let initial_world_kind = if args.iter().any(|a| a == "--sandbox") {
+        crate::core::world::WorldKind::Sandbox
+    } else {
+        crate::core::world::WorldKind::MainScene
+    };
+    runtime::run(initial_world_kind)
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::core::world::WorldState;
+use crate::core::world::{WorldKind, WorldState};
 use crate::render::fonts::FontRegistry;
 use crate::scene::render_scene;
 use crate::systems::tick::tick;
@@ -23,15 +23,21 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-pub fn run() -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut world = WorldState::new();
     let mut ui_state = UiState::load_or_new();
+    if ui_state.active_world_kind() != initial_world_kind {
+        ui_state.meta.active_world = match initial_world_kind {
+            WorldKind::MainScene => crate::ui::state::WorldKindSnapshot::MainScene,
+            WorldKind::Sandbox => crate::ui::state::WorldKindSnapshot::Sandbox,
+        };
+    }
+    let mut world = WorldState::for_kind(ui_state.active_world_kind());
     let fonts = FontRegistry::new();
     let world_tick = Duration::from_millis(250);
     let frame_time = Duration::from_secs_f64(1.0 / 120.0);
@@ -73,9 +79,58 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                         ui_state.toggle_hotkeys()
                     }
                     KeyCode::Char('m') if ui_state.meta.dev_mode => ui_state.toggle_move_mode(),
+                    KeyCode::Char('w')
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.cycle_world_kind();
+                        world = WorldState::for_kind(ui_state.active_world_kind());
+                    }
+                    KeyCode::Char('v')
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_vines_visible();
+                    }
                     KeyCode::Char('s') if ui_state.meta.dev_mode => ui_state.toggle_settings(),
+                    KeyCode::Enter
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        if ui_state.settings_edit.active {
+                            ui_state.commit_settings_edit()?;
+                        } else {
+                            let size = terminal.size()?;
+                            ui_state.begin_settings_edit_with_viewport(
+                                size.width,
+                                size.height.saturating_sub(1),
+                            );
+                        }
+                    }
+                    KeyCode::Esc
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && ui_state.settings_edit.active =>
+                    {
+                        ui_state.cancel_settings_edit();
+                    }
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
+                    KeyCode::Left
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && ui_state.settings_edit.active
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_settings_edit_field();
+                    }
                     KeyCode::Left
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
@@ -90,6 +145,15 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     KeyCode::Right
                         if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && ui_state.settings_edit.active
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_settings_edit_field();
+                    }
+                    KeyCode::Right
+                        if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open =>
@@ -99,6 +163,22 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                         } else {
                             ui_state.move_camera_right();
                         }
+                    }
+                    KeyCode::Up
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.select_prev_settings_row();
+                    }
+                    KeyCode::Down
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.select_next_settings_row();
                     }
                     KeyCode::Up
                         if ui_state.meta.dev_mode
@@ -124,7 +204,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             ui_state.move_camera_down();
                         }
                     }
-                    KeyCode::Tab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
+                    KeyCode::Tab
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && !ui_state.settings_edit.active =>
+                    {
                         ui_state.next_settings_tab();
                     }
                     KeyCode::Char(c) => {
@@ -150,6 +234,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                                 _ => {}
                             }
                         } else if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && ui_state.settings_edit.active
+                        {
+                            ui_state.settings_edit_insert_char(c);
+                        } else if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
                             && !ui_state.meta.move_mode_open
@@ -172,8 +261,19 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     }
-                    KeyCode::BackTab if ui_state.meta.dev_mode && ui_state.meta.settings_open => {
-                        ui_state.prev_settings_tab()
+                    KeyCode::BackTab
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && !ui_state.settings_edit.active =>
+                    {
+                        ui_state.prev_settings_tab();
+                    }
+                    KeyCode::Backspace
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.settings_open
+                            && ui_state.settings_edit.active =>
+                    {
+                        ui_state.settings_edit_backspace();
                     }
                     KeyCode::Esc if ui_state.meta.dev_mode && ui_state.meta.move_mode_open => {
                         ui_state.toggle_move_mode();

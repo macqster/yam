@@ -39,7 +39,8 @@ impl Camera {
     #[allow(dead_code)]
     pub fn world_to_screen(&self, wx: i32, wy: i32) -> Option<(u16, u16)> {
         let sx = wx - self.x;
-        let sy = wy - self.y;
+        let top = self.y + self.height as i32 - 1;
+        let sy = top - wy;
         if sx >= 0 && sy >= 0 && sx < self.width as i32 && sy < self.height as i32 {
             Some((sx as u16, sy as u16))
         } else {

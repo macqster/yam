@@ -25,7 +25,12 @@ pub struct RenderState {
 
 impl RenderState {
     pub fn clock_screen(&self) -> WorldPos {
-        world_to_screen(self.world.clock_world, self.hud.camera.x, self.hud.camera.y)
+        world_to_screen(
+            self.world.clock_world,
+            self.hud.camera.x,
+            self.hud.camera.y,
+            self.hud.camera.height,
+        )
     }
 }
 
@@ -64,6 +69,7 @@ mod tests {
             state.world.clock_world,
             state.hud.camera.x,
             state.hud.camera.y,
+            state.hud.camera.height,
         );
         let viewport = state
             .hud
@@ -113,6 +119,7 @@ mod tests {
             state.world.hero_visual_anchor,
             state.hud.camera.x,
             state.hud.camera.y,
+            state.hud.camera.height,
         );
         let clock_screen = state.clock_screen();
         let hero_view = state
@@ -139,7 +146,7 @@ mod tests {
         );
         assert_eq!(
             clock_screen,
-            world_to_screen(state.world.clock_world, 30, 10)
+            world_to_screen(state.world.clock_world, 30, 10, 32)
         );
     }
 
@@ -172,7 +179,7 @@ mod tests {
         assert_eq!(state.hud.camera.world_to_screen(1, 1), None);
         assert_eq!(
             state.clock_screen(),
-            world_to_screen(state.world.clock_world, 0, 0)
+            world_to_screen(state.world.clock_world, 0, 0, 0)
         );
         assert_eq!(state.hud.viewport_rect.width, 0);
         assert_eq!(state.hud.viewport_rect.height, 0);

@@ -21,7 +21,8 @@ impl Viewport {
     #[allow(dead_code)]
     pub fn world_to_view(&self, wx: i32, wy: i32) -> Option<(u16, u16)> {
         let vx = wx - self.x;
-        let vy = wy - self.y;
+        let top = self.y + self.height as i32 - 1;
+        let vy = top - wy;
         if vx >= 0 && vy >= 0 && vx < self.width as i32 && vy < self.height as i32 {
             Some((vx as u16, vy as u16))
         } else {

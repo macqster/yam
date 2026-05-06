@@ -122,6 +122,9 @@ Coordination contract:
 - [inspect] keep the minimal vine ownership contract in [`docs/vines.md`](docs/vines.md) current before implementation: vine state belongs to world/flora state, guide lookup belongs to the spatial layer, and render layers only visualize resolved geometry.
 - [verify] do not make vines depend on raster masks, filled sprites, or empty-cell masking until the mask contract is promoted beyond explicit linework/outline guides.
 - [verify] world-space guide primitives live in `GuideState` as linework-only vectors/streams/curves and stay separate from raster masks or filled sprites; debug visualization should project them rather than reinterpreting them as pixels, and the project-wide guide/mask generator should keep a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](docs/soft-line-atlas.md) for the 10x1..10x5 and longer world-span direction families.
+- [inspect] follow the dedicated vine roadmap in [`docs/vines.md`](docs/vines.md): storage-only flora, deterministic seed, guide lookup, static axis derivation, render layer, debug inspection, deterministic growth, branching/organs, then border awareness.
+- [verify] keep each vine slice reviewable and stop if a step requires hero aesthetic changes, raster masks, render-owned growth state, or HUD/footer layout changes.
+- [verify] run targeted spatial/core/layer tests during each vine slice, `scripts/check.sh` before handoff, and the full `cargo test` suite at milestone boundaries.
 
 ## 6. Ratatui Research Follow-Ups
 

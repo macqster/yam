@@ -8,6 +8,7 @@
 pub mod chafa;
 pub mod clock;
 pub mod compositor;
+pub mod drawing;
 pub mod figlet;
 pub mod fonts;
 pub mod guide;

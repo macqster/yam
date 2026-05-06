@@ -14,8 +14,10 @@
 - `core/` - data only, no UI, no terminal, no rendering
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
 - `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers and the guide index abstraction that now feeds the render/debug guide path, and will absorb more relation logic over time
+- `core/world.rs` - owns world bootstrapping by explicit world kind; main-scene, sandbox, and future greenhouse/lab worlds should be selected intentionally rather than hidden behind one implicit `WorldState::new()` payload
 - `systems/` - mutate `WorldState` only, no rendering
-- `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, and final text conversion
+- `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, shared drawing-engine primitives, and final text conversion
+- `render/drawing.rs` - reusable path stroke, glyph stamping, and occupancy tracking for features that need deterministic generative cell drawing without re-owning raster logic in a single layer
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
 - `ui/` - runtime UI state, persisted offsets/settings, screen-space widgets, and temporary scene adapter
 - `runtime.rs` - event loop, input, tick, and render orchestration only
@@ -45,6 +47,7 @@
   - `world`: hero and clock attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
 - `UiState` owns the runtime attachment offsets that feed the hero/clock attachment object
+- the current main-scene boot composition for hero and clock still comes from `UiOffsets::default()`; those hard-coded start values are acceptable as runtime defaults for now, but the `settings` layer is the intended eventual owner for user-tweakable composition values
 - `WorldState` owns `GuideState` so world-attached guide primitives stay in simulation data, not UI state
 - hero and clock attachment facts are computed through explicit `scene::entity::HeroClockAttachment` produced by `scene::entity::hero_and_clock_poses(...)`
 - each layer emits a full-frame `LayerOutput`
@@ -71,6 +74,9 @@
   - `command palette`: search/fallback discovery for rare actions and jumps
 - turning `dev_mode` off closes any open hotkeys, move, or settings modal state so the modal family cannot stay latched outside the dev surface
 - `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
+- the settings popup should behave like a compact list UI: `Tab` changes tabs, `Up/Down` moves the active row within the current tab, and the active row should be called out with a clear background highlight rather than punctuation-heavy markers
+- in the `positions` tab, `Enter` opens a buffered edit mode for the active row, `Left/Right` switches between the `x` and `y` fields, typed numeric input edits the focused field, `Enter` commits, and `Esc` cancels
+- camera position is context-sensitive: when the active viewport already covers the full world, the camera row should read as locked/disabled because panning is no longer meaningful in that view
 - modal move/settings/hotkeys popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal panels clear the GIF beneath them instead of tinting it through
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position

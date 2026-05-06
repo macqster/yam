@@ -39,6 +39,9 @@ Rules:
 
 - screen zones are stable; they should not move around between frames unless the terminal size changes
 - the main scene owns the visual composition and all world-tied assets
+- the sandbox world reuses the same render stack and projection helpers as the main scene, but keeps intentionally sparse content so drawing-engine trials can be judged without main-scene composition noise
+- `yam-sandbox` is the direct launch path for that sparse world, so dry-trial drawing and pointer work do not depend on entering the main scene first
+- sandbox is not a separate app shell: it is an internal YAM space that should be reachable by world switching, and the main-scene hero/clock composition should stay out of it so the sandbox can read like a clean room rather than an emptied scene with leftover props
 - the hud/footer owns screen-attached status, hints, and mode reminders
 - debug and inspect outputs may be visible during normal use, but they must not displace the footer contract
 - modal overlays may cover any zone while active, but they remain explicit and bounded
@@ -75,6 +78,7 @@ Rules:
 - any new visible element should be assigned to one of these regions before implementation
 - the footer may show the current mode and the minimal runtime hint only
 - debug/inspect may show state facts and labels, but not the full action menu
+- in `dev_mode`, the active world should also be announced by a small centered top-row label such as `MAIN SCENE` or `SANDBOX`, so alternate spaces can be identified at a glance without depending on the debug panel text
 - modal overlays may show the denser key vocabulary, but only while active
 
 ## Rules
@@ -98,9 +102,11 @@ Rules:
 - the clock is a world entity: debug/info panels report its projected screen position, but they do not define it
 - guide primitives live in `WorldState` and may be projected or visualized by debug layers, but for now they are linework-only world-space annotations rather than raster masks or solid fills; sprites and solid masks stay future work
 - the guide / line generator is project-wide, not vines-only: it is now used for guide drawing and should remain suitable for future mask edges, rulers, and other world annotations that need deterministic world-space coverage, and it must remain capable of generating any line in any direction across the full YAM world size
+- the drawing engine sits one layer above raw line grammar: `render/drawing.rs` owns reusable path-stroke, glyph-stamp, and occupancy-mask primitives so flora, mask edges, guide authoring, and lightweight UI accents can share one deterministic cell-writing contract
 - linework rendering follows [`docs/soft-line-atlas.md`](soft-line-atlas.md), with a Bresenham-style geometry layer and a glyph-appearance layer, using a small slope-aware glyph grammar with `|` / `:` for vertical emphasis so rulers, vectors, and curves read as directional strokes instead of block fills; the engine target is universal line coverage across the full YAM world size, using the grammar key `LineFamily -> LengthBucket -> Direction -> PhaseRole -> CellBand -> LocalStep`
 - the soft-line renderer is intended to cover every possible line in world space; ad hoc block-fills or special-case line escapes are not the target architecture
 - the pointer probe is a practical guide-authoring tool: it can be used to record exact coordinates for points, guides, and masks, and the line renderer should make those recorded relations legible in world space; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
+- the pointer probe now belongs primarily to the sandbox world: it remains a world-space capture instrument for point-to-point drawing, guide authoring, and future mask outlines, and it should not be treated as a permanent main-scene overlay feature
 - the renderer should prefer Cartesian and Euclidean reasoning for world-space line work because signed axes and direct distance logic make precise authoring easier to validate
 
 ## Flora Model Contract

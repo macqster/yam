@@ -13,6 +13,8 @@
 - [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
 - [`rendering.md`](rendering.md) - render order contract
+- [`loading-screen.md`](loading-screen.md) - boot/loading-screen architecture, sequence, lessons learned, and current visual pause point
+- [`reference-sigye.md`](reference-sigye.md) - reference study of `sigye` and the YAM-facing subsystem ideas worth emulating
 - [`release-model.md`](release-model.md) - branch and release policy
 - [`config.md`](config.md) - scene config ownership note and the current Ghostty boot/start frame note
 ## Notes

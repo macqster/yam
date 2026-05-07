@@ -15,6 +15,7 @@
 - `scene_config.json` is authoritative for the visualizer / experimental tooling.
 - `scene_config.json` is not authoritative for the Rust renderer under `src/render/*`.
 - Hero rendering fields in `scene_config.json` are ignored by the Rust renderer and only matter to the tooling path.
+- Detailed boot/loading-screen behavior, staging, and lessons learned live in [`loading-screen.md`](loading-screen.md); this note only carries the small config-facing ownership facts.
 
 This note owns the active, repo-tracked default scene configuration for the visualizer / experimental tooling path.
 
@@ -30,6 +31,7 @@ This note owns the active, repo-tracked default scene configuration for the visu
 - clock font and formats
 - hero GIF path and placement
 - theme selection
+- boot/loading wordmark rendering now comes from the shared FIGlet subsystem rather than a one-off ASCII asset literal
 
 ## Rule
 

@@ -156,6 +156,8 @@ Coordination contract:
 - [verify] the dev-only pointer probe stays discoverable through the hotkeys popup and remains a blinking world-space marker with absolute-position reporting in the debug panel.
 - [verify] move mode keeps entity movement behind the `[m]ove` popup, with `1/2/3` selecting targets and `hjkl` moving only the active target.
 - [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/widgets/gif/theme tabs staying presentation-only.
+- [inspect] introduce a dedicated FIGlet/font subsystem for YAM text-art surfaces instead of continuing to hand-maintain one-off ASCII literals; use the `sigye` study in `docs/reference-sigye.md` as the starter reference.
+- [inspect] add a reusable styled hotkey-hint formatter so overlays can present compact cues like `↑↓ nav  ←→ change` with explicit token/description contrast.
 - [verify] hotkeys, move, and settings continue to share one centered modal shell so popup styling and geometry do not drift apart.
 - [verify] the clock remains a world-attached hero entity; debug info must report its projected screen position without implying a screen-attached UI clock.
 - [inspect] audit the current projection path for any remaining split responsibilities.

@@ -15,20 +15,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("failed to run command");
     }
 
+    fn print_runtime_identity() {
+        println!("==============================");
+        println!("YAM RUNTIME IDENTITY");
+        println!("SOURCE: {}", env!("CARGO_MANIFEST_DIR"));
+        println!(
+            "BUILD: yam {}, build {} ({})",
+            build_info::VERSION,
+            build_info::BUILD_TIME,
+            build_info::build_hash()
+        );
+        println!("BIN PATH: {:?}", std::env::current_exe().unwrap());
+        println!("==============================");
+    }
+
     let args: Vec<String> = std::env::args().collect();
-    println!("==============================");
-    println!("YAM RUNTIME IDENTITY");
-    println!("SOURCE: {}", env!("CARGO_MANIFEST_DIR"));
-    println!(
-        "BUILD: yam {}, build {} ({})",
-        build_info::VERSION,
-        build_info::BUILD_TIME,
-        build_info::build_hash()
-    );
-    println!("BIN PATH: {:?}", std::env::current_exe().unwrap());
-    println!("==============================");
     if args.iter().any(|a| a == "--version") {
         println!("yam-rust {}", build_info::VERSION);
+        return Ok(());
+    }
+    if args.iter().any(|a| a == "--identity") {
+        print_runtime_identity();
         return Ok(());
     }
     if args.iter().any(|a| a == "--check-updates") {
@@ -44,7 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         crate::core::world::WorldKind::MainScene
     };
-    runtime::run(initial_world_kind)
+    let clean_launch = !args.iter().any(|a| a == "--preserve-ui-state");
+    runtime::run(initial_world_kind, clean_launch)
 }
 
 #[cfg(test)]

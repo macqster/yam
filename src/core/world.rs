@@ -40,6 +40,7 @@ pub struct WorldState {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum WorldKind {
+    Boot,
     MainScene,
     Sandbox,
 }
@@ -47,6 +48,7 @@ pub enum WorldKind {
 impl WorldKind {
     pub fn title(self) -> &'static str {
         match self {
+            WorldKind::Boot => "boot",
             WorldKind::MainScene => "main-scene",
             WorldKind::Sandbox => "sandbox",
         }
@@ -61,8 +63,23 @@ impl WorldState {
 
     pub fn for_kind(kind: WorldKind) -> Self {
         match kind {
+            WorldKind::Boot => Self::for_boot(),
             WorldKind::MainScene => Self::for_main_scene(),
             WorldKind::Sandbox => Self::for_sandbox(),
+        }
+    }
+
+    pub fn for_boot() -> Self {
+        let width = 300;
+        let height = 120;
+        Self {
+            kind: WorldKind::Boot,
+            grid: Grid::new(width, height),
+            entities: Vec::new(),
+            fields: Fields::new(width, height),
+            flora: FloraState::new(),
+            guides: GuideState::new(),
+            tick: 0,
         }
     }
 
@@ -150,6 +167,19 @@ mod tests {
         let world = WorldState::for_sandbox();
 
         assert_eq!(world.kind, WorldKind::Sandbox);
+        assert!(world.flora.vines.is_empty());
+        assert!(world.guides.guides.is_empty());
+        assert!(world.entities.is_empty());
+        assert_eq!(world.tick, 0);
+        assert_eq!(world.grid.width, 300);
+        assert_eq!(world.grid.height, 120);
+    }
+
+    #[test]
+    fn boot_world_starts_empty_and_has_no_scene_assets() {
+        let world = WorldState::for_boot();
+
+        assert_eq!(world.kind, WorldKind::Boot);
         assert!(world.flora.vines.is_empty());
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());

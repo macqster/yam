@@ -22,11 +22,12 @@ impl Layer for WorldLabelLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.meta.dev_mode || height == 0 || width == 0 {
+        if !ui.show_dev_surfaces() || height == 0 || width == 0 {
             return LayerOutput { grid, mask: None };
         }
 
         let label = match world.kind {
+            WorldKind::Boot => return LayerOutput { grid, mask: None },
             WorldKind::MainScene => "MAIN SCENE",
             WorldKind::Sandbox => "SANDBOX",
         };

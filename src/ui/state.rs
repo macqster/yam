@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs, io,
     path::{Path, PathBuf},
+    time::{Duration, Instant},
 };
 
 use crate::core::world::WorldKind;
@@ -277,6 +278,100 @@ impl SettingsEditState {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BootLoadingPhase {
+    Coalesce,
+    Bar,
+    AwaitStart,
+    Dissolve,
+    Hold,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LoadingMode {
+    Boot(BootLoadingPhase),
+    Transition,
+}
+
+#[derive(Clone, Debug)]
+pub struct LoadingState {
+    pub active: bool,
+    pub label: String,
+    pub mode: LoadingMode,
+    pub started_at: Option<Instant>,
+    pub duration: Duration,
+}
+
+impl Default for LoadingState {
+    fn default() -> Self {
+        Self {
+            active: false,
+            label: String::new(),
+            mode: LoadingMode::Transition,
+            started_at: None,
+            duration: Duration::from_millis(0),
+        }
+    }
+}
+
+impl LoadingState {
+    pub const BOOT_COALESCE: Duration = Duration::from_millis(1000);
+    pub const BOOT_BAR: Duration = Duration::from_millis(3000);
+    pub const BOOT_DISSOLVE: Duration = Duration::from_millis(1000);
+    pub const BOOT_HOLD: Duration = Duration::from_millis(500);
+
+    pub fn progress(&self, now: Instant) -> f32 {
+        let Some(started_at) = self.started_at else {
+            return 0.0;
+        };
+        let duration = self.duration.as_secs_f32();
+        if duration <= f32::EPSILON {
+            return 1.0;
+        }
+        (now.duration_since(started_at).as_secs_f32() / duration).clamp(0.0, 1.0)
+    }
+
+    #[cfg(test)]
+    pub fn boot_phase(&self) -> Option<BootLoadingPhase> {
+        match self.mode {
+            LoadingMode::Boot(phase) => Some(phase),
+            LoadingMode::Transition => None,
+        }
+    }
+
+    pub fn effect_phase(&self) -> Option<BootLoadingPhase> {
+        match self.mode {
+            LoadingMode::Boot(BootLoadingPhase::Coalesce) => Some(BootLoadingPhase::Coalesce),
+            LoadingMode::Boot(BootLoadingPhase::Dissolve) => Some(BootLoadingPhase::Dissolve),
+            _ => None,
+        }
+    }
+
+    pub fn awaiting_start_confirmation(&self) -> bool {
+        self.active && matches!(self.mode, LoadingMode::Boot(BootLoadingPhase::AwaitStart))
+    }
+
+    pub fn showing_start_prompt(&self) -> bool {
+        self.active
+            && matches!(
+                self.mode,
+                LoadingMode::Boot(BootLoadingPhase::AwaitStart)
+                    | LoadingMode::Boot(BootLoadingPhase::Dissolve)
+            )
+    }
+
+    pub fn bar_progress(&self, now: Instant) -> f32 {
+        match self.mode {
+            LoadingMode::Boot(BootLoadingPhase::Coalesce) => 0.0,
+            LoadingMode::Boot(BootLoadingPhase::Bar) => self.progress(now),
+            LoadingMode::Boot(BootLoadingPhase::AwaitStart)
+            | LoadingMode::Boot(BootLoadingPhase::Dissolve)
+            | LoadingMode::Boot(BootLoadingPhase::Hold) => 1.0,
+            LoadingMode::Transition => self.progress(now),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct UiStateSnapshot {
     offsets: UiOffsets,
@@ -328,6 +423,7 @@ pub struct UiState {
     pub hero: Hero,
     pub pointer_blink_on: bool,
     pub settings_edit: SettingsEditState,
+    pub loading: LoadingState,
 }
 
 impl UiState {
@@ -346,13 +442,14 @@ impl UiState {
             hero,
             pointer_blink_on: true,
             settings_edit: SettingsEditState::default(),
+            loading: LoadingState::default(),
         }
     }
 
     pub fn load_or_new() -> Self {
         let mut state = Self::new();
         if let Ok(snapshot) = Self::load_snapshot() {
-            state.clock_font = Self::parse_clock_font(&snapshot.offsets.clock_font);
+            state.clock_font = ClockFont::from_name(&snapshot.offsets.clock_font);
             state.offsets = snapshot.offsets;
             state.meta = snapshot.meta;
         }
@@ -362,25 +459,28 @@ impl UiState {
         state
     }
 
-    pub fn next_font(&mut self) {
-        self.clock_font = match self.clock_font {
-            ClockFont::Small => ClockFont::Standard,
-            ClockFont::Standard => ClockFont::Fender,
-            ClockFont::Fender => ClockFont::Gothic,
-            ClockFont::Gothic => ClockFont::Small,
+    pub fn reset_for_clean_launch(&mut self, world_kind: WorldKind) {
+        self.meta = MetaState::new();
+        self.meta.active_world = match world_kind {
+            WorldKind::Boot => WorldKindSnapshot::MainScene,
+            WorldKind::MainScene => WorldKindSnapshot::MainScene,
+            WorldKind::Sandbox => WorldKindSnapshot::Sandbox,
         };
-        self.offsets.clock_font = Self::clock_font_name(self.clock_font).to_string();
+        self.camera.follow_hero = false;
+        self.settings_edit.clear();
+        self.loading = LoadingState::default();
+        self.pointer_blink_on = true;
+    }
+
+    pub fn next_font(&mut self) {
+        self.clock_font = self.clock_font.next();
+        self.offsets.clock_font = self.clock_font.display_name().to_string();
         self.save_state();
     }
 
     pub fn prev_font(&mut self) {
-        self.clock_font = match self.clock_font {
-            ClockFont::Small => ClockFont::Gothic,
-            ClockFont::Standard => ClockFont::Small,
-            ClockFont::Fender => ClockFont::Standard,
-            ClockFont::Gothic => ClockFont::Fender,
-        };
-        self.offsets.clock_font = Self::clock_font_name(self.clock_font).to_string();
+        self.clock_font = self.clock_font.prev();
+        self.offsets.clock_font = self.clock_font.display_name().to_string();
         self.save_state();
     }
 
@@ -414,12 +514,22 @@ impl UiState {
         self.meta.toggle_vines_visible();
     }
 
+    pub fn show_dev_surfaces(&self) -> bool {
+        self.meta.dev_mode && !self.loading.active
+    }
+
     pub fn active_world_kind(&self) -> WorldKind {
         self.meta.active_world_kind()
     }
 
     pub fn cycle_world_kind(&mut self) {
         self.meta.cycle_world_kind();
+        let label = match self.meta.active_world_kind() {
+            WorldKind::Boot => "loading...",
+            WorldKind::MainScene => "loading main scene...",
+            WorldKind::Sandbox => "loading sandbox...",
+        };
+        self.start_loading_transition(label, Duration::from_millis(900));
         if self.meta.active_world_kind() != WorldKind::Sandbox {
             self.pointer_blink_on = true;
         }
@@ -541,6 +651,72 @@ impl UiState {
     pub fn close_settings(&mut self) {
         self.meta.settings_open = false;
         self.settings_edit.clear();
+    }
+
+    pub fn start_loading_boot(&mut self) {
+        self.loading.active = true;
+        self.loading.label = "loading...".to_string();
+        self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Coalesce);
+        self.loading.started_at = Some(Instant::now());
+        self.loading.duration = LoadingState::BOOT_COALESCE;
+    }
+
+    pub fn start_loading_transition(&mut self, label: &str, duration: Duration) {
+        self.loading.active = true;
+        self.loading.label = label.to_string();
+        self.loading.mode = LoadingMode::Transition;
+        self.loading.started_at = Some(Instant::now());
+        self.loading.duration = duration;
+    }
+
+    pub fn acknowledge_loading_start(&mut self) {
+        if !self.loading.awaiting_start_confirmation() {
+            return;
+        }
+        self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Dissolve);
+        self.loading.started_at = Some(Instant::now());
+        self.loading.duration = LoadingState::BOOT_DISSOLVE;
+    }
+
+    pub fn update_loading(&mut self) {
+        if !self.loading.active {
+            return;
+        }
+        let now = Instant::now();
+        match self.loading.mode {
+            LoadingMode::Transition => {
+                if self.loading.progress(now) >= 1.0 {
+                    self.loading = LoadingState::default();
+                }
+            }
+            LoadingMode::Boot(BootLoadingPhase::Coalesce) => {
+                if self.loading.progress(now) >= 1.0 {
+                    self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Bar);
+                    self.loading.started_at = Some(now);
+                    self.loading.duration = LoadingState::BOOT_BAR;
+                }
+            }
+            LoadingMode::Boot(BootLoadingPhase::Bar) => {
+                if self.loading.progress(now) >= 1.0 {
+                    self.loading.mode = LoadingMode::Boot(BootLoadingPhase::AwaitStart);
+                    self.loading.started_at = None;
+                    self.loading.duration = Duration::from_millis(0);
+                }
+            }
+            LoadingMode::Boot(BootLoadingPhase::AwaitStart) => {}
+            LoadingMode::Boot(BootLoadingPhase::Dissolve) => {
+                if self.loading.progress(now) >= 1.0 {
+                    self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Hold);
+                    self.loading.started_at = Some(now);
+                    self.loading.duration = LoadingState::BOOT_HOLD;
+                }
+            }
+            LoadingMode::Boot(BootLoadingPhase::Hold) => {
+                if self.loading.progress(now) >= 1.0 {
+                    self.loading = LoadingState::default();
+                }
+            }
+        }
     }
 
     pub fn settings_edit_backspace(&mut self) {
@@ -813,25 +989,6 @@ impl UiState {
         })
     }
 
-    fn parse_clock_font(name: &str) -> ClockFont {
-        match name {
-            "small" => ClockFont::Small,
-            "standard" => ClockFont::Standard,
-            "fender" => ClockFont::Fender,
-            "gothic" => ClockFont::Gothic,
-            _ => ClockFont::Gothic,
-        }
-    }
-
-    fn clock_font_name(font: ClockFont) -> &'static str {
-        match font {
-            ClockFont::Small => "small",
-            ClockFont::Standard => "standard",
-            ClockFont::Fender => "fender",
-            ClockFont::Gothic => "gothic",
-        }
-    }
-
     fn save_state(&self) {
         let path = Self::state_path();
         if let Some(parent) = path.parent() {
@@ -876,10 +1033,12 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        MetaState, MoveTarget, SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState,
-        UiStateSnapshot, WorldKindSnapshot,
+        BootLoadingPhase, LoadingMode, LoadingState, MetaState, MoveTarget, SettingsAxisField,
+        SettingsCursor, SettingsTab, UiOffsets, UiState, UiStateSnapshot, WorldKindSnapshot,
     };
+    use crate::core::world::WorldKind;
     use crate::scene::coords::WorldPos;
+    use std::time::{Duration, Instant};
 
     #[test]
     fn clamp_camera_limits_windowed_pan_to_one_cell_overscan() {
@@ -1374,5 +1533,94 @@ mod tests {
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
         assert!(!ui.meta.world_datum_visible);
+    }
+
+    #[test]
+    fn cycling_world_kind_starts_a_loading_transition() {
+        let mut ui = UiState::new();
+
+        ui.cycle_world_kind();
+
+        assert_eq!(ui.active_world_kind(), WorldKind::Sandbox);
+        assert!(ui.loading.active);
+        assert_eq!(ui.loading.label, "loading sandbox...");
+    }
+
+    #[test]
+    fn loading_transition_clears_after_duration_elapses() {
+        let mut ui = UiState::new();
+        ui.start_loading_transition("loading sandbox...", Duration::from_millis(1));
+        std::thread::sleep(Duration::from_millis(5));
+
+        ui.update_loading();
+
+        assert!(!ui.loading.active);
+        assert!(ui.loading.label.is_empty());
+    }
+
+    #[test]
+    fn boot_loading_waits_for_space_before_dissolve() {
+        let mut ui = UiState::new();
+
+        ui.start_loading_boot();
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_COALESCE + LoadingState::BOOT_BAR)
+                .expect("boot phase start should support subtraction"),
+        );
+        ui.loading.mode = LoadingMode::Boot(BootLoadingPhase::Bar);
+        ui.loading.duration = LoadingState::BOOT_BAR;
+
+        ui.update_loading();
+
+        assert!(ui.loading.awaiting_start_confirmation());
+        ui.acknowledge_loading_start();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Dissolve));
+    }
+
+    #[test]
+    fn boot_loading_holds_briefly_after_dissolve() {
+        let mut ui = UiState::new();
+
+        ui.start_loading_boot();
+        ui.loading.mode = LoadingMode::Boot(BootLoadingPhase::Dissolve);
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_DISSOLVE)
+                .expect("dissolve phase start should support subtraction"),
+        );
+        ui.loading.duration = LoadingState::BOOT_DISSOLVE;
+
+        ui.update_loading();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Hold));
+
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_HOLD)
+                .expect("hold phase start should support subtraction"),
+        );
+        ui.loading.duration = LoadingState::BOOT_HOLD;
+
+        ui.update_loading();
+        assert!(!ui.loading.active);
+    }
+
+    #[test]
+    fn clean_launch_resets_dev_and_modal_state() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.hotkeys_open = true;
+        ui.meta.move_mode_open = true;
+        ui.meta.settings_open = true;
+        ui.meta.pointer_probe_open = true;
+
+        ui.reset_for_clean_launch(WorldKind::MainScene);
+
+        assert!(!ui.meta.dev_mode);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
+        assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
     }
 }

@@ -13,6 +13,10 @@ impl Layer for StatusLayer {
         1000
     }
 
+    fn visible_during_loading(&self) -> bool {
+        true
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
@@ -24,17 +28,23 @@ impl Layer for StatusLayer {
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         let footer_y = footer_row(height);
-        let left_text = if ui.meta.dev_mode {
+        let left_text = if ui.loading.showing_start_prompt() {
+            " [q]uit  •  [d]ev"
+        } else if ui.loading.active {
+            ""
+        } else if ui.show_dev_surfaces() {
             " [q]uit  •  [d]ev  •  [w]orld  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [v]ines  •  [C]/[c] camera home"
         } else {
             " [q]uit  •  [d]ev"
         };
-        let right_text = build_status_label();
         let footer_style = theme_style::footer_text();
         write_string(&mut grid, 0, footer_y, left_text, footer_style);
-        let stamp_width = right_text.chars().count() as u16 + 1;
-        let x = width.saturating_sub(stamp_width);
-        write_string(&mut grid, x, footer_y, &right_text, footer_style);
+        if !ui.loading.active {
+            let right_text = build_status_label();
+            let stamp_width = right_text.chars().count() as u16 + 1;
+            let x = width.saturating_sub(stamp_width);
+            write_string(&mut grid, x, footer_y, &right_text, footer_style);
+        }
         LayerOutput { grid, mask: None }
     }
 }
@@ -141,6 +151,57 @@ mod tests {
         assert!(text.contains(&build_status_label()));
         assert!(!text.contains("space - play/pause"));
         assert!(!text.contains(". - step"));
+    }
+
+    #[test]
+    fn boot_loading_footer_stays_hidden_until_space_prompt_phase() {
+        let layer = StatusLayer;
+        let world = WorldState::for_boot();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = UiState::new();
+        ui.start_loading_boot();
+
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+        assert!(!text.contains("[q]uit"));
+
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+        assert!(text.contains("[q]uit"));
+        assert!(text.contains("[d]ev"));
+        assert!(!text.contains(&build_status_label()));
+
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::Dissolve);
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+        assert!(text.contains("[q]uit"));
+        assert!(text.contains("[d]ev"));
     }
 
     #[test]

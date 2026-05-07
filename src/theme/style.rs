@@ -13,6 +13,20 @@ pub fn panel_text() -> Style {
     BTAS.panel_text()
 }
 
+pub fn loading_text() -> Style {
+    Style::default().fg(palette::PRIMARY_FG)
+}
+
+pub fn loading_prompt(pulse: f32) -> Style {
+    let pulse = pulse.clamp(0.0, 1.0);
+    let fg = if pulse < 0.6 {
+        lerp_rgb(palette::PRIMARY_FG, BTAS.pms_317, pulse / 0.6)
+    } else {
+        lerp_rgb(BTAS.pms_317, BTAS.pms_345, (pulse - 0.6) / 0.4)
+    };
+    Style::default().fg(fg)
+}
+
 pub fn modal_panel() -> Style {
     BTAS.modal_panel()
 }
@@ -74,4 +88,19 @@ pub fn guide_trace() -> Style {
 
 pub fn vine_stem(health: VineHealth) -> Style {
     BTAS.vine_stem(matches!(health, VineHealth::Healthy))
+}
+
+fn lerp_rgb(
+    from: ratatui::style::Color,
+    to: ratatui::style::Color,
+    t: f32,
+) -> ratatui::style::Color {
+    match (from, to) {
+        (ratatui::style::Color::Rgb(fr, fg, fb), ratatui::style::Color::Rgb(tr, tg, tb)) => {
+            let lerp =
+                |a: u8, b: u8| -> u8 { (a as f32 + (b as f32 - a as f32) * t).round() as u8 };
+            ratatui::style::Color::Rgb(lerp(fr, tr), lerp(fg, tg), lerp(fb, tb))
+        }
+        _ => to,
+    }
 }

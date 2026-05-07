@@ -1,6 +1,6 @@
 [package]
 name = "yam-rust"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 
 [[bin]]
@@ -20,6 +20,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 unicode-segmentation = "1"
 unicode-width = "0.2"
+tachyonfx = { version = "0.25", features = ["std-duration"] }
 
 [build-dependencies]
 chrono = "0.4"

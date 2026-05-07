@@ -31,6 +31,9 @@ pub trait Layer {
     fn is_field_layer(&self) -> bool {
         false
     }
+    fn visible_during_loading(&self) -> bool {
+        false
+    }
 
     #[allow(clippy::too_many_arguments)]
     fn render_to_grid(
@@ -68,7 +71,11 @@ impl Scene {
     ) {
         let full = frame.area();
         let render_state = build_render_state(full, ui);
-        let mut layers = self.layers.iter().collect::<Vec<_>>();
+        let mut layers = self
+            .layers
+            .iter()
+            .filter(|layer| !ui.loading.active || layer.visible_during_loading())
+            .collect::<Vec<_>>();
         layers.sort_by_key(|layer| layer.z_index());
         let mut outputs = Vec::with_capacity(layers.len());
         for layer in layers.iter() {

@@ -22,8 +22,28 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
+use tachyonfx::{fx, CellFilter, Effect, Interpolation};
 
-pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Error>> {
+fn build_loading_effect(phase: crate::ui::state::BootLoadingPhase) -> Effect {
+    let mut effect = match phase {
+        crate::ui::state::BootLoadingPhase::Coalesce => {
+            fx::coalesce((1000, Interpolation::BounceInOut))
+        }
+        crate::ui::state::BootLoadingPhase::Dissolve => fx::dissolve(1000),
+        crate::ui::state::BootLoadingPhase::Bar
+        | crate::ui::state::BootLoadingPhase::AwaitStart
+        | crate::ui::state::BootLoadingPhase::Hold => {
+            unreachable!("only effect phases should build tachyonfx effects")
+        }
+    };
+    effect.filter(CellFilter::Text);
+    effect
+}
+
+pub fn run(
+    initial_world_kind: WorldKind,
+    clean_launch: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -31,13 +51,24 @@ pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Erro
     let mut terminal = Terminal::new(backend)?;
 
     let mut ui_state = UiState::load_or_new();
+    if clean_launch {
+        ui_state.reset_for_clean_launch(initial_world_kind);
+        ui_state.meta.dev_mode = false;
+        ui_state.meta.hotkeys_open = false;
+        ui_state.meta.move_mode_open = false;
+        ui_state.meta.settings_open = false;
+        ui_state.meta.pointer_probe_open = false;
+    }
     if ui_state.active_world_kind() != initial_world_kind {
         ui_state.meta.active_world = match initial_world_kind {
+            WorldKind::Boot => crate::ui::state::WorldKindSnapshot::MainScene,
             WorldKind::MainScene => crate::ui::state::WorldKindSnapshot::MainScene,
             WorldKind::Sandbox => crate::ui::state::WorldKindSnapshot::Sandbox,
         };
     }
+    ui_state.start_loading_boot();
     let mut world = WorldState::for_kind(ui_state.active_world_kind());
+    let boot_world = WorldState::for_boot();
     let fonts = FontRegistry::new();
     let world_tick = Duration::from_millis(250);
     let frame_time = Duration::from_secs_f64(1.0 / 120.0);
@@ -45,14 +76,30 @@ pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Erro
     let mut last_world_tick = Instant::now();
     let mut last_hero_tick = Instant::now();
     let mut last_pointer_blink = Instant::now();
+    let mut loading_effect_phase = None;
+    let mut loading_effect: Option<Effect> = None;
+    let mut loading_effect_last_tick = Instant::now();
     'run: loop {
         let frame_start = Instant::now();
+        ui_state.update_loading();
 
         while event::poll(Duration::from_millis(0))? {
             if let Event::Key(KeyEvent {
                 code, modifiers, ..
             }) = event::read()?
             {
+                if ui_state.loading.active {
+                    match code {
+                        KeyCode::Char('q') => break 'run,
+                        KeyCode::Char('d') => ui_state.toggle_dev_mode(),
+                        KeyCode::Char(' ') if ui_state.loading.awaiting_start_confirmation() => {
+                            ui_state.acknowledge_loading_start();
+                        }
+                        _ => {}
+                    }
+                    continue;
+                }
+
                 match code {
                     KeyCode::Char('q') => break 'run,
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
@@ -319,7 +366,29 @@ pub fn run(initial_world_kind: WorldKind) -> Result<(), Box<dyn std::error::Erro
             ui_state.clamp_camera(size.width as i32, size.height as i32);
         }
         terminal.draw(|frame| {
-            render_scene(frame, &world, &ui_state, &fonts);
+            let render_world = if ui_state.loading.active {
+                &boot_world
+            } else {
+                &world
+            };
+            render_scene(frame, render_world, &ui_state, &fonts);
+            if let Some(phase) = ui_state.loading.effect_phase() {
+                if loading_effect_phase != Some(phase) {
+                    loading_effect_phase = Some(phase);
+                    loading_effect = Some(build_loading_effect(phase));
+                    loading_effect_last_tick = frame_start;
+                }
+                if let Some(effect) = loading_effect.as_mut() {
+                    let elapsed = frame_start.saturating_duration_since(loading_effect_last_tick);
+                    let area = frame.area();
+                    let _ = effect.process(elapsed, frame.buffer_mut(), area);
+                    loading_effect_last_tick = frame_start;
+                }
+            } else {
+                loading_effect_phase = None;
+                loading_effect = None;
+                loading_effect_last_tick = frame_start;
+            }
         })?;
 
         let elapsed = frame_start.elapsed();

@@ -60,10 +60,12 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 ## Runtime
 
-- `yam-rust` is the installed command
-- `yam-install` rebuilds and reinstalls the binary
-- `yam-sandbox` launches the sparse sandbox world directly
-- the expected local routine is `yam-install && yam` for the main scene or `yam-install && yam-sandbox` for the sandbox
+- `yam` is the canonical launcher command
+- `yam` prefers the live repo at `~/_git/yam` when present and opens YAM in a new Ghostty window on the current macOS setup
+- `yam-sandbox` does the same for the sparse sandbox world
+- `yam-rust` remains the direct runtime binary for debugging or manual execution
+- `yam-install` rebuilds and reinstalls the fallback binary and launcher wrappers
+- normal startup should hand off straight into the YAM boot/loading screen rather than printing runtime identity before the TUI takes over, and fresh boots should start from a clean non-dev UI state by default unless a future diagnostic run explicitly opts into preserving UI state
 - `q` exits
 
 ## Current Work

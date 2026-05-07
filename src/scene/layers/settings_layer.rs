@@ -23,7 +23,7 @@ impl Layer for SettingsLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.meta.dev_mode || !ui.meta.settings_open {
+        if !ui.show_dev_surfaces() || !ui.meta.settings_open {
             return LayerOutput { grid, mask: None };
         }
 

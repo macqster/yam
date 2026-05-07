@@ -2,4 +2,32 @@
 
 set -euo pipefail
 
-exec "${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}" "$@"
+ROOT="${YAM_ROOT:-$HOME/_git/yam}"
+GHOSTTY_OPEN=(open -na Ghostty --args)
+REPO_CMD="cd \"$ROOT\" && cargo run --release --quiet -- --clean-launch"
+INSTALLED_CMD="\"${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}\" --clean-launch"
+
+quote_args() {
+  local out=()
+  local arg
+  for arg in "$@"; do
+    out+=("$(printf '%q' "$arg")")
+  done
+  printf '%s' "${(j: :)out}"
+}
+
+launch_in_new_window() {
+  local cmd="$1"
+  if [[ "$OSTYPE" == darwin* ]] && open -Ra Ghostty >/dev/null 2>&1; then
+    exec "${GHOSTTY_OPEN[@]}" /bin/zsh -lc "$cmd"
+  fi
+  exec /bin/zsh -lc "$cmd"
+}
+
+ARGS="$(quote_args "$@")"
+
+if [[ -f "$ROOT/Cargo.toml" ]]; then
+  launch_in_new_window "$REPO_CMD${ARGS:+ $ARGS}"
+else
+  launch_in_new_window "$INSTALLED_CMD${ARGS:+ $ARGS}"
+fi

@@ -23,7 +23,7 @@ impl Layer for HotkeysLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.meta.dev_mode || !ui.meta.hotkeys_open {
+        if !ui.show_dev_surfaces() || !ui.meta.hotkeys_open {
             return LayerOutput { grid, mask: None };
         }
 

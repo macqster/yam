@@ -1,6 +1,5 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{grid_to_lines, lines_to_grid};
-use crate::render::figlet::render_figlet;
 use crate::render::fonts::FontRegistry;
 use crate::ui::state::UiState;
 use crate::ui::widgets::clock::current_time_string;
@@ -24,8 +23,7 @@ fn render_lines(frame: &mut Frame, lines: &[String], start_x: u16, start_y: u16)
 
 pub fn clock_lines(ui: &UiState, fonts: &FontRegistry) -> Vec<String> {
     let now = current_time_string();
-    let font = fonts.get(ui.clock_font);
-    render_figlet(font, &now)
+    fonts.render(ui.clock_font, &now)
 }
 
 #[allow(dead_code)]

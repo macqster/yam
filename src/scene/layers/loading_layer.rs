@@ -83,7 +83,7 @@ impl Layer for LoadingLayer {
         if showing_start_prompt {
             write_centered_line(
                 &mut grid,
-                center_x,
+                center_x + 1,
                 origin_y + art_lines.len() as u16 + 3,
                 "press [space] to continue",
                 theme_style::loading_prompt(prompt_pulse(now)),

@@ -4,16 +4,75 @@ This file is append-only and historical only; current rules live in the active d
 
 Logging rule:
 - Prefer day headers in the form `## YYYY-MM-DD` for grouping.
+- Keep day sections in reverse-chronological order, with the most recent day at the top of the log.
 - Prefer inline timestamps in the form `[HH:MM]` for entries within a day.
+- Within a day section, keep entries in chronological order when the sequence is known.
 - Use the local system time for new entries. On this machine that currently means `Europe/Warsaw`, including summer-time shifts such as `CEST` / `UTC+02:00` when applicable.
 - New entries should use a full date and time stamp whenever practical, especially when the exact sequence within a day matters.
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+
+## 2026-05-08
+
+- [06:37] inspected the main-scene vine control path and confirmed the current startup behavior: normal launches reset live metamechanics state, so `[v]`-toggled vine visibility snaps back to enabled unless `--preserve-ui-state` is used; then added a dedicated `features` settings tab with a persisted main-scene vine visibility mode (`on`, `off`, `last`), taught clean launch to preserve that policy while still clearing transient dev/modal state, and kept `[v]` as the quick live toggle while persisting its last state for `last` mode.
+- [06:43] tightened the boot loading-screen alignment slightly by nudging `press [space] to continue` one cell to the right relative to the centered wordmark/version assembly, while keeping the rest of the loading layout unchanged.
+- [06:49] added a dedicated root-level `known_issues.md` tracker with a timestamped issue-entry contract, explicit coordination with `README.md`, `docs/README.md`, `TODO.md`, and `docs/LOG.md`, and a lightweight tag grammar for status/severity/surface/system; seeded it with the still-open minor UI alignment note for the boot `press [space] to continue` prompt.
+- [06:58] replaced the shared modal popup frame with continuous box-drawing borders (`┌ ┐ └ ┘ ─ │`) and simplified top-border titles so settings, hotkeys, and move now all use the same cleaner shell without the older dashed ASCII outline.
+- [07:10] added a shared bottom-border legend slot to the modal shell and wired compact popup-specific hotkey hints into settings, hotkeys, and move so the modal family now exposes a minimal footer legend instead of keeping all interaction cues in body copy alone.
+- [07:18] refined the modal footer-legend spacing so the hint block sits with visible breathing room inside the bottom border rather than touching the border run directly, and changed the settings enter hint to the JetBrains-Mono-friendly `⏎` glyph after the earlier symbol read poorly in live screenshots.
+- [08:20] repaired offline install hygiene in `scripts/update.sh`: removed the unconditional `cargo update` network hit from the normal `yam-install` path, switched the rebuild flow to `--locked --offline` first for both `cargo check` and `cargo install`, and only retry the network path if the local Cargo cache is incomplete, so routine reinstalls now behave sanely when crates are already cached but the machine is offline.
+- [18:47] began aligning YAM's runtime theme with the repo-wide BTAS/TNBA palette reference: remapped the core panel/text/selection/debug/vine/marker tones away from the older brighter BTAS swatches toward the calmer TNBA-inspired neutrals, blues, greens, and warm accents; expanded the semantic palette aliases accordingly; and updated `docs/theme.md` so the active color contract now points at the BTAS/TNBA reference direction instead of the earlier Pantone-like bundle alone.
+- [19:06] extended the settings modal `ui` tab with two more persisted visibility toggles that match the live debug surfaces: camera scrollbars can now be enabled/disabled independently from the world overlay guides, and the debug info panel text block can be hidden without turning off the rest of dev-mode diagnostics.
+- [19:14] fixed clean-launch state hygiene so the `ui` tab visibility preferences now truly survive between sessions and reinstalls: world frame, axis, datum, scrollbars, and debug info panel choices are still stored in `~/.config/yam/state.json`, but clean startup now preserves those persisted flags instead of resetting them back to defaults while still clearing transient dev/modal state.
+- [19:21] split the shared modal shell chrome from the popup text styling and moved the box-drawing borders onto the BTAS/TNBA `too dark` green `#1F3B2C`, so settings and the other popups now use a quieter green frame while keeping title/body/footer text in the lighter UI foreground.
+- [19:24] lightened the popup border chrome immediately after live review: the shared modal shell now uses the subtler green `#2F5A45` instead of the earlier too-dark `#1F3B2C`, keeping the BTAS/TNBA direction while improving legibility against the panel background.
+- [19:29] added a separate subtle navy-blue accent path for popup footer control glyphs: the shared modal footer renderer now colors `↑ ↓ ← → ⇥ ⏎ ⌨ ? ⎋` in the muted navy accent while leaving spacing and divider text on the lighter foreground, so the control legend reads more intentionally without turning into a full-color strip.
+- [19:32] tightened the popup footer color grammar after live review: the inline `──` separator between control groups now follows the same subtle green border-chrome color as the modal shell instead of staying on the light text color.
+- [19:37] refined the popup title treatment on the top border: labels like `settings` now use two-cell padding on both sides and the exact subtle navy `#243B73`, matching the footer-symbol accent instead of the plain light text style.
+- [19:40] rebalanced the shared popup accent after another live look: the footer symbols and popup title now use the brighter balanced blue `#2C4C8A` instead of the darker navy, which keeps the BTAS/TNBA blue family while reading more clearly against the modal background.
+- [19:45] warmed the settings-tab labels to a BTAS/TNBA red pair after live review: inactive tabs now use auburn `#8A3B2E`, while the active bracketed tab uses brick red `#A33A32`, giving the tab row a clearer hierarchy without affecting body text or row highlights.
+- [19:49] toned the active settings-row highlight back down after the tab-color pass: the selected-row background now uses navy `#243B73` instead of the brighter balanced blue, so the highlight stays legible without competing as strongly with the new blue title/footer accents.
+- [19:52] adjusted the inactive settings-tab labels again after live comparison: they now use rust `#B24E2E` instead of the darker auburn, while the active tab remains on brick red `#A33A32`.
+- [19:58] documented the resulting popup-shell palette more explicitly in `docs/theme.md`: modal border chrome is now the subtle green `#2F5A45`, popup title/footer symbols use balanced blue `#2C4C8A`, inactive settings tabs use rust `#B24E2E`, the active tab uses brick red `#A33A32`, and the selected settings row background uses navy `#243B73`.
+- [20:01] updated the repo front door in `README.md` so it now mentions the current popup/settings surface, the persisted `ui` / `features` settings ownership, the state file location, and the BTAS/TNBA popup-theme direction instead of leaving that context buried only in deeper docs and the log.
+
 ## 2026-05-07
 
 - [13:08] reviewed the entire loading-screen effort and consolidated the active documentation in `docs/loading-screen.md`: the note now records the three visible loading states, the real staged boot sequence, footer timing, prompt-vs-bar continuity, the empty post-dissolve hold, the unresolved prompt color-drift problem, and the explicit decision to pause manual wordmark tweaking until a stronger figlet/offline inspection workflow exists.
 - [13:11] cut release `0.3.3` for the loading-screen and figlet pass: canonical launch now enters a staged boot world with transparent loading art, shared FIGlet-backed wordmark support, world-aware loading transitions, cleaner footer timing, prompt/dissolve continuity, and a documented pause on unresolved wordmark/color-shift polish.
+
+## 2026-05-06
+
+- [15:19] split the world debug overlay into two real surfaces instead of one coupled drawing pass: the rectangular world frame/border and the datum-centered crosshair/axis can now be toggled independently, and the settings modal gained a dedicated `ui` tab with row toggles for both
+- [15:20] made the settings modal more world-aware by keeping the new `ui` overlay controls available across worlds while continuing to hide main-scene-only hero/clock position and gif controls in sandbox
+- [15:33] extended the `ui` tab with a third overlay toggle for the world datum marker at `(0, 0)`, keeping the datum independent from both the frame and the axis instead of folding it into either surface
+- [15:35] tightened the popup affordance flow so `Esc` now directly closes the settings and move popups, while still canceling buffered settings-field editing before it dismisses the whole settings modal
+- [15:48] cut release `0.3.2` after the settings-modal maturation pass: world-aware settings, independent world-overlay toggles for frame/axis/datum, darker BTAS row highlight polish, and better popup-exit behavior are now part of the release surface
+- [16:02] added a reusable loading overlay seam to the UI stack: `UiState` now owns a short-lived loading state, a dedicated loading layer renders a centered progress/spinner popup, and world switching now uses that overlay as the first live transition path instead of jumping instantly with no visual handoff
+- [16:18] promoted `yam` to the canonical launcher shape: it now prefers the live repo source at `~/_git/yam`, opens in a new Ghostty window on the current macOS setup, and relies on the in-app loading screen instead of printing runtime identity before the TUI takes over; `yam-sandbox` follows the same launch pattern for the sandbox world
+- [16:31] tightened canonical launch polish after a live sanity check: the loading layer now owns a full-screen backdrop instead of appearing as a popup over an already-visible scene, and `yam`/`yam-sandbox` pass a clean-launch flag so ordinary startup enters the boot screen from a non-dev UI state
+- [16:44] changed the loading treatment to the lighter boot-screen direction: startup now renders the loading text as transparent ASCII content over a dedicated empty boot world instead of using the modal shell/background path, leaving later color and Tachyonfx motion as explicit future polish rather than hardwiring them now
+- [16:57] completed the boot-world loading implementation: `WorldKind::Boot` now builds a genuinely empty scene for startup, the transparent ASCII loading art renders version/build plus the text bar over that scene, and the launch/runtime state matches the documented “boot first, main scene after” handoff instead of leaking partial main-scene composition underneath
+- [17:09] made clean non-dev boot the runtime default instead of an opt-in launcher behavior: fresh startup now resets dev/modal UI state before the loading screen and first world render unless `--preserve-ui-state` is explicitly requested for diagnostics
+- [17:18] hardened fresh-boot cleanliness after a live screenshot check: runtime now explicitly clears dev/modal state on clean launch and dev-only layers/footer expansion stay suppressed while the loading screen is active, so the boot world no longer exposes stale debug surfaces during startup
+- [17:27] moved the loading-screen isolation into the scene pipeline itself: when loading is active, only the loading layer and the minimal footer are rendered, which prevents debug/world overlay leaks during boot even if stale UI state somehow survives elsewhere
+- [17:46] upgraded startup into a staged boot sequence with `tachyonfx`: boot now uses `coalesce` for the transparent ASCII loading art, runs the existing bar animation for three seconds, waits silently for `[space]`, and then uses `dissolve` before handing off to the first world; ordinary world-switch loading keeps its shorter transition path instead of inheriting the blocking boot ceremony
+- [18:02] moved the boot/loading ASCII art out of Rust string literals and into `assets/loading_art.txt`, with the loading layer now consuming the repo-tracked text asset directly so shape tweaks can be reviewed in-YAM without fighting escape sequences in source
+- [18:19] paused manual loading-wordmark tweaking after another in-YAM screenshot still showed visible glyph/layout glitches; added a dedicated `docs/loading-screen.md` note to preserve the boot-sequence architecture, asset ownership, successful decisions, failure modes, and future resume checklist so the next pass can restart from documentation instead of rediscovering the same issues
+- [18:42] studied `sigye` as a reference implementation and recorded the useful transfer ideas in `docs/reference-sigye.md`: a dedicated FIGlet parser/registry/render subsystem, transparent direct glyph rendering that skips spaces, and compact styled hotkey hints like `↑↓ nav  ←→ change`; the corresponding YAM follow-ups were added to `TODO.md` instead of rushing directly into implementation
+- [19:07] replaced the one-off loading-art asset path with a real shared FIGlet subsystem: bundled `.flf` assets are now embedded through `render/fonts.rs`, the clock still uses the same UI-facing font control but resolves through the new registry, and the boot wordmark now renders `yam` from the Standard FIGlet font instead of depending on `assets/loading_art.txt`
+- [19:19] tightened loading-screen block alignment after live screenshot review: the caption, FIGlet wordmark, version line, and all loading labels are now centered explicitly per line rather than relying on embedded left-padding, and the loading bar is intentionally nudged two cells to the right so boot, sandbox, and main-scene loading states share one stable visual centerline
+- [19:32] refreshed the loading-bar visual language: boot and transition loading now render `■` for fulfilled increments and `⋄` for remaining increments while keeping the current bar length, replacing the older alternating ASCII punctuation bar with a clearer progress/readiness cue
+- [19:46] refined the boot loading handoff so the finished bar state no longer keeps pretending to load: once boot reaches the wait-for-space phase, the loading label and progress bar are replaced with a single centered `press [space] to continue` prompt with empty breathing rows above and below it
+- [20:04] refined the boot wait-for-space moment: the minimal `[q]uit • [d]ev` footer now appears only once loading has actually finished and the `press [space] to continue` prompt is visible, and that prompt now pulses subtly from the default light text toward BTAS green so the boot screen reads as alive rather than hung while it waits for input
+- [20:11] stabilized the vertical rhythm of the boot handoff state by giving `press [space] to continue` the same two-row gap below the version line as the active loading label, so the loading block does not appear to jump or collapse when the bar phase hands off to user confirmation
+- [20:22] tightened the wait-for-space prompt animation so the foreground now shifts on a clear 3-second white→BTAS-green→white cycle using a smooth ping-pong interpolation with a softer BTAS-green midpoint and a stronger green endpoint, making the prompt feel more visibly alive without turning it into a blink
+- [20:36] fixed the final boot-phase continuity bug: the visible `press [space] to continue` state now remains on-screen through the dissolve phase (and takes the minimal footer with it) instead of snapping back to the older `loading...` composition just before exit
+- [20:37] documented that the current wait-prompt color drift is still visually broken: although a white-to-BTAS-green foreground shift exists in code, the live terminal output does not show it clearly enough to treat the effect as working, so it remains an explicit future-fix item rather than finished polish
+- [20:44] added a short post-dissolve hold to the boot sequence: after the final prompt dissolves away, YAM now rests on the empty boot world for 0.5 seconds before handing off to the first real world, giving the launch sequence a cleaner visual exhale instead of an immediate scene jump
+- [20:52] fixed the post-dissolve boot hold so it now truly rests on an empty boot screen: the new `Hold` phase had been added to the loading state machine but the loading layer still treated it like an older loading phase, so the final 0.5 second pause was showing stale loading content instead of a genuinely empty boot world
+- [12:51] clarified the log contract explicitly: new `docs/LOG.md` entries should use the local system time of the active machine, which for the current setup means `Europe/Warsaw` with seasonal offset changes such as `CEST` / `UTC+02:00`, while the visible inline format remains compact `[HH:MM]` local time
 
 ## 2026-05-05
 
@@ -35,6 +94,78 @@ Logging rule:
 - [15:31] added a debug-mode vine visibility toggle on `[v]`, persisted it in `MetaState`, taught the `VineLayer` to honor it directly, and exposed the hotkey in the dev footer so vine rendering can be quickly hidden without disturbing world state or growth.
 - [15:44] resumed vine anatomy with the first explicit organ slice: segment aging now runs in `systems::aging`, mature odd-indexed segments rebuild attached leaf organs into vine state, the vine layer renders those leaves as tiny direction-derived marks, and the debug surface now reports organ count alongside axes and segments.
 - [15:53] tightened the stem rendering contract so the main axis no longer borrows the generic soft-line grammar: vine stems now choose continuity-first structural glyphs from local path connectivity, trunks get a heavier variant of the same language, and focused vine-layer tests pin the new stem/trunk policy.
+
+
+- [05:14] continued the stability-first maintenance pass with a fresh day entry so the append-only log can keep the coordination, audit, and backlog contracts moving forward in a clean timestamped shape
+- [06:58] aligned the audit priority wording with the front door and docs map so the stability-first contract now reads consistently across README, docs/README, and docs/audit
+- [07:18] made the audit priority line match the front-door wording exactly so the hero/flora stability-first contract reads the same across README, docs/README, and docs/audit
+- [07:25] fixed a real spatial compatibility bug: projected world and anchor paths were collapsing signed off-screen coordinates too early, so `scene::coords` now keeps a signed `ScreenPos`, projects world/anchor elements through the proper screen helper, and leaves screen-attached values camera-invariant; the full `scene::coords` test group is green again
+- [07:29] added a vines readiness gate to the audit and backlog, removed stale spatial `node` wording from the guide-capture flow, and cleaned a duplicate spatial API bullet so vine work has clearer preconditions before implementation begins
+- [07:37] updated the footer row regression test to match the current no-band footer contract: only written footer text carries the BTAS foreground style, while unwritten cells remain plain
+- [07:54] reran the full Rust test suite after the vines-readiness and footer-test cleanup; `cargo test --quiet` is green with 83 passing tests
+- [10:05] added `docs/vines.md` as the pre-runtime vine ownership contract and linked it from the README, docs map, audit, backlog, scene model, and rendering contract so vine work has one place for readiness and ownership rules before implementation begins
+- [10:21] completed a pre-commit hygiene pass for the spatial/theme/docs/vines-readiness batch: `scripts/check.sh` passed and `cargo test --quiet` passed with 83 tests
+- [16:11] pivoted the drawing work back into a shared core engine seam: added `render/drawing.rs` with reusable path-stroke, glyph-stamp, and occupancy-mask primitives, rewired the vine layer to consume those primitives, and documented the engine role in the architecture, rendering, and vines contracts
+- [16:34] established the first explicit multi-world seam: `WorldState` now boots by `WorldKind`, the main scene and a sparse sandbox world are separated, dev mode can cycle worlds with `[w]`, the debug surface reports the active world, and the pointer probe is now sandbox-owned so point-to-point drawing trials have a dedicated lab surface
+- [16:49] promoted the sandbox into a first-class launch path: added the `yam-sandbox` wrapper, taught `yam-rust` to accept `--sandbox`, updated install/runtime docs, and aligned the expected routine around `yam-install` followed by either `yam` or `yam-sandbox`
+- [17:27] fixed the install-path mismatch for the new sandbox launcher: `scripts/update.sh` now installs both `yam` and `yam-sandbox` into `~/.local/bin`, so the common `yam-install` rebuild routine can actually expose the new wrapper instead of only refreshing `yam-rust`
+- [17:38] tightened the sandbox model so it behaves like an internal alternate space instead of a half-empty main scene: hero and clock layers now render only in the main scene, the dev footer only advertises the pointer inside sandbox, the debug surface reports hero/clock facts as `n/a` there, and the docs now describe sandbox as a switchable in-app world while `yam-sandbox` remains only a convenience preset
+- [17:46] added a dedicated world-label overlay in dev mode so both spaces now announce themselves with centered top-row labels: `MAIN SCENE` for the default composition and `SANDBOX` for the dry-trial world
+- [17:59] investigated the apparent scene-layer test hangs and found they were dominated by eager hero GIF/chafa rendering inside `UiState::new()`; test builds now use a lightweight hero stub so UI/layer tests exercise the real state seams without paying the full runtime render pipeline
+- [18:11] restored the pointer probe as a shared dev-mode tool in both worlds after over-constraining it during the sandbox split: `[p]ointer` is back in the main-scene footer, the runtime hotkey is no longer sandbox-gated, and `UiState::toggle_pointer_probe()` again works across both the main scene and sandbox
+- [18:24] re-encoded the default main-scene hero and clock start positions to match the desired fullscreen composition, and recorded that these boot-time offsets should eventually move from `UiOffsets::default()` into the tweakable settings layer instead of living forever as hard-coded layout constants
+- [18:38] gave the settings modal its first CDDA-like list behavior: `Tab` still cycles tabs, `Up/Down` now moves a per-tab active row cursor, and the selected settings row is rendered with a clean background highlight so the popup reads like a navigable list instead of a static fact sheet
+- [18:53] turned the `positions` tab into the first real buffered editor: labels now read `x = ..., y = ...`, `Enter` opens and commits row edits, `Left/Right` switches the focused axis field, numeric input edits the active field, and `Esc` cancels without mutating runtime values
+- [19:02] made the positions editor respect fullscreen/world-fit constraints: when the active viewport already covers the full world, the camera row now renders as locked/disabled and `Enter` will not open camera editing, matching the existing no-scrollbar/no-meaningful-pan behavior
+- [19:09] simplified the locked camera row copy to a passive `camera: [locked in fullscreen]` status line so the disabled state no longer pretends to expose editable `x/y` fields
+- [19:14] polished the locked-row presentation so the selected disabled camera row now uses one coherent muted-grey-on-blue style instead of splitting the row highlight from the text color
+
+## 2026-05-04
+
+- Recorded that the recent hero-rendering test run was unsuccessful and should remain a cautionary experiment rather than a baseline path
+- Marked the hero-rendering pipeline as one of the current weak spots: the active Chafa path is stable, but the offline compiler / `CellGrid` direction is still an experiment rather than a replacement baseline
+- Ranked the current weak seams in the audit: spatial relation consolidation is the highest-priority gap, hero rendering is second, and the flora runtime is still a broader implementation target
+- Added explicit screen-point projection helpers to `core/spatial` so the spatial layer has a clearer world/screen split while retaining compatibility wrappers for the older world-point path
+- Narrowed the spatial audit language around anchors: `Space::Anchor(EntityId)` still needs a registry-backed resolution path, so anchor identity remains a planned follow-on rather than a currently-resolved runtime relation
+- Made the compatibility layer world-aware for anchor resolution: `scene/coords.rs` now consults `WorldState` entities when `Space::Anchor(EntityId)` is present, so anchor identity is partially real rather than purely declarative
+- Clarified that the new anchor lookup remains a compatibility path and that the long-term goal is to move the entity-backed relation logic into `core/spatial`
+- Recorded the current Ghostty hidden-titlebar baseline as `window-width = 120`, `window-height = 30`, which opens to about `124x21` usable cells on the current macOS setup
+- Updated the Ghostty hidden-titlebar baseline to `window-height = 31`; the current setup now opens to about `124x32` usable cells instead of the earlier `124x21` note
+- Lightened the footer contract so the runtime footer is plain text without a green bar and the visible dev hint is now `[d]ev` instead of `[d]ev mode`
+- Removed the now-unused footer bar palette/style helpers after the footer switched to plain text, and updated the footer tests to match the shorter `[d]ev` label
+- Tuned the footer text to a dimmed BTAS-grey (`Rgb(26, 31, 38)` with dim modifier) so the footer reads lighter while staying readable
+- Learned from a footer mismatch that `yam-install && yam-rust` can still surface an older installed binary if the executable hash/build stamp does not change; future visual checks should confirm `yam-rust --version` and build stamp after reinstall before treating a screenshot as current
+- Fixed the source-side footer spacing bug after screenshot inspection showed the compact `[q]uit  •  [d]ev` spacing had not actually been applied in `status_layer.rs`; the dev-mode footer hint now uses tighter spacing too
+- Reinstalled `yam-rust` through `scripts/update.sh` and confirmed that the build stamp stays stable when the git/source hash is unchanged, so runtime identity alone is not enough to prove a visual refresh unless the footer output is also rechecked
+- Removed the footer `DIM` modifier so the BTAS-grey tone can be evaluated without a second styling layer; this should help distinguish a true palette mismatch from a terminal/font perception issue
+- Darkened the footer BTAS-grey a little further (`Rgb(20, 24, 30)`) to see whether the footer reads as subdued enough without needing background tinting or dimming
+- Temporarily set the footer foreground to an unmistakable magenta diagnostic color so we can verify whether Ghostty and the runtime are honoring footer text styling end-to-end before choosing the final BTAS-grey tone
+- Confirmed via screenshot that Ghostty and the runtime honor footer styling end-to-end; restored the footer from the magenta diagnostic to a subdued grey (`Rgb(96, 102, 110)`) now that the color path has been proven
+- Final footer lesson: the visible problem was a mix of source spacing drift and style perception, but the render pipeline itself was healthy; the working solution is the compact footer grammar (`[q]uit  •  [d]ev`) with a subdued grey foreground and no background tint or dim modifier
+- Codified the BTAS palette as a reusable architecture theme layer with a canonical `BTAS` palette bundle, semantic palette aliases, and shared style helpers so the whole YAM stack can reuse the same visual vocabulary
+- Added a dedicated `docs/theme.md` and a canonical `src/theme/btas.rs` bundle so the BTAS palette can be reused as one shared theme contract across panels, modal shells, hero overlays, camera indicators, pointers, and footer text
+- Trimmed the footer to a single leading/trailing cell of padding so the compact footer grammar reads tighter without changing the color or the no-background contract
+- Moved the footer styling fully onto the BTAS helper path so the status bar follows the same theme contract as the rest of the UI surfaces instead of using a raw palette alias directly
+- Folded the remaining obvious debug/UI raw colors into BTAS helpers too: the small debug panel now uses a BTAS debug-text style, while guide traces use a shared BTAS trace style instead of ad hoc green/dark-gray literals
+- Documented the remaining raw-color literals as intentional low-level render/test exceptions: hero-art calibration and compositor-level tests may keep precise literals when the goal is to verify rendering behavior rather than define a reusable UI surface
+- Tightened the spatial compatibility layer again so `resolve_anchored_position(...)` now returns screen space directly, making the anchor helper explicit instead of forcing another world-shaped hop in the compatibility path
+- Continued the spatial cleanup by adding an explicit screen-point constructor in `core/spatial` and using it in the scene compatibility layer so the screen branch is a little less fuzzy without breaking the existing world-point callers
+- Tightened the screen compatibility path one step further by introducing `resolve_screen_position(...)` in `scene/coords.rs`, so the screen branch now passes through the dedicated `ScreenPos` type before being bridged back to the legacy world-shaped compatibility return
+- Continued the spatial consolidation by adding `SpatialResolver::resolve_anchor(...)` and routing `scene/coords.rs`'s anchor helper through it so the anchor math lives more centrally in `core/spatial`
+- Extracted `resolve_anchored_position(...)` in `scene/coords.rs` so entity-backed anchor resolution is named and isolated instead of being inlined inside the `Space::Anchor` match arm
+- Added `SpatialResolver::resolve_anchor_or_world(...)` so the shared spatial layer now owns the anchor-or-fallback resolution shape, and `scene/coords.rs` routes the compatibility path through that central helper
+- Recorded the current spatial compatibility contract: anchor and screen branches now have dedicated helpers, while `resolve_position(...)` stays as the legacy world-shaped bridge for older call sites until the rest of the tree is migrated
+- Added `resolve_element_screen_position(...)` so the compatibility layer has an explicit screen-returning helper, and `resolve_position(...)` now delegates through that bridge instead of rebuilding the screen branch inline
+- Added a ranked top-five weak-area summary to the audit: spatial relations remain the top seam, followed by hero rendering, flora runtime, theme convergence, and docs/runtime synchronization
+- Reasserted the current project priority: stability and efficiency first, hero GIF aesthetics frozen for now, flora deferred until systematic preparation is in place, and cross-cutting coherence across UI/theme/docs to be improved before new features
+- Propagated the stability-first priority into the front door and docs map so the repository overview now explicitly says the active focus is stability/efficiency, with hero aesthetics held steady and flora deferred
+
+- [15:00] tightened the log format guidance so future entries should prefer day headers with inline timestamps while the existing append-only history stays intact
+- [15:10] tied the repo coordination contract together across `README.md`, `docs/README.md`, `TODO.md`, `docs/audit.md`, and `docs/LOG.md` so the backlog stays execution-focused, the audit stays risk-focused, and the log stays append-only
+- [15:15] cleaned a docs-index duplication so `docs/README.md` now lists `TODO.md` only once while preserving the coordination contract between the front door, backlog, audit, and append-only log
+- [15:20] aligned the priority wording in `docs/README.md` with the front-door README so the stability-first contract reads the same in both places
+- [15:25] reflected the log-format rule in `docs/README.md` so the docs map now points to the day-header-plus-inline-timestamp shape for future log entries
+- [15:30] removed timezone suffixes from the active log timestamps so the append-only history now uses plain `[HH:MM]` inline stamps under day headers
 
 ## 2026-05-03
 
@@ -72,6 +203,97 @@ Logging rule:
 - added the dedicated per-life-form log-journal requirement so lifecycle events and debugging notes can be tracked per organism
 - defined the per-life-form journal payload as a compact event log centered on lifecycle transitions, growth steps, organ changes, environmental effects, pruning, and debug annotations
 
+- Defined the species-registry payload as compact reusable metadata for morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels
+- Noted that the state/stat/journal/registry layer may eventually merit its own dedicated render mode alongside the main scene and greenhouse if inspection needs grow
+- Noted an alternative per-life-form popup UI strategy for inspecting organism data and making limited tweaks like growth rate or lifecycle length
+- Added a simple comparison rule of thumb for the three inspection paths: dedicated mode for registry-scale browsing, popup windows for quick tuning, and lightweight debug overlays for routine checks
+- Added a registry taxonomy note grouping species fields into anatomy defaults, growth rules, phenotype ranges, lifecycle tuning, and debug labels
+- Added a botanical-basics reminder so species terms and morphology fields stay grounded in real plant structure before they are committed to YAM
+- Added a species-entry checklist with fields for species id, display name, habit/form, anatomy defaults, morphology notes, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, debug labels, and journal hints
+- Added concrete morphological briefs for the current prototypes: the bark-textured Y-shaped tree-stump scaffold, border-aware sprawling vines, and the multi-stem fenestrated monstera-like plant
+- Added example species entries informed by botanical consults, with each prototype explicitly labeled as an inference rather than a direct copy of a real species
+- Added a botanical species-template split so registry data keeps taxonomic inspiration, support habit, growth mode, leaf architecture, reproductive strategy, life cycle notes, and ecology cues separate from generic fields
+- Tightened the three example species into explicit registry-style entries with ids, support strategy, stem plan, growth-tip behavior, branching pattern, organ outputs, lifecycle defaults, registry tags, and inspection notes
+- Clarified the scaffold as a pre-rendered dead-or-senescent hero support remnant with only minimal moss growth, stable bark texture, and later vine attachment/overgrowth
+- Filled the first species-template examples for the Y-shaped tree-stump scaffold, border-aware vine family, and monstera-like multi-stem plant
+- Canonized a plant anatomy and morphology glossary so stem, branch, stub, node, internode, leaf, meristem, axis, insertion, and organ mean the same thing across architecture, scene, and rendering docs
+- Added a compact working plant-vocabulary table mapping each botanical term to its YAM meaning and intended use
+- Extended the working plant vocabulary with bud, petiole, petal, root, crown, canopy, flower, and fruit so structural, growth, and reproductive language stays distinct
+- Noted the project's historical inspiration from `cbonsai` so the plant-structure lineage stays visible as YAM expands into a broader greenhouse and multi-species model
+- Added a short inspiration lineage block naming `cbonsai`, `Dwarf Fortress`, and `Cataclysm: DDA` as the main plant/UI ancestry references
+- Added a terminology-authority legend so plant terms can be marked as strict, inferred, or provisional
+- Added explicit term labels for the current glossary entries so the repo can distinguish strict botanical terms, YAM-inferred terms, and provisional placeholders
+- Added a dedicated `docs/glossary.md` so plant anatomy, morphology, and spatial terminology have a single canonical reference page
+- Removed duplicated glossary prose from the main contracts and replaced it with a pointer to `docs/glossary.md`
+- Expanded the glossary with scene/UI terms for camera, viewport, HUD, suite, overlay, world space, screen space, frame, layout, and panel
+- Extended the glossary with layer, zone, modal, footer, status bar, debug overlay, inspect, dev mode, command palette, main scene, and greenhouse terms
+- Renamed the glossary to a broader YAM glossary and added `shell` for the shared modal container vocabulary
+- Updated the front door to point to `docs/glossary.md` as the shared terminology source of truth and to reflect the current terminology contract more directly
+- Added a front-door note saying the glossary owns shared terminology and that duplicate term definitions should not be reintroduced into the contracts
+- Trimmed the front-door YAM definition slightly so the README reads more tightly while keeping the glossary/source-of-truth note intact
+- Wired the debug guide renderer through `SpatialGuideIndex` directly and updated the contracts to say the shared guide index is now a live runtime consumer, not just a migration target
+- Broadened the docs index label for `docs/glossary.md` so it reads as the YAM terminology source of truth rather than only a plant/spatial glossary
+- Recorded Lua as a bounded optional scripting/plugin layer for species authoring or debug/dev tools, while keeping Rust as the host for canonical state and render ownership
+- Recorded the Rust-first tool split: keep runtime simulation/rendering in Rust, and allow non-Rust sidecars only for botanical research, registry authoring, or offline analysis when they clearly help
+- Marked the current scene/render behavior as aligned with the active contracts, leaving the spatial relation split as a consolidation task rather than a drift bug
+- Narrowed the spatial-layer target to a minimal first cut: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers
+- Added a low-risk extraction sketch for the spatial layer so `coords`, `entity`, `guide`, and `render/guide` can be consolidated in pieces instead of by a big-bang refactor
+- Sketched the first canonical spatial API surface with `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver`
+- Mapped the proposed spatial API onto the current modules so the eventual extraction has a concrete mechanical path
+- Added a stepwise migration order for the spatial consolidation so the new layer can land behind existing tests and shims
+- Landed the first `core/spatial` cut in code and updated the docs to describe it as the active canonical relation layer first pass
+- Marked the spatial audit as done for now: behavior matches the contracts, and the remaining work is a planned consolidation into `core/spatial`
+- Recorded a preliminary weak-spot audit note: `Space::Anchor` currently resolves like world space, and the projection API still uses `WorldPos` for both world and screen results
+- Clarified that the Ghostty `124x32` window size is also the YAM boot/start frame size when the app opens
+- Updated the front door and docs index so they both say YAM boots in the `124x32` Ghostty starting frame
+
+## 2026-05-02
+
+- Narrowed the guide contract to linework-only primitives for now, keeping sprites and solid masks explicitly future work
+- Folded the soft line reference into the guide contract so linework now has an explicit slope-aware glyph grammar for points, rulers, vectors, streams, and curves
+- Added a temporary soft-line probe to the debug overlay so the new linework grammar can be tested in-world at specific coordinates
+- Upgraded the soft-line probe to use a punctuation ramp so shallow strokes read closer to the ASCII linework reference instead of flattening to `.` and `-`
+- Extended the soft-line probe into a broader punctuation ramp so linework can express gentler stroke transitions instead of only dot/dash traces
+- Tightened the soft-line probe back to a sparse reference-shaped ramp so the current probe matches the desired `. _ - '`-style line profile more closely
+- Added a soft-line atlas document for the 10x1..10x5 direction families so linework can stay directionally unambiguous during future guide/vine work
+- Extended the soft-line atlas with longer slope families so the guide engine has a documented path for world-spanning lines, not only short primitives
+- Reframed the line generator as a project-wide guide/mask tool with a Bresenham geometry layer and glyph-appearance layer, not only a vines helper
+- Extracted the shared soft-line rasterizer into `core::guide_line` and wired the debug guide visualization path through it so guide rendering and the debug probe use one line engine
+- Ingested the first ASCII Draw Studio sample sets and folded their inferred long-line cadence into `docs/soft-line-atlas.md` as a sample-derived grammar note
+- Cross-referenced `filled_soft_line_slope_form_v0_1.md` alongside the straight-primitive samples in `docs/soft-line-atlas.md` so the inferred grammar points at both study sources
+- Added a first-pass inferred bucket table to `docs/soft-line-atlas.md` so the sample-backed line grammar is recorded as explicit family/cadence hypotheses
+- Updated the soft-line contracts to state the real target plainly: the guide engine must generate any line in any direction across the full YAM world size
+- Added a v1 grammar key to the soft-line atlas so the line engine selection order is explicit: `LineFamily -> LengthBucket -> Direction -> PhaseRole -> LocalStep`
+- Added explicit Rust-side line grammar types in `core::guide_line` so the atlas key now has a code-facing classifier and dispatch path
+- Replaced the line glyph branch tree with a literal atlas table in `core::guide_line` so the grammar is editable as data instead of only as match logic
+- Expanded the soft-line atlas notes with explicit calibration buckets for `10x2`, `10x3`, `10x4`, `10x5`, `7x2`, `8x3`, `9x4`, and `6x5` so the longer sample families stay visible in the contract
+- Retargeted the debug soft-line probe to a long shallow calibration line so the visible test line now exercises the sampled long-span cadence more directly
+- Restored the debug soft-line probe to the canonical mirrored `64x10` calibration span `(-28, 22) -> (36, 12)` so the probe matches the manual sample target again
+- Tuned the `64x10` long-shallow glyph cadence toward the canonical `--''` / `__. -` reference so the probe stops collapsing into mostly underscores
+- Documented the remaining `64x10` smooth-line fidelity gap in the soft-line atlas and render contract so the long-shallow grammar issue stays explicit while the engine is still being tuned
+- Added a cadence-driven long-shallow fallback in `core::guide_line` so the canonical `64x10` probe can express a clearer entry / ramp / core / exit rhythm before the local-step fallback takes over
+- Added the mirrored `64x10` long-shallow calibration probe in the debug surface so both directions can be compared side by side during cadence tuning
+- Made long-shallow punctuation slope-sign aware so the glyph lean can match cell directionality instead of reading as generic filler punctuation
+- Added a coarse `CellBand` to the line grammar key so glyph choice can also reflect top / middle / bottom placement inside the terminal cell, not only slope and cadence
+- Exposed a soft-band readout in the debug panel for the canonical probe so the new `CellBand` classifier can be inspected while line cadence tuning continues
+- Switched `CellBand` classification to use the stroke’s sub-cell position relative to the ideal segment so glyph placement can reflect where the line actually sits inside the cell
+- Documented the remaining `64x10` failure modes after the latest screenshot pass: segmented silhouette, weak band/glyph correlation, and insufficient resemblance to the manual reference despite the new cadence and band scaffolding
+- Added explicit labels and optional groups to `Guide` so guide primitives can be addressed individually and as part of larger named sets, which shifts the guide contract toward composable guide/mask groups instead of anonymous strokes
+- Added `GuideSet` to `GuideState` so named guide collections can be stored and queried explicitly instead of being inferred only through per-guide groups
+- Added `GuideSet::new(...)` and `GuideState::add_set(...)` so named guide collections have a small construction API instead of requiring direct vector mutation
+
+## 2026-05-01
+
+- Unified the hotkeys/move/settings popup shell so the modal family shares one centered BTAS-style backdrop, border, and sizing contract
+- Moved the camera/world debug scrollbars from the inset gauge track to the outermost terminal row/column so the indicator frame now hugs the screen edge
+- Cut release `0.3.1` after the modal-shell, camera, debug-overlay, and hero-rendering polish pass
+- Pruned the vines backlog wording so `TODO.md` stays execution-only and the vines contract stays in the owning docs
+- Made `dev_mode` a stronger umbrella by closing hotkeys, move, and settings modal state when dev mode turns off
+- Added a pre-new-feature gate to hygiene and TODO so future feature work starts from a clean modal/camera/hero/doc/test baseline
+- Split the dev-mode camera hotkey into `C` store / `c` recall so the manual camera home can be saved and restored explicitly
+- Added a dev-only blinking pointer probe that moves with arrow keys and reports its absolute world position in the debug panel, with footer and hotkeys entry points
+- Added world-space guide primitives to `WorldState` as the first guide/coordinates layer for future vines, with docs updated to keep them distinct from raster masks
+
 ## 2026-04-26
 
 - added `docs/SCENE_MODEL.md` to formalize the deterministic scene layer above ratatui, including layer order, coordinate spaces, masking, and the frame pipeline
@@ -104,29 +326,6 @@ Logging rule:
 - rewrote `docs/audit.md` into a current risk snapshot, trimmed `TODO.md` back to backlog pointers, and archived the completed flattening/version-map notes
 - documented `scene_config.json` in `docs/config.md` as the repo-tracked default scene configuration surface
 - standardized the conceptual scene naming from Ivy to vines in `docs/scene-model.md` so the active docs use one term consistently
-
-## 2026-04-23
-
-- pruned Go-era root artifacts from the repo
-- moved the active documentation surface to `docs/`
-- removed the legacy `docs/v2/` tree
-- updated the root README and hygiene notes for the Rust baseline
-- committed the Rust baseline and the documentation hygiene refresh
-- removed dead `visualizer/` ignore entries and normalized the repo hygiene wording
-- verified `cargo clippy -- -D warnings` and `cargo run -- --version` on the Rust baseline
-- added architecture contract docs, module headers, and a strict repo check script
-- enforced the module boundary contract and verified `scripts/check.sh`
-- added the render layer contract and scene-level render order header
-- integrated a cached chafa-backed hero frame path with escape-sequence stripping
-- switched the hero frame path to ANSI-preserving ratatui text and derived hero bounds from the rendered frame size
-- replaced the hero snapshot path with a persistent chafa stream and UI-owned frame updates
-- added a compile-time/runtime identity stamp to prove `cargo run` and `yam-rust` share the same source tree and build markers
-- removed the chafa stream signature gate so frame snapshots are no longer collapsed before reaching the hero state
-- aligned the crate/package version with the runtime footer so `cargo run` and `yam-rust` both report `v0.3.0`
-- replaced PTY-based hero capture with deterministic GIF decoding plus per-frame single-image chafa rendering
-- fixed temp GIF frame export to deterministic PNG filenames and verified the hero buffer loads 64 frames in tests
-- preserved ANSI-derived style spans while clipping hero frame text in the renderer
-- introduced a minimal scene + layer compositor and routed the existing render order through it without changing output
 
 ## 2026-04-24
 
@@ -270,197 +469,25 @@ Logging rule:
 - added a soft feature-freeze rule to hygiene and the active backlog so future work stays in polish/stability mode unless a bug or contract violation justifies new behavior
 - added a hero render regression test that exercises the buffer write path with styled spans so future hero rendering changes cannot silently flatten colorized output again
 
-## Log Rules
+## 2026-04-23
 
-- append entries in date order
-- keep entries factual and short
-- record material repository changes, not speculative notes
-- [2026-05-01] Unified the hotkeys/move/settings popup shell so the modal family shares one centered BTAS-style backdrop, border, and sizing contract
-- [2026-05-01] Moved the camera/world debug scrollbars from the inset gauge track to the outermost terminal row/column so the indicator frame now hugs the screen edge
-- [2026-05-01] Cut release `0.3.1` after the modal-shell, camera, debug-overlay, and hero-rendering polish pass
-- [2026-05-01] Pruned the vines backlog wording so `TODO.md` stays execution-only and the vines contract stays in the owning docs
-- [2026-05-01] Made `dev_mode` a stronger umbrella by closing hotkeys, move, and settings modal state when dev mode turns off
-- [2026-05-01] Added a pre-new-feature gate to hygiene and TODO so future feature work starts from a clean modal/camera/hero/doc/test baseline
-- [2026-05-01] Split the dev-mode camera hotkey into `C` store / `c` recall so the manual camera home can be saved and restored explicitly
-- [2026-05-01] Added a dev-only blinking pointer probe that moves with arrow keys and reports its absolute world position in the debug panel, with footer and hotkeys entry points
-- [2026-05-01] Added world-space guide primitives to `WorldState` as the first guide/coordinates layer for future vines, with docs updated to keep them distinct from raster masks
-- [2026-05-02] Narrowed the guide contract to linework-only primitives for now, keeping sprites and solid masks explicitly future work
-- [2026-05-02] Folded the soft line reference into the guide contract so linework now has an explicit slope-aware glyph grammar for points, rulers, vectors, streams, and curves
-- [2026-05-02] Added a temporary soft-line probe to the debug overlay so the new linework grammar can be tested in-world at specific coordinates
-- [2026-05-02] Upgraded the soft-line probe to use a punctuation ramp so shallow strokes read closer to the ASCII linework reference instead of flattening to `.` and `-`
-- [2026-05-02] Extended the soft-line probe into a broader punctuation ramp so linework can express gentler stroke transitions instead of only dot/dash traces
-- [2026-05-02] Tightened the soft-line probe back to a sparse reference-shaped ramp so the current probe matches the desired `. _ - '`-style line profile more closely
-- [2026-05-02] Added a soft-line atlas document for the 10x1..10x5 direction families so linework can stay directionally unambiguous during future guide/vine work
-- [2026-05-02] Extended the soft-line atlas with longer slope families so the guide engine has a documented path for world-spanning lines, not only short primitives
-- [2026-05-02] Reframed the line generator as a project-wide guide/mask tool with a Bresenham geometry layer and glyph-appearance layer, not only a vines helper
-- [2026-05-02] Extracted the shared soft-line rasterizer into `core::guide_line` and wired the debug guide visualization path through it so guide rendering and the debug probe use one line engine
-- [2026-05-02] Ingested the first ASCII Draw Studio sample sets and folded their inferred long-line cadence into `docs/soft-line-atlas.md` as a sample-derived grammar note
-- [2026-05-02] Cross-referenced `filled_soft_line_slope_form_v0_1.md` alongside the straight-primitive samples in `docs/soft-line-atlas.md` so the inferred grammar points at both study sources
-- [2026-05-02] Added a first-pass inferred bucket table to `docs/soft-line-atlas.md` so the sample-backed line grammar is recorded as explicit family/cadence hypotheses
-- [2026-05-02] Updated the soft-line contracts to state the real target plainly: the guide engine must generate any line in any direction across the full YAM world size
-- [2026-05-02] Added a v1 grammar key to the soft-line atlas so the line engine selection order is explicit: `LineFamily -> LengthBucket -> Direction -> PhaseRole -> LocalStep`
-- [2026-05-02] Added explicit Rust-side line grammar types in `core::guide_line` so the atlas key now has a code-facing classifier and dispatch path
-- [2026-05-02] Replaced the line glyph branch tree with a literal atlas table in `core::guide_line` so the grammar is editable as data instead of only as match logic
-- [2026-05-02] Expanded the soft-line atlas notes with explicit calibration buckets for `10x2`, `10x3`, `10x4`, `10x5`, `7x2`, `8x3`, `9x4`, and `6x5` so the longer sample families stay visible in the contract
-- [2026-05-02] Retargeted the debug soft-line probe to a long shallow calibration line so the visible test line now exercises the sampled long-span cadence more directly
-- [2026-05-02] Restored the debug soft-line probe to the canonical mirrored `64x10` calibration span `(-28, 22) -> (36, 12)` so the probe matches the manual sample target again
-- [2026-05-02] Tuned the `64x10` long-shallow glyph cadence toward the canonical `--''` / `__. -` reference so the probe stops collapsing into mostly underscores
-- [2026-05-02] Documented the remaining `64x10` smooth-line fidelity gap in the soft-line atlas and render contract so the long-shallow grammar issue stays explicit while the engine is still being tuned
-- [2026-05-02] Added a cadence-driven long-shallow fallback in `core::guide_line` so the canonical `64x10` probe can express a clearer entry / ramp / core / exit rhythm before the local-step fallback takes over
-- [2026-05-02] Added the mirrored `64x10` long-shallow calibration probe in the debug surface so both directions can be compared side by side during cadence tuning
-- [2026-05-02] Made long-shallow punctuation slope-sign aware so the glyph lean can match cell directionality instead of reading as generic filler punctuation
-- [2026-05-02] Added a coarse `CellBand` to the line grammar key so glyph choice can also reflect top / middle / bottom placement inside the terminal cell, not only slope and cadence
-- [2026-05-02] Exposed a soft-band readout in the debug panel for the canonical probe so the new `CellBand` classifier can be inspected while line cadence tuning continues
-- [2026-05-02] Switched `CellBand` classification to use the stroke’s sub-cell position relative to the ideal segment so glyph placement can reflect where the line actually sits inside the cell
-- [2026-05-02] Documented the remaining `64x10` failure modes after the latest screenshot pass: segmented silhouette, weak band/glyph correlation, and insufficient resemblance to the manual reference despite the new cadence and band scaffolding
-- [2026-05-02] Added explicit labels and optional groups to `Guide` so guide primitives can be addressed individually and as part of larger named sets, which shifts the guide contract toward composable guide/mask groups instead of anonymous strokes
-- [2026-05-02] Added `GuideSet` to `GuideState` so named guide collections can be stored and queried explicitly instead of being inferred only through per-guide groups
-- [2026-05-02] Added `GuideSet::new(...)` and `GuideState::add_set(...)` so named guide collections have a small construction API instead of requiring direct vector mutation
-- [2026-05-03] Defined the species-registry payload as compact reusable metadata for morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels
-- [2026-05-03] Noted that the state/stat/journal/registry layer may eventually merit its own dedicated render mode alongside the main scene and greenhouse if inspection needs grow
-- [2026-05-03] Noted an alternative per-life-form popup UI strategy for inspecting organism data and making limited tweaks like growth rate or lifecycle length
-- [2026-05-03] Added a simple comparison rule of thumb for the three inspection paths: dedicated mode for registry-scale browsing, popup windows for quick tuning, and lightweight debug overlays for routine checks
-- [2026-05-03] Added a registry taxonomy note grouping species fields into anatomy defaults, growth rules, phenotype ranges, lifecycle tuning, and debug labels
-- [2026-05-03] Added a botanical-basics reminder so species terms and morphology fields stay grounded in real plant structure before they are committed to YAM
-- [2026-05-03] Added a species-entry checklist with fields for species id, display name, habit/form, anatomy defaults, morphology notes, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, debug labels, and journal hints
-- [2026-05-03] Added concrete morphological briefs for the current prototypes: the bark-textured Y-shaped tree-stump scaffold, border-aware sprawling vines, and the multi-stem fenestrated monstera-like plant
-- [2026-05-03] Added example species entries informed by botanical consults, with each prototype explicitly labeled as an inference rather than a direct copy of a real species
-- [2026-05-03] Added a botanical species-template split so registry data keeps taxonomic inspiration, support habit, growth mode, leaf architecture, reproductive strategy, life cycle notes, and ecology cues separate from generic fields
-- [2026-05-03] Tightened the three example species into explicit registry-style entries with ids, support strategy, stem plan, growth-tip behavior, branching pattern, organ outputs, lifecycle defaults, registry tags, and inspection notes
-- [2026-05-03] Clarified the scaffold as a pre-rendered dead-or-senescent hero support remnant with only minimal moss growth, stable bark texture, and later vine attachment/overgrowth
-- [2026-05-03] Filled the first species-template examples for the Y-shaped tree-stump scaffold, border-aware vine family, and monstera-like multi-stem plant
-- [2026-05-03] Canonized a plant anatomy and morphology glossary so stem, branch, stub, node, internode, leaf, meristem, axis, insertion, and organ mean the same thing across architecture, scene, and rendering docs
-- [2026-05-03] Added a compact working plant-vocabulary table mapping each botanical term to its YAM meaning and intended use
-- [2026-05-03] Extended the working plant vocabulary with bud, petiole, petal, root, crown, canopy, flower, and fruit so structural, growth, and reproductive language stays distinct
-- [2026-05-03] Noted the project's historical inspiration from `cbonsai` so the plant-structure lineage stays visible as YAM expands into a broader greenhouse and multi-species model
-- [2026-05-03] Added a short inspiration lineage block naming `cbonsai`, `Dwarf Fortress`, and `Cataclysm: DDA` as the main plant/UI ancestry references
-- [2026-05-03] Added a terminology-authority legend so plant terms can be marked as strict, inferred, or provisional
-- [2026-05-03] Added explicit term labels for the current glossary entries so the repo can distinguish strict botanical terms, YAM-inferred terms, and provisional placeholders
-- [2026-05-03] Added a dedicated `docs/glossary.md` so plant anatomy, morphology, and spatial terminology have a single canonical reference page
-- [2026-05-03] Removed duplicated glossary prose from the main contracts and replaced it with a pointer to `docs/glossary.md`
-- [2026-05-03] Expanded the glossary with scene/UI terms for camera, viewport, HUD, suite, overlay, world space, screen space, frame, layout, and panel
-- [2026-05-03] Extended the glossary with layer, zone, modal, footer, status bar, debug overlay, inspect, dev mode, command palette, main scene, and greenhouse terms
-- [2026-05-03] Renamed the glossary to a broader YAM glossary and added `shell` for the shared modal container vocabulary
-- [2026-05-03] Updated the front door to point to `docs/glossary.md` as the shared terminology source of truth and to reflect the current terminology contract more directly
-- [2026-05-03] Added a front-door note saying the glossary owns shared terminology and that duplicate term definitions should not be reintroduced into the contracts
-- [2026-05-03] Trimmed the front-door YAM definition slightly so the README reads more tightly while keeping the glossary/source-of-truth note intact
-- [2026-05-03] Wired the debug guide renderer through `SpatialGuideIndex` directly and updated the contracts to say the shared guide index is now a live runtime consumer, not just a migration target
-- [2026-05-04] Recorded that the recent hero-rendering test run was unsuccessful and should remain a cautionary experiment rather than a baseline path
-- [2026-05-04] Marked the hero-rendering pipeline as one of the current weak spots: the active Chafa path is stable, but the offline compiler / `CellGrid` direction is still an experiment rather than a replacement baseline
-- [2026-05-04] Ranked the current weak seams in the audit: spatial relation consolidation is the highest-priority gap, hero rendering is second, and the flora runtime is still a broader implementation target
-- [2026-05-04] Added explicit screen-point projection helpers to `core/spatial` so the spatial layer has a clearer world/screen split while retaining compatibility wrappers for the older world-point path
-- [2026-05-04] Narrowed the spatial audit language around anchors: `Space::Anchor(EntityId)` still needs a registry-backed resolution path, so anchor identity remains a planned follow-on rather than a currently-resolved runtime relation
-- [2026-05-04] Made the compatibility layer world-aware for anchor resolution: `scene/coords.rs` now consults `WorldState` entities when `Space::Anchor(EntityId)` is present, so anchor identity is partially real rather than purely declarative
-- [2026-05-04] Clarified that the new anchor lookup remains a compatibility path and that the long-term goal is to move the entity-backed relation logic into `core/spatial`
-- [2026-05-04] Recorded the current Ghostty hidden-titlebar baseline as `window-width = 120`, `window-height = 30`, which opens to about `124x21` usable cells on the current macOS setup
-- [2026-05-04] Updated the Ghostty hidden-titlebar baseline to `window-height = 31`; the current setup now opens to about `124x32` usable cells instead of the earlier `124x21` note
-- [2026-05-04 14:51:57 CEST] Recorded the current YAM screenshot as the golden frame reference for the Ghostty baseline: hidden titlebar, `120x31` config, and the present `124x32` usable-cell capture
-- [2026-05-04] Lightened the footer contract so the runtime footer is plain text without a green bar and the visible dev hint is now `[d]ev` instead of `[d]ev mode`
-- [2026-05-04] Removed the now-unused footer bar palette/style helpers after the footer switched to plain text, and updated the footer tests to match the shorter `[d]ev` label
-- [2026-05-04] Tuned the footer text to a dimmed BTAS-grey (`Rgb(26, 31, 38)` with dim modifier) so the footer reads lighter while staying readable
-- [2026-05-04] Learned from a footer mismatch that `yam-install && yam-rust` can still surface an older installed binary if the executable hash/build stamp does not change; future visual checks should confirm `yam-rust --version` and build stamp after reinstall before treating a screenshot as current
-- [2026-05-04] Fixed the source-side footer spacing bug after screenshot inspection showed the compact `[q]uit  •  [d]ev` spacing had not actually been applied in `status_layer.rs`; the dev-mode footer hint now uses tighter spacing too
-- [2026-05-04] Reinstalled `yam-rust` through `scripts/update.sh` and confirmed that the build stamp stays stable when the git/source hash is unchanged, so runtime identity alone is not enough to prove a visual refresh unless the footer output is also rechecked
-- [2026-05-03] Broadened the docs index label for `docs/glossary.md` so it reads as the YAM terminology source of truth rather than only a plant/spatial glossary
-- [2026-05-03] Recorded Lua as a bounded optional scripting/plugin layer for species authoring or debug/dev tools, while keeping Rust as the host for canonical state and render ownership
-- [2026-05-03] Recorded the Rust-first tool split: keep runtime simulation/rendering in Rust, and allow non-Rust sidecars only for botanical research, registry authoring, or offline analysis when they clearly help
-- [2026-05-03] Marked the current scene/render behavior as aligned with the active contracts, leaving the spatial relation split as a consolidation task rather than a drift bug
-- [2026-05-04] Removed the footer `DIM` modifier so the BTAS-grey tone can be evaluated without a second styling layer; this should help distinguish a true palette mismatch from a terminal/font perception issue
-- [2026-05-04] Darkened the footer BTAS-grey a little further (`Rgb(20, 24, 30)`) to see whether the footer reads as subdued enough without needing background tinting or dimming
-- [2026-05-04] Temporarily set the footer foreground to an unmistakable magenta diagnostic color so we can verify whether Ghostty and the runtime are honoring footer text styling end-to-end before choosing the final BTAS-grey tone
-- [2026-05-04] Confirmed via screenshot that Ghostty and the runtime honor footer styling end-to-end; restored the footer from the magenta diagnostic to a subdued grey (`Rgb(96, 102, 110)`) now that the color path has been proven
-- [2026-05-04] Final footer lesson: the visible problem was a mix of source spacing drift and style perception, but the render pipeline itself was healthy; the working solution is the compact footer grammar (`[q]uit  •  [d]ev`) with a subdued grey foreground and no background tint or dim modifier
-- [2026-05-04] Codified the BTAS palette as a reusable architecture theme layer with a canonical `BTAS` palette bundle, semantic palette aliases, and shared style helpers so the whole YAM stack can reuse the same visual vocabulary
-- [2026-05-04] Added a dedicated `docs/theme.md` and a canonical `src/theme/btas.rs` bundle so the BTAS palette can be reused as one shared theme contract across panels, modal shells, hero overlays, camera indicators, pointers, and footer text
-- [2026-05-04] Trimmed the footer to a single leading/trailing cell of padding so the compact footer grammar reads tighter without changing the color or the no-background contract
-- [2026-05-04] Moved the footer styling fully onto the BTAS helper path so the status bar follows the same theme contract as the rest of the UI surfaces instead of using a raw palette alias directly
-- [2026-05-04] Folded the remaining obvious debug/UI raw colors into BTAS helpers too: the small debug panel now uses a BTAS debug-text style, while guide traces use a shared BTAS trace style instead of ad hoc green/dark-gray literals
-- [2026-05-04] Documented the remaining raw-color literals as intentional low-level render/test exceptions: hero-art calibration and compositor-level tests may keep precise literals when the goal is to verify rendering behavior rather than define a reusable UI surface
-- [2026-05-04] Tightened the spatial compatibility layer again so `resolve_anchored_position(...)` now returns screen space directly, making the anchor helper explicit instead of forcing another world-shaped hop in the compatibility path
-- [2026-05-04] Continued the spatial cleanup by adding an explicit screen-point constructor in `core/spatial` and using it in the scene compatibility layer so the screen branch is a little less fuzzy without breaking the existing world-point callers
-- [2026-05-04] Tightened the screen compatibility path one step further by introducing `resolve_screen_position(...)` in `scene/coords.rs`, so the screen branch now passes through the dedicated `ScreenPos` type before being bridged back to the legacy world-shaped compatibility return
-- [2026-05-04] Continued the spatial consolidation by adding `SpatialResolver::resolve_anchor(...)` and routing `scene/coords.rs`'s anchor helper through it so the anchor math lives more centrally in `core/spatial`
-- [2026-05-04] Extracted `resolve_anchored_position(...)` in `scene/coords.rs` so entity-backed anchor resolution is named and isolated instead of being inlined inside the `Space::Anchor` match arm
-- [2026-05-04] Added `SpatialResolver::resolve_anchor_or_world(...)` so the shared spatial layer now owns the anchor-or-fallback resolution shape, and `scene/coords.rs` routes the compatibility path through that central helper
-- [2026-05-04] Recorded the current spatial compatibility contract: anchor and screen branches now have dedicated helpers, while `resolve_position(...)` stays as the legacy world-shaped bridge for older call sites until the rest of the tree is migrated
-- [2026-05-04] Added `resolve_element_screen_position(...)` so the compatibility layer has an explicit screen-returning helper, and `resolve_position(...)` now delegates through that bridge instead of rebuilding the screen branch inline
-- [2026-05-04] Added a ranked top-five weak-area summary to the audit: spatial relations remain the top seam, followed by hero rendering, flora runtime, theme convergence, and docs/runtime synchronization
-- [2026-05-04] Reasserted the current project priority: stability and efficiency first, hero GIF aesthetics frozen for now, flora deferred until systematic preparation is in place, and cross-cutting coherence across UI/theme/docs to be improved before new features
-- [2026-05-04] Propagated the stability-first priority into the front door and docs map so the repository overview now explicitly says the active focus is stability/efficiency, with hero aesthetics held steady and flora deferred
-- [2026-05-03] Narrowed the spatial-layer target to a minimal first cut: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers
-- [2026-05-03] Added a low-risk extraction sketch for the spatial layer so `coords`, `entity`, `guide`, and `render/guide` can be consolidated in pieces instead of by a big-bang refactor
-- [2026-05-03] Sketched the first canonical spatial API surface with `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver`
-- [2026-05-03] Mapped the proposed spatial API onto the current modules so the eventual extraction has a concrete mechanical path
-- [2026-05-03] Added a stepwise migration order for the spatial consolidation so the new layer can land behind existing tests and shims
-- [2026-05-03] Landed the first `core/spatial` cut in code and updated the docs to describe it as the active canonical relation layer first pass
-- [2026-05-03] Marked the spatial audit as done for now: behavior matches the contracts, and the remaining work is a planned consolidation into `core/spatial`
-- [2026-05-03] Recorded a preliminary weak-spot audit note: `Space::Anchor` currently resolves like world space, and the projection API still uses `WorldPos` for both world and screen results
-- [2026-05-03] Clarified that the Ghostty `124x32` window size is also the YAM boot/start frame size when the app opens
-- [2026-05-03] Updated the front door and docs index so they both say YAM boots in the `124x32` Ghostty starting frame
-
-## 2026-05-04
-
-- [15:00] tightened the log format guidance so future entries should prefer day headers with inline timestamps while the existing append-only history stays intact
-- [15:10] tied the repo coordination contract together across `README.md`, `docs/README.md`, `TODO.md`, `docs/audit.md`, and `docs/LOG.md` so the backlog stays execution-focused, the audit stays risk-focused, and the log stays append-only
-- [15:15] cleaned a docs-index duplication so `docs/README.md` now lists `TODO.md` only once while preserving the coordination contract between the front door, backlog, audit, and append-only log
-- [15:20] aligned the priority wording in `docs/README.md` with the front-door README so the stability-first contract reads the same in both places
-- [15:25] reflected the log-format rule in `docs/README.md` so the docs map now points to the day-header-plus-inline-timestamp shape for future log entries
-- [15:30] removed timezone suffixes from the active log timestamps so the append-only history now uses plain `[HH:MM]` inline stamps under day headers
-
-## 2026-05-05
-
-- [05:14] continued the stability-first maintenance pass with a fresh day entry so the append-only log can keep the coordination, audit, and backlog contracts moving forward in a clean timestamped shape
-- [06:58] aligned the audit priority wording with the front door and docs map so the stability-first contract now reads consistently across README, docs/README, and docs/audit
-- [07:18] made the audit priority line match the front-door wording exactly so the hero/flora stability-first contract reads the same across README, docs/README, and docs/audit
-- [07:25] fixed a real spatial compatibility bug: projected world and anchor paths were collapsing signed off-screen coordinates too early, so `scene::coords` now keeps a signed `ScreenPos`, projects world/anchor elements through the proper screen helper, and leaves screen-attached values camera-invariant; the full `scene::coords` test group is green again
-- [07:29] added a vines readiness gate to the audit and backlog, removed stale spatial `node` wording from the guide-capture flow, and cleaned a duplicate spatial API bullet so vine work has clearer preconditions before implementation begins
-- [07:37] updated the footer row regression test to match the current no-band footer contract: only written footer text carries the BTAS foreground style, while unwritten cells remain plain
-- [07:54] reran the full Rust test suite after the vines-readiness and footer-test cleanup; `cargo test --quiet` is green with 83 passing tests
-- [10:05] added `docs/vines.md` as the pre-runtime vine ownership contract and linked it from the README, docs map, audit, backlog, scene model, and rendering contract so vine work has one place for readiness and ownership rules before implementation begins
-- [10:21] completed a pre-commit hygiene pass for the spatial/theme/docs/vines-readiness batch: `scripts/check.sh` passed and `cargo test --quiet` passed with 83 tests
-- [16:11] pivoted the drawing work back into a shared core engine seam: added `render/drawing.rs` with reusable path-stroke, glyph-stamp, and occupancy-mask primitives, rewired the vine layer to consume those primitives, and documented the engine role in the architecture, rendering, and vines contracts
-- [16:34] established the first explicit multi-world seam: `WorldState` now boots by `WorldKind`, the main scene and a sparse sandbox world are separated, dev mode can cycle worlds with `[w]`, the debug surface reports the active world, and the pointer probe is now sandbox-owned so point-to-point drawing trials have a dedicated lab surface
-- [16:49] promoted the sandbox into a first-class launch path: added the `yam-sandbox` wrapper, taught `yam-rust` to accept `--sandbox`, updated install/runtime docs, and aligned the expected routine around `yam-install` followed by either `yam` or `yam-sandbox`
-- [17:27] fixed the install-path mismatch for the new sandbox launcher: `scripts/update.sh` now installs both `yam` and `yam-sandbox` into `~/.local/bin`, so the common `yam-install` rebuild routine can actually expose the new wrapper instead of only refreshing `yam-rust`
-- [17:38] tightened the sandbox model so it behaves like an internal alternate space instead of a half-empty main scene: hero and clock layers now render only in the main scene, the dev footer only advertises the pointer inside sandbox, the debug surface reports hero/clock facts as `n/a` there, and the docs now describe sandbox as a switchable in-app world while `yam-sandbox` remains only a convenience preset
-- [17:46] added a dedicated world-label overlay in dev mode so both spaces now announce themselves with centered top-row labels: `MAIN SCENE` for the default composition and `SANDBOX` for the dry-trial world
-- [17:59] investigated the apparent scene-layer test hangs and found they were dominated by eager hero GIF/chafa rendering inside `UiState::new()`; test builds now use a lightweight hero stub so UI/layer tests exercise the real state seams without paying the full runtime render pipeline
-- [18:11] restored the pointer probe as a shared dev-mode tool in both worlds after over-constraining it during the sandbox split: `[p]ointer` is back in the main-scene footer, the runtime hotkey is no longer sandbox-gated, and `UiState::toggle_pointer_probe()` again works across both the main scene and sandbox
-- [18:24] re-encoded the default main-scene hero and clock start positions to match the desired fullscreen composition, and recorded that these boot-time offsets should eventually move from `UiOffsets::default()` into the tweakable settings layer instead of living forever as hard-coded layout constants
-- [18:38] gave the settings modal its first CDDA-like list behavior: `Tab` still cycles tabs, `Up/Down` now moves a per-tab active row cursor, and the selected settings row is rendered with a clean background highlight so the popup reads like a navigable list instead of a static fact sheet
-- [18:53] turned the `positions` tab into the first real buffered editor: labels now read `x = ..., y = ...`, `Enter` opens and commits row edits, `Left/Right` switches the focused axis field, numeric input edits the active field, and `Esc` cancels without mutating runtime values
-- [19:02] made the positions editor respect fullscreen/world-fit constraints: when the active viewport already covers the full world, the camera row now renders as locked/disabled and `Enter` will not open camera editing, matching the existing no-scrollbar/no-meaningful-pan behavior
-- [19:09] simplified the locked camera row copy to a passive `camera: [locked in fullscreen]` status line so the disabled state no longer pretends to expose editable `x/y` fields
-- [19:14] polished the locked-row presentation so the selected disabled camera row now uses one coherent muted-grey-on-blue style instead of splitting the row highlight from the text color
-
-## 2026-05-06
-
-- [15:19] split the world debug overlay into two real surfaces instead of one coupled drawing pass: the rectangular world frame/border and the datum-centered crosshair/axis can now be toggled independently, and the settings modal gained a dedicated `ui` tab with row toggles for both
-- [15:20] made the settings modal more world-aware by keeping the new `ui` overlay controls available across worlds while continuing to hide main-scene-only hero/clock position and gif controls in sandbox
-- [15:33] extended the `ui` tab with a third overlay toggle for the world datum marker at `(0, 0)`, keeping the datum independent from both the frame and the axis instead of folding it into either surface
-- [15:35] tightened the popup affordance flow so `Esc` now directly closes the settings and move popups, while still canceling buffered settings-field editing before it dismisses the whole settings modal
-- [15:48] cut release `0.3.2` after the settings-modal maturation pass: world-aware settings, independent world-overlay toggles for frame/axis/datum, darker BTAS row highlight polish, and better popup-exit behavior are now part of the release surface
-- [16:02] added a reusable loading overlay seam to the UI stack: `UiState` now owns a short-lived loading state, a dedicated loading layer renders a centered progress/spinner popup, and world switching now uses that overlay as the first live transition path instead of jumping instantly with no visual handoff
-- [16:18] promoted `yam` to the canonical launcher shape: it now prefers the live repo source at `~/_git/yam`, opens in a new Ghostty window on the current macOS setup, and relies on the in-app loading screen instead of printing runtime identity before the TUI takes over; `yam-sandbox` follows the same launch pattern for the sandbox world
-- [16:31] tightened canonical launch polish after a live sanity check: the loading layer now owns a full-screen backdrop instead of appearing as a popup over an already-visible scene, and `yam`/`yam-sandbox` pass a clean-launch flag so ordinary startup enters the boot screen from a non-dev UI state
-- [16:44] changed the loading treatment to the lighter boot-screen direction: startup now renders the loading text as transparent ASCII content over a dedicated empty boot world instead of using the modal shell/background path, leaving later color and Tachyonfx motion as explicit future polish rather than hardwiring them now
-- [16:57] completed the boot-world loading implementation: `WorldKind::Boot` now builds a genuinely empty scene for startup, the transparent ASCII loading art renders version/build plus the text bar over that scene, and the launch/runtime state matches the documented “boot first, main scene after” handoff instead of leaking partial main-scene composition underneath
-- [17:09] made clean non-dev boot the runtime default instead of an opt-in launcher behavior: fresh startup now resets dev/modal UI state before the loading screen and first world render unless `--preserve-ui-state` is explicitly requested for diagnostics
-- [17:18] hardened fresh-boot cleanliness after a live screenshot check: runtime now explicitly clears dev/modal state on clean launch and dev-only layers/footer expansion stay suppressed while the loading screen is active, so the boot world no longer exposes stale debug surfaces during startup
-- [17:27] moved the loading-screen isolation into the scene pipeline itself: when loading is active, only the loading layer and the minimal footer are rendered, which prevents debug/world overlay leaks during boot even if stale UI state somehow survives elsewhere
-- [17:46] upgraded startup into a staged boot sequence with `tachyonfx`: boot now uses `coalesce` for the transparent ASCII loading art, runs the existing bar animation for three seconds, waits silently for `[space]`, and then uses `dissolve` before handing off to the first world; ordinary world-switch loading keeps its shorter transition path instead of inheriting the blocking boot ceremony
-- [18:02] moved the boot/loading ASCII art out of Rust string literals and into `assets/loading_art.txt`, with the loading layer now consuming the repo-tracked text asset directly so shape tweaks can be reviewed in-YAM without fighting escape sequences in source
-- [18:19] paused manual loading-wordmark tweaking after another in-YAM screenshot still showed visible glyph/layout glitches; added a dedicated `docs/loading-screen.md` note to preserve the boot-sequence architecture, asset ownership, successful decisions, failure modes, and future resume checklist so the next pass can restart from documentation instead of rediscovering the same issues
-- [18:42] studied `sigye` as a reference implementation and recorded the useful transfer ideas in `docs/reference-sigye.md`: a dedicated FIGlet parser/registry/render subsystem, transparent direct glyph rendering that skips spaces, and compact styled hotkey hints like `↑↓ nav  ←→ change`; the corresponding YAM follow-ups were added to `TODO.md` instead of rushing directly into implementation
-- [19:07] replaced the one-off loading-art asset path with a real shared FIGlet subsystem: bundled `.flf` assets are now embedded through `render/fonts.rs`, the clock still uses the same UI-facing font control but resolves through the new registry, and the boot wordmark now renders `yam` from the Standard FIGlet font instead of depending on `assets/loading_art.txt`
-- [19:19] tightened loading-screen block alignment after live screenshot review: the caption, FIGlet wordmark, version line, and all loading labels are now centered explicitly per line rather than relying on embedded left-padding, and the loading bar is intentionally nudged two cells to the right so boot, sandbox, and main-scene loading states share one stable visual centerline
-- [19:32] refreshed the loading-bar visual language: boot and transition loading now render `■` for fulfilled increments and `⋄` for remaining increments while keeping the current bar length, replacing the older alternating ASCII punctuation bar with a clearer progress/readiness cue
-- [19:46] refined the boot loading handoff so the finished bar state no longer keeps pretending to load: once boot reaches the wait-for-space phase, the loading label and progress bar are replaced with a single centered `press [space] to continue` prompt with empty breathing rows above and below it
-- [20:04] refined the boot wait-for-space moment: the minimal `[q]uit • [d]ev` footer now appears only once loading has actually finished and the `press [space] to continue` prompt is visible, and that prompt now pulses subtly from the default light text toward BTAS green so the boot screen reads as alive rather than hung while it waits for input
-- [20:11] stabilized the vertical rhythm of the boot handoff state by giving `press [space] to continue` the same two-row gap below the version line as the active loading label, so the loading block does not appear to jump or collapse when the bar phase hands off to user confirmation
-- [20:22] tightened the wait-for-space prompt animation so the foreground now shifts on a clear 3-second white→BTAS-green→white cycle using a smooth ping-pong interpolation with a softer BTAS-green midpoint and a stronger green endpoint, making the prompt feel more visibly alive without turning it into a blink
-- [20:36] fixed the final boot-phase continuity bug: the visible `press [space] to continue` state now remains on-screen through the dissolve phase (and takes the minimal footer with it) instead of snapping back to the older `loading...` composition just before exit
-- [20:37] documented that the current wait-prompt color drift is still visually broken: although a white-to-BTAS-green foreground shift exists in code, the live terminal output does not show it clearly enough to treat the effect as working, so it remains an explicit future-fix item rather than finished polish
-- [20:44] added a short post-dissolve hold to the boot sequence: after the final prompt dissolves away, YAM now rests on the empty boot world for 0.5 seconds before handing off to the first real world, giving the launch sequence a cleaner visual exhale instead of an immediate scene jump
-- [20:52] fixed the post-dissolve boot hold so it now truly rests on an empty boot screen: the new `Hold` phase had been added to the loading state machine but the loading layer still treated it like an older loading phase, so the final 0.5 second pause was showing stale loading content instead of a genuinely empty boot world
-- [12:51] clarified the log contract explicitly: new `docs/LOG.md` entries should use the local system time of the active machine, which for the current setup means `Europe/Warsaw` with seasonal offset changes such as `CEST` / `UTC+02:00`, while the visible inline format remains compact `[HH:MM]` local time
+- pruned Go-era root artifacts from the repo
+- moved the active documentation surface to `docs/`
+- removed the legacy `docs/v2/` tree
+- updated the root README and hygiene notes for the Rust baseline
+- committed the Rust baseline and the documentation hygiene refresh
+- removed dead `visualizer/` ignore entries and normalized the repo hygiene wording
+- verified `cargo clippy -- -D warnings` and `cargo run -- --version` on the Rust baseline
+- added architecture contract docs, module headers, and a strict repo check script
+- enforced the module boundary contract and verified `scripts/check.sh`
+- added the render layer contract and scene-level render order header
+- integrated a cached chafa-backed hero frame path with escape-sequence stripping
+- switched the hero frame path to ANSI-preserving ratatui text and derived hero bounds from the rendered frame size
+- replaced the hero snapshot path with a persistent chafa stream and UI-owned frame updates
+- added a compile-time/runtime identity stamp to prove `cargo run` and `yam-rust` share the same source tree and build markers
+- removed the chafa stream signature gate so frame snapshots are no longer collapsed before reaching the hero state
+- aligned the crate/package version with the runtime footer so `cargo run` and `yam-rust` both report `v0.3.0`
+- replaced PTY-based hero capture with deterministic GIF decoding plus per-frame single-image chafa rendering
+- fixed temp GIF frame export to deterministic PNG filenames and verified the hero buffer loads 64 frames in tests
+- preserved ANSI-derived style spans while clipping hero frame text in the renderer
+- introduced a minimal scene + layer compositor and routed the existing render order through it without changing output

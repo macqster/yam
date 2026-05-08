@@ -13,6 +13,30 @@ pub fn panel_text() -> Style {
     BTAS.panel_text()
 }
 
+pub fn modal_border() -> Style {
+    Style::default()
+        .bg(palette::MODAL_BG)
+        .fg(palette::MODAL_BORDER)
+}
+
+pub fn modal_footer_symbol() -> Style {
+    Style::default()
+        .bg(palette::MODAL_BG)
+        .fg(palette::MODAL_FOOTER_SYMBOL)
+}
+
+pub fn settings_tab_inactive() -> Style {
+    Style::default()
+        .bg(palette::MODAL_BG)
+        .fg(palette::TAB_INACTIVE)
+}
+
+pub fn settings_tab_active() -> Style {
+    Style::default()
+        .bg(palette::MODAL_BG)
+        .fg(palette::TAB_ACTIVE)
+}
+
 pub fn loading_text() -> Style {
     Style::default().fg(palette::PRIMARY_FG)
 }
@@ -20,9 +44,13 @@ pub fn loading_text() -> Style {
 pub fn loading_prompt(pulse: f32) -> Style {
     let pulse = pulse.clamp(0.0, 1.0);
     let fg = if pulse < 0.6 {
-        lerp_rgb(palette::PRIMARY_FG, BTAS.pms_317, pulse / 0.6)
+        lerp_rgb(palette::PRIMARY_FG, palette::SECONDARY_FG, pulse / 0.6)
     } else {
-        lerp_rgb(BTAS.pms_317, BTAS.pms_345, (pulse - 0.6) / 0.4)
+        lerp_rgb(
+            palette::SECONDARY_FG,
+            palette::VINE_HEALTHY,
+            (pulse - 0.6) / 0.4,
+        )
     };
     Style::default().fg(fg)
 }
@@ -48,11 +76,11 @@ pub fn pointer_probe() -> Style {
 }
 
 pub fn footer_text() -> Style {
-    BTAS.footer_text()
+    Style::default().fg(palette::SECONDARY_FG)
 }
 
 pub fn debug_text() -> Style {
-    BTAS.debug_text()
+    Style::default().fg(palette::DEBUG_FG)
 }
 
 pub fn settings_selected_row() -> Style {
@@ -83,11 +111,15 @@ pub fn settings_disabled_row_selected() -> Style {
 }
 
 pub fn guide_trace() -> Style {
-    BTAS.guide_trace()
+    Style::default().fg(palette::SECONDARY_FG)
 }
 
 pub fn vine_stem(health: VineHealth) -> Style {
-    BTAS.vine_stem(matches!(health, VineHealth::Healthy))
+    if matches!(health, VineHealth::Healthy) {
+        Style::default().fg(palette::VINE_HEALTHY)
+    } else {
+        Style::default().fg(palette::VINE_AGED)
+    }
 }
 
 fn lerp_rgb(

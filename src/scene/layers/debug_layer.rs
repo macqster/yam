@@ -38,7 +38,9 @@ impl Layer for DebugLayer {
             return LayerOutput { grid, mask: None };
         }
 
-        draw_camera_scrollbars(&mut grid, width, height, ctx);
+        if ui.meta.sliders_visible {
+            draw_camera_scrollbars(&mut grid, width, height, ctx);
+        }
         draw_guides(
             &mut grid,
             SpatialGuideIndex::new(&world.guides),
@@ -231,14 +233,16 @@ impl Layer for DebugLayer {
                 format!("Vines: {}", vine_count),
             ]
         };
-        for (row, line) in lines.iter().enumerate() {
-            write_string(
-                &mut grid,
-                panel_x,
-                panel_y + row as u16,
-                line,
-                theme_style::debug_text(),
-            );
+        if ui.meta.debug_info_panel_visible {
+            for (row, line) in lines.iter().enumerate() {
+                write_string(
+                    &mut grid,
+                    panel_x,
+                    panel_y + row as u16,
+                    line,
+                    theme_style::debug_text(),
+                );
+            }
         }
         if ui.meta.world_frame_visible {
             draw_world_frame(
@@ -833,6 +837,87 @@ mod tests {
         assert!(!text.contains("Hero visual anchor:"));
         assert!(!text.contains("Clock final:"));
         assert!(!text.contains("Clock anchor:"));
+    }
+
+    #[test]
+    fn debug_info_panel_can_be_hidden_without_disabling_other_debug_surfaces() {
+        let layer = super::DebugLayer;
+        let world = crate::core::world::WorldState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+        let ctx = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: true,
+                },
+            },
+        };
+        let mut ui = crate::ui::state::UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.debug_info_panel_visible = false;
+
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+        let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(!text.contains("FPS:"));
+        assert!(text.contains("-"));
+    }
+
+    #[test]
+    fn camera_scrollbars_can_be_hidden_independently() {
+        let layer = super::DebugLayer;
+        let world = crate::core::world::WorldState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+        let ctx = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: true,
+                },
+            },
+        };
+        let mut ui = crate::ui::state::UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.sliders_visible = false;
+
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+        let thumb_present = output
+            .grid
+            .cells
+            .iter()
+            .any(|cell| cell.style.fg == Some(palette::CAMERA_THUMB));
+
+        assert!(!thumb_present);
     }
 
     #[test]

@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::layers::modal::{paint_modal_shell, ModalFrame};
+use crate::scene::layers::modal::{paint_modal_shell, ModalFooter, ModalFrame};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -28,7 +28,15 @@ impl Layer for HotkeysLayer {
         }
 
         let frame = ModalFrame::centered(width, height, 68, 17);
-        paint_modal_shell(&mut grid, frame, "[h]otkeys");
+        paint_modal_shell(
+            &mut grid,
+            frame,
+            "[h]otkeys",
+            Some(ModalFooter {
+                left: "↑ ↓",
+                right: "? ⎋",
+            }),
+        );
 
         let (body_x, body_y) = frame.body_origin();
         let lines = [
@@ -42,6 +50,7 @@ impl Layer for HotkeysLayer {
             "[C] store camera home",
             "[c] recall camera home",
             "[p] toggle pointer probe",
+            "[v] toggle vines",
             "[s] toggle settings popup",
             "[F5] next font",
             "[space] play/pause",
@@ -117,10 +126,13 @@ mod tests {
         assert!(text.contains("[C] store camera home"));
         assert!(text.contains("[c] recall camera home"));
         assert!(text.contains("[p] toggle pointer probe"));
+        assert!(text.contains("[v] toggle vines"));
         assert!(text.contains("[s] toggle settings popup"));
         assert!(text.contains("[m] toggle move mode"));
         assert!(text.contains("[1] hero"));
         assert!(text.contains("[2] clock"));
         assert!(text.contains("[space] play/pause"));
+        assert!(text.contains("↑ ↓"));
+        assert!(text.contains("? ⎋"));
     }
 }

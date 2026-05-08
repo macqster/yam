@@ -50,6 +50,7 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 - [`docs/glossary.md`](docs/glossary.md) - shared terminology source of truth
 - [`docs/vines.md`](docs/vines.md) - pre-runtime vine ownership contract
 - [`TODO.md`](TODO.md) - active backlog
+- [`known_issues.md`](known_issues.md) - active unresolved issue tracker
 - [`docs/LOG.md`](docs/LOG.md) - append-only repo log
 - [`docs/scene-model.md`](docs/scene-model.md) - deterministic scene model
 - [`docs/architecture.md`](docs/architecture.md) - architecture contract
@@ -67,6 +68,16 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 - `yam-install` rebuilds and reinstalls the fallback binary and launcher wrappers
 - normal startup should hand off straight into the YAM boot/loading screen rather than printing runtime identity before the TUI takes over, and fresh boots should start from a clean non-dev UI state by default unless a future diagnostic run explicitly opts into preserving UI state
 - `q` exits
+
+## Current UI Surface
+
+- dev mode exposes a compact popup family for `hotkeys`, `move`, and `settings`
+- the settings popup currently owns:
+  - `positions` for camera / hero / clock offsets
+  - `ui` for world frame, axis, datum, scrollbars, and debug info panel visibility
+  - `features` for persisted main-scene vine visibility policy
+- runtime UI state is persisted at `~/.config/yam/state.json`, and clean startup now preserves these durable settings while still clearing transient dev/modal state
+- popup chrome follows the BTAS/TNBA theme direction documented in [`docs/theme.md`](docs/theme.md)
 
 ## Current Work
 
@@ -95,3 +106,4 @@ Current priority is stability and efficiency first, with hero GIF aesthetics hel
 - `cargo clippy -- -D warnings` must pass without warnings
 - keep active behavior contracts in the relevant docs under `docs/`
 - keep `TODO.md` execution-focused, `docs/audit.md` risk-focused, and `docs/LOG.md` append-only
+- keep `known_issues.md` focused on active unresolved issues with timestamped tagged entries

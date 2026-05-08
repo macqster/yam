@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::layers::modal::{paint_modal_shell, ModalFrame};
+use crate::scene::layers::modal::{paint_modal_shell, ModalFooter, ModalFrame};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -28,7 +28,15 @@ impl Layer for MoveLayer {
         }
 
         let frame = ModalFrame::centered(width, height, 68, 12);
-        paint_modal_shell(&mut grid, frame, "[m]ove");
+        paint_modal_shell(
+            &mut grid,
+            frame,
+            "[m]ove",
+            Some(ModalFooter {
+                left: "1 2 3  ──  h j k l",
+                right: "? ⎋",
+            }),
+        );
 
         let lines = [
             format!(
@@ -112,6 +120,9 @@ mod tests {
         assert!(text.contains("[m]ove"));
         assert!(text.contains("target: hero"));
         assert!(text.contains("[3] weather (future)"));
+        assert!(text.contains("1 2 3"));
+        assert!(text.contains("h j k l"));
+        assert!(text.contains("? ⎋"));
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
         assert_eq!(center, Some(crate::theme::palette::MODAL_BG));
     }

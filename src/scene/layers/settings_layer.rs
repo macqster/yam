@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Cell, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::layers::modal::{paint_modal_shell, ModalFrame};
+use crate::scene::layers::modal::{paint_modal_shell, ModalFooter, ModalFrame};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::{SettingsAxisField, SettingsTab, UiState};
@@ -28,7 +28,15 @@ impl Layer for SettingsLayer {
         }
 
         let frame = ModalFrame::centered(width, height, 68, 14);
-        paint_modal_shell(&mut grid, frame, "settings");
+        paint_modal_shell(
+            &mut grid,
+            frame,
+            "settings",
+            Some(ModalFooter {
+                left: "↑ ↓ ← →  ──  ⇥ ⏎ ⌨",
+                right: "? ⎋",
+            }),
+        );
         let body_x = frame.x + 2;
         let body_y = frame.y + 3;
         draw_tabs(&mut grid, body_x, frame.y + 1, ui.meta.settings_tab);
@@ -41,6 +49,7 @@ fn draw_tabs(grid: &mut Grid, x: u16, y: u16, active: SettingsTab) {
     let tabs = [
         SettingsTab::Positions,
         SettingsTab::Ui,
+        SettingsTab::Features,
         SettingsTab::Gif,
         SettingsTab::Theme,
     ];
@@ -51,7 +60,12 @@ fn draw_tabs(grid: &mut Grid, x: u16, y: u16, active: SettingsTab) {
         } else {
             format!(" {} ", tab.title())
         };
-        write_string(grid, cursor, y, &label, theme_style::panel_text());
+        let style = if tab == active {
+            theme_style::settings_tab_active()
+        } else {
+            theme_style::settings_tab_inactive()
+        };
+        write_string(grid, cursor, y, &label, style);
         cursor = cursor.saturating_add(label.chars().count() as u16 + 1);
     }
 }
@@ -62,6 +76,7 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState, ctx:
     let lines = match ui.meta.settings_tab {
         SettingsTab::Positions => position_lines(ui, camera_locked),
         SettingsTab::Ui => ui_lines(ui),
+        SettingsTab::Features => feature_lines(ui),
         SettingsTab::Gif => gif_lines(ui),
         SettingsTab::Theme => vec![
             "theme: active runtime palette".to_string(),
@@ -152,6 +167,22 @@ fn ui_lines(ui: &UiState) -> Vec<String> {
                 "disabled"
             }
         ),
+        format!(
+            "scrollbars: {}",
+            if ui.meta.sliders_visible {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        ),
+        format!(
+            "debug info panel: {}",
+            if ui.meta.debug_info_panel_visible {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        ),
     ]
 }
 
@@ -165,6 +196,14 @@ fn gif_lines(ui: &UiState) -> Vec<String> {
     } else {
         vec!["no hero or clock assets in sandbox".to_string()]
     }
+}
+
+fn feature_lines(ui: &UiState) -> Vec<String> {
+    vec![format!(
+        "main scene vines: {} (current: {})",
+        ui.meta.vines_visibility_mode.label(),
+        if ui.meta.vines_visible { "on" } else { "off" }
+    )]
 }
 
 fn format_axis_line(label: &str, x: i32, y: i32, ui: &UiState, row: u16) -> String {
@@ -297,6 +336,19 @@ mod tests {
         assert!(text.contains("world frame/border: enabled"));
         assert!(text.contains("world crosshair/axis: enabled"));
         assert!(text.contains("world datum: enabled"));
+        assert!(text.contains("scrollbars: enabled"));
+        assert!(text.contains("debug info panel: enabled"));
+        assert!(text.contains("↑ ↓ ← →"));
+        assert!(text.contains("⇥ ⏎ ⌨"));
+        assert!(text.contains("? ⎋"));
+        assert_eq!(
+            open.grid.cells[open.grid.index(31, 10)].style.fg,
+            Some(crate::theme::palette::TAB_INACTIVE)
+        );
+        assert_eq!(
+            open.grid.cells[open.grid.index(42, 10)].style.fg,
+            Some(crate::theme::palette::TAB_ACTIVE)
+        );
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
         assert_eq!(center, Some(crate::theme::palette::MODAL_BG));
     }
@@ -378,6 +430,8 @@ mod tests {
         ui.meta.world_frame_visible = false;
         ui.meta.world_axis_visible = true;
         ui.meta.world_datum_visible = false;
+        ui.meta.sliders_visible = false;
+        ui.meta.debug_info_panel_visible = false;
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
@@ -385,6 +439,50 @@ mod tests {
         assert!(text.contains("world frame/border: disabled"));
         assert!(text.contains("world crosshair/axis: enabled"));
         assert!(text.contains("world datum: disabled"));
+        assert!(text.contains("scrollbars: disabled"));
+        assert!(text.contains("debug info panel: disabled"));
+    }
+
+    #[test]
+    fn features_tab_reflects_vine_visibility_policy_and_current_state() {
+        let layer = SettingsLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 50, y: 30 },
+                hero_visual_anchor: WorldPos { x: 40, y: 20 },
+                clock_world: WorldPos { x: 45, y: 25 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Features;
+        ui.meta.vines_visibility_mode = crate::ui::state::FeatureVisibilityMode::Last;
+        ui.meta.vines_visible = false;
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("features"));
+        assert!(text.contains("main scene vines: last (current: off)"));
     }
 
     #[test]

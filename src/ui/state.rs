@@ -18,6 +18,7 @@ pub struct MetaState {
     pub dev_mode: bool,
     pub active_world: WorldKindSnapshot,
     pub vines_visible: bool,
+    pub vines_visibility_mode: FeatureVisibilityMode,
     pub hotkeys_open: bool,
     pub move_mode_open: bool,
     pub settings_open: bool,
@@ -25,6 +26,8 @@ pub struct MetaState {
     pub world_frame_visible: bool,
     pub world_axis_visible: bool,
     pub world_datum_visible: bool,
+    pub sliders_visible: bool,
+    pub debug_info_panel_visible: bool,
     pub settings_tab: SettingsTab,
     pub settings_cursor: SettingsCursor,
     pub move_target: MoveTarget,
@@ -36,6 +39,7 @@ impl MetaState {
             dev_mode: false,
             active_world: WorldKindSnapshot::MainScene,
             vines_visible: true,
+            vines_visibility_mode: FeatureVisibilityMode::On,
             hotkeys_open: false,
             move_mode_open: false,
             settings_open: false,
@@ -43,6 +47,8 @@ impl MetaState {
             world_frame_visible: true,
             world_axis_visible: true,
             world_datum_visible: true,
+            sliders_visible: true,
+            debug_info_panel_visible: true,
             settings_tab: SettingsTab::default(),
             settings_cursor: SettingsCursor::default(),
             move_target: MoveTarget::default(),
@@ -101,6 +107,11 @@ impl MetaState {
 
     pub fn toggle_vines_visible(&mut self) {
         self.vines_visible = !self.vines_visible;
+    }
+
+    pub fn cycle_vines_visibility_mode(&mut self) {
+        self.vines_visibility_mode = self.vines_visibility_mode.next();
+        self.vines_visible = self.vines_visibility_mode.resolve(self.vines_visible);
     }
 
     pub fn active_world_kind(&self) -> WorldKind {
@@ -177,6 +188,7 @@ pub enum SettingsTab {
     Positions,
     #[serde(alias = "Widgets")]
     Ui,
+    Features,
     Gif,
     Theme,
 }
@@ -185,7 +197,8 @@ impl SettingsTab {
     pub fn next(self) -> Self {
         match self {
             SettingsTab::Positions => SettingsTab::Ui,
-            SettingsTab::Ui => SettingsTab::Gif,
+            SettingsTab::Ui => SettingsTab::Features,
+            SettingsTab::Features => SettingsTab::Gif,
             SettingsTab::Gif => SettingsTab::Theme,
             SettingsTab::Theme => SettingsTab::Positions,
         }
@@ -195,7 +208,8 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => SettingsTab::Theme,
             SettingsTab::Ui => SettingsTab::Positions,
-            SettingsTab::Gif => SettingsTab::Ui,
+            SettingsTab::Features => SettingsTab::Ui,
+            SettingsTab::Gif => SettingsTab::Features,
             SettingsTab::Theme => SettingsTab::Gif,
         }
     }
@@ -204,6 +218,7 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => "positions",
             SettingsTab::Ui => "ui",
+            SettingsTab::Features => "features",
             SettingsTab::Gif => "gif",
             SettingsTab::Theme => "theme",
         }
@@ -212,9 +227,44 @@ impl SettingsTab {
     pub fn item_count(self) -> usize {
         match self {
             SettingsTab::Positions => 3,
-            SettingsTab::Ui => 3,
+            SettingsTab::Ui => 5,
+            SettingsTab::Features => 1,
             SettingsTab::Gif => 3,
             SettingsTab::Theme => 3,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum FeatureVisibilityMode {
+    #[default]
+    On,
+    Off,
+    Last,
+}
+
+impl FeatureVisibilityMode {
+    pub fn next(self) -> Self {
+        match self {
+            Self::On => Self::Off,
+            Self::Off => Self::Last,
+            Self::Last => Self::On,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::On => "on",
+            Self::Off => "off",
+            Self::Last => "last",
+        }
+    }
+
+    pub fn resolve(self, last_visible: bool) -> bool {
+        match self {
+            Self::On => true,
+            Self::Off => false,
+            Self::Last => last_visible,
         }
     }
 }
@@ -223,6 +273,7 @@ impl SettingsTab {
 pub struct SettingsCursor {
     pub positions: u16,
     pub widgets: u16,
+    pub features: u16,
     pub gif: u16,
     pub theme: u16,
 }
@@ -232,6 +283,7 @@ impl SettingsCursor {
         match tab {
             SettingsTab::Positions => self.positions,
             SettingsTab::Ui => self.widgets,
+            SettingsTab::Features => self.features,
             SettingsTab::Gif => self.gif,
             SettingsTab::Theme => self.theme,
         }
@@ -241,6 +293,7 @@ impl SettingsCursor {
         match tab {
             SettingsTab::Positions => self.positions = row,
             SettingsTab::Ui => self.widgets = row,
+            SettingsTab::Features => self.features = row,
             SettingsTab::Gif => self.gif = row,
             SettingsTab::Theme => self.theme = row,
         }
@@ -460,12 +513,26 @@ impl UiState {
     }
 
     pub fn reset_for_clean_launch(&mut self, world_kind: WorldKind) {
+        let vines_visibility_mode = self.meta.vines_visibility_mode;
+        let last_vines_visible = self.meta.vines_visible;
+        let world_frame_visible = self.meta.world_frame_visible;
+        let world_axis_visible = self.meta.world_axis_visible;
+        let world_datum_visible = self.meta.world_datum_visible;
+        let sliders_visible = self.meta.sliders_visible;
+        let debug_info_panel_visible = self.meta.debug_info_panel_visible;
         self.meta = MetaState::new();
         self.meta.active_world = match world_kind {
             WorldKind::Boot => WorldKindSnapshot::MainScene,
             WorldKind::MainScene => WorldKindSnapshot::MainScene,
             WorldKind::Sandbox => WorldKindSnapshot::Sandbox,
         };
+        self.meta.vines_visibility_mode = vines_visibility_mode;
+        self.meta.vines_visible = vines_visibility_mode.resolve(last_vines_visible);
+        self.meta.world_frame_visible = world_frame_visible;
+        self.meta.world_axis_visible = world_axis_visible;
+        self.meta.world_datum_visible = world_datum_visible;
+        self.meta.sliders_visible = sliders_visible;
+        self.meta.debug_info_panel_visible = debug_info_panel_visible;
         self.camera.follow_hero = false;
         self.settings_edit.clear();
         self.loading = LoadingState::default();
@@ -512,6 +579,7 @@ impl UiState {
 
     pub fn toggle_vines_visible(&mut self) {
         self.meta.toggle_vines_visible();
+        self.save_state();
     }
 
     pub fn show_dev_surfaces(&self) -> bool {
@@ -629,7 +697,16 @@ impl UiState {
                     0 => self.meta.world_frame_visible = !self.meta.world_frame_visible,
                     1 => self.meta.world_axis_visible = !self.meta.world_axis_visible,
                     2 => self.meta.world_datum_visible = !self.meta.world_datum_visible,
+                    3 => self.meta.sliders_visible = !self.meta.sliders_visible,
+                    4 => self.meta.debug_info_panel_visible = !self.meta.debug_info_panel_visible,
                     _ => {}
+                }
+                self.save_state();
+                Ok(())
+            }
+            SettingsTab::Features => {
+                if self.meta.selected_settings_row() == 0 {
+                    self.meta.cycle_vines_visibility_mode();
                 }
                 self.save_state();
                 Ok(())
@@ -808,6 +885,7 @@ impl UiState {
         for tab in [
             SettingsTab::Positions,
             SettingsTab::Ui,
+            SettingsTab::Features,
             SettingsTab::Gif,
             SettingsTab::Theme,
         ] {
@@ -1033,8 +1111,9 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        BootLoadingPhase, LoadingMode, LoadingState, MetaState, MoveTarget, SettingsAxisField,
-        SettingsCursor, SettingsTab, UiOffsets, UiState, UiStateSnapshot, WorldKindSnapshot,
+        BootLoadingPhase, FeatureVisibilityMode, LoadingMode, LoadingState, MetaState, MoveTarget,
+        SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState, UiStateSnapshot,
+        WorldKindSnapshot,
     };
     use crate::core::world::WorldKind;
     use crate::scene::coords::WorldPos;
@@ -1271,6 +1350,7 @@ mod tests {
                 dev_mode: true,
                 active_world: WorldKindSnapshot::Sandbox,
                 vines_visible: false,
+                vines_visibility_mode: FeatureVisibilityMode::Last,
                 hotkeys_open: false,
                 move_mode_open: true,
                 settings_open: true,
@@ -1278,10 +1358,13 @@ mod tests {
                 world_frame_visible: false,
                 world_axis_visible: true,
                 world_datum_visible: false,
+                sliders_visible: false,
+                debug_info_panel_visible: true,
                 settings_tab: SettingsTab::Theme,
                 settings_cursor: SettingsCursor {
                     positions: 1,
                     widgets: 2,
+                    features: 0,
                     gif: 0,
                     theme: 1,
                 },
@@ -1307,15 +1390,22 @@ mod tests {
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.dev_mode);
         assert!(!round_trip.meta.vines_visible);
+        assert_eq!(
+            round_trip.meta.vines_visibility_mode,
+            FeatureVisibilityMode::Last
+        );
         assert!(round_trip.meta.settings_open);
         assert!(round_trip.meta.move_mode_open);
         assert!(round_trip.meta.pointer_probe_open);
         assert!(!round_trip.meta.world_frame_visible);
         assert!(round_trip.meta.world_axis_visible);
         assert!(!round_trip.meta.world_datum_visible);
+        assert!(!round_trip.meta.sliders_visible);
+        assert!(round_trip.meta.debug_info_panel_visible);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
         assert_eq!(round_trip.meta.settings_cursor.positions, 1);
         assert_eq!(round_trip.meta.settings_cursor.widgets, 2);
+        assert_eq!(round_trip.meta.settings_cursor.features, 0);
         assert_eq!(round_trip.meta.settings_cursor.gif, 0);
         assert_eq!(round_trip.meta.settings_cursor.theme, 1);
         assert_eq!(round_trip.meta.move_target, MoveTarget::Hero);
@@ -1357,6 +1447,10 @@ mod tests {
         assert!(snapshot.meta.world_axis_visible);
         assert!(snapshot.meta.world_datum_visible);
         assert!(snapshot.meta.vines_visible);
+        assert_eq!(
+            snapshot.meta.vines_visibility_mode,
+            FeatureVisibilityMode::On
+        );
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
         assert_eq!(snapshot.meta.settings_cursor, SettingsCursor::default());
         assert_eq!(snapshot.meta.move_target, MoveTarget::Hero);
@@ -1412,6 +1506,31 @@ mod tests {
         ui.toggle_vines_visible();
         assert!(!ui.meta.vines_visible);
         ui.toggle_vines_visible();
+        assert!(ui.meta.vines_visible);
+    }
+
+    #[test]
+    fn feature_settings_cycle_vines_visibility_policy() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Features;
+        ui.meta.settings_cursor.features = 0;
+
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("feature toggle should succeed");
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Off);
+        assert!(!ui.meta.vines_visible);
+
+        ui.toggle_vines_visible();
+        assert!(ui.meta.vines_visible);
+
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("feature toggle should succeed");
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Last);
+        assert!(ui.meta.vines_visible);
+
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("feature toggle should succeed");
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::On);
         assert!(ui.meta.vines_visible);
     }
 
@@ -1507,7 +1626,8 @@ mod tests {
         ui.meta.active_world = WorldKindSnapshot::Sandbox;
 
         assert_eq!(ui.settings_item_count(SettingsTab::Positions), 1);
-        assert_eq!(ui.settings_item_count(SettingsTab::Ui), 3);
+        assert_eq!(ui.settings_item_count(SettingsTab::Ui), 5);
+        assert_eq!(ui.settings_item_count(SettingsTab::Features), 1);
         assert_eq!(ui.settings_item_count(SettingsTab::Gif), 1);
         assert_eq!(ui.settings_item_count(SettingsTab::Theme), 3);
     }
@@ -1523,6 +1643,8 @@ mod tests {
         assert!(!ui.meta.world_frame_visible);
         assert!(ui.meta.world_axis_visible);
         assert!(ui.meta.world_datum_visible);
+        assert!(ui.meta.sliders_visible);
+        assert!(ui.meta.debug_info_panel_visible);
 
         ui.meta.settings_cursor.widgets = 1;
         ui.activate_selected_setting_with_viewport(124, 32)
@@ -1533,6 +1655,64 @@ mod tests {
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
         assert!(!ui.meta.world_datum_visible);
+
+        ui.meta.settings_cursor.widgets = 3;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("ui toggle should succeed");
+        assert!(!ui.meta.sliders_visible);
+
+        ui.meta.settings_cursor.widgets = 4;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("ui toggle should succeed");
+        assert!(!ui.meta.debug_info_panel_visible);
+    }
+
+    #[test]
+    fn clean_launch_preserves_vines_visibility_policy_and_resolves_live_state() {
+        let mut ui = UiState::new();
+        ui.meta.vines_visibility_mode = FeatureVisibilityMode::Last;
+        ui.meta.vines_visible = false;
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+
+        ui.reset_for_clean_launch(WorldKind::MainScene);
+
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Last);
+        assert!(!ui.meta.vines_visible);
+        assert!(!ui.meta.dev_mode);
+        assert!(!ui.meta.settings_open);
+
+        ui.meta.vines_visibility_mode = FeatureVisibilityMode::Off;
+        ui.meta.vines_visible = true;
+        ui.reset_for_clean_launch(WorldKind::MainScene);
+        assert!(!ui.meta.vines_visible);
+
+        ui.meta.vines_visibility_mode = FeatureVisibilityMode::On;
+        ui.meta.vines_visible = false;
+        ui.reset_for_clean_launch(WorldKind::MainScene);
+        assert!(ui.meta.vines_visible);
+    }
+
+    #[test]
+    fn clean_launch_preserves_ui_visibility_preferences() {
+        let mut ui = UiState::new();
+        ui.meta.world_frame_visible = false;
+        ui.meta.world_axis_visible = false;
+        ui.meta.world_datum_visible = false;
+        ui.meta.sliders_visible = false;
+        ui.meta.debug_info_panel_visible = false;
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+
+        ui.reset_for_clean_launch(WorldKind::MainScene);
+
+        assert!(!ui.meta.world_frame_visible);
+        assert!(!ui.meta.world_axis_visible);
+        assert!(!ui.meta.world_datum_visible);
+        assert!(!ui.meta.sliders_visible);
+        assert!(!ui.meta.debug_info_panel_visible);
+        assert!(!ui.meta.dev_mode);
+        assert!(!ui.meta.settings_open);
     }
 
     #[test]

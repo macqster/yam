@@ -7,7 +7,9 @@ Coordination contract:
 - keep this file execution-focused
 - keep risk and status notes in `docs/audit.md`
 - keep the historical record in `docs/LOG.md`
+- keep active unresolved issue notes in `known_issues.md`
 - if a TODO item becomes mainly a risk note, move it to the audit
+- if a TODO item is blocked on or clarified by an active issue, link the matching `known_issues.md` entry
 - if a TODO item becomes historical, record the closure in the log and remove it here
 
 ## 1. Scene Model and Presentation Contract

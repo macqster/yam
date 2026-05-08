@@ -11,12 +11,23 @@ install_wrappers() {
   chmod +x "$BIN_DIR/yam" "$BIN_DIR/yam-sandbox"
 }
 
-echo "[yam] updating dependencies..."
-cargo update
-echo "[yam] checking build..."
-cargo check
-echo "[yam] rebuilding + reinstalling..."
-cargo install --path . --force --locked
+run_cargo_with_offline_fallback() {
+  local description="$1"
+  shift
+
+  echo "[yam] ${description} (offline-first)..."
+  if cargo "$@" --offline; then
+    return 0
+  fi
+
+  echo "[yam] offline path unavailable; retrying with network..."
+  cargo "$@"
+}
+
+cd "$ROOT"
+
+run_cargo_with_offline_fallback "checking build" check --locked
+run_cargo_with_offline_fallback "rebuilding + reinstalling" install --path . --force --locked
 echo "[yam] installing launcher wrappers..."
 install_wrappers
 echo "[yam] done."

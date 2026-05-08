@@ -4,6 +4,7 @@
 
 - [`../README.md`](../README.md) - current repo and runtime overview
 - [`../TODO.md`](../TODO.md) - active backlog
+- [`../known_issues.md`](../known_issues.md) - active unresolved issue tracker
 - [`LOG.md`](LOG.md) - current repository log
 - [`hygiene.md`](hygiene.md) - repo hygiene rules
 - [`audit.md`](audit.md) - current repo audit
@@ -24,7 +25,8 @@
 - If unsure where to make a change, start here.
 - `README.md` carries the one-line YAM slogan and non-goals; `docs/architecture.md` and `docs/scene-model.md` carry the detailed contracts.
 - `TODO.md` should stay execution-focused, `docs/audit.md` should stay risk-focused, and `docs/LOG.md` should stay append-only.
-- `docs/LOG.md` prefers day headers with inline timestamps for new entries; older history stays intact unless a maintenance pass explicitly needs to refine it.
+- `known_issues.md` should stay issue-focused, timestamped, and tightly linked to the relevant backlog, log, and front-door docs.
+- `docs/LOG.md` prefers newest-first day headers with inline timestamps for new entries; older history stays intact unless a maintenance pass explicitly needs to refine it.
 - current project priority is stability and efficiency first, with hero GIF aesthetics held steady and flora deferred until the system is prepared for it.
 - `docs/glossary.md` is the shared terminology source of truth; the other docs should point back to it instead of redefining terms.
 - if a term looks shared or ambiguous, check `docs/glossary.md` before extending a contract doc.

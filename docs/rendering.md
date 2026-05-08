@@ -59,7 +59,7 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 
 - `hotkeys` - the discoverability sheet for the current dev controls
 - `move` - target selection and movement for world-attached entities
-- `settings` - tabbed presentation/state inspection for positions, widgets, gif, and theme values
+- `settings` - tabbed presentation/state inspection for positions, ui overlays, features, gif, and theme values
 - `pointer` - dev-only probe state, shown through the debug surface rather than as a standalone modal
 - `camera home` - stored and recalled through the runtime keys, not through a separate overlay
 

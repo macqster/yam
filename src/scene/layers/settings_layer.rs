@@ -136,6 +136,27 @@ fn position_lines(ui: &UiState, camera_locked: bool) -> Vec<String> {
             ui,
             2,
         ));
+        lines.push(format_axis_line(
+            "weather offset",
+            ui.offsets.weather_dx as i32,
+            ui.offsets.weather_dy as i32,
+            ui,
+            3,
+        ));
+        lines.push(format_axis_line(
+            "date offset",
+            ui.offsets.date_dx as i32,
+            ui.offsets.date_dy as i32,
+            ui,
+            4,
+        ));
+        lines.push(format_axis_line(
+            "calendar offset",
+            ui.offsets.calendar_dx as i32,
+            ui.offsets.calendar_dy as i32,
+            ui,
+            5,
+        ));
     }
 
     lines
@@ -233,6 +254,9 @@ fn maybe_draw_active_axis_field(
         0 => "camera",
         1 => "hero offset",
         2 => "clock offset",
+        3 => "weather offset",
+        4 => "date offset",
+        5 => "calendar offset",
         _ => return,
     };
     let prefix_len = format!("{}: ", label).chars().count() as u16;
@@ -302,6 +326,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -363,6 +388,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -405,6 +431,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -453,6 +480,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -495,6 +523,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -524,6 +553,7 @@ mod tests {
         assert!(text.contains("camera: x ="));
         assert!(text.contains("hero offset: x ="));
         assert!(text.contains("clock offset: x ="));
+        assert!(text.contains("weather offset: x ="));
     }
 
     #[test]
@@ -536,6 +566,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -578,6 +609,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -608,6 +640,7 @@ mod tests {
         assert!(text.contains("camera: [locked in fullscreen]"));
         assert!(!text.contains("hero offset:"));
         assert!(!text.contains("clock offset:"));
+        assert!(!text.contains("weather offset:"));
     }
 
     #[test]
@@ -620,6 +653,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {

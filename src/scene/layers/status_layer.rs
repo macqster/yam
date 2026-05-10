@@ -85,6 +85,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -125,6 +126,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -163,6 +165,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -214,6 +217,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {

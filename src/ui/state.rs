@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs, io,
     path::{Path, PathBuf},
+    sync::mpsc::{self, Receiver},
+    thread,
     time::{Duration, Instant},
 };
 
@@ -9,7 +11,12 @@ use crate::core::world::WorldKind;
 use crate::render::fonts::ClockFont;
 use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
-use crate::scene::entity::hero_and_clock_poses;
+use crate::scene::entity::hero_scene_poses;
+use crate::weather::model::{WeatherLocale, WeatherLocation, WeatherSnapshot};
+use crate::weather::provider::{
+    StaticWeatherProvider, WeatherError, WeatherProvider, WttrInWeatherProvider,
+};
+use crate::weather::render::WeatherLayout;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -170,6 +177,8 @@ pub enum MoveTarget {
     Hero,
     Clock,
     Weather,
+    Date,
+    Calendar,
 }
 
 impl MoveTarget {
@@ -178,6 +187,8 @@ impl MoveTarget {
             MoveTarget::Hero => "hero",
             MoveTarget::Clock => "clock",
             MoveTarget::Weather => "weather",
+            MoveTarget::Date => "date",
+            MoveTarget::Calendar => "calendar",
         }
     }
 }
@@ -226,7 +237,7 @@ impl SettingsTab {
 
     pub fn item_count(self) -> usize {
         match self {
-            SettingsTab::Positions => 3,
+            SettingsTab::Positions => 6,
             SettingsTab::Ui => 5,
             SettingsTab::Features => 1,
             SettingsTab::Gif => 3,
@@ -444,6 +455,12 @@ pub struct UiOffsets {
     pub hero_dy: i32,
     pub clock_dx: i16,
     pub clock_dy: i16,
+    pub weather_dx: i16,
+    pub weather_dy: i16,
+    pub date_dx: i16,
+    pub date_dy: i16,
+    pub calendar_dx: i16,
+    pub calendar_dy: i16,
     pub clock_font: String,
     pub hero_fps: f32,
 }
@@ -461,6 +478,12 @@ impl Default for UiOffsets {
             hero_dy: -39,
             clock_dx: 95,
             clock_dy: -10,
+            weather_dx: 120,
+            weather_dy: 14,
+            date_dx: 95,
+            date_dy: -4,
+            calendar_dx: 126,
+            calendar_dy: -4,
             clock_font: "gothic".to_string(),
             hero_fps: 2.0,
         }
@@ -477,6 +500,13 @@ pub struct UiState {
     pub pointer_blink_on: bool,
     pub settings_edit: SettingsEditState,
     pub loading: LoadingState,
+    pub weather_location: WeatherLocation,
+    pub weather_snapshot: Option<WeatherSnapshot>,
+    pub weather_last_refresh: Option<Instant>,
+    pub weather_refresh_interval: Duration,
+    pub weather_refresh_rx: Option<Receiver<Result<WeatherSnapshot, WeatherError>>>,
+    pub weather_locale: WeatherLocale,
+    pub weather_layout: WeatherLayout,
 }
 
 impl UiState {
@@ -496,6 +526,13 @@ impl UiState {
             pointer_blink_on: true,
             settings_edit: SettingsEditState::default(),
             loading: LoadingState::default(),
+            weather_location: WeatherLocation::named("Sulkowice"),
+            weather_snapshot: None,
+            weather_last_refresh: None,
+            weather_refresh_interval: Duration::from_secs(15 * 60),
+            weather_refresh_rx: None,
+            weather_locale: WeatherLocale::En,
+            weather_layout: WeatherLayout::WttrCompact,
         }
     }
 
@@ -509,6 +546,7 @@ impl UiState {
         state.camera.x = state.offsets.camera_x;
         state.camera.y = state.offsets.camera_y;
         state.pointer_blink_on = true;
+        state.start_weather_refresh();
         state
     }
 
@@ -537,6 +575,87 @@ impl UiState {
         self.settings_edit.clear();
         self.loading = LoadingState::default();
         self.pointer_blink_on = true;
+    }
+
+    pub fn refresh_weather_if_due(&mut self) {
+        self.finish_weather_refresh_if_ready();
+        if self.weather_refresh_rx.is_some() {
+            return;
+        }
+        let now = Instant::now();
+        if self
+            .weather_last_refresh
+            .is_none_or(|last| now.duration_since(last) >= self.weather_refresh_interval)
+        {
+            self.start_weather_refresh();
+        }
+    }
+
+    #[cfg(test)]
+    pub fn refresh_weather_now(&mut self) {
+        self.start_weather_refresh();
+        self.finish_weather_refresh_blocking();
+    }
+
+    pub fn start_weather_refresh(&mut self) {
+        if self.weather_refresh_rx.is_some() {
+            return;
+        }
+        let location = self.weather_location.clone();
+        let (tx, rx) = mpsc::channel();
+        thread::spawn(move || {
+            let provider = WttrInWeatherProvider;
+            let result = provider.snapshot(&location);
+            let _ = tx.send(result);
+        });
+        self.weather_refresh_rx = Some(rx);
+    }
+
+    fn finish_weather_refresh_if_ready(&mut self) {
+        let Some(rx) = self.weather_refresh_rx.as_ref() else {
+            return;
+        };
+        match rx.try_recv() {
+            Ok(result) => {
+                self.weather_refresh_rx = None;
+                self.apply_weather_refresh_result(result);
+            }
+            Err(mpsc::TryRecvError::Empty) => {}
+            Err(mpsc::TryRecvError::Disconnected) => {
+                self.weather_refresh_rx = None;
+                self.apply_weather_refresh_result(Err(WeatherError::Unavailable));
+            }
+        }
+    }
+
+    #[cfg(test)]
+    fn finish_weather_refresh_blocking(&mut self) {
+        let Some(rx) = self.weather_refresh_rx.take() else {
+            return;
+        };
+        let result = rx.recv().unwrap_or(Err(WeatherError::Unavailable));
+        self.apply_weather_refresh_result(result);
+    }
+
+    fn apply_weather_refresh_result(&mut self, result: Result<WeatherSnapshot, WeatherError>) {
+        match result {
+            Ok(snapshot) => {
+                self.weather_snapshot = Some(snapshot);
+                self.weather_last_refresh = Some(Instant::now());
+            }
+            Err(_) => {
+                if let Some(snapshot) = self.weather_snapshot.as_mut() {
+                    snapshot.stale = true;
+                } else {
+                    let provider = StaticWeatherProvider;
+                    if let Ok(mut snapshot) = provider.snapshot(&self.weather_location) {
+                        snapshot.stale = true;
+                        self.weather_snapshot = Some(snapshot);
+                    }
+                }
+                self.weather_last_refresh = Some(Instant::now());
+            }
+        }
     }
 
     pub fn next_font(&mut self) {
@@ -665,6 +784,15 @@ impl UiState {
             0 => (self.offsets.camera_x, self.offsets.camera_y),
             1 => (self.offsets.hero_dx, self.offsets.hero_dy),
             2 => (self.offsets.clock_dx as i32, self.offsets.clock_dy as i32),
+            3 => (
+                self.offsets.weather_dx as i32,
+                self.offsets.weather_dy as i32,
+            ),
+            4 => (self.offsets.date_dx as i32, self.offsets.date_dy as i32),
+            5 => (
+                self.offsets.calendar_dx as i32,
+                self.offsets.calendar_dy as i32,
+            ),
             _ => return,
         };
         self.settings_edit.active = true;
@@ -854,6 +982,18 @@ impl UiState {
                 self.offsets.clock_dx = x.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
                 self.offsets.clock_dy = y.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
             }
+            3 => {
+                self.offsets.weather_dx = x.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+                self.offsets.weather_dy = y.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+            }
+            4 => {
+                self.offsets.date_dx = x.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+                self.offsets.date_dy = y.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+            }
+            5 => {
+                self.offsets.calendar_dx = x.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+                self.offsets.calendar_dy = y.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+            }
             _ => {}
         }
 
@@ -895,8 +1035,8 @@ impl UiState {
         }
     }
 
-    pub fn hero_clock_attachment(&self) -> crate::scene::entity::HeroClockAttachment {
-        hero_and_clock_poses(
+    pub fn hero_scene_attachment(&self) -> crate::scene::entity::HeroSceneAttachment {
+        hero_scene_poses(
             crate::scene::coords::WorldPos {
                 x: self.hero.x,
                 y: self.hero.y,
@@ -908,6 +1048,18 @@ impl UiState {
             crate::scene::coords::WorldPos {
                 x: self.offsets.clock_dx as i32,
                 y: self.offsets.clock_dy as i32,
+            },
+            crate::scene::coords::WorldPos {
+                x: self.offsets.weather_dx as i32,
+                y: self.offsets.weather_dy as i32,
+            },
+            crate::scene::coords::WorldPos {
+                x: self.offsets.date_dx as i32,
+                y: self.offsets.date_dy as i32,
+            },
+            crate::scene::coords::WorldPos {
+                x: self.offsets.calendar_dx as i32,
+                y: self.offsets.calendar_dy as i32,
             },
         )
     }
@@ -938,7 +1090,18 @@ impl UiState {
                 self.offsets.clock_dx = (self.offsets.clock_dx + dx).clamp(-200, 200);
                 self.offsets.clock_dy = (self.offsets.clock_dy + dy).clamp(-200, 200);
             }
-            MoveTarget::Weather => {}
+            MoveTarget::Weather => {
+                self.offsets.weather_dx = (self.offsets.weather_dx + dx).clamp(-200, 200);
+                self.offsets.weather_dy = (self.offsets.weather_dy + dy).clamp(-200, 200);
+            }
+            MoveTarget::Date => {
+                self.offsets.date_dx = (self.offsets.date_dx + dx).clamp(-200, 200);
+                self.offsets.date_dy = (self.offsets.date_dy + dy).clamp(-200, 200);
+            }
+            MoveTarget::Calendar => {
+                self.offsets.calendar_dx = (self.offsets.calendar_dx + dx).clamp(-200, 200);
+                self.offsets.calendar_dy = (self.offsets.calendar_dy + dy).clamp(-200, 200);
+            }
         }
         self.save_state();
         Ok(())
@@ -1269,38 +1432,50 @@ mod tests {
     }
 
     #[test]
-    fn hero_clock_attachment_uses_ui_offsets_as_runtime_source_of_truth() {
+    fn hero_scene_attachment_uses_ui_offsets_as_runtime_source_of_truth() {
         let ui = UiState::new();
-        let attachment = ui.hero_clock_attachment();
+        let attachment = ui.hero_scene_attachment();
 
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
         assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -68, y: 21 });
         assert_eq!(attachment.clock_world(), WorldPos { x: 27, y: 11 });
+        assert_eq!(attachment.weather_world(), WorldPos { x: 52, y: 35 });
+        assert_eq!(attachment.date_world(), WorldPos { x: 27, y: 17 });
+        assert_eq!(attachment.calendar_world(), WorldPos { x: 58, y: 17 });
     }
 
     #[test]
-    fn hero_clock_attachment_reflects_offset_changes() {
+    fn hero_scene_attachment_reflects_offset_changes() {
         let mut ui = UiState::new();
         ui.offsets.hero_dx = -100;
         ui.offsets.hero_dy = -50;
         ui.offsets.clock_dx = 12;
         ui.offsets.clock_dy = -3;
+        ui.offsets.weather_dx = 40;
+        ui.offsets.weather_dy = 8;
+        ui.offsets.date_dx = 12;
+        ui.offsets.date_dy = 4;
+        ui.offsets.calendar_dx = 30;
+        ui.offsets.calendar_dy = 4;
 
-        let attachment = ui.hero_clock_attachment();
+        let attachment = ui.hero_scene_attachment();
 
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
         assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: 50, y: 10 });
         assert_eq!(attachment.clock_world(), WorldPos { x: 62, y: 7 });
+        assert_eq!(attachment.weather_world(), WorldPos { x: 90, y: 18 });
+        assert_eq!(attachment.date_world(), WorldPos { x: 62, y: 14 });
+        assert_eq!(attachment.calendar_world(), WorldPos { x: 80, y: 14 });
     }
 
     #[test]
     fn toggling_meta_does_not_change_attachment_facts() {
         let mut ui = UiState::new();
-        let baseline = ui.hero_clock_attachment();
+        let baseline = ui.hero_scene_attachment();
 
         ui.toggle_dev_mode();
 
-        let after_toggle = ui.hero_clock_attachment();
+        let after_toggle = ui.hero_scene_attachment();
 
         assert_eq!(baseline.hero_world(), after_toggle.hero_world());
         assert_eq!(
@@ -1308,17 +1483,20 @@ mod tests {
             after_toggle.hero_visual_anchor()
         );
         assert_eq!(baseline.clock_world(), after_toggle.clock_world());
+        assert_eq!(baseline.weather_world(), after_toggle.weather_world());
+        assert_eq!(baseline.date_world(), after_toggle.date_world());
+        assert_eq!(baseline.calendar_world(), after_toggle.calendar_world());
     }
 
     #[test]
     fn move_target_selection_changes_without_touching_attachment_facts() {
         let mut ui = UiState::new();
-        let baseline = ui.hero_clock_attachment();
+        let baseline = ui.hero_scene_attachment();
 
         ui.toggle_move_mode();
         ui.meta.select_move_target(MoveTarget::Clock);
 
-        let after_select = ui.hero_clock_attachment();
+        let after_select = ui.hero_scene_attachment();
 
         assert_eq!(baseline.hero_world(), after_select.hero_world());
         assert_eq!(
@@ -1326,7 +1504,92 @@ mod tests {
             after_select.hero_visual_anchor()
         );
         assert_eq!(baseline.clock_world(), after_select.clock_world());
+        assert_eq!(baseline.weather_world(), after_select.weather_world());
+        assert_eq!(baseline.date_world(), after_select.date_world());
+        assert_eq!(baseline.calendar_world(), after_select.calendar_world());
         assert_eq!(ui.meta.move_target, MoveTarget::Clock);
+    }
+
+    #[test]
+    fn refresh_weather_now_populates_cached_snapshot() {
+        let mut ui = UiState::new();
+
+        assert!(ui.weather_snapshot.is_none());
+        assert!(ui.weather_last_refresh.is_none());
+
+        ui.refresh_weather_now();
+
+        assert!(ui.weather_snapshot.is_some());
+        assert!(ui.weather_last_refresh.is_some());
+        assert_eq!(ui.weather_location.label, "Sulkowice");
+    }
+
+    #[test]
+    fn failed_weather_refresh_marks_existing_snapshot_stale() {
+        let mut ui = UiState::new();
+        ui.refresh_weather_now();
+        let fresh = ui
+            .weather_snapshot
+            .clone()
+            .expect("refresh should populate a weather snapshot");
+        assert!(!fresh.stale);
+
+        ui.apply_weather_refresh_result(Err(WeatherError::Unavailable));
+
+        let refreshed = ui
+            .weather_snapshot
+            .as_ref()
+            .expect("existing weather snapshot should be preserved");
+        assert_eq!(refreshed.location_label, fresh.location_label);
+        assert!(refreshed.stale);
+    }
+
+    #[test]
+    fn commit_settings_edit_updates_weather_offsets() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Positions;
+        ui.meta.settings_cursor.positions = 3;
+        ui.begin_settings_edit();
+        ui.settings_edit.x_buffer = "88".to_string();
+        ui.settings_edit.y_buffer = "-12".to_string();
+
+        ui.commit_settings_edit()
+            .expect("weather offset edit should commit");
+
+        assert_eq!(ui.offsets.weather_dx, 88);
+        assert_eq!(ui.offsets.weather_dy, -12);
+    }
+
+    #[test]
+    fn commit_settings_edit_updates_date_offsets() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Positions;
+        ui.meta.settings_cursor.positions = 4;
+        ui.begin_settings_edit();
+        ui.settings_edit.x_buffer = "77".to_string();
+        ui.settings_edit.y_buffer = "-6".to_string();
+
+        ui.commit_settings_edit()
+            .expect("date offset edit should commit");
+
+        assert_eq!(ui.offsets.date_dx, 77);
+        assert_eq!(ui.offsets.date_dy, -6);
+    }
+
+    #[test]
+    fn commit_settings_edit_updates_calendar_offsets() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Positions;
+        ui.meta.settings_cursor.positions = 5;
+        ui.begin_settings_edit();
+        ui.settings_edit.x_buffer = "132".to_string();
+        ui.settings_edit.y_buffer = "5".to_string();
+
+        ui.commit_settings_edit()
+            .expect("calendar offset edit should commit");
+
+        assert_eq!(ui.offsets.calendar_dx, 132);
+        assert_eq!(ui.offsets.calendar_dy, 5);
     }
 
     #[test]
@@ -1343,6 +1606,12 @@ mod tests {
                 hero_dy: -43,
                 clock_dx: 77,
                 clock_dy: -5,
+                weather_dx: 123,
+                weather_dy: 11,
+                date_dx: 71,
+                date_dy: 3,
+                calendar_dx: 140,
+                calendar_dy: 9,
                 clock_font: "fender".to_string(),
                 hero_fps: 4.5,
             },
@@ -1386,6 +1655,12 @@ mod tests {
         assert_eq!(round_trip.offsets.hero_dy, -43);
         assert_eq!(round_trip.offsets.clock_dx, 77);
         assert_eq!(round_trip.offsets.clock_dy, -5);
+        assert_eq!(round_trip.offsets.weather_dx, 123);
+        assert_eq!(round_trip.offsets.weather_dy, 11);
+        assert_eq!(round_trip.offsets.date_dx, 71);
+        assert_eq!(round_trip.offsets.date_dy, 3);
+        assert_eq!(round_trip.offsets.calendar_dx, 140);
+        assert_eq!(round_trip.offsets.calendar_dy, 9);
         assert_eq!(round_trip.offsets.clock_font, "fender");
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
         assert!(round_trip.meta.dev_mode);
@@ -1437,6 +1712,10 @@ mod tests {
         assert_eq!(snapshot.offsets.hero_dy, -8);
         assert_eq!(snapshot.offsets.clock_dx, 7);
         assert_eq!(snapshot.offsets.clock_dy, -6);
+        assert_eq!(snapshot.offsets.date_dx, 95);
+        assert_eq!(snapshot.offsets.date_dy, -4);
+        assert_eq!(snapshot.offsets.calendar_dx, 126);
+        assert_eq!(snapshot.offsets.calendar_dy, -4);
         assert_eq!(snapshot.offsets.clock_font, "small");
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
         assert!(!snapshot.meta.dev_mode);

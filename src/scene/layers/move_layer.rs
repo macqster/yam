@@ -33,7 +33,7 @@ impl Layer for MoveLayer {
             frame,
             "[m]ove",
             Some(ModalFooter {
-                left: "1 2 3  ──  h j k l",
+                left: "1 2 3 4 5  ──  h j k l",
                 right: "? ⎋",
             }),
         );
@@ -46,7 +46,9 @@ impl Layer for MoveLayer {
             format!("target: {}", ui.meta.move_target.title()),
             "[1] hero".to_string(),
             "[2] clock".to_string(),
-            "[3] weather (future)".to_string(),
+            "[3] weather".to_string(),
+            "[4] date".to_string(),
+            "[5] calendar".to_string(),
             "hjkl move selected target".to_string(),
             "[Esc] or [m] exit move mode".to_string(),
         ];
@@ -88,6 +90,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -119,8 +122,10 @@ mod tests {
 
         assert!(text.contains("[m]ove"));
         assert!(text.contains("target: hero"));
-        assert!(text.contains("[3] weather (future)"));
-        assert!(text.contains("1 2 3"));
+        assert!(text.contains("[3] weather"));
+        assert!(text.contains("[4] date"));
+        assert!(text.contains("[5] calendar"));
+        assert!(text.contains("1 2 3 4 5"));
         assert!(text.contains("h j k l"));
         assert!(text.contains("? ⎋"));
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;

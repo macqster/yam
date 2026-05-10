@@ -44,12 +44,15 @@
 - `Scene` builds ordered layers through `ui::scene::build_ui_layers`
 - `Scene` computes a read-only `RenderState` once per frame and passes it to every layer
 - `RenderState` is split into:
-  - `world`: hero and clock attachment facts that stay world-pinned
+  - `world`: hero and companion attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
-- `UiState` owns the runtime attachment offsets that feed the hero/clock attachment object
-- the current main-scene boot composition for hero and clock still comes from `UiOffsets::default()`; those hard-coded start values are acceptable as runtime defaults for now, but the `settings` layer is the intended eventual owner for user-tweakable composition values
+- `UiState` owns the runtime attachment offsets that feed the hero-scene attachment object
+- `UiState` also owns the current cached weather snapshot and its refresh cadence, so the weather layer stays render-only instead of performing provider work inline; runtime is responsible for advancing that refresh seam outside the draw path
+- `UiState` also owns the current weather presentation settings that are intentionally independent from the provider path, such as locale and layout selection, so future widget-shape changes do not leak back into fetch/normalization code
+- the current main-scene boot composition for hero, clock, and weather still comes from `UiOffsets::default()`; those hard-coded start values are acceptable as runtime defaults for now, but the `settings` layer is the intended eventual owner for user-tweakable composition values
 - `WorldState` owns `GuideState` so world-attached guide primitives stay in simulation data, not UI state
-- hero and clock attachment facts are computed through explicit `scene::entity::HeroClockAttachment` produced by `scene::entity::hero_and_clock_poses(...)`
+- hero, clock, weather, and the reserved future `date` / `calendar` companion seams are computed through explicit `scene::entity::HeroSceneAttachment` produced by `scene::entity::hero_scene_poses(...)`
+- the canonical weather-widget provider/model/render ownership contract lives in [`weather-widget.md`](weather-widget.md); architecture should treat that document as the source of truth for weather backend and sprite-atlas boundaries
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`
 - `Scene` converts the final grid into ratatui `Line`s
@@ -188,7 +191,8 @@
 
 - field/background: `z_index = 0`
 - hero/entity: `z_index = 10`
-- clock/world entity: `z_index = 100`
+- clock/world companion: `z_index = 100`
+- weather/world companion: `z_index = 100`
 - debug overlay: `z_index = 300`
 - hotkeys popup: `z_index = 390`
 - move popup: `z_index = 395`

@@ -8,6 +8,11 @@ pub struct WorldFrame {
     pub hero_world: WorldPos,
     pub hero_visual_anchor: WorldPos,
     pub clock_world: WorldPos,
+    pub weather_world: WorldPos,
+    #[allow(dead_code)]
+    pub date_world: WorldPos,
+    #[allow(dead_code)]
+    pub calendar_world: WorldPos,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -32,6 +37,35 @@ impl RenderState {
             self.hud.camera.height,
         )
     }
+
+    pub fn weather_screen(&self) -> WorldPos {
+        world_to_screen(
+            self.world.weather_world,
+            self.hud.camera.x,
+            self.hud.camera.y,
+            self.hud.camera.height,
+        )
+    }
+
+    #[allow(dead_code)]
+    pub fn date_screen(&self) -> WorldPos {
+        world_to_screen(
+            self.world.date_world,
+            self.hud.camera.x,
+            self.hud.camera.y,
+            self.hud.camera.height,
+        )
+    }
+
+    #[allow(dead_code)]
+    pub fn calendar_screen(&self) -> WorldPos {
+        world_to_screen(
+            self.world.calendar_world,
+            self.hud.camera.x,
+            self.hud.camera.y,
+            self.hud.camera.height,
+        )
+    }
 }
 
 #[cfg(test)]
@@ -46,6 +80,9 @@ mod tests {
             hero_world: WorldPos { x: 50, y: 30 },
             hero_visual_anchor: WorldPos { x: 40, y: 20 },
             clock_world: WorldPos { x: 45, y: 25 },
+            weather_world: WorldPos { x: 55, y: 26 },
+            date_world: WorldPos { x: 45, y: 23 },
+            calendar_world: WorldPos { x: 60, y: 22 },
         };
         let hud = HudFrame {
             viewport: Viewport {
@@ -91,11 +128,52 @@ mod tests {
     }
 
     #[test]
+    fn weather_screen_matches_the_shared_projection_helpers() {
+        let world = WorldFrame {
+            hero_world: WorldPos { x: 50, y: 30 },
+            hero_visual_anchor: WorldPos { x: 40, y: 20 },
+            clock_world: WorldPos { x: 45, y: 25 },
+            weather_world: WorldPos { x: 55, y: 26 },
+            date_world: WorldPos { x: 45, y: 23 },
+            calendar_world: WorldPos { x: 60, y: 22 },
+        };
+        let hud = HudFrame {
+            viewport: Viewport {
+                x: 30,
+                y: 10,
+                width: 124,
+                height: 32,
+            },
+            viewport_rect: Rect::new(0, 0, 124, 32),
+            camera: Camera {
+                x: 30,
+                y: 10,
+                width: 124,
+                height: 32,
+                follow_hero: false,
+            },
+        };
+        let state = RenderState { world, hud };
+
+        let expected = world_to_screen(
+            state.world.weather_world,
+            state.hud.camera.x,
+            state.hud.camera.y,
+            state.hud.camera.height,
+        );
+
+        assert_eq!(state.weather_screen(), expected);
+    }
+
+    #[test]
     fn hero_and_clock_projection_helpers_agree_with_viewport_origin() {
         let world = WorldFrame {
             hero_world: WorldPos { x: 50, y: 30 },
             hero_visual_anchor: WorldPos { x: 40, y: 20 },
             clock_world: WorldPos { x: 45, y: 25 },
+            weather_world: WorldPos { x: 55, y: 26 },
+            date_world: WorldPos { x: 45, y: 23 },
+            calendar_world: WorldPos { x: 60, y: 22 },
         };
         let hud = HudFrame {
             viewport: Viewport {
@@ -156,6 +234,9 @@ mod tests {
             hero_world: WorldPos { x: 1, y: 1 },
             hero_visual_anchor: WorldPos { x: 1, y: 1 },
             clock_world: WorldPos { x: 1, y: 1 },
+            weather_world: WorldPos { x: 1, y: 1 },
+            date_world: WorldPos { x: 1, y: 1 },
+            calendar_world: WorldPos { x: 1, y: 1 },
         };
         let hud = HudFrame {
             viewport: Viewport {

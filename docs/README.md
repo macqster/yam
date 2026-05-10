@@ -10,6 +10,7 @@
 - [`audit.md`](audit.md) - current repo audit
 - [`glossary.md`](glossary.md) - YAM glossary and terminology source of truth
 - [`theme.md`](theme.md) - reusable BTAS theme contract for the architecture
+- [`weather-widget.md`](weather-widget.md) - canonical weather-widget design brief
 - [`vines.md`](vines.md) - pre-runtime ownership contract for future vine work
 - [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
 - [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
@@ -44,6 +45,7 @@
 - Conceptual behavior changes -> `docs/scene-model.md`
 - Ownership and architecture changes -> `docs/architecture.md`
 - Rendering and layer-order changes -> `docs/rendering.md`
+- Weather provider/model/widget design changes -> `docs/weather-widget.md`
 - Vine ownership and readiness changes -> `docs/vines.md`
 - Work order and validation changes -> `TODO.md`
 - Risk and status changes -> `docs/audit.md`

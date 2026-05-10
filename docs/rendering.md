@@ -49,6 +49,8 @@ Rules:
 ## Visible Content Map
 
 - main scene: hero GIF, tree-stump scaffolding with a Y-shaped fork under the hero, vines, flora, guides, weather/clock composition, and world-tied diagnostic geometry
+- weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
+- sandbox: weather sprite-table and layout-inspection trials should render here when comparative visual review is needed, so atlas iteration does not have to compete with the main-scene composition
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only
 - debug/inspect: coordinate readouts, camera/world position, probe state, entity detail, and other readable diagnostics; it may show numbers and labels, but not the main command vocabulary
 - modal overlay: hotkeys, move, settings, command help, and temporary control surfaces that are opened intentionally
@@ -337,8 +339,8 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - The recent hero-rendering test run that produced the `hero-ansipx` preview artifacts was unsuccessful and remains a cautionary experiment only; it does not change the active Chafa-backed baseline.
 - `write_string` currently iterates `char`s, not display-width-aware graphemes.
 - `grid_to_lines` groups adjacent cells by style.
-- Clock attachment on the active path is world-pinned: the clock follows the hero in world space and keeps its own hero-relative offset. It does not inherit camera, viewport, or terminal motion directly.
-- Debug info that prints clock position is reporting the projected world-entity clock position, not a screen-attached UI placement.
+- Clock and weather attachment on the active path are world-pinned sibling companions: both follow the hero in world space and keep their own hero-relative offsets. They do not inherit camera, viewport, or terminal motion directly.
+- Debug info that prints companion positions is reporting projected world-entity positions, not screen-attached UI placement.
 - Debug world borders are rendered as a stable ASCII 2x2 datum-centered indicator in world space, so they move with camera panning and remain a debug view of the real world bounds. It keeps one top padding row and one side padding cell for symmetry, and those margins are intentional and reserved for future UI placement. The bottom one-row padding is currently occupied by the footer.
 - The world itself keeps a 1-cell inset boundary, and the HUD/viewport overlay layer also keeps a 1-cell inset boundary where needed for future UI elements.
 

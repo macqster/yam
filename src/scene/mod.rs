@@ -116,15 +116,21 @@ pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
     let camera = camera_for_frame(world_rect, ui);
     let viewport = Viewport::from_camera(&camera, world_rect.width, world_rect.height);
     let viewport_rect = world_rect;
-    let attachment = ui.hero_clock_attachment();
+    let attachment = ui.hero_scene_attachment();
     let hero_world = attachment.hero_world();
     let hero_visual_anchor = attachment.hero_visual_anchor();
     let clock_world = attachment.clock_world();
+    let weather_world = attachment.weather_world();
+    let date_world = attachment.date_world();
+    let calendar_world = attachment.calendar_world();
     RenderState {
         world: WorldFrame {
             hero_world,
             hero_visual_anchor,
             clock_world,
+            weather_world,
+            date_world,
+            calendar_world,
         },
         hud: HudFrame {
             viewport,

@@ -42,6 +42,8 @@ Current popup-shell grammar is intentionally more specific:
 - settings tabs: inactive rust `#B24E2E`, active brick red `#A33A32`
 - selected settings row background: navy `#243B73`
 
+Weather-widget work should stay inside this palette vocabulary as well; the canonical weather-specific role mapping and sprite-color guidance live in [`weather-widget.md`](weather-widget.md).
+
 ## Style model
 
 - `src/theme/style.rs` maps the semantic tokens into reusable style helpers.

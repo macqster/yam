@@ -45,7 +45,9 @@ impl Layer for HotkeysLayer {
             "[m] toggle move mode",
             "  [1] hero",
             "  [2] clock",
-            "  [3] weather (future)",
+            "  [3] weather",
+            "  [4] date",
+            "  [5] calendar",
             "[h/j/k/l] move selected target",
             "[C] store camera home",
             "[c] recall camera home",
@@ -93,6 +95,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -131,6 +134,8 @@ mod tests {
         assert!(text.contains("[m] toggle move mode"));
         assert!(text.contains("[1] hero"));
         assert!(text.contains("[2] clock"));
+        assert!(text.contains("[4] date"));
+        assert!(text.contains("[5] calendar"));
         assert!(text.contains("[space] play/pause"));
         assert!(text.contains("↑ ↓"));
         assert!(text.contains("? ⎋"));

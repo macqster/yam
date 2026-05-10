@@ -66,6 +66,7 @@ pub fn run(
             WorldKind::Sandbox => crate::ui::state::WorldKindSnapshot::Sandbox,
         };
     }
+    ui_state.refresh_weather_if_due();
     ui_state.start_loading_boot();
     let mut world = WorldState::for_kind(ui_state.active_world_kind());
     let boot_world = WorldState::for_boot();
@@ -82,6 +83,7 @@ pub fn run(
     'run: loop {
         let frame_start = Instant::now();
         ui_state.update_loading();
+        ui_state.refresh_weather_if_due();
 
         while event::poll(Duration::from_millis(0))? {
             if let Event::Key(KeyEvent {

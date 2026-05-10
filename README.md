@@ -48,6 +48,7 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 - [`docs/README.md`](docs/README.md) - docs map
 - [`docs/glossary.md`](docs/glossary.md) - shared terminology source of truth
+- [`docs/weather-widget.md`](docs/weather-widget.md) - canonical weather-widget design brief
 - [`docs/vines.md`](docs/vines.md) - pre-runtime vine ownership contract
 - [`TODO.md`](TODO.md) - active backlog
 - [`known_issues.md`](known_issues.md) - active unresolved issue tracker
@@ -73,11 +74,16 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 - dev mode exposes a compact popup family for `hotkeys`, `move`, and `settings`
 - the settings popup currently owns:
-  - `positions` for camera / hero / clock offsets
+  - `positions` for camera / hero / clock / weather offsets, plus reserved companion seams for future `date` and `calendar` placement
   - `ui` for world frame, axis, datum, scrollbars, and debug info panel visibility
   - `features` for persisted main-scene vine visibility policy
+- hero, clock, and weather are treated as one world-attached companion composition, with sibling-companion seams also reserved for future `date` and `calendar` widgets or clock-cluster features
+- the main scene now includes a first compact weather-layer scaffold using a cached weather snapshot and native Ratatui rendering; runtime currently attempts background `wttr.in` refresh and falls back to a static prototype snapshot if live fetch fails
+- weather presentation is intentionally split into atlas / layout / localized-text seams so the current compact widget can evolve without re-owning fetch and normalization code, and sprite-shape trials can be inspected comparatively in the sandbox world
+- the current compact weather presentation now leans toward a `wttr.in`-style left-sprite/right-facts structure while staying fully native to YAM
 - runtime UI state is persisted at `~/.config/yam/state.json`, and clean startup now preserves these durable settings while still clearing transient dev/modal state
 - popup chrome follows the BTAS/TNBA theme direction documented in [`docs/theme.md`](docs/theme.md)
+- the canonical weather-widget direction lives in [`docs/weather-widget.md`](docs/weather-widget.md), with `wttr.in` as the preferred first provider, a provider-neutral internal model, and YAM-owned Ratatui sprite rendering
 
 ## Current Work
 

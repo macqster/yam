@@ -96,6 +96,13 @@ impl Layer for DebugLayer {
             && clock_screen.y >= 0
             && clock_screen.x < width as i32
             && clock_screen.y < height as i32;
+        let weather_world = ctx.world.weather_world;
+        let weather_screen = ctx.weather_screen();
+        let weather_visible = main_scene
+            && weather_screen.x >= 0
+            && weather_screen.y >= 0
+            && weather_screen.x < width as i32
+            && weather_screen.y < height as i32;
         let vine_count = world.flora.vines.len();
         let first_vine = world.flora.vines.first();
         let vine_line = if let Some(vine) = first_vine {
@@ -209,6 +216,12 @@ impl Layer for DebugLayer {
                 format!("Clock world: ({}, {})", clock_world.x, clock_world.y),
                 format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
                 format!("Clock visible: {}", clock_visible),
+                format!("Weather world: ({}, {})", weather_world.x, weather_world.y),
+                format!(
+                    "Weather screen: ({}, {})",
+                    weather_screen.x, weather_screen.y
+                ),
+                format!("Weather visible: {}", weather_visible),
                 vine_line,
                 vine_axis_line,
                 vine_tip_line,
@@ -644,6 +657,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -687,6 +701,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -793,6 +808,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -829,6 +845,9 @@ mod tests {
         assert!(text.contains("Clock world:"));
         assert!(text.contains("Clock screen:"));
         assert!(text.contains("Clock visible:"));
+        assert!(text.contains("Weather world:"));
+        assert!(text.contains("Weather screen:"));
+        assert!(text.contains("Weather visible:"));
         assert!(text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
         assert!(text.contains("Vine axes: 1 / segments:"));
         assert!(text.contains("Vine tips: 1 active / 0 dormant"));
@@ -849,6 +868,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -888,6 +908,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -930,6 +951,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -980,6 +1002,7 @@ mod tests {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
+                weather_world: WorldPos { x: 55, y: 26 },
             },
             hud: HudFrame {
                 viewport: Viewport {

@@ -6,6 +6,7 @@ mod scene;
 mod systems;
 mod theme;
 mod ui;
+mod weather;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     fn run(cmd: &str, args: &[&str]) {

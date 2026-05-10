@@ -162,6 +162,8 @@ Coordination contract:
 - [inspect] add a reusable styled hotkey-hint formatter so overlays can present compact cues like `↑↓ nav  ←→ change` with explicit token/description contrast.
 - [verify] hotkeys, move, and settings continue to share one centered modal shell so popup styling and geometry do not drift apart.
 - [verify] the clock remains a world-attached hero entity; debug info must report its projected screen position without implying a screen-attached UI clock.
+- [inspect] revisit future manual weather-sprite authoring through MoebiusXBIN or similar XBIN tooling only as an offline art workflow; keep runtime assets plain-text plus semantic role mapping unless a later experiment proves a cleaner import path.
+- [inspect] stage the first manual weather-sprite batch around the current seed grammar: keep `clear`, `partly_cloudy`, `cloudy`, and `unknown` as anchors; likely reclassify the current dense `mist` asset toward `fog`; and add `clear_night`, `very_cloudy`, `overcast`, lighter true `mist`, plus the first stronger overlay variants such as `light_showers`, `heavy_rain`, `heavy_snow`, and `light_sleet`.
 - [inspect] audit the current projection path for any remaining split responsibilities.
 - [verify] use the bug taxonomy as a checklist for missing regression coverage.
 - [verify] the active backlog stays aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.

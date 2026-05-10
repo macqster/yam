@@ -41,6 +41,50 @@ pub fn loading_text() -> Style {
     Style::default().fg(palette::PRIMARY_FG)
 }
 
+pub fn clock_text() -> Style {
+    Style::default().fg(palette::PRIMARY_FG)
+}
+
+pub fn weather_text() -> Style {
+    Style::default().fg(palette::PRIMARY_FG)
+}
+
+pub fn weather_text_dim() -> Style {
+    Style::default().fg(palette::SECONDARY_FG)
+}
+
+pub fn weather_cloud_edge() -> Style {
+    Style::default().fg(palette::SECONDARY_FG)
+}
+
+pub fn weather_cloud_accent() -> Style {
+    Style::default().fg(palette::MODAL_FOOTER_SYMBOL)
+}
+
+pub fn weather_cloud_shadow() -> Style {
+    Style::default().fg(palette::DIVIDER)
+}
+
+pub fn weather_fog() -> Style {
+    Style::default().fg(palette::DIVIDER)
+}
+
+pub fn weather_rain() -> Style {
+    Style::default().fg(palette::MODAL_FOOTER_SYMBOL)
+}
+
+pub fn weather_snow() -> Style {
+    Style::default().fg(palette::PRIMARY_FG)
+}
+
+pub fn weather_sun_core() -> Style {
+    Style::default().fg(palette::MARKER)
+}
+
+pub fn weather_sun_ray() -> Style {
+    Style::default().fg(palette::VINE_AGED)
+}
+
 pub fn loading_prompt(pulse: f32) -> Style {
     let pulse = pulse.clamp(0.0, 1.0);
     let fg = if pulse < 0.6 {

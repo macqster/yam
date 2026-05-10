@@ -21,9 +21,12 @@ pub enum WeatherColorRole {
     TextDim,
     Fog,
     Rain,
+    RainHeavy,
     Snow,
     SunCore,
     SunRay,
+    Lightning,
+    Alert,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -74,9 +77,12 @@ pub fn role_style(role: WeatherColorRole) -> Style {
         WeatherColorRole::TextDim => theme_style::weather_text_dim(),
         WeatherColorRole::Fog => theme_style::weather_fog(),
         WeatherColorRole::Rain => theme_style::weather_rain(),
+        WeatherColorRole::RainHeavy => theme_style::weather_rain_heavy(),
         WeatherColorRole::Snow => theme_style::weather_snow(),
         WeatherColorRole::SunCore => theme_style::weather_sun_core(),
         WeatherColorRole::SunRay => theme_style::weather_sun_ray(),
+        WeatherColorRole::Lightning => theme_style::weather_lightning(),
+        WeatherColorRole::Alert => theme_style::weather_alert(),
     }
 }
 

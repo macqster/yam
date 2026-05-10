@@ -11,6 +11,12 @@ pub const SECONDARY_FG: Color = BTAS.pms_430;
 pub const SURFACE_LIFTED: Color = Color::Rgb(38, 42, 46);
 #[allow(dead_code)]
 pub const DIVIDER: Color = Color::Rgb(55, 60, 65);
+pub const WEATHER_RAIN: Color = BTAS.pms_292;
+pub const WEATHER_RAIN_HEAVY: Color = Color::Rgb(75, 123, 214);
+pub const WEATHER_SUN_CORE: Color = BTAS.pms_142;
+pub const WEATHER_SUN_RAY: Color = BTAS.pms_131;
+pub const WEATHER_LIGHTNING: Color = BTAS.pms_131;
+pub const WEATHER_ALERT: Color = BTAS.pms_485;
 pub const MODAL_BORDER: Color = Color::Rgb(47, 90, 69);
 pub const BTAS_GREY_DISABLED: Color = BTAS.pms_430;
 #[allow(dead_code)]

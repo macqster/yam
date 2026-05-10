@@ -347,6 +347,10 @@ Recommended weather-role anchors:
 - severe alert: `#A33A32`
 - calm/fresh green accents: `#3E7357` / `#4F8E6C`
 
+Current runtime note:
+
+- the theme layer now exposes distinct semantic handles for `rain`, `heavy rain`, `sun core`, `sun ray`, `lightning`, and `alert`, so atlas role maps can differentiate thunder-family glyphs without baking literal colors into sprite assets
+
 Configurability rules:
 
 - the weather widget should not hard-freeze one palette forever

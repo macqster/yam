@@ -19,6 +19,12 @@ YAM's visual identity is based on a reusable BTAS/TNBA-inspired theme layer.
   - `SECONDARY_FG`
   - `DEBUG_FG`
   - `MARKER`
+  - `WEATHER_RAIN`
+  - `WEATHER_RAIN_HEAVY`
+  - `WEATHER_SUN_CORE`
+  - `WEATHER_SUN_RAY`
+  - `WEATHER_LIGHTNING`
+  - `WEATHER_ALERT`
   - `HERO_BG`
   - `MODAL_BG`
   - `CAMERA_TRACK`
@@ -43,6 +49,8 @@ Current popup-shell grammar is intentionally more specific:
 - selected settings row background: navy `#243B73`
 
 Weather-widget work should stay inside this palette vocabulary as well; the canonical weather-specific role mapping and sprite-color guidance live in [`weather-widget.md`](weather-widget.md).
+
+The current weather token pass intentionally keeps the atlas monochrome asset files frozen while giving runtime theme application more semantic range, especially for heavy-rain and thunder/lightning families that were previously sharing broader generic accents.
 
 ## Style model
 

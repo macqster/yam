@@ -198,6 +198,11 @@ fn partly_cloudy_roles() -> Vec<Vec<SegmentRole>> {
 }
 
 fn rain_roles(shape: &'static str) -> Vec<Vec<SegmentRole>> {
+    let precip_role = if matches!(shape, HEAVY_SHOWERS_SHAPE | HEAVY_RAIN_SHAPE) {
+        WeatherColorRole::RainHeavy
+    } else {
+        WeatherColorRole::Rain
+    };
     vec![
         vec![full_line(shape, 0, WeatherColorRole::CloudEdge)],
         vec![full_line(shape, 1, WeatherColorRole::CloudEdge)],
@@ -207,8 +212,8 @@ fn rain_roles(shape: &'static str) -> Vec<Vec<SegmentRole>> {
                 .nth(2)
                 .expect("weather sprite line should exist"),
         ),
-        vec![full_line(shape, 3, WeatherColorRole::Rain)],
-        vec![full_line(shape, 4, WeatherColorRole::Rain)],
+        vec![full_line(shape, 3, precip_role)],
+        vec![full_line(shape, 4, precip_role)],
     ]
 }
 
@@ -268,6 +273,11 @@ fn mixed_precip_roles(shape: &'static str) -> Vec<Vec<SegmentRole>> {
 }
 
 fn thunder_roles(shape: &'static str) -> Vec<Vec<SegmentRole>> {
+    let rain_role = if matches!(shape, THUNDERY_HEAVY_RAIN_SHAPE | STORM_SHAPE) {
+        WeatherColorRole::RainHeavy
+    } else {
+        WeatherColorRole::Rain
+    };
     vec![
         vec![full_line(shape, 0, WeatherColorRole::CloudEdge)],
         vec![full_line(shape, 1, WeatherColorRole::CloudEdge)],
@@ -282,12 +292,14 @@ fn thunder_roles(shape: &'static str) -> Vec<Vec<SegmentRole>> {
                 .lines()
                 .nth(3)
                 .expect("weather sprite line should exist"),
+            rain_role,
         ),
         classify_thunder_line(
             shape
                 .lines()
                 .nth(4)
                 .expect("weather sprite line should exist"),
+            rain_role,
         ),
     ]
 }
@@ -392,13 +404,15 @@ fn classify_partly_cloudy_lower_cloud_line() -> Vec<SegmentRole> {
     })
 }
 
-fn classify_thunder_line(line: &'static str) -> Vec<SegmentRole> {
+fn classify_thunder_line(line: &'static str, rain_role: WeatherColorRole) -> Vec<SegmentRole> {
     classify_line(line, |ch| match ch {
         '*' => WeatherColorRole::Snow,
-        '\'' | '‘' | '’' => WeatherColorRole::Rain,
-        '/' | '\\' | '_' | ',' => WeatherColorRole::SunRay,
+        '\'' | '‘' | '’' => rain_role,
+        '/' | '\\' => WeatherColorRole::Lightning,
+        '_' => WeatherColorRole::Alert,
+        ',' => WeatherColorRole::CloudShadow,
         ' ' => WeatherColorRole::TextDim,
-        _ => WeatherColorRole::Rain,
+        _ => rain_role,
     })
 }
 
@@ -458,6 +472,7 @@ fn slice_chars(line: &'static str, start: usize, end: usize) -> &'static str {
 mod tests {
     use super::compact_sprite_for;
     use crate::weather::model::WeatherVisual;
+    use crate::weather::render::WeatherColorRole;
 
     #[test]
     fn compact_sprite_assets_survive_unicode_character_boundaries() {
@@ -496,6 +511,40 @@ mod tests {
                 .collect::<String>();
 
             assert!(!flattened.contains('?'));
+        }
+    }
+
+    #[test]
+    fn heavy_precipitation_variants_use_the_heavier_rain_role() {
+        for visual in [
+            WeatherVisual::HeavyRain,
+            WeatherVisual::HeavyShowers,
+            WeatherVisual::ThunderyHeavyRain,
+            WeatherVisual::Thunderstorm,
+        ] {
+            let sprite = compact_sprite_for(visual);
+            assert!(sprite
+                .lines
+                .iter()
+                .flat_map(|line| line.spans.iter())
+                .any(|span| span.role == WeatherColorRole::RainHeavy));
+        }
+    }
+
+    #[test]
+    fn thunder_variants_expose_lightning_roles_without_reusing_sun_rays() {
+        for visual in [
+            WeatherVisual::ThunderyShowers,
+            WeatherVisual::ThunderyHeavyRain,
+            WeatherVisual::ThunderySnowShowers,
+            WeatherVisual::Thunderstorm,
+        ] {
+            let sprite = compact_sprite_for(visual);
+            assert!(sprite
+                .lines
+                .iter()
+                .flat_map(|line| line.spans.iter())
+                .any(|span| span.role == WeatherColorRole::Lightning));
         }
     }
 }

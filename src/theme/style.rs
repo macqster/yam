@@ -70,7 +70,11 @@ pub fn weather_fog() -> Style {
 }
 
 pub fn weather_rain() -> Style {
-    Style::default().fg(palette::MODAL_FOOTER_SYMBOL)
+    Style::default().fg(palette::WEATHER_RAIN)
+}
+
+pub fn weather_rain_heavy() -> Style {
+    Style::default().fg(palette::WEATHER_RAIN_HEAVY)
 }
 
 pub fn weather_snow() -> Style {
@@ -78,11 +82,19 @@ pub fn weather_snow() -> Style {
 }
 
 pub fn weather_sun_core() -> Style {
-    Style::default().fg(palette::MARKER)
+    Style::default().fg(palette::WEATHER_SUN_CORE)
 }
 
 pub fn weather_sun_ray() -> Style {
-    Style::default().fg(palette::VINE_AGED)
+    Style::default().fg(palette::WEATHER_SUN_RAY)
+}
+
+pub fn weather_lightning() -> Style {
+    Style::default().fg(palette::WEATHER_LIGHTNING)
+}
+
+pub fn weather_alert() -> Style {
+    Style::default().fg(palette::WEATHER_ALERT)
 }
 
 pub fn loading_prompt(pulse: f32) -> Style {

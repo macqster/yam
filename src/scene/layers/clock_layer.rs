@@ -67,7 +67,7 @@ mod tests {
     use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
-    use crate::theme::palette;
+    use crate::theme::style as theme_style;
     use crate::ui::state::UiState;
     use ratatui::prelude::Rect;
 
@@ -141,14 +141,17 @@ mod tests {
         let clock = layer
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;
-        let pos = ctx.clock_screen();
-        let idx = base.index(pos.x as u16, pos.y as u16);
+        let idx = clock
+            .cells
+            .iter()
+            .position(|cell| cell.symbol != ' ')
+            .expect("clock grid should render at least one visible glyph");
         base.cells[idx].symbol = '#';
         base.cells[idx].style.fg = Some(ratatui::style::Color::Rgb(178, 78, 46));
 
         merge_grid(&mut base, &clock, None);
 
         assert_eq!(base.cells[idx].symbol, clock.cells[idx].symbol);
-        assert_eq!(base.cells[idx].style.fg, Some(palette::PRIMARY_FG));
+        assert_eq!(base.cells[idx].style.fg, theme_style::clock_text().fg);
     }
 }

@@ -12,6 +12,13 @@ Coordination contract:
 - if a TODO item is blocked on or clarified by an active issue, link the matching `known_issues.md` entry
 - if a TODO item becomes historical, record the closure in the log and remove it here
 
+## Immediate Maintenance Batch
+
+- [verify] keep the restored full `cargo test` suite green while the next maintenance batches continue.
+- [verify] keep the reserved `calendar` seam labeled honestly anywhere dev UI still exposes it before a future widget rework gives it a live surface.
+- [inspect] move modal/dev-control query helpers toward `UiState` / `MetaState` so `runtime.rs` reads more like an input dispatcher than a policy owner.
+- [inspect] keep the README front door explicit about implemented runtime surfaces versus future greenhouse direction.
+
 ## 1. Scene Model and Presentation Contract
 
 - [verify] `docs/scene-model.md` and `docs/architecture.md` remain the source of truth for world, HUD, and overlay behavior.

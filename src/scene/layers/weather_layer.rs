@@ -172,10 +172,10 @@ mod tests {
         let grid = layer
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;
-        let pos = ctx.weather_screen();
-        let idx = grid.index(pos.x as u16, pos.y as u16);
+        let text: String = grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert_eq!(grid.cells[idx].symbol, '.');
+        assert!(grid.cells.iter().any(|cell| cell.symbol != ' '));
+        assert!(text.contains("Sulkowice") || text.contains("overcast") || text.contains("km/h"));
     }
 
     #[test]

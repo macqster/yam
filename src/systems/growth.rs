@@ -25,6 +25,7 @@ pub fn run_growth(world: &mut WorldState) {
     if axis.segments.len() >= BORDER_VINE_MAX_SEGMENTS {
         if let Some(tip) = vine.growth_tips.first_mut() {
             tip.state = VineGrowthTipState::Spent;
+            tip.remaining_growth_steps = 0;
         }
         vine.life_state = VineLifeState::Mature;
         return;
@@ -190,6 +191,10 @@ mod tests {
         assert_eq!(
             world.flora.vines[0].growth_tips[0].state,
             VineGrowthTipState::Spent
+        );
+        assert_eq!(
+            world.flora.vines[0].growth_tips[0].remaining_growth_steps,
+            0
         );
     }
 }

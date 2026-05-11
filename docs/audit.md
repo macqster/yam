@@ -1,10 +1,13 @@
 # Repo Audit
 
 Date: 2026-04-27
+Last reviewed: 2026-05-11
 
 ## Unresolved Risks
 
 - Highest-priority weak seam: the spatial relation layer is still the most structurally fragile area because anchor identity, projection typing, and guide relation ownership are still only partly unified.
+- The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
+- Modal/dev-control policy is more readable than before, but `runtime.rs` still owns more query logic than ideal; future cleanup should move intent-level predicates closer to `UiState` / `MetaState` without changing behavior.
 
 ## Weakest Areas
 
@@ -20,6 +23,7 @@ Date: 2026-04-27
 2. Keep hero GIF aesthetics held steady and flora deferred until the system is prepared for it; focus only on code-side stability and efficiency improvements.
 3. Defer flora runtime development until the species/morphology stack is prepared systematically.
 4. Improve coherence and consistency across UI, theming, and docs.
+5. Keep `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite green together now that the broader stabilization pass is restored.
 
 ## Vines Readiness Gate
 

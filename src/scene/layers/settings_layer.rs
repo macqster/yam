@@ -151,7 +151,7 @@ fn position_lines(ui: &UiState, camera_locked: bool) -> Vec<String> {
             4,
         ));
         lines.push(format_axis_line(
-            "calendar offset",
+            "calendar offset (reserved)",
             ui.offsets.calendar_dx as i32,
             ui.offsets.calendar_dy as i32,
             ui,
@@ -256,7 +256,7 @@ fn maybe_draw_active_axis_field(
         2 => "clock offset",
         3 => "weather offset",
         4 => "date offset",
-        5 => "calendar offset",
+        5 => "calendar offset (reserved)",
         _ => return,
     };
     let prefix_len = format!("{}: ", label).chars().count() as u16;

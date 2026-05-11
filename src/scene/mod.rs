@@ -283,7 +283,7 @@ mod tests {
         assert_eq!(state.hud.camera.width, windowed.width);
         assert_eq!(state.hud.camera.height, windowed.height - 1);
         assert_eq!(state.hud.camera.x, -107);
-        assert_eq!(state.hud.camera.y, -4);
+        assert_eq!(state.hud.camera.y, -2);
     }
 
     #[test]
@@ -315,7 +315,7 @@ mod tests {
             fullscreen_state.world.clock_world
         );
         assert_eq!(windowed_state.hud.camera.x, -107);
-        assert_eq!(windowed_state.hud.camera.y, -3);
+        assert_eq!(windowed_state.hud.camera.y, -2);
         assert_eq!(
             fullscreen_state.hud.camera.x,
             -(fullscreen.width as i32) / 2

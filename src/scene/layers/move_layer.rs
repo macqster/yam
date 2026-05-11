@@ -48,7 +48,7 @@ impl Layer for MoveLayer {
             "[2] clock".to_string(),
             "[3] weather".to_string(),
             "[4] date".to_string(),
-            "[5] calendar".to_string(),
+            "[5] calendar (reserved)".to_string(),
             "hjkl move selected target".to_string(),
             "[Esc] or [m] exit move mode".to_string(),
         ];
@@ -130,7 +130,7 @@ mod tests {
         assert!(text.contains("target: hero"));
         assert!(text.contains("[3] weather"));
         assert!(text.contains("[4] date"));
-        assert!(text.contains("[5] calendar"));
+        assert!(text.contains("[5] calendar (reserved)"));
         assert!(text.contains("? ⎋"));
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
         assert_eq!(center, Some(crate::theme::palette::MODAL_BG));

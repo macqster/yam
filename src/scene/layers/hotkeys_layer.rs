@@ -49,7 +49,7 @@ impl Layer for HotkeysLayer {
             "  [2] clock",
             "  [3] weather",
             "  [4] date",
-            "  [5] calendar",
+            "  [5] calendar (reserved)",
             "[h/j/k/l] move selected target",
             "[C] store camera home",
             "[c] recall camera home",
@@ -145,7 +145,7 @@ mod tests {
         assert!(text.contains("[1] hero"));
         assert!(text.contains("[2] clock"));
         assert!(text.contains("[4] date"));
-        assert!(text.contains("[5] calendar"));
+        assert!(text.contains("[5] calendar (reserved)"));
         assert!(text.contains("[space] play/pause"));
         assert!(text.contains("? ⎋"));
     }

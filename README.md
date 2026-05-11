@@ -14,26 +14,28 @@ The current Ghostty baseline uses a hidden titlebar with a `120x31` window confi
 
 Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render contracts point back to it rather than redefining terms inline.
 
-## Main Scene
+## Implemented Runtime Surfaces
 
-- hero GIF
-- tree-stump-like hero scaffolding for the animated figure to sit on
-- clock widget
-- weather widget
-- procedurally generated vines as the organic frame of the composition
+- boot/loading world
+- main scene world
+- sandbox world
+- hero GIF with tree-stump-like scaffolding
+- world-attached clock, weather, and one-line Polish date companions
+- procedurally generated vines framing the main-scene composition
+- dev popup family for hotkeys, move, settings, palette, and weather inspection
 
-## Greenhouse
+## Early / Contracted Organic Surfaces
+
+- tree-stump-like hero scaffold as the current boot/main-scene organic anchor
+- tropical vines as the current live flora prototype
+- weather sprite source-art workflow kept separate from runtime rendering ownership
+
+## Future Greenhouse Direction
 
 - separate rooms and labs for plant development
 - pots and bowls for growth procedures
 - controlled-environment and biome-like themes
 - multiple flora species with distinct anatomy and lifecycle behavior
-
-## Current Flora
-
-- pre-generated tree-stump hero scaffolding at boot
-- tropical vines framing the composition
-- monstera-like plant with large aesthetic growing leaves
 
 ## Non-Goals
 

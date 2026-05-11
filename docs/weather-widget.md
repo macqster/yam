@@ -137,8 +137,9 @@ Target width guidance:
 Recommended fixed sprite sizes:
 
 - `1x1` for footer-scale status
-- `5x4` for compact widget mode
-- `7x4` for expanded compact/panel mode
+- runtime compact sprites should currently stay within a `<=15x5` envelope
+- the dedicated `[W]eather` popup currently assumes one label row plus `5` sprite rows per inspected state
+- any future alternate compact/panel mode can use a different envelope, but it should be documented explicitly instead of silently reusing the older `5x4` / `7x4` guidance
 
 Recommended compact composition:
 

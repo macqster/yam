@@ -53,13 +53,6 @@ pub fn run(
     let mut ui_state = UiState::load_or_new();
     if clean_launch {
         ui_state.reset_for_clean_launch(initial_world_kind);
-        ui_state.meta.dev_mode = false;
-        ui_state.meta.hotkeys_open = false;
-        ui_state.meta.move_mode_open = false;
-        ui_state.meta.palette_open = false;
-        ui_state.meta.weather_popup_open = false;
-        ui_state.meta.settings_open = false;
-        ui_state.meta.pointer_probe_open = false;
     }
     if ui_state.active_world_kind() != initial_world_kind {
         ui_state.meta.active_world = match initial_world_kind {

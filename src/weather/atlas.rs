@@ -25,6 +25,36 @@ const STORM_SHAPE: &str = include_str!("assets/runtime/storm.txt");
 const UNKNOWN_SHAPE: &str = include_str!("assets/runtime/unknown.txt");
 const VERY_CLOUDY_SHAPE: &str = include_str!("assets/runtime/very_cloudy.txt");
 const OVERCAST_SHAPE: &str = include_str!("assets/runtime/overcast.txt");
+#[cfg(test)]
+const WEATHER_ASSETS_README: &str = include_str!("assets/README.md");
+
+#[cfg(test)]
+const RUNTIME_ASSETS: [(&str, &str); 24] = [
+    ("clear.txt", CLEAR_SHAPE),
+    ("clear_night.txt", CLEAR_NIGHT_SHAPE),
+    ("cloudy.txt", CLOUDY_SHAPE),
+    ("very_cloudy.txt", VERY_CLOUDY_SHAPE),
+    ("overcast.txt", OVERCAST_SHAPE),
+    ("mist.txt", MIST_SHAPE),
+    ("fog.txt", FOG_SHAPE),
+    ("partly_cloudy.txt", PARTLY_CLOUDY_SHAPE),
+    ("light_showers.txt", LIGHT_SHOWERS_SHAPE),
+    ("light_rain.txt", LIGHT_RAIN_SHAPE),
+    ("heavy_showers.txt", HEAVY_SHOWERS_SHAPE),
+    ("heavy_rain.txt", HEAVY_RAIN_SHAPE),
+    ("sleet.txt", SLEET_SHAPE),
+    ("light_sleet.txt", LIGHT_SLEET_SHAPE),
+    ("light_sleet_showers.txt", LIGHT_SLEET_SHOWERS_SHAPE),
+    ("light_snow.txt", LIGHT_SNOW_SHAPE),
+    ("heavy_snow.txt", HEAVY_SNOW_SHAPE),
+    ("light_snow_showers.txt", LIGHT_SNOW_SHOWERS_SHAPE),
+    ("heavy_snow_showers.txt", HEAVY_SNOW_SHOWERS_SHAPE),
+    ("thundery_showers.txt", THUNDERY_SHOWERS_SHAPE),
+    ("thundery_heavy_rain.txt", THUNDERY_HEAVY_RAIN_SHAPE),
+    ("thundery_snow_showers.txt", THUNDERY_SNOW_SHOWERS_SHAPE),
+    ("storm.txt", STORM_SHAPE),
+    ("unknown.txt", UNKNOWN_SHAPE),
+];
 
 pub fn compact_sprite_for(visual: WeatherVisual) -> WeatherSprite {
     match visual {
@@ -470,9 +500,9 @@ fn slice_chars(line: &'static str, start: usize, end: usize) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::compact_sprite_for;
+    use super::{compact_sprite_for, RUNTIME_ASSETS, WEATHER_ASSETS_README};
     use crate::weather::model::WeatherVisual;
-    use crate::weather::render::WeatherColorRole;
+    use crate::weather::render::{WeatherColorRole, COMPACT_WEATHER_WIDTH};
 
     #[test]
     fn compact_sprite_assets_survive_unicode_character_boundaries() {
@@ -545,6 +575,75 @@ mod tests {
                 .iter()
                 .flat_map(|line| line.spans.iter())
                 .any(|span| span.role == WeatherColorRole::Lightning));
+        }
+    }
+
+    #[test]
+    fn runtime_assets_follow_the_documented_plain_text_contract() {
+        for (filename, asset) in RUNTIME_ASSETS {
+            let lines = asset.lines().collect::<Vec<_>>();
+            let max_width = lines
+                .iter()
+                .map(|line| line.chars().count())
+                .max()
+                .unwrap_or(0);
+
+            assert_eq!(lines.len(), 5, "{filename} should stay five rows high");
+            assert!(
+                max_width <= 15,
+                "{filename} should stay within the compact 15-cell sprite envelope"
+            );
+            assert!(
+                !asset.contains("\u{1b}["),
+                "{filename} should stay ANSI-free"
+            );
+            assert!(
+                WEATHER_ASSETS_README.contains(&format!("runtime/{filename}")),
+                "{filename} should stay listed in the runtime asset README"
+            );
+        }
+    }
+
+    #[test]
+    fn every_weather_visual_resolves_to_a_compact_sprite_within_the_current_contract() {
+        let visuals = [
+            WeatherVisual::Sunny,
+            WeatherVisual::ClearNight,
+            WeatherVisual::PartlyCloudy,
+            WeatherVisual::Cloudy,
+            WeatherVisual::VeryCloudy,
+            WeatherVisual::Overcast,
+            WeatherVisual::Mist,
+            WeatherVisual::Fog,
+            WeatherVisual::LightShowers,
+            WeatherVisual::LightRain,
+            WeatherVisual::HeavyShowers,
+            WeatherVisual::HeavyRain,
+            WeatherVisual::LightSnow,
+            WeatherVisual::HeavySnow,
+            WeatherVisual::LightSnowShowers,
+            WeatherVisual::HeavySnowShowers,
+            WeatherVisual::LightSleet,
+            WeatherVisual::LightSleetShowers,
+            WeatherVisual::Sleet,
+            WeatherVisual::ThunderyShowers,
+            WeatherVisual::ThunderyHeavyRain,
+            WeatherVisual::ThunderySnowShowers,
+            WeatherVisual::Thunderstorm,
+            WeatherVisual::Unknown,
+        ];
+
+        for visual in visuals {
+            let sprite = compact_sprite_for(visual);
+            assert_eq!(sprite.height, 5, "{visual:?} should stay five rows high");
+            assert!(
+                sprite.width as usize <= 15,
+                "{visual:?} should stay within the compact 15-cell sprite envelope"
+            );
+            assert!(
+                sprite.width as usize <= COMPACT_WEATHER_WIDTH,
+                "{visual:?} should fit inside the compact widget width"
+            );
         }
     }
 }

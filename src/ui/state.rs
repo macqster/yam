@@ -703,6 +703,10 @@ impl UiState {
         self.meta.toggle_hotkeys();
     }
 
+    pub fn move_mode_toggle_allowed(&self) -> bool {
+        self.meta.dev_mode
+    }
+
     pub fn toggle_move_mode(&mut self) {
         self.meta.toggle_move_mode();
     }
@@ -713,6 +717,10 @@ impl UiState {
 
     pub fn toggle_weather_popup(&mut self) {
         self.meta.toggle_weather_popup();
+    }
+
+    pub fn settings_toggle_allowed(&self) -> bool {
+        self.meta.dev_mode
     }
 
     pub fn toggle_settings(&mut self) {
@@ -817,8 +825,32 @@ impl UiState {
         self.meta.dev_mode && self.meta.settings_open && self.settings_edit.active
     }
 
+    pub fn pointer_probe_active(&self) -> bool {
+        self.meta.pointer_probe_open
+    }
+
+    pub fn should_blink_pointer_probe(&self) -> bool {
+        self.meta.dev_mode && self.pointer_probe_active()
+    }
+
+    pub fn move_mode_close_active(&self) -> bool {
+        self.meta.dev_mode && self.meta.move_mode_open
+    }
+
+    pub fn font_cycle_allowed(&self) -> bool {
+        self.meta.dev_mode && !self.meta.settings_open
+    }
+
     pub fn active_world_kind(&self) -> WorldKind {
         self.meta.active_world_kind()
+    }
+
+    pub fn force_initial_world_kind(&mut self, world_kind: WorldKind) {
+        self.meta.active_world = match world_kind {
+            WorldKind::Boot => WorldKindSnapshot::MainScene,
+            WorldKind::MainScene => WorldKindSnapshot::MainScene,
+            WorldKind::Sandbox => WorldKindSnapshot::Sandbox,
+        };
     }
 
     pub fn cycle_world_kind(&mut self) {
@@ -963,6 +995,22 @@ impl UiState {
 
     pub fn close_move_mode(&mut self) {
         self.meta.move_mode_open = false;
+    }
+
+    pub fn handle_move_mode_key(&mut self, key: char) -> Result<(), Box<dyn std::error::Error>> {
+        match key {
+            '1' => self.meta.select_move_target(MoveTarget::Hero),
+            '2' => self.meta.select_move_target(MoveTarget::Clock),
+            '3' => self.meta.select_move_target(MoveTarget::Weather),
+            '4' => self.meta.select_move_target(MoveTarget::Date),
+            '5' => self.meta.select_move_target(MoveTarget::Calendar),
+            'h' => self.move_selected_target_left()?,
+            'j' => self.move_selected_target_down()?,
+            'k' => self.move_selected_target_up()?,
+            'l' => self.move_selected_target_right()?,
+            _ => {}
+        }
+        Ok(())
     }
 
     pub fn close_settings(&mut self) {

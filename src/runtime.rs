@@ -55,11 +55,7 @@ pub fn run(
         ui_state.reset_for_clean_launch(initial_world_kind);
     }
     if ui_state.active_world_kind() != initial_world_kind {
-        ui_state.meta.active_world = match initial_world_kind {
-            WorldKind::Boot => crate::ui::state::WorldKindSnapshot::MainScene,
-            WorldKind::MainScene => crate::ui::state::WorldKindSnapshot::MainScene,
-            WorldKind::Sandbox => crate::ui::state::WorldKindSnapshot::Sandbox,
-        };
+        ui_state.force_initial_world_kind(initial_world_kind);
     }
     ui_state.refresh_weather_if_due();
     ui_state.start_loading_boot();
@@ -116,7 +112,9 @@ pub fn run(
                     KeyCode::Char('h') if ui_state.hotkeys_toggle_allowed() => {
                         ui_state.toggle_hotkeys()
                     }
-                    KeyCode::Char('m') if ui_state.meta.dev_mode => ui_state.toggle_move_mode(),
+                    KeyCode::Char('m') if ui_state.move_mode_toggle_allowed() => {
+                        ui_state.toggle_move_mode()
+                    }
                     KeyCode::Char('w') if ui_state.dev_free_roam() => {
                         ui_state.cycle_world_kind();
                         world = WorldState::for_kind(ui_state.active_world_kind());
@@ -124,7 +122,9 @@ pub fn run(
                     KeyCode::Char('v') if ui_state.dev_free_roam() => {
                         ui_state.toggle_vines_visible();
                     }
-                    KeyCode::Char('s') if ui_state.meta.dev_mode => ui_state.toggle_settings(),
+                    KeyCode::Char('s') if ui_state.settings_toggle_allowed() => {
+                        ui_state.toggle_settings()
+                    }
                     KeyCode::Enter if ui_state.settings_navigation_active() => {
                         let size = terminal.size()?;
                         ui_state.activate_selected_setting_with_viewport(
@@ -150,7 +150,7 @@ pub fn run(
                         ui_state.toggle_settings_edit_field();
                     }
                     KeyCode::Left if ui_state.dev_free_roam() => {
-                        if ui_state.meta.pointer_probe_open {
+                        if ui_state.pointer_probe_active() {
                             ui_state.move_pointer_left();
                         } else {
                             ui_state.move_camera_left();
@@ -160,7 +160,7 @@ pub fn run(
                         ui_state.toggle_settings_edit_field();
                     }
                     KeyCode::Right if ui_state.dev_free_roam() => {
-                        if ui_state.meta.pointer_probe_open {
+                        if ui_state.pointer_probe_active() {
                             ui_state.move_pointer_right();
                         } else {
                             ui_state.move_camera_right();
@@ -173,14 +173,14 @@ pub fn run(
                         ui_state.select_next_settings_row();
                     }
                     KeyCode::Up if ui_state.dev_free_roam() => {
-                        if ui_state.meta.pointer_probe_open {
+                        if ui_state.pointer_probe_active() {
                             ui_state.move_pointer_up();
                         } else {
                             ui_state.move_camera_up();
                         }
                     }
                     KeyCode::Down if ui_state.dev_free_roam() => {
-                        if ui_state.meta.pointer_probe_open {
+                        if ui_state.pointer_probe_active() {
                             ui_state.move_pointer_down();
                         } else {
                             ui_state.move_camera_down();
@@ -191,28 +191,7 @@ pub fn run(
                     }
                     KeyCode::Char(c) => {
                         if ui_state.move_mode_active() {
-                            match c {
-                                '1' => ui_state
-                                    .meta
-                                    .select_move_target(crate::ui::state::MoveTarget::Hero),
-                                '2' => ui_state
-                                    .meta
-                                    .select_move_target(crate::ui::state::MoveTarget::Clock),
-                                '3' => ui_state
-                                    .meta
-                                    .select_move_target(crate::ui::state::MoveTarget::Weather),
-                                '4' => ui_state
-                                    .meta
-                                    .select_move_target(crate::ui::state::MoveTarget::Date),
-                                '5' => ui_state
-                                    .meta
-                                    .select_move_target(crate::ui::state::MoveTarget::Calendar),
-                                'h' => ui_state.move_selected_target_left()?,
-                                'j' => ui_state.move_selected_target_down()?,
-                                'k' => ui_state.move_selected_target_up()?,
-                                'l' => ui_state.move_selected_target_right()?,
-                                _ => {}
-                            }
+                            ui_state.handle_move_mode_key(c)?;
                         } else if ui_state.settings_edit_active() {
                             ui_state.settings_edit_insert_char(c);
                         } else if ui_state.dev_free_roam() {
@@ -240,12 +219,10 @@ pub fn run(
                     KeyCode::Backspace if ui_state.settings_edit_mode_active() => {
                         ui_state.settings_edit_backspace();
                     }
-                    KeyCode::Esc if ui_state.meta.dev_mode && ui_state.meta.move_mode_open => {
+                    KeyCode::Esc if ui_state.move_mode_close_active() => {
                         ui_state.close_move_mode();
                     }
-                    KeyCode::F(5) if ui_state.meta.dev_mode && !ui_state.meta.settings_open => {
-                        ui_state.next_font()
-                    }
+                    KeyCode::F(5) if ui_state.font_cycle_allowed() => ui_state.next_font(),
                     _ => {}
                 }
             }
@@ -263,7 +240,7 @@ pub fn run(
             last_hero_tick = frame_start;
         }
 
-        if ui_state.meta.dev_mode && ui_state.meta.pointer_probe_open {
+        if ui_state.should_blink_pointer_probe() {
             if frame_start.duration_since(last_pointer_blink) >= pointer_blink {
                 ui_state.pointer_blink_on = !ui_state.pointer_blink_on;
                 last_pointer_blink = frame_start;

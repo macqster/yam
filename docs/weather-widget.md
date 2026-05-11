@@ -400,17 +400,17 @@ If the widget uses human-readable text, localization should be a first-class sea
 Rules:
 
 - provider wording is not the final UI wording
-- localized weather labels should be derived from normalized `WeatherVisual` state
+- localized weather labels should resolve from normalized weather state, preferring condition-code-specific labels when available and falling back to generalized `WeatherVisual` labels otherwise
 - English and Polish should both be supportable by the presentation layer
 - Polish does not need to be the default, but the infrastructure should make it available
 - abbreviated metric rows may remain language-light, but any named weather condition should have a localized path
-- the compact widget now prefers a two-line condition header for longer localized states, a dedicated day/night temperature row rendered as two compact icon/value units separated by a pipe (` 8C |  20C`), a wind row, and a precipitation row that disappears when there is no measurable precipitation
+- the compact widget now prefers a two-line condition header for longer localized states, a dedicated day/night temperature row rendered as two compact icon/value units (`8C 20C`), a wind row, and a precipitation row that disappears when there is no measurable precipitation
 - the compact wind row should use a direction-aware arrow glyph rather than a fixed up-arrow, so `N / NE / E / SE / S / SW / W / NW` families remain legible at a glance even in the narrow panel
 
 Recommended direction:
 
 - keep locale as an explicit weather-widget presentation setting
-- map `WeatherVisual` to localized human-facing labels
+- map `WeatherVisual` to localized human-facing fallback labels
 - avoid hard-coding provider-origin strings as the canonical visible condition text
 - when `wttr.in` condition codes are available, prefer their upstream translation-table wording for locale-specific condition labels; for Polish, `share/translations/pl.txt` is now the reference wording source for numeric conditions, while YAM keeps a separate generalized visual-label fallback for non-code cases
 

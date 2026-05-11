@@ -735,6 +735,88 @@ impl UiState {
         self.meta.dev_mode && !self.loading.active
     }
 
+    pub fn dev_free_roam(&self) -> bool {
+        self.meta.dev_mode
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.palette_open
+            && !self.meta.weather_popup_open
+            && !self.meta.move_mode_open
+    }
+
+    pub fn palette_toggle_allowed(&self) -> bool {
+        self.meta.dev_mode
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.move_mode_open
+            && !self.meta.weather_popup_open
+    }
+
+    pub fn weather_popup_toggle_allowed(&self) -> bool {
+        self.meta.dev_mode
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.move_mode_open
+            && !self.meta.palette_open
+    }
+
+    pub fn hotkeys_toggle_allowed(&self) -> bool {
+        self.meta.dev_mode
+            && !self.meta.palette_open
+            && !self.meta.weather_popup_open
+            && !self.meta.move_mode_open
+    }
+
+    pub fn settings_navigation_active(&self) -> bool {
+        self.meta.dev_mode
+            && self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.palette_open
+            && !self.meta.weather_popup_open
+            && !self.meta.move_mode_open
+    }
+
+    pub fn settings_edit_active(&self) -> bool {
+        self.settings_navigation_active() && self.settings_edit.active
+    }
+
+    pub fn move_mode_active(&self) -> bool {
+        self.meta.dev_mode
+            && self.meta.move_mode_open
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.palette_open
+            && !self.meta.weather_popup_open
+    }
+
+    pub fn palette_popup_active(&self) -> bool {
+        self.meta.dev_mode
+            && self.meta.palette_open
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.move_mode_open
+    }
+
+    pub fn weather_popup_active(&self) -> bool {
+        self.meta.dev_mode
+            && self.meta.weather_popup_open
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.move_mode_open
+    }
+
+    pub fn settings_close_active(&self) -> bool {
+        self.meta.dev_mode && self.meta.settings_open && !self.settings_edit.active
+    }
+
+    pub fn settings_tab_switch_allowed(&self) -> bool {
+        self.meta.dev_mode && self.meta.settings_open && !self.settings_edit.active
+    }
+
+    pub fn settings_edit_mode_active(&self) -> bool {
+        self.meta.dev_mode && self.meta.settings_open && self.settings_edit.active
+    }
+
     pub fn active_world_kind(&self) -> WorldKind {
         self.meta.active_world_kind()
     }

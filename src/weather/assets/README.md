@@ -58,7 +58,7 @@ Source-art and review notes live in `source-art/`:
 - runtime assets should stay ANSI-free
 - runtime assets should not embed palette decisions
 - approved manual edits should be normalized back into plain-text before entering the live atlas
-- sandbox world remains the preferred comparative inspection surface before promoting a candidate into the live widget
+- the dedicated `[W]eather` dev popup is the preferred comparative inspection surface before promoting a candidate into the live widget
 - for full-sheet Moebius round-trips, prefer `.xb` as the canonical preserved artifact; treat `.ans` as secondary/inspection-oriented export
 
 ## Current Organization Rule

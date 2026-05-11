@@ -139,7 +139,7 @@ mod tests {
 
         assert!(text.contains("[W]eather"));
         assert!(text.contains("weather sprites"));
-        assert!(text.contains("sandbox atlas review"));
+        assert!(text.contains("dev popup atlas review"));
         assert!(text.contains("sprite atlas review"));
         assert!(text.contains("? ⎋"));
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;

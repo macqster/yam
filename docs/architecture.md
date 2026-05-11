@@ -51,7 +51,7 @@
 - `UiState` also owns the current weather presentation settings that are intentionally independent from the provider path, such as locale and layout selection, so future widget-shape changes do not leak back into fetch/normalization code
 - the current main-scene boot composition for hero, clock, and weather still comes from `UiOffsets::default()`; those hard-coded start values are acceptable as runtime defaults for now, but the `settings` layer is the intended eventual owner for user-tweakable composition values
 - `WorldState` owns `GuideState` so world-attached guide primitives stay in simulation data, not UI state
-- hero, clock, weather, and the reserved future `date` / `calendar` companion seams are computed through explicit `scene::entity::HeroSceneAttachment` produced by `scene::entity::hero_scene_poses(...)`
+- hero, clock, weather, and the live `date` plus still-reserved `calendar` companion seams are computed through explicit `scene::entity::HeroSceneAttachment` produced by `scene::entity::hero_scene_poses(...)`
 - the canonical weather-widget provider/model/render ownership contract lives in [`weather-widget.md`](weather-widget.md); architecture should treat that document as the source of truth for weather backend and sprite-atlas boundaries
 - each layer emits a full-frame `LayerOutput`
 - `Scene` merges layer grids with `render::compositor::merge_grid`
@@ -160,19 +160,19 @@
 - the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
 - the debug overlay may also temporarily draw a faint soft-line probe for linework testing, using the atlas in [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be evaluated against real world coordinates before vines or other world annotations consume it; the same atlas also defines the longer slope families used to cover full-world line spans, and the live debug surface now renders visible `GuideState` linework through the same helper
 - the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, pointer probe state/absolute position, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
-- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering, the pointer probe, the palette popup, and other developer controls are described
+- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering, the pointer probe, the palette popup, the weather popup, and other developer controls are described
 - `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
 - `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
 - the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current developer controls without adding footer clutter
-- the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
+- the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it uses the shared modal shell to make entity movement explicit with `1/2/3/4/5` target selection and `hjkl` movement
 - the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, widgets, gif, and theme values
 - the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, `hotkeys`/`move`/`settings` are mutually exclusive modal surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
-- the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3` select the active entity target and `hjkl` move that target while the popup is open
+- the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3/4/5` select the active entity target and `hjkl` move that target while the popup is open
 
 ## UI / Metamechanics Working Set
 
 - current state: `dev_mode` is the umbrella toggle, `h` opens hotkeys, `m` opens move, and `s` opens settings
-- current move grammar: `1/2/3` select the active target, `hjkl` move that target, and the popup itself stays modal
+- current move grammar: `1/2/3/4/5` select the active target, `hjkl` move that target, and the popup itself stays modal
 - current settings grammar: tabbed positions/widgets/gif/theme controls stay presentation-only inside the modal popup
 - current modal surface: move/settings panels use an opaque BTAS backdrop so the hero GIF does not bleed through
 - current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position

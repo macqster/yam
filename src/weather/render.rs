@@ -124,7 +124,7 @@ pub fn sprite_inspection_lines(locale: WeatherLocale) -> Vec<Line<'static>> {
         theme_style::weather_text(),
     )]));
     lines.push(Line::from(vec![Span::styled(
-        "sandbox atlas review",
+        "dev popup atlas review",
         theme_style::weather_text_dim(),
     )]));
     lines.push(Line::from(vec![Span::styled("", Style::default())]));

@@ -146,7 +146,7 @@ Rules:
   - `normal` favors navigation, toggles, and spatial reading
   - `inspect` favors focus movement, drill-down, and entity inspection
   - `debug` favors passive visibility and diagnostic toggles
-  - `dev` favors the explicit modal controls already present in code, such as hotkeys, move, settings, pointer probe, and camera-home actions
+  - `dev` favors the explicit modal controls already present in code, such as hotkeys, move, settings, palette/weather inspection popups, pointer probe, and camera-home actions
   - `command palette` is the rare-action entrypoint for search, jump, and non-muscle-memory commands
 - precise guide authoring should treat the pointer probe and soft-line renderer as a pair: the pointer records coordinates, and the line engine visualizes the resulting geometry in world space
 
@@ -218,7 +218,7 @@ Rules:
 - main scene: hero GIF, tree-stump scaffolding, vines, flora, guides, weather/clock composition, and world-tied diagnostics
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only
 - debug/inspect: coordinate readouts, camera/world position, probe state, entity detail, and other readable diagnostics; it may show numbers and labels, but not the main command vocabulary
-- modal overlay: hotkeys, move, settings, command help, and temporary control surfaces that are opened intentionally
+- modal overlay: hotkeys, move, settings, palette inspection, weather atlas inspection, command help, and temporary control surfaces that are opened intentionally
 
 ## Modal Vocabulary
 
@@ -227,6 +227,8 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 - `hotkeys` - discoverability for the current dev controls
 - `move` - target selection and movement for world-attached entities
 - `settings` - tabbed presentation/state inspection for positions, widgets, gif, and theme values
+- `palette` - curated plus extracted BTAS/TNBA swatch inspection in a dedicated dev modal
+- `weather` - comparative weather atlas inspection in a dedicated dev modal
 - `pointer` - dev-only probe state, shown through the debug surface rather than as a standalone modal
 - `camera home` - stored and recalled through runtime keys, not through a separate overlay
 
@@ -235,6 +237,7 @@ Rules:
 - hotkeys should describe the current dev controls that are actually implemented
 - move should stay focused on target choice and explicit motion
 - settings should stay tabbed and presentation-oriented
+- palette and weather inspection should stay comparative and read-only rather than turning those modals into editing surfaces
 - the pointer probe and camera-home actions are dev-only helpers, not always-on HUD content
 
 Rules:

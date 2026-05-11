@@ -18,7 +18,7 @@ This document is the canonical design brief for the YAM weather widget.
 - External ANSI/ASCII finds may still be useful as one-off provenance sources for individual shapes; when that happens, the imported shape should be converted into plain-text assets and semantic YAM color roles rather than embedded as raw ANSI escape art.
 - Treat XBIN/Moebius-style editors as a future offline sprite-authoring workflow only; do not make YAM depend on raw XBIN blobs at runtime unless a later dedicated import/export pass proves worth the complexity.
 - For full-sheet Moebius atlas work, prefer `.xb` as the preserved round-trip artifact; ANSI `.ans` exports may still help with terminal inspection, but should be treated as secondary because they can spatially degrade a dense atlas sheet.
-- The current implementation goal is to lock ownership, sizing, layering, and styling before live weather I/O arrives.
+- The current implementation goal is to keep ownership, sizing, layering, and styling stable now that the first live weather refresh seam is already in place.
 
 ## Core Direction
 
@@ -35,7 +35,7 @@ This document is the canonical design brief for the YAM weather widget.
 - The provider/network/cache path should stay separate from widget rendering.
 - The render layer should consume normalized weather state only.
 - The widget should use the existing hero-scene companion seam, where hero, clock, and weather are sibling world-attached companions.
-- The companion seam should stay extensible enough to host future `date` and `calendar` surfaces as either sibling widgets or clock-cluster features without forcing a second attachment-model rewrite.
+- The companion seam should stay extensible enough to host the already-live `date` surface together with a future `calendar` surface as sibling widgets or clock-cluster features without forcing a second attachment-model rewrite.
 
 ## Provider Rule
 
@@ -322,7 +322,7 @@ First promoted runtime selection:
 - `sunny`, `partly_cloudy`, `cloudy`, and `unknown` remain anchored to the selected current-shape family
 - this is still a first-pass monochrome atlas, so color-role tuning and any second-pass silhouette refinement remain separate follow-up work
 
-Recommended first comparative sandbox rows:
+Recommended first comparative popup rows:
 
 - `Sunny | Clear Night | Partly Cloudy | Cloudy | Very Cloudy | Overcast | Mist | Fog | Unknown`
 - `Light Showers | Light Rain | Heavy Showers | Heavy Rain | Light Snow | Heavy Snow | Light Sleet | Sleet`

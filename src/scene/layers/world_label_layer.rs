@@ -59,6 +59,8 @@ mod tests {
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {

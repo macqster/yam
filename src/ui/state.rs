@@ -66,81 +66,67 @@ impl MetaState {
         }
     }
 
+    fn close_dev_overlays(&mut self) {
+        self.hotkeys_open = false;
+        self.move_mode_open = false;
+        self.palette_open = false;
+        self.weather_popup_open = false;
+        self.settings_open = false;
+        self.pointer_probe_open = false;
+    }
+
     pub fn toggle_dev_mode(&mut self) {
         self.dev_mode = !self.dev_mode;
         if !self.dev_mode {
-            self.hotkeys_open = false;
-            self.move_mode_open = false;
-            self.palette_open = false;
-            self.weather_popup_open = false;
-            self.settings_open = false;
-            self.pointer_probe_open = false;
+            self.close_dev_overlays();
         }
     }
 
     pub fn toggle_hotkeys(&mut self) {
         self.hotkeys_open = !self.hotkeys_open;
         if self.hotkeys_open {
-            self.move_mode_open = false;
-            self.palette_open = false;
-            self.weather_popup_open = false;
-            self.settings_open = false;
-            self.pointer_probe_open = false;
+            self.close_dev_overlays();
+            self.hotkeys_open = true;
         }
     }
 
     pub fn toggle_move_mode(&mut self) {
         self.move_mode_open = !self.move_mode_open;
         if self.move_mode_open {
-            self.hotkeys_open = false;
-            self.palette_open = false;
-            self.weather_popup_open = false;
-            self.settings_open = false;
-            self.pointer_probe_open = false;
+            self.close_dev_overlays();
+            self.move_mode_open = true;
         }
     }
 
     pub fn toggle_palette(&mut self) {
         self.palette_open = !self.palette_open;
         if self.palette_open {
-            self.hotkeys_open = false;
-            self.move_mode_open = false;
-            self.weather_popup_open = false;
-            self.settings_open = false;
-            self.pointer_probe_open = false;
+            self.close_dev_overlays();
+            self.palette_open = true;
         }
     }
 
     pub fn toggle_weather_popup(&mut self) {
         self.weather_popup_open = !self.weather_popup_open;
         if self.weather_popup_open {
-            self.hotkeys_open = false;
-            self.move_mode_open = false;
-            self.palette_open = false;
-            self.settings_open = false;
-            self.pointer_probe_open = false;
+            self.close_dev_overlays();
+            self.weather_popup_open = true;
         }
     }
 
     pub fn toggle_settings(&mut self) {
         self.settings_open = !self.settings_open;
         if self.settings_open {
-            self.hotkeys_open = false;
-            self.move_mode_open = false;
-            self.palette_open = false;
-            self.weather_popup_open = false;
-            self.pointer_probe_open = false;
+            self.close_dev_overlays();
+            self.settings_open = true;
         }
     }
 
     pub fn toggle_pointer_probe(&mut self) {
         self.pointer_probe_open = !self.pointer_probe_open;
         if self.pointer_probe_open {
-            self.hotkeys_open = false;
-            self.move_mode_open = false;
-            self.palette_open = false;
-            self.weather_popup_open = false;
-            self.settings_open = false;
+            self.close_dev_overlays();
+            self.pointer_probe_open = true;
         }
     }
 

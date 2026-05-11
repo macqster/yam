@@ -50,10 +50,10 @@ Rules:
 
 - main scene: hero GIF, tree-stump scaffolding with a Y-shaped fork under the hero, vines, flora, guides, weather/clock composition, and world-tied diagnostic geometry
 - weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
-- sandbox: weather sprite-table and layout-inspection trials should render here when comparative visual review is needed, so atlas iteration does not have to compete with the main-scene composition
+- sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only
 - debug/inspect: coordinate readouts, camera/world position, probe state, entity detail, and other readable diagnostics; it may show numbers and labels, but not the main command vocabulary
-- modal overlay: hotkeys, move, settings, command help, and temporary control surfaces that are opened intentionally
+- modal overlay: hotkeys, move, settings, palette inspection, weather atlas inspection, command help, and temporary control surfaces that are opened intentionally
 
 ## Modal Vocabulary
 
@@ -62,6 +62,8 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 - `hotkeys` - the discoverability sheet for the current dev controls
 - `move` - target selection and movement for world-attached entities
 - `settings` - tabbed presentation/state inspection for positions, ui overlays, features, gif, and theme values
+- `palette` - curated plus extracted BTAS/TNBA swatch inspection in a dedicated dev modal
+- `weather` - comparative weather atlas inspection in a dedicated dev modal
 - `pointer` - dev-only probe state, shown through the debug surface rather than as a standalone modal
 - `camera home` - stored and recalled through the runtime keys, not through a separate overlay
 
@@ -70,6 +72,7 @@ Rules:
 - hotkeys should describe the currently implemented dev controls, not a hypothetical full command catalog
 - move should stay focused on target choice and explicit motion
 - settings should stay tabbed and presentation-oriented
+- palette and weather inspection should stay comparative and read-only, rather than turning those modals into editing surfaces
 - the pointer probe and camera-home actions are dev-only helpers, not always-on HUD content
 
 Rules:
@@ -288,15 +291,15 @@ The active implementation treats camera as a viewport crop helper:
 - modal hotkeys/move/settings overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
 - the hotkeys popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter
-- the move popup is a modal overlay rendered between hotkeys and settings; it uses the shared modal shell to make entity movement explicit with `1/2/3` selection and `hjkl` movement
-- the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3` select the active entity target and `hjkl` move that target
+- the move popup is a modal overlay rendered between hotkeys and settings; it uses the shared modal shell to make entity movement explicit with `1/2/3/4/5` selection and `hjkl` movement
+- the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3/4/5` select the active entity target and `hjkl` move that target
 - the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
 - the hotkeys popup now also lists the pointer probe, palette popup, and weather sprite popup so those dev-only tools stay discoverable without turning the footer into a full command legend
 
 ## UI / Metamechanics Working Set
 
 - current state: the modal UI stack is `hotkeys` at `390`, `move` at `395`, and `settings` at `400`
-- current move grammar: `1/2/3` select the target and `hjkl` move it while move mode is open
+- current move grammar: `1/2/3/4/5` select the target and `hjkl` move it while move mode is open
 - current settings grammar: positions/widgets/gif/theme tabs are presentation-only and do not own world state
 - current modal surface: move/settings panels paint an opaque BTAS backdrop before the border and text are drawn, and opaque space+background cells clear the GIF underneath
 - current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position

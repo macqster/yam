@@ -15,6 +15,12 @@ Logging rule:
 
 ## 2026-05-11
 
+- [23:16] followed up on the validated external audit with a concrete test-hygiene fix: patched the stale `WorldFrame` initializers in the hotkeys/world-label layer tests to include the live `date` and reserved `calendar` companion fields, and added tiny local render-state helpers there so future companion-frame drift is a little less likely.
+- [23:03] continued the runtime-gating cleanup without touching the reserved `calendar` seam: the remaining popup-toggle, popup-close, tab-switch, and free-roam key paths in `runtime.rs` now route through a few named predicates instead of repeating near-identical modal guard expressions inline.
+- [22:55] ran the first code-facing maintenance pass on the dev-control seam: consolidated `MetaState`'s repeated "close competing overlays" behavior behind one helper, and tightened `runtime.rs`'s input loop by replacing several copy-pasted dev/settings/move gating expressions with named predicates so the modal contract stays easier to read and less likely to drift.
+- [22:43] finished the second pass with one last architecture-note correction so the attachment docs no longer describe the live `date` seam as if it were still reserved alongside `calendar`.
+- [22:39] ran a second maintenance pass focused on active-contract honesty: the front-door, weather, scene-model, architecture, and rendering docs now describe the live one-line `date` companion as implemented, keep `calendar` explicitly reserved, update the move grammar to the current `1/2/3/4/5` target set, and stop talking about live weather I/O as if it were still purely future work.
+- [22:26] ran a first repo-wide maintenance pass after `0.3.5` and tightened the inspection-surface contract again: stale sandbox/world-space wording was corrected across the front-door and asset/render docs, and the `[W]eather` popup copy/tests now describe the current dev-popup atlas review instead of the older sandbox review path.
 - [22:02] cut release `0.3.5` after the Polish weather companion and dev-inspection cleanup pass: the main-scene weather/clock/date cluster now has the warmer BTAS-aligned foreground polish, the compact weather facts and Polish localization are tighter, the date companion is live, and the old sandbox review surfaces now exist as dedicated `[P]alette` and `[W]eather` popups instead of occupying world-space.
 
 ## 2026-05-10

@@ -24,6 +24,87 @@ use crossterm::{
 use ratatui::{backend::CrosstermBackend, Terminal};
 use tachyonfx::{fx, CellFilter, Effect, Interpolation};
 
+fn dev_free_roam(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && !ui_state.meta.settings_open
+        && !ui_state.meta.hotkeys_open
+        && !ui_state.meta.palette_open
+        && !ui_state.meta.weather_popup_open
+        && !ui_state.meta.move_mode_open
+}
+
+fn popup_toggle_allowed(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && !ui_state.meta.settings_open
+        && !ui_state.meta.hotkeys_open
+        && !ui_state.meta.move_mode_open
+}
+
+fn palette_toggle_allowed(ui_state: &UiState) -> bool {
+    popup_toggle_allowed(ui_state) && !ui_state.meta.weather_popup_open
+}
+
+fn weather_popup_toggle_allowed(ui_state: &UiState) -> bool {
+    popup_toggle_allowed(ui_state) && !ui_state.meta.palette_open
+}
+
+fn hotkeys_toggle_allowed(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && !ui_state.meta.palette_open
+        && !ui_state.meta.weather_popup_open
+        && !ui_state.meta.move_mode_open
+}
+
+fn settings_navigation_active(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && ui_state.meta.settings_open
+        && !ui_state.meta.hotkeys_open
+        && !ui_state.meta.palette_open
+        && !ui_state.meta.weather_popup_open
+        && !ui_state.meta.move_mode_open
+}
+
+fn settings_edit_active(ui_state: &UiState) -> bool {
+    settings_navigation_active(ui_state) && ui_state.settings_edit.active
+}
+
+fn move_mode_active(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && ui_state.meta.move_mode_open
+        && !ui_state.meta.settings_open
+        && !ui_state.meta.hotkeys_open
+        && !ui_state.meta.palette_open
+        && !ui_state.meta.weather_popup_open
+}
+
+fn palette_popup_active(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && ui_state.meta.palette_open
+        && !ui_state.meta.settings_open
+        && !ui_state.meta.hotkeys_open
+        && !ui_state.meta.move_mode_open
+}
+
+fn weather_popup_active(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode
+        && ui_state.meta.weather_popup_open
+        && !ui_state.meta.settings_open
+        && !ui_state.meta.hotkeys_open
+        && !ui_state.meta.move_mode_open
+}
+
+fn settings_close_active(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode && ui_state.meta.settings_open && !ui_state.settings_edit.active
+}
+
+fn settings_tab_switch_allowed(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode && ui_state.meta.settings_open && !ui_state.settings_edit.active
+}
+
+fn settings_edit_mode_active(ui_state: &UiState) -> bool {
+    ui_state.meta.dev_mode && ui_state.meta.settings_open && ui_state.settings_edit.active
+}
+
 fn build_loading_effect(phase: crate::ui::state::BootLoadingPhase) -> Effect {
     let mut effect = match phase {
         crate::ui::state::BootLoadingPhase::Coalesce => {
@@ -108,231 +189,96 @@ pub fn run(
                     KeyCode::Char('q') => break 'run,
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
-                    KeyCode::Char('C')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('C') if dev_free_roam(&ui_state) => {
                         ui_state.store_camera_home();
                     }
-                    KeyCode::Char('p')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('p') if dev_free_roam(&ui_state) => {
                         ui_state.toggle_pointer_probe();
                     }
-                    KeyCode::Char('P')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('P') if palette_toggle_allowed(&ui_state) => {
                         ui_state.toggle_palette();
                     }
-                    KeyCode::Char('W')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('W') if weather_popup_toggle_allowed(&ui_state) => {
                         ui_state.toggle_weather_popup();
                     }
-                    KeyCode::Char('h')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('h') if hotkeys_toggle_allowed(&ui_state) => {
                         ui_state.toggle_hotkeys()
                     }
                     KeyCode::Char('m') if ui_state.meta.dev_mode => ui_state.toggle_move_mode(),
-                    KeyCode::Char('w')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('w') if dev_free_roam(&ui_state) => {
                         ui_state.cycle_world_kind();
                         world = WorldState::for_kind(ui_state.active_world_kind());
                     }
-                    KeyCode::Char('v')
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Char('v') if dev_free_roam(&ui_state) => {
                         ui_state.toggle_vines_visible();
                     }
                     KeyCode::Char('s') if ui_state.meta.dev_mode => ui_state.toggle_settings(),
-                    KeyCode::Enter
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Enter if settings_navigation_active(&ui_state) => {
                         let size = terminal.size()?;
                         ui_state.activate_selected_setting_with_viewport(
                             size.width,
                             size.height.saturating_sub(1),
                         )?;
                     }
-                    KeyCode::Esc
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.palette_open
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Esc if palette_popup_active(&ui_state) => {
                         ui_state.toggle_palette();
                     }
-                    KeyCode::Esc
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.weather_popup_open
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Esc if weather_popup_active(&ui_state) => {
                         ui_state.toggle_weather_popup();
                     }
-                    KeyCode::Esc
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && ui_state.settings_edit.active =>
-                    {
+                    KeyCode::Esc if settings_edit_mode_active(&ui_state) => {
                         ui_state.cancel_settings_edit();
                     }
-                    KeyCode::Esc
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && !ui_state.settings_edit.active =>
-                    {
+                    KeyCode::Esc if settings_close_active(&ui_state) => {
                         ui_state.close_settings();
                     }
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
-                    KeyCode::Left
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && ui_state.settings_edit.active
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Left if settings_edit_active(&ui_state) => {
                         ui_state.toggle_settings_edit_field();
                     }
-                    KeyCode::Left
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Left if dev_free_roam(&ui_state) => {
                         if ui_state.meta.pointer_probe_open {
                             ui_state.move_pointer_left();
                         } else {
                             ui_state.move_camera_left();
                         }
                     }
-                    KeyCode::Right
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && ui_state.settings_edit.active
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Right if settings_edit_active(&ui_state) => {
                         ui_state.toggle_settings_edit_field();
                     }
-                    KeyCode::Right
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Right if dev_free_roam(&ui_state) => {
                         if ui_state.meta.pointer_probe_open {
                             ui_state.move_pointer_right();
                         } else {
                             ui_state.move_camera_right();
                         }
                     }
-                    KeyCode::Up
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Up if settings_navigation_active(&ui_state) => {
                         ui_state.select_prev_settings_row();
                     }
-                    KeyCode::Down
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Down if settings_navigation_active(&ui_state) => {
                         ui_state.select_next_settings_row();
                     }
-                    KeyCode::Up
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Up if dev_free_roam(&ui_state) => {
                         if ui_state.meta.pointer_probe_open {
                             ui_state.move_pointer_up();
                         } else {
                             ui_state.move_camera_up();
                         }
                     }
-                    KeyCode::Down
-                        if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open =>
-                    {
+                    KeyCode::Down if dev_free_roam(&ui_state) => {
                         if ui_state.meta.pointer_probe_open {
                             ui_state.move_pointer_down();
                         } else {
                             ui_state.move_camera_down();
                         }
                     }
-                    KeyCode::Tab
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && !ui_state.settings_edit.active =>
-                    {
+                    KeyCode::Tab if settings_tab_switch_allowed(&ui_state) => {
                         ui_state.next_settings_tab();
                     }
                     KeyCode::Char(c) => {
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.move_mode_open
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                        {
+                        if move_mode_active(&ui_state) {
                             match c {
                                 '1' => ui_state
                                     .meta
@@ -355,18 +301,9 @@ pub fn run(
                                 'l' => ui_state.move_selected_target_right()?,
                                 _ => {}
                             }
-                        } else if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && ui_state.settings_edit.active
-                        {
+                        } else if settings_edit_active(&ui_state) {
                             ui_state.settings_edit_insert_char(c);
-                        } else if ui_state.meta.dev_mode
-                            && !ui_state.meta.settings_open
-                            && !ui_state.meta.hotkeys_open
-                            && !ui_state.meta.palette_open
-                            && !ui_state.meta.weather_popup_open
-                            && !ui_state.meta.move_mode_open
-                        {
+                        } else if dev_free_roam(&ui_state) {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
                             let base = c.to_ascii_lowercase();
                             if base == 'c' {
@@ -385,18 +322,10 @@ pub fn run(
                             }
                         }
                     }
-                    KeyCode::BackTab
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && !ui_state.settings_edit.active =>
-                    {
+                    KeyCode::BackTab if settings_tab_switch_allowed(&ui_state) => {
                         ui_state.prev_settings_tab();
                     }
-                    KeyCode::Backspace
-                        if ui_state.meta.dev_mode
-                            && ui_state.meta.settings_open
-                            && ui_state.settings_edit.active =>
-                    {
+                    KeyCode::Backspace if settings_edit_mode_active(&ui_state) => {
                         ui_state.settings_edit_backspace();
                     }
                     KeyCode::Esc if ui_state.meta.dev_mode && ui_state.meta.move_mode_open => {

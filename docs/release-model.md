@@ -1,24 +1,25 @@
 # YAM Release Model
 
-This repository uses two branches and continuous versioning.
+This repository currently uses one active Rust maintenance branch with lightweight release cuts.
 
-## Branches
+## Active Branch
 
-- `stable` holds the last released version.
-- `experimental` holds the next release in progress.
+- `yam-rust` is the active branch for ongoing Rust runtime maintenance.
+- Current stabilization, review, and release-prep work happens directly on `yam-rust`.
+- Historical branch models such as `stable` / `experimental` are not the active workflow for the current repo state unless a future release process explicitly reinstates them.
 
 ## Versioning
 
 - Releases advance monotonically: `0.2`, `0.3`, `0.4`, and so on.
-- `stable` always corresponds to the latest released version.
-- `experimental` always corresponds to the next version under active development.
+- The current branch version should stay explicit in the repo, docs, and release notes.
+- Tags and release notes should carry the long-term release history; the branch itself stays focused on the active maintenance line.
 
 ## Workflow
 
-1. Cut a stable release from `experimental`.
-2. Tag the release.
-3. Merge or fast-forward the result into `stable`.
-4. Continue development in `experimental` for the next version.
+1. Keep `yam-rust` green under `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite.
+2. Land maintenance batches directly on `yam-rust` with docs/tests/log updates in the same change.
+3. Cut and tag releases from the clean pushed `yam-rust` state when the branch is ready.
+4. Document any future branch-model change here before treating it as active workflow.
 
 ## Repo Shape Goal
 

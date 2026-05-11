@@ -39,8 +39,6 @@ Last reviewed: 2026-05-11
 
 - [medium] `scene_config.json` is active for tooling and should stay aligned with the tooling defaults if they change.
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
-- [medium] Projection and camera semantics now have shared projection, resize round-trip, and viewport-origin helper tests.
-  - evidence: `docs/architecture.md`, `docs/rendering.md`, `src/render/render_state.rs`, `src/scene/mod.rs`
 - [medium] The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.
   - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
 - [low] `resolve_position(...)` is still the legacy world-shaped bridge even though `ScreenPos` is now active again in the compatibility helpers; that keeps the signed projection semantics correct, but the final migration away from world-shaped screen results is not finished yet.

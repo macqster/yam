@@ -14,10 +14,10 @@ Coordination contract:
 
 ## Immediate Maintenance Batch
 
+- [patch] align `docs/release-model.md` with the active `yam-rust` branch workflow and lightweight release-cut process.
+- [patch] keep `docs/audit.md` focused on actual current risks rather than positive coverage notes.
+- [inspect] decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
 - [verify] keep `cargo fmt && bash scripts/check.sh` and full `cargo test` green together while maintenance continues.
-- [inspect] keep `TODO.md` as the visible execution queue and keep `docs/audit.md` trimmed to current risk status only.
-- [verify] keep the reserved `calendar` seam labeled honestly anywhere dev UI still exposes it before a future widget rework gives it a live surface.
-- [inspect] keep the front door and weather docs aligned with the live runtime contracts.
 
 ## 1. Scene Model and Presentation Contract
 

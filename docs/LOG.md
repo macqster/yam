@@ -13,6 +13,10 @@ Logging rule:
 - Prefer append-only additions over rewriting older lines.
 
 
+## 2026-05-11
+
+- [22:02] cut release `0.3.5` after the Polish weather companion and dev-inspection cleanup pass: the main-scene weather/clock/date cluster now has the warmer BTAS-aligned foreground polish, the compact weather facts and Polish localization are tighter, the date companion is live, and the old sandbox review surfaces now exist as dedicated `[P]alette` and `[W]eather` popups instead of occupying world-space.
+
 ## 2026-05-10
 
 - [21:49] polished the compact weather temperature row again so it now reads as ` 8C |  20C`, adding a little more glyph/value breathing room and a clear separator between night minimum and day maximum facts.

@@ -14,10 +14,10 @@ Coordination contract:
 
 ## Immediate Maintenance Batch
 
-- [verify] keep the restored full `cargo test` suite green while the next maintenance batches continue.
+- [verify] keep `cargo fmt && bash scripts/check.sh` and full `cargo test` green together while maintenance continues.
+- [inspect] keep `TODO.md` as the visible execution queue and keep `docs/audit.md` trimmed to current risk status only.
 - [verify] keep the reserved `calendar` seam labeled honestly anywhere dev UI still exposes it before a future widget rework gives it a live surface.
-- [inspect] move modal/dev-control query helpers toward `UiState` / `MetaState` so `runtime.rs` reads more like an input dispatcher than a policy owner.
-- [inspect] keep the README front door explicit about implemented runtime surfaces versus future greenhouse direction.
+- [inspect] keep the front door and weather docs aligned with the live runtime contracts.
 
 ## 1. Scene Model and Presentation Contract
 
@@ -135,7 +135,7 @@ Coordination contract:
 - [verify] keep each vine slice reviewable and stop if a step requires hero aesthetic changes, raster masks, render-owned growth state, or HUD/footer layout changes.
 - [verify] run targeted spatial/core/layer tests during each vine slice, `scripts/check.sh` before handoff, and the full `cargo test` suite at milestone boundaries.
 
-## 6. Ratatui Research Follow-Ups
+## 6. Secondary Checks
 
 - [verify] layout vs `SceneLayout` mapping remains evaluated.
 - [verify] event/focus patterns from ratatui ecosystem crates are reviewed only when they solve a concrete problem.
@@ -151,7 +151,7 @@ Coordination contract:
 - [verify] masking is not treated as “empty pixels”.
 - [verify] rendering does not happen inside logic systems.
 
-## 8. Concrete Next Steps
+## 8. Execution Checks
 
 - [verify] the repo remains in soft feature freeze mode: only polish, stability, bug fixes, and contract repairs move forward unless a stronger justification is documented.
 - [verify] before any new feature work starts, the pre-new-feature gate is green: modal/UI state is clean, camera behavior is explicit, hero rendering is stable, docs/logs match the contract, and the relevant regression tests pass.
@@ -184,7 +184,7 @@ Coordination contract:
 - [verify] render-time validation goals stay in the active backlog here without duplicating contract text.
 - [verify] vine-specific design notes should stay in the owning docs; keep this backlog to execution and regression checks.
 
-## 10. Further Development Guidelines
+## 10. Maintenance Rules
 
 - [verify] add new backlog items as execution steps, inspections, or regression checks; keep contract wording in the owning docs.
 - [verify] prefer one narrowly scoped item per line so TODO stays easy to prune.

@@ -7,7 +7,7 @@ Last reviewed: 2026-05-11
 
 - Highest-priority weak seam: the spatial relation layer is still the most structurally fragile area because anchor identity, projection typing, and guide relation ownership are still only partly unified.
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
-- Modal/dev-control policy is more readable than before, but `runtime.rs` still owns more query logic than ideal; future cleanup should move intent-level predicates closer to `UiState` / `MetaState` without changing behavior.
+- `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 
 ## Weakest Areas
 
@@ -25,7 +25,7 @@ Last reviewed: 2026-05-11
 4. Improve coherence and consistency across UI, theming, and docs.
 5. Keep `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite green together now that the broader stabilization pass is restored.
 
-## Vines Readiness Gate
+## Active Readiness Gates
 
 - The ownership contract lives in [`docs/vines.md`](vines.md) and should remain current before runtime vine work begins.
 - Do not start vine feature work until the signed projection, anchor identity, and screen-attached invariance tests stay green together.
@@ -35,12 +35,7 @@ Last reviewed: 2026-05-11
 - Clean terminology drift before implementation: spatial capture uses points, anchors, guides, lines, and polylines; `node` remains reserved for plant morphology/anatomy.
 - Readiness validation on 2026-05-05: targeted Phase 0 checks are green for spatial projection, guide-set lookup, anchor identity, footer/HUD invariance, and resize round-trip behavior; the remaining risk is architectural consolidation, not an active regression.
 
-## Coordination Contract
-
-- `TODO.md` should stay execution-focused.
-- `docs/audit.md` should stay risk-focused.
-- `docs/LOG.md` should stay append-only and historical.
-- Use the audit for current risk status and the log for dated decision history, not as substitutes for the backlog.
+## Active Risk Notes
 
 - [medium] `scene_config.json` is active for tooling and should stay aligned with the tooling defaults if they change.
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
@@ -56,18 +51,6 @@ Last reviewed: 2026-05-11
   - evidence: `src/scene/coords.rs`, `src/core/world.rs`, `src/scene/entity.rs`, `src/ui/state.rs`
 - [low] A recent footer visual check exposed a stale-binary risk pattern: `yam-install` can complete while `yam-rust --version` still reports an older build stamp, so screenshot comparisons should verify the installed runtime identity before treating the output as the current source of truth.
   - evidence: `yam-rust --version`, `docs/LOG.md`, `docs/config.md`, `README.md`
-- [resolved] The footer spacing source bug was real as well: `status_layer.rs` still contained the old triple-spacing form, so the screenshot mismatch was partly a code issue and not only a stale-binary issue.
-  - evidence: `src/scene/layers/status_layer.rs`
-- [resolved] The footer color diagnostic proved the runtime/terminal styling pipeline is healthy; the final working solution is compact spacing, no background tint, no dim modifier, and a subdued grey foreground that reads cleanly on the current Ghostty theme.
-  - evidence: `src/scene/layers/status_layer.rs`, `src/theme/palette.rs`, `docs/LOG.md`
-- [resolved] The footer now routes through the BTAS theme helper path instead of a raw palette constant, which makes the status bar consistent with the rest of the theme contract.
-  - evidence: `src/scene/layers/status_layer.rs`, `src/theme/btas.rs`, `src/theme/style.rs`, `docs/theme.md`
-- [resolved] The remaining obvious debug/UI raw colors were folded into BTAS helper vocabulary as well: the small debug panel now uses BTAS debug text, and guide traces use a shared BTAS trace style instead of ad hoc green/dark-gray literals.
-  - evidence: `src/ui/debug.rs`, `src/render/guide.rs`, `src/scene/layers/debug_layer.rs`, `src/theme/btas.rs`, `src/theme/style.rs`, `docs/theme.md`
-- [resolved] The remaining raw color literals are now explicitly treated as intentional low-level render/test exceptions, not as theme drift: hero-art calibration and compositor-level tests may still use precise color literals when the point is to verify rendering behavior rather than define a reusable UI surface.
-  - evidence: `src/render/hero.rs`, `src/render/compositor.rs`, `docs/theme.md`
-- [resolved] The spatial compatibility layer now preserves signed off-screen screen coordinates correctly again: projected world and anchor paths use screen-space helpers without collapsing negative positions into unsigned values, while screen-attached values stay camera-invariant.
-  - evidence: `src/scene/coords.rs`, `src/core/spatial.rs`
 
 ## Priority Order
 
@@ -75,30 +58,7 @@ Last reviewed: 2026-05-11
 2. Hero-rendering pipeline hardening
 3. Broader flora runtime implementation
 
-## Recently Resolved
-
-- [resolved] The current runtime behavior matches the active scene/render contracts for the world/footer split, dev-mode gating, and guide-set handling; the remaining work is consolidation of the spatial relation layer rather than drift correction.
-  - evidence: `src/scene/mod.rs`, `src/runtime.rs`, `src/core/guide.rs`, `src/render/guide.rs`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`
-- [resolved] The spatial split now has a first canonical `core/spatial` cut in code, with a minimal API surface and a documented migration order; the remaining work is incremental expansion, not a fresh design.
-  - evidence: `src/core/spatial.rs`, `src/scene/coords.rs`, `src/scene/entity.rs`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`
-- [resolved] `scene/coords.rs` now has a world-aware anchor resolution helper that consults `WorldState` entities when an `EntityId` is present, so anchor identity is no longer purely declarative in the compatibility layer.
-  - evidence: `src/scene/coords.rs`, `src/core/world.rs`
-- [resolved] `scene-model.md` is the canonical conceptual scene contract filename.
-- [resolved] `docs/architecture.md` now points at `scene-model.md`.
-- [resolved] `TODO.md` is restored as the active backlog at the root.
-- [resolved] The root docs have been separated into a front door, a real backlog, and a docs map.
-- [resolved] The debug border bounds are now directly tested and kept in sync with the footer row contract.
-- [resolved] The hero path is now explicitly documented as chafa-backed, with cached-frame ownership reserved for future migration if needed.
-- [resolved] `RenderState` now has resize, round-trip, and projection-helper coverage.
-- [resolved] The debug border contract now has a direct bounds test, and the footer/debug split remains documented in the active contracts.
-
-## Deferred
-
-- [deferred] Legacy `Layer::render(...)` history remains in archived notes.
-- [deferred] Historical migration and version-map notes are archived instead of active.
-- [deferred] Older audit and issue reports remain in `docs/archive/` for context only.
-
 ## Rule
 
 - Keep this file focused on current risk status, not history or backlog text.
-- Move resolved items out when they are closed, and record the closure in `docs/LOG.md`.
+- Keep resolved detail in `docs/LOG.md` and archived reports rather than re-accumulating it here.

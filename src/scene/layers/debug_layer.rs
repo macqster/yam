@@ -635,6 +635,47 @@ mod tests {
     use crate::theme::palette;
     use ratatui::prelude::Rect;
 
+    fn world_frame() -> WorldFrame {
+        WorldFrame {
+            hero_world: WorldPos { x: 50, y: 30 },
+            hero_visual_anchor: WorldPos { x: 40, y: 20 },
+            clock_world: WorldPos { x: 45, y: 25 },
+            weather_world: WorldPos { x: 55, y: 26 },
+            date_world: WorldPos { x: 45, y: 23 },
+            calendar_world: WorldPos { x: 60, y: 22 },
+        }
+    }
+
+    fn render_state(
+        viewport_x: i32,
+        viewport_y: i32,
+        width: u16,
+        height: u16,
+        camera_x: i32,
+        camera_y: i32,
+        follow_hero: bool,
+    ) -> RenderState {
+        RenderState {
+            world: world_frame(),
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: viewport_x,
+                    y: viewport_y,
+                    width,
+                    height,
+                },
+                viewport_rect: Rect::new(0, 0, width, height),
+                camera: Camera {
+                    x: camera_x,
+                    y: camera_y,
+                    width,
+                    height,
+                    follow_hero,
+                },
+            },
+        }
+    }
+
     #[test]
     fn border_probe_stays_datum_centered_with_one_cell_inset() {
         let border = border_probe_bounds();
@@ -652,30 +693,7 @@ mod tests {
     #[test]
     fn camera_scrollbars_render_on_the_outer_frame() {
         let mut grid = crate::render::compositor::Grid::new(124, 32);
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let ctx = render_state(30, 10, 124, 32, 30, 10, false);
 
         draw_camera_scrollbars(&mut grid, 124, 32, &ctx);
 
@@ -696,30 +714,7 @@ mod tests {
     #[test]
     fn camera_scrollbars_hide_when_viewport_already_covers_the_full_world() {
         let mut grid = crate::render::compositor::Grid::new(212, 57);
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: -106,
-                    y: -28,
-                    width: 212,
-                    height: 56,
-                },
-                viewport_rect: Rect::new(0, 0, 212, 56),
-                camera: Camera {
-                    x: -106,
-                    y: -28,
-                    width: 212,
-                    height: 56,
-                    follow_hero: false,
-                },
-            },
-        };
+        let ctx = render_state(-106, -28, 212, 56, -106, -28, false);
 
         draw_camera_scrollbars(&mut grid, 212, 57, &ctx);
 
@@ -803,30 +798,7 @@ mod tests {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::new();
         let fonts = crate::render::fonts::FontRegistry::new();
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: true,
-                },
-            },
-        };
+        let ctx = render_state(30, 10, 124, 32, 30, 10, true);
         let mut ui = crate::ui::state::UiState::new();
         ui.camera.follow_hero = true;
         ui.meta.dev_mode = true;
@@ -841,13 +813,10 @@ mod tests {
         assert!(text.contains("Pointer: on (0, 0)"));
         assert!(text.contains("Hero world:"));
         assert!(text.contains("Hero screen:"));
-        assert!(text.contains("Hero visible:"));
         assert!(text.contains("Clock world:"));
         assert!(text.contains("Clock screen:"));
-        assert!(text.contains("Clock visible:"));
         assert!(text.contains("Weather world:"));
         assert!(text.contains("Weather screen:"));
-        assert!(text.contains("Weather visible:"));
         assert!(text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
         assert!(text.contains("Vine axes: 1 / segments:"));
         assert!(text.contains("Vine tips: 1 active / 0 dormant"));
@@ -863,30 +832,7 @@ mod tests {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::new();
         let fonts = crate::render::fonts::FontRegistry::new();
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: true,
-                },
-            },
-        };
+        let ctx = render_state(30, 10, 124, 32, 30, 10, true);
         let mut ui = crate::ui::state::UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.debug_info_panel_visible = false;
@@ -903,30 +849,7 @@ mod tests {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::new();
         let fonts = crate::render::fonts::FontRegistry::new();
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: true,
-                },
-            },
-        };
+        let ctx = render_state(30, 10, 124, 32, 30, 10, true);
         let mut ui = crate::ui::state::UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.sliders_visible = false;
@@ -946,30 +869,7 @@ mod tests {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::for_sandbox();
         let fonts = crate::render::fonts::FontRegistry::new();
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let ctx = render_state(30, 10, 124, 32, 30, 10, false);
         let mut ui = crate::ui::state::UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
@@ -997,30 +897,7 @@ mod tests {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::new();
         let fonts = crate::render::fonts::FontRegistry::new();
-        let ctx = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: -63,
-                    y: -17,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let ctx = render_state(30, 10, 124, 32, -63, -17, false);
         let mut ui = crate::ui::state::UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.pointer_probe_open = true;

@@ -316,35 +316,49 @@ mod tests {
     use crate::ui::state::UiState;
     use ratatui::prelude::Rect;
 
-    #[test]
-    fn settings_overlay_requires_dev_mode_and_open_state() {
-        let layer = SettingsLayer;
-        let world = WorldState::new();
-        let fonts = FontRegistry::new();
-        let render_state = RenderState {
+    fn render_state(
+        viewport_x: i32,
+        viewport_y: i32,
+        width: u16,
+        height: u16,
+        camera_x: i32,
+        camera_y: i32,
+        follow_hero: bool,
+    ) -> RenderState {
+        RenderState {
             world: WorldFrame {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
+                    x: viewport_x,
+                    y: viewport_y,
+                    width,
+                    height,
                 },
-                viewport_rect: Rect::new(0, 0, 124, 32),
+                viewport_rect: Rect::new(0, 0, width, height),
                 camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
+                    x: camera_x,
+                    y: camera_y,
+                    width,
+                    height,
+                    follow_hero,
                 },
             },
-        };
+        }
+    }
+
+    #[test]
+    fn settings_overlay_requires_dev_mode_and_open_state() {
+        let layer = SettingsLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
         let mut ui = UiState::new();
 
         let closed = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
@@ -383,30 +397,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
         let mut ui = UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
@@ -426,30 +417,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
         let mut ui = UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
@@ -475,30 +443,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
         let mut ui = UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
@@ -518,30 +463,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                },
-                viewport_rect: Rect::new(0, 0, 124, 32),
-                camera: Camera {
-                    x: 30,
-                    y: 10,
-                    width: 124,
-                    height: 32,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
         let mut ui = UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
@@ -561,30 +483,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::new();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 0,
-                    y: 0,
-                    width: 212,
-                    height: 56,
-                },
-                viewport_rect: Rect::new(0, 0, 212, 56),
-                camera: Camera {
-                    x: -106,
-                    y: -28,
-                    width: 212,
-                    height: 56,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(0, 0, 212, 56, -106, -28, false);
         let mut ui = UiState::new();
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
@@ -604,30 +503,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::for_sandbox();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 0,
-                    y: 0,
-                    width: 212,
-                    height: 56,
-                },
-                viewport_rect: Rect::new(0, 0, 212, 56),
-                camera: Camera {
-                    x: -106,
-                    y: -28,
-                    width: 212,
-                    height: 56,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(0, 0, 212, 56, -106, -28, false);
         let mut ui = UiState::new();
         ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
         ui.meta.dev_mode = true;
@@ -648,30 +524,7 @@ mod tests {
         let layer = SettingsLayer;
         let world = WorldState::for_sandbox();
         let fonts = FontRegistry::new();
-        let render_state = RenderState {
-            world: WorldFrame {
-                hero_world: WorldPos { x: 50, y: 30 },
-                hero_visual_anchor: WorldPos { x: 40, y: 20 },
-                clock_world: WorldPos { x: 45, y: 25 },
-                weather_world: WorldPos { x: 55, y: 26 },
-            },
-            hud: HudFrame {
-                viewport: Viewport {
-                    x: 0,
-                    y: 0,
-                    width: 212,
-                    height: 56,
-                },
-                viewport_rect: Rect::new(0, 0, 212, 56),
-                camera: Camera {
-                    x: -106,
-                    y: -28,
-                    width: 212,
-                    height: 56,
-                    follow_hero: false,
-                },
-            },
-        };
+        let render_state = render_state(0, 0, 212, 56, -106, -28, false);
         let mut ui = UiState::new();
         ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
         ui.meta.dev_mode = true;

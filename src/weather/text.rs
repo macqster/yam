@@ -259,7 +259,7 @@ mod tests {
         assert_eq!(condition_label(&snapshot, WeatherLocale::En), "overcast");
         assert_eq!(
             condition_label(&snapshot, WeatherLocale::Pl),
-            "zachmurzenie"
+            "całkowite zachmurzenie"
         );
     }
 

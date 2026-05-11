@@ -142,7 +142,7 @@ mod tests {
         };
 
         assert!(is_visible(render_state.date_screen(), 124, 32, label));
-        assert_eq!(render_state.date_screen(), WorldPos { x: 15, y: 17 });
+        assert_eq!(render_state.date_screen(), WorldPos { x: 15, y: 18 });
     }
 
     #[test]

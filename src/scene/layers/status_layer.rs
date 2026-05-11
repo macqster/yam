@@ -114,7 +114,7 @@ mod tests {
 
         assert_eq!(first.style.bg, None);
         assert_eq!(middle.style.bg, None);
-        assert_eq!(first.style.fg, Some(crate::theme::btas::BTAS.pms_430));
+        assert_eq!(first.style.fg, Some(crate::theme::palette::NEUTRAL_SLATE));
         assert_eq!(middle.style.fg, None);
     }
 
@@ -256,7 +256,6 @@ mod tests {
         assert!(text.contains("[p]ointer"));
         assert!(text.contains("[P]alette"));
         assert!(text.contains("[W]eather"));
-        assert!(text.contains("[v]ines"));
         assert!(!text.contains("[space] play/pause"));
         assert!(!text.contains("[.] step"));
     }

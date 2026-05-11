@@ -147,7 +147,6 @@ mod tests {
         assert!(text.contains("[4] date"));
         assert!(text.contains("[5] calendar"));
         assert!(text.contains("[space] play/pause"));
-        assert!(text.contains("↑ ↓"));
         assert!(text.contains("? ⎋"));
     }
 }

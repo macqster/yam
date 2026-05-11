@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn scene_config_matches_the_current_runtime_defaults() {
+    fn scene_config_matches_the_current_tooling_defaults() {
         let config: SceneConfig = serde_json::from_str(include_str!("../scene_config.json"))
             .expect("scene_config.json should be valid JSON");
 

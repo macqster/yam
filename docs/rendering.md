@@ -274,7 +274,7 @@ The active implementation treats camera as a viewport crop helper:
   - `debug` keeps safe diagnostic overlays available during normal use
   - `dev` gates editing, mutation, and simulation tooling behind explicit controls
   - `command palette` is the fallback for rare actions, search, and entity jumps
-- `dev` mode currently exposes the concrete runtime hotkeys already implemented in code: `[h]otkeys`, `[m]ove`, `[s]ettings`, `[p]ointer`, `[P]alette`, `[W]eather`, `[C]` store camera home, `[c]` recall camera home, and `F5` for the debug info surface when dev controls are enabled
+- `dev` mode currently exposes the concrete runtime hotkeys already implemented in code: `[h]otkeys`, `[m]ove`, `[s]ettings`, `[p]ointer`, `[P]alette`, `[W]eather`, `[C]` store camera home, `[c]` recall camera home, and `F5` for font cycling when dev controls are enabled
 - the mode-specific layout contract should stay stable so the footer and overlays do not become the primary discoverability surface; rare actions belong in the command palette or the modal hotkey shell, not in the always-on footer
 - the debug overlay can include passive camera/world scrollbar indicators anchored to the outermost terminal row/column; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
 - the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point

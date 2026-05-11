@@ -33,7 +33,7 @@ Coordination contract:
 - [verify] greenhouse remains a separate world mode, not panel chrome.
 - [verify] room selection stays internal to the world model.
 - [verify] side-by-side tab UI is not the primary greenhouse architecture.
-- [verify] `WorldMode::Main` and `WorldMode::Greenhouse` interaction with camera and input stays defined.
+- [verify] current `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera and input stays defined, and future greenhouse/lab worlds should reuse the same world-switching contract.
 
 ## 3. Footer, HUD, and Debug
 

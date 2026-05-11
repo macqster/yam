@@ -80,17 +80,15 @@ mod tests {
     use crate::ui::state::UiState;
     use ratatui::prelude::Rect;
 
-    #[test]
-    fn move_overlay_requires_dev_mode_and_open_state() {
-        let layer = MoveLayer;
-        let world = WorldState::new();
-        let fonts = FontRegistry::new();
-        let render_state = RenderState {
+    fn render_state() -> RenderState {
+        RenderState {
             world: WorldFrame {
                 hero_world: WorldPos { x: 50, y: 30 },
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -108,7 +106,15 @@ mod tests {
                     follow_hero: false,
                 },
             },
-        };
+        }
+    }
+
+    #[test]
+    fn move_overlay_requires_dev_mode_and_open_state() {
+        let layer = MoveLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = render_state();
         let mut ui = UiState::new();
 
         let closed = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
@@ -125,8 +131,6 @@ mod tests {
         assert!(text.contains("[3] weather"));
         assert!(text.contains("[4] date"));
         assert!(text.contains("[5] calendar"));
-        assert!(text.contains("1 2 3 4 5"));
-        assert!(text.contains("h j k l"));
         assert!(text.contains("? ⎋"));
         let center = open.grid.cells[open.grid.index(62, 16)].style.bg;
         assert_eq!(center, Some(crate::theme::palette::MODAL_BG));

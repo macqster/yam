@@ -1310,6 +1310,7 @@ mod tests {
     };
     use crate::core::world::WorldKind;
     use crate::scene::coords::WorldPos;
+    use crate::weather::provider::WeatherError;
     use std::time::{Duration, Instant};
 
     #[test]
@@ -1967,9 +1968,9 @@ mod tests {
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
         ui.meta.settings_tab = SettingsTab::Positions;
+        ui.meta.settings_cursor.positions = 0;
 
-        ui.commit_settings_edit()
-            .expect("begin edit should succeed");
+        ui.begin_settings_edit_with_viewport(124, 32);
         assert!(ui.settings_edit.active);
         assert_eq!(ui.settings_edit.row, 0);
 
@@ -1988,8 +1989,11 @@ mod tests {
     #[test]
     fn positions_settings_edit_switches_active_axis_field() {
         let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
         ui.meta.settings_tab = SettingsTab::Positions;
-        ui.begin_settings_edit();
+        ui.meta.settings_cursor.positions = 0;
+        ui.begin_settings_edit_with_viewport(124, 32);
 
         assert_eq!(ui.settings_edit.field, SettingsAxisField::X);
         ui.toggle_settings_edit_field();

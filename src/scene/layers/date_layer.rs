@@ -1,5 +1,6 @@
+use chrono::{Datelike, Local, NaiveDate, Weekday};
+
 use crate::core::world::{WorldKind, WorldState};
-use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::coords::WorldPos;
@@ -7,9 +8,9 @@ use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 
-pub struct ClockLayer;
+pub struct DateLayer;
 
-impl Layer for ClockLayer {
+impl Layer for DateLayer {
     fn z_index(&self) -> i32 {
         100
     }
@@ -19,61 +20,100 @@ impl Layer for ClockLayer {
         width: u16,
         height: u16,
         world: &WorldState,
-        ui: &UiState,
-        fonts: &FontRegistry,
+        _ui: &UiState,
+        _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
         if world.kind != WorldKind::MainScene {
             return LayerOutput { grid, mask: None };
         }
-        let lines = clock_lines(ui, fonts);
-        let screen_pos = ctx.clock_screen();
-        if is_visible(screen_pos, width, height, &lines) {
-            for (i, line) in lines.iter().enumerate() {
-                write_string(
-                    &mut grid,
-                    screen_pos.x.max(0) as u16,
-                    screen_pos.y.max(0) as u16 + i as u16,
-                    line,
-                    theme_style::clock_text(),
-                );
-            }
+
+        let text = polish_date_label(Local::now().date_naive());
+        let screen_pos = ctx.date_screen();
+        if is_visible(screen_pos, width, height, &text) {
+            write_string(
+                &mut grid,
+                screen_pos.x.max(0) as u16,
+                screen_pos.y.max(0) as u16,
+                &text,
+                theme_style::weather_text(),
+            );
         }
+
         LayerOutput { grid, mask: None }
     }
 }
 
-fn is_visible(pos: WorldPos, viewport_width: u16, viewport_height: u16, lines: &[String]) -> bool {
-    let clock_width = lines
-        .iter()
-        .map(|l| l.chars().count() as i32)
-        .max()
-        .unwrap_or(0);
-    let clock_height = lines.len() as i32;
-    let max_x = viewport_width as i32 - clock_width;
-    let max_y = viewport_height as i32 - clock_height;
+fn polish_date_label(date: NaiveDate) -> String {
+    format!(
+        "{}, {} {}",
+        polish_weekday(date.weekday()),
+        date.day(),
+        polish_month_genitive(date.month())
+    )
+}
+
+fn polish_weekday(weekday: Weekday) -> &'static str {
+    match weekday {
+        Weekday::Mon => "poniedziałek",
+        Weekday::Tue => "wtorek",
+        Weekday::Wed => "środa",
+        Weekday::Thu => "czwartek",
+        Weekday::Fri => "piątek",
+        Weekday::Sat => "sobota",
+        Weekday::Sun => "niedziela",
+    }
+}
+
+fn polish_month_genitive(month: u32) -> &'static str {
+    match month {
+        1 => "stycznia",
+        2 => "lutego",
+        3 => "marca",
+        4 => "kwietnia",
+        5 => "maja",
+        6 => "czerwca",
+        7 => "lipca",
+        8 => "sierpnia",
+        9 => "września",
+        10 => "października",
+        11 => "listopada",
+        12 => "grudnia",
+        _ => "miesiąca",
+    }
+}
+
+fn is_visible(pos: WorldPos, viewport_width: u16, viewport_height: u16, text: &str) -> bool {
+    let width = text.chars().count() as i32;
+    let max_x = viewport_width as i32 - width;
+    let max_y = viewport_height as i32 - 1;
     pos.x >= 0 && pos.y >= 0 && pos.x <= max_x && pos.y <= max_y
 }
 
 #[cfg(test)]
 mod tests {
-    use super::is_visible;
+    use super::{is_visible, polish_date_label};
     use crate::core::world::WorldState;
-    use crate::render::compositor::merge_grid;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
     use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
-    use crate::theme::palette;
     use crate::ui::state::UiState;
+    use chrono::NaiveDate;
     use ratatui::prelude::Rect;
 
     #[test]
-    fn clock_uses_projection_from_the_shared_render_state() {
-        let lines = vec!["12:34".to_string()];
+    fn polish_date_label_uses_nominative_weekday_and_genitive_month() {
+        let date = NaiveDate::from_ymd_opt(2026, 5, 11).expect("known date should be valid");
+        assert_eq!(polish_date_label(date), "poniedziałek, 11 maja");
+    }
+
+    #[test]
+    fn date_uses_projection_from_the_shared_render_state() {
+        let label = "poniedziałek, 11 maja";
         let render_state = RenderState {
             world: WorldFrame {
                 hero_world: WorldPos { x: 50, y: 30 },
@@ -101,14 +141,15 @@ mod tests {
             },
         };
 
-        assert!(is_visible(render_state.clock_screen(), 124, 32, &lines));
-        assert_eq!(render_state.clock_screen(), WorldPos { x: 15, y: 16 });
+        assert!(is_visible(render_state.date_screen(), 124, 32, label));
+        assert_eq!(render_state.date_screen(), WorldPos { x: 15, y: 17 });
     }
 
     #[test]
-    fn clock_glyphs_keep_their_own_foreground_when_merged_over_styled_content() {
-        let layer = super::ClockLayer;
+    fn date_layer_renders_a_single_polish_line() {
+        let layer = super::DateLayer;
         let world = WorldState::new();
+        let ui = UiState::new();
         let fonts = FontRegistry::new();
         let ctx = RenderState {
             world: WorldFrame {
@@ -136,19 +177,13 @@ mod tests {
                 },
             },
         };
-        let ui = UiState::new();
-        let mut base = crate::render::compositor::Grid::new(124, 32);
-        let clock = layer
+
+        let grid = layer
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;
-        let pos = ctx.clock_screen();
-        let idx = base.index(pos.x as u16, pos.y as u16);
-        base.cells[idx].symbol = '#';
-        base.cells[idx].style.fg = Some(ratatui::style::Color::Rgb(178, 78, 46));
+        let pos = ctx.date_screen();
+        let idx = grid.index(pos.x as u16, pos.y as u16);
 
-        merge_grid(&mut base, &clock, None);
-
-        assert_eq!(base.cells[idx].symbol, clock.cells[idx].symbol);
-        assert_eq!(base.cells[idx].style.fg, Some(palette::PRIMARY_FG));
+        assert_eq!(grid.cells[idx].symbol, 'p');
     }
 }

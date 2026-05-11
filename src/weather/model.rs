@@ -71,6 +71,8 @@ pub struct WeatherSnapshot {
     pub observed_at: DateTime<Utc>,
     pub temperature_c: Option<f32>,
     pub feels_like_c: Option<f32>,
+    pub day_max_c: Option<f32>,
+    pub night_min_c: Option<f32>,
     pub humidity_pct: Option<u8>,
     pub wind_kph: Option<f32>,
     pub wind_dir: Option<String>,

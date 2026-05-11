@@ -1,8 +1,10 @@
 use crate::scene::layers::{
-    clock_layer::ClockLayer, debug_layer::DebugLayer, field_layer::FieldLayer,
-    hero_layer::HeroLayer, hotkeys_layer::HotkeysLayer, loading_layer::LoadingLayer,
-    move_layer::MoveLayer, settings_layer::SettingsLayer, status_layer::StatusLayer,
-    vine_layer::VineLayer, weather_layer::WeatherLayer, world_label_layer::WorldLabelLayer,
+    clock_layer::ClockLayer, date_layer::DateLayer, debug_layer::DebugLayer,
+    field_layer::FieldLayer, hero_layer::HeroLayer, hotkeys_layer::HotkeysLayer,
+    loading_layer::LoadingLayer, move_layer::MoveLayer, palette_layer::PaletteLayer,
+    settings_layer::SettingsLayer, status_layer::StatusLayer, vine_layer::VineLayer,
+    weather_layer::WeatherLayer, weather_popup_layer::WeatherPopupLayer,
+    world_label_layer::WorldLabelLayer,
 };
 
 pub fn build_ui_layers() -> Vec<Box<dyn crate::scene::Layer>> {
@@ -12,10 +14,13 @@ pub fn build_ui_layers() -> Vec<Box<dyn crate::scene::Layer>> {
         Box::new(VineLayer),
         Box::new(WeatherLayer),
         Box::new(ClockLayer),
+        Box::new(DateLayer),
         Box::new(DebugLayer),
         Box::new(WorldLabelLayer),
         Box::new(HotkeysLayer),
         Box::new(MoveLayer),
+        Box::new(PaletteLayer),
+        Box::new(WeatherPopupLayer),
         Box::new(SettingsLayer),
         Box::new(LoadingLayer),
         Box::new(StatusLayer),

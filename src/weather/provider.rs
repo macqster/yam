@@ -24,6 +24,8 @@ impl WeatherProvider for StaticWeatherProvider {
             observed_at: Utc::now(),
             temperature_c: Some(14.0),
             feels_like_c: Some(12.0),
+            day_max_c: Some(18.0),
+            night_min_c: Some(9.0),
             humidity_pct: Some(81),
             wind_kph: Some(6.0),
             wind_dir: Some("NE".to_string()),

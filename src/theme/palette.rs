@@ -6,7 +6,9 @@ use super::btas::BTAS;
 pub const PANEL_BG: Color = BTAS.pms_432;
 #[allow(dead_code)]
 pub const PRIMARY_FG: Color = BTAS.pms_427;
+pub const PRIMARY_FG_WARM: Color = Color::Rgb(220, 216, 203);
 pub const SECONDARY_FG: Color = BTAS.pms_430;
+pub const NEUTRAL_SLATE: Color = Color::Rgb(114, 124, 118);
 #[allow(dead_code)]
 pub const SURFACE_LIFTED: Color = Color::Rgb(38, 42, 46);
 #[allow(dead_code)]

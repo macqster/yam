@@ -4,7 +4,7 @@ use crate::render::fonts::FontRegistry;
 use crate::scene::coords::WorldPos;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
-use crate::weather::render::{compact_widget_lines, line_width, sprite_inspection_lines};
+use crate::weather::render::{compact_widget_lines, line_width};
 
 pub struct WeatherLayer;
 
@@ -39,12 +39,7 @@ impl Layer for WeatherLayer {
                     );
                 }
             }
-            WorldKind::Sandbox => {
-                let lines = sprite_inspection_lines(ui.weather_locale);
-                if is_visible(WorldPos { x: 2, y: 2 }, width, height, &lines) {
-                    write_lines(&mut grid, 2, 2, &lines);
-                }
-            }
+            WorldKind::Sandbox => {}
             WorldKind::Boot => {}
         }
 
@@ -184,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn sandbox_world_renders_weather_sprite_inspection_table() {
+    fn sandbox_world_no_longer_renders_the_palette_sheet_in_world_space() {
         let layer = super::WeatherLayer;
         let world = WorldState::for_kind(WorldKind::Sandbox);
         let mut ui = UiState::new();
@@ -221,8 +216,8 @@ mod tests {
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;
 
-        assert_eq!(grid.cells[grid.index(2, 2)].symbol, 'w');
-        assert_eq!(grid.cells[grid.index(2, 3)].symbol, 's');
-        assert_eq!(grid.cells[grid.index(2, 5)].symbol, 's');
+        assert_eq!(grid.cells[grid.index(2, 2)].symbol, ' ');
+        assert_eq!(grid.cells[grid.index(2, 5)].symbol, ' ');
+        assert_eq!(grid.cells[grid.index(2, 18)].symbol, ' ');
     }
 }

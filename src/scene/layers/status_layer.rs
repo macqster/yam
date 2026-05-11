@@ -33,7 +33,7 @@ impl Layer for StatusLayer {
         } else if ui.loading.active {
             ""
         } else if ui.show_dev_surfaces() {
-            " [q]uit  •  [d]ev  •  [w]orld  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [v]ines  •  [C]/[c] camera home"
+            " [q]uit  •  [d]ev  •  [w]orld  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [P]alette  •  [W]eather  •  [v]ines"
         } else {
             " [q]uit  •  [d]ev"
         };
@@ -86,6 +86,8 @@ mod tests {
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -127,6 +129,8 @@ mod tests {
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -166,6 +170,8 @@ mod tests {
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -218,6 +224,8 @@ mod tests {
                 hero_visual_anchor: WorldPos { x: 40, y: 20 },
                 clock_world: WorldPos { x: 45, y: 25 },
                 weather_world: WorldPos { x: 55, y: 26 },
+                date_world: WorldPos { x: 45, y: 23 },
+                calendar_world: WorldPos { x: 60, y: 22 },
             },
             hud: HudFrame {
                 viewport: Viewport {
@@ -245,8 +253,10 @@ mod tests {
         assert!(text.contains("[h]otkeys"));
         assert!(text.contains("[w]orld"));
         assert!(text.contains("[m]ove"));
+        assert!(text.contains("[p]ointer"));
+        assert!(text.contains("[P]alette"));
+        assert!(text.contains("[W]eather"));
         assert!(text.contains("[v]ines"));
-        assert!(text.contains("[C]/[c] camera home"));
         assert!(!text.contains("[space] play/pause"));
         assert!(!text.contains("[.] step"));
     }

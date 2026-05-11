@@ -56,6 +56,8 @@ pub fn run(
         ui_state.meta.dev_mode = false;
         ui_state.meta.hotkeys_open = false;
         ui_state.meta.move_mode_open = false;
+        ui_state.meta.palette_open = false;
+        ui_state.meta.weather_popup_open = false;
         ui_state.meta.settings_open = false;
         ui_state.meta.pointer_probe_open = false;
     }
@@ -110,6 +112,7 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.store_camera_home();
@@ -118,12 +121,34 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.toggle_pointer_probe();
                     }
+                    KeyCode::Char('P')
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.weather_popup_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_palette();
+                    }
+                    KeyCode::Char('W')
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_weather_popup();
+                    }
                     KeyCode::Char('h')
-                        if ui_state.meta.dev_mode && !ui_state.meta.move_mode_open =>
+                        if ui_state.meta.dev_mode
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
+                            && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.toggle_hotkeys()
                     }
@@ -132,6 +157,7 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.cycle_world_kind();
@@ -141,6 +167,7 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.toggle_vines_visible();
@@ -150,6 +177,7 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         let size = terminal.size()?;
@@ -157,6 +185,24 @@ pub fn run(
                             size.width,
                             size.height.saturating_sub(1),
                         )?;
+                    }
+                    KeyCode::Esc
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.palette_open
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_palette();
+                    }
+                    KeyCode::Esc
+                        if ui_state.meta.dev_mode
+                            && ui_state.meta.weather_popup_open
+                            && !ui_state.meta.settings_open
+                            && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.move_mode_open =>
+                    {
+                        ui_state.toggle_weather_popup();
                     }
                     KeyCode::Esc
                         if ui_state.meta.dev_mode
@@ -179,6 +225,8 @@ pub fn run(
                             && ui_state.meta.settings_open
                             && ui_state.settings_edit.active
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.toggle_settings_edit_field();
@@ -187,6 +235,8 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         if ui_state.meta.pointer_probe_open {
@@ -200,6 +250,8 @@ pub fn run(
                             && ui_state.meta.settings_open
                             && ui_state.settings_edit.active
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.toggle_settings_edit_field();
@@ -208,6 +260,8 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         if ui_state.meta.pointer_probe_open {
@@ -220,6 +274,8 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.select_prev_settings_row();
@@ -228,6 +284,8 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         ui_state.select_next_settings_row();
@@ -236,6 +294,8 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         if ui_state.meta.pointer_probe_open {
@@ -248,6 +308,8 @@ pub fn run(
                         if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open =>
                     {
                         if ui_state.meta.pointer_probe_open {
@@ -268,6 +330,8 @@ pub fn run(
                             && ui_state.meta.move_mode_open
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                         {
                             match c {
                                 '1' => ui_state
@@ -279,6 +343,12 @@ pub fn run(
                                 '3' => ui_state
                                     .meta
                                     .select_move_target(crate::ui::state::MoveTarget::Weather),
+                                '4' => ui_state
+                                    .meta
+                                    .select_move_target(crate::ui::state::MoveTarget::Date),
+                                '5' => ui_state
+                                    .meta
+                                    .select_move_target(crate::ui::state::MoveTarget::Calendar),
                                 'h' => ui_state.move_selected_target_left()?,
                                 'j' => ui_state.move_selected_target_down()?,
                                 'k' => ui_state.move_selected_target_up()?,
@@ -293,6 +363,8 @@ pub fn run(
                         } else if ui_state.meta.dev_mode
                             && !ui_state.meta.settings_open
                             && !ui_state.meta.hotkeys_open
+                            && !ui_state.meta.palette_open
+                            && !ui_state.meta.weather_popup_open
                             && !ui_state.meta.move_mode_open
                         {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);

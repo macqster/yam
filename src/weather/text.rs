@@ -10,12 +10,16 @@ pub fn condition_label(snapshot: &WeatherSnapshot, locale: WeatherLocale) -> Str
     visual_label(snapshot.visual, locale).to_string()
 }
 
-pub fn wttr_temperature_band_label(snapshot: &WeatherSnapshot) -> String {
-    match (snapshot.temperature_c, snapshot.feels_like_c) {
-        (Some(temp), Some(feels_like)) => format!("{temp:.0} - {feels_like:.0} C"),
-        (Some(temp), None) => format!("{temp:.0} C"),
-        _ => "--".to_string(),
-    }
+pub fn wttr_day_night_temperature_label(snapshot: &WeatherSnapshot) -> String {
+    let day = snapshot
+        .day_max_c
+        .map(|temp| format!("{temp:.0}"))
+        .unwrap_or_else(|| "--".to_string());
+    let night = snapshot
+        .night_min_c
+        .map(|temp| format!("{temp:.0}"))
+        .unwrap_or_else(|| "--".to_string());
+    format!(" {night}C |  {day}C")
 }
 
 pub fn wttr_wind_label(snapshot: &WeatherSnapshot) -> String {
@@ -24,20 +28,13 @@ pub fn wttr_wind_label(snapshot: &WeatherSnapshot) -> String {
         Some(wind_kph) => format!("{wind_kph:.0} km/h"),
         None => "--".to_string(),
     };
-    format!("↑ {wind} {wind_kph}")
-}
-
-pub fn wttr_visibility_label(snapshot: &WeatherSnapshot) -> String {
-    match snapshot.visibility_km {
-        Some(visibility_km) => format!("{visibility_km:.0} km"),
-        None => "-- km".to_string(),
-    }
+    format!("{} {wind} {wind_kph}", wind_direction_arrow(wind))
 }
 
 pub fn wttr_precip_label(snapshot: &WeatherSnapshot) -> String {
     match snapshot.precip_mm {
-        Some(precip_mm) => format!("{precip_mm:.1} mm"),
-        None => "-- mm".to_string(),
+        Some(precip_mm) if precip_mm > 0.0 => format!("{precip_mm:.1} mm"),
+        _ => String::new(),
     }
 }
 
@@ -70,34 +67,34 @@ pub fn visual_label(visual: WeatherVisual, locale: WeatherLocale) -> &'static st
             WeatherVisual::Unknown => "unknown",
         },
         WeatherLocale::Pl => match visual {
-            WeatherVisual::Sunny => "Słonecznie",
-            WeatherVisual::ClearNight => "Bezchmurna noc",
-            WeatherVisual::PartlyCloudy => "Lekkie zachmurzenie",
-            WeatherVisual::Cloudy => "pochmurno",
-            WeatherVisual::VeryCloudy => "Całkowite zachmurzenie",
-            WeatherVisual::Overcast => "Całkowite zachmurzenie",
-            WeatherVisual::Mist => "Zamglenie",
-            WeatherVisual::Fog => "Mgła",
-            WeatherVisual::LightShowers => "Przelotne lekkie opady deszczu",
-            WeatherVisual::LightRain => "Lekkie opady deszczu",
-            WeatherVisual::HeavyShowers => "Umiarkowane lub silne opady deszczu",
-            WeatherVisual::HeavyRain => "Silne opady deszczu",
-            WeatherVisual::LightSnow => "Lekkie opady śniegu",
-            WeatherVisual::HeavySnow => "Silne opady śniegu",
-            WeatherVisual::LightSnowShowers => "Lekkie opady śniegu",
-            WeatherVisual::HeavySnowShowers => "Umiarkowane lub silne opady śniegu",
-            WeatherVisual::LightSleet => "Lekki deszcz ze śniegiem",
-            WeatherVisual::LightSleetShowers => "Lekki deszcz ze śniegiem",
-            WeatherVisual::Sleet => "Deszcz ze śniegiem",
-            WeatherVisual::ThunderyShowers => "Możliwa burza",
+            WeatherVisual::Sunny => "słonecznie",
+            WeatherVisual::ClearNight => "bezchmurna noc",
+            WeatherVisual::PartlyCloudy => "lekkie zachmurzenie",
+            WeatherVisual::Cloudy => "zachmurzenie",
+            WeatherVisual::VeryCloudy => "całkowite zachmurzenie",
+            WeatherVisual::Overcast => "całkowite zachmurzenie",
+            WeatherVisual::Mist => "zamglenie",
+            WeatherVisual::Fog => "mgła",
+            WeatherVisual::LightShowers => "przelotne lekkie opady deszczu",
+            WeatherVisual::LightRain => "lekkie opady deszczu",
+            WeatherVisual::HeavyShowers => "przelotne silne opady deszczu",
+            WeatherVisual::HeavyRain => "silne opady deszczu",
+            WeatherVisual::LightSnow => "lekkie opady śniegu",
+            WeatherVisual::HeavySnow => "silne opady śniegu",
+            WeatherVisual::LightSnowShowers => "lekkie opady śniegu",
+            WeatherVisual::HeavySnowShowers => "umiarkowane lub silne opady śniegu",
+            WeatherVisual::LightSleet => "lekki deszcz ze śniegiem",
+            WeatherVisual::LightSleetShowers => "lekki deszcz ze śniegiem",
+            WeatherVisual::Sleet => "deszcz ze śniegiem",
+            WeatherVisual::ThunderyShowers => "możliwa burza",
             WeatherVisual::ThunderyHeavyRain => {
-                "Umiarkowane lub silne opady deszczu i burza z piorunami"
+                "umiarkowane lub silne opady deszczu i burza z piorunami"
             }
             WeatherVisual::ThunderySnowShowers => {
-                "Umiarkowane lub silne opady śniegu i burza z piorunami"
+                "umiarkowane lub silne opady śniegu i burza z piorunami"
             }
-            WeatherVisual::Thunderstorm => "Burza",
-            WeatherVisual::Unknown => "Nieznane",
+            WeatherVisual::Thunderstorm => "burza",
+            WeatherVisual::Unknown => "nieznane",
         },
     }
 }
@@ -154,52 +151,52 @@ fn wttr_code_label(code: i32, locale: WeatherLocale) -> Option<&'static str> {
             _ => return None,
         },
         WeatherLocale::Pl => match code {
-            113 => "Bezchmurnie",
-            116 => "Lekkie zachmurzenie",
-            119 => "Zachmurzenie",
-            122 => "Całkowite zachmurzenie",
-            143 => "Zamglenie",
-            176 => "Możliwe miejscowe opady deszczu",
-            179 => "Możliwe miejscowe opady śniegu",
-            182 => "Możliwe miejscowe opady deszczu ze śniegiem",
-            185 => "Możliwe miejscowe opady marznącego deszczu",
-            200 => "Możliwa burza",
-            227 => "Zawieja śnieżna",
-            230 => "Śnieżyca",
-            248 => "Mgła",
-            260 => "Marznąca mgła",
-            263 => "Przelotna mżawka",
-            266 => "Mżawka",
-            281 => "Marznąca mżawka",
-            284 => "Marznąca mżawka",
-            293 => "Przelotne lekkie opady deszczu",
-            296 => "Lekkie opady deszczu",
-            299 => "Przelotne umiarkowane opady deszczu",
-            302 => "Umiarkowane opady deszczu",
-            305 => "Przelotne silne opady deszczu",
-            308 => "Silne opady deszczu",
-            311 => "Lekki marznący deszcz",
-            314 => "Umiarkowany lub silny marznący deszcz",
-            317 => "Lekki deszcz ze śniegiem",
-            320 => "Umiarkowany lub silny deszcz ze śniegiem",
-            323 => "Miejscowe lekkie opady śniegu",
-            326 => "Lekkie opady śniegu",
-            329 => "Miejscowe umiarkowane opady śniegu",
-            332 => "Umiarkowane opady śniegu",
-            335 => "Miejscowe silne opady śniegu",
-            338 => "Silne opady śniegu",
-            350 => "Gradobicie",
-            353 => "Lekkie opady deszczu",
-            356 => "Umiarkowane lub silne opady deszczu",
-            359 => "Oberwanie chmury",
-            362 => "Lekki deszcz ze śniegiem",
-            365 => "Umiarkowany lub silny deszcz ze śniegiem",
-            368 => "Lekkie opady śniegu",
-            371 => "Umiarkowane lub silne opady śniegu",
-            386 => "Miejscowe lekkie opady deszczu i burza z piorunami",
-            389 => "Umiarkowane lub silne opady deszczu i burza z piorunami",
-            392 => "Miejscowe lekkie opady śniegu i burza z piorunami",
-            395 => "Umiarkowane lub silne opady śniegu i burza z piorunami",
+            113 => "bezchmurnie",
+            116 => "lekkie zachmurzenie",
+            119 => "zachmurzenie",
+            122 => "całkowite zachmurzenie",
+            143 => "zamglenie",
+            176 => "możliwe miejscowe opady deszczu",
+            179 => "możliwe miejscowe opady śniegu",
+            182 => "możliwe miejscowe opady deszczu ze śniegiem",
+            185 => "możliwe miejscowe opady marznącego deszczu",
+            200 => "możliwa burza",
+            227 => "zawieja śnieżna",
+            230 => "śnieżyca",
+            248 => "mgła",
+            260 => "marznąca mgła",
+            263 => "przelotna mżawka",
+            266 => "mżawka",
+            281 => "marznąca mżawka",
+            284 => "marznąca mżawka",
+            293 => "przelotne lekkie opady deszczu",
+            296 => "lekkie opady deszczu",
+            299 => "przelotne umiarkowane opady deszczu",
+            302 => "umiarkowane opady deszczu",
+            305 => "przelotne silne opady deszczu",
+            308 => "silne opady deszczu",
+            311 => "lekki marznący deszcz",
+            314 => "umiarkowany lub silny marznący deszcz",
+            317 => "lekki deszcz ze śniegiem",
+            320 => "umiarkowany lub silny deszcz ze śniegiem",
+            323 => "miejscowe lekkie opady śniegu",
+            326 => "lekkie opady śniegu",
+            329 => "miejscowe umiarkowane opady śniegu",
+            332 => "umiarkowane opady śniegu",
+            335 => "miejscowe silne opady śniegu",
+            338 => "silne opady śniegu",
+            350 => "gradobicie",
+            353 => "lekkie opady deszczu",
+            356 => "umiarkowane lub silne opady deszczu",
+            359 => "oberwanie chmury",
+            362 => "lekki deszcz ze śniegiem",
+            365 => "umiarkowany lub silny deszcz ze śniegiem",
+            368 => "lekkie opady śniegu",
+            371 => "umiarkowane lub silne opady śniegu",
+            386 => "miejscowe lekkie opady deszczu i burza z piorunami",
+            389 => "umiarkowane lub silne opady deszczu i burza z piorunami",
+            392 => "miejscowe lekkie opady śniegu i burza z piorunami",
+            395 => "umiarkowane lub silne opady śniegu i burza z piorunami",
             _ => return None,
         },
     };
@@ -207,9 +204,34 @@ fn wttr_code_label(code: i32, locale: WeatherLocale) -> Option<&'static str> {
     Some(label)
 }
 
+fn wind_direction_arrow(direction: &str) -> &'static str {
+    let normalized = direction.trim().to_ascii_uppercase();
+    match normalized.as_str() {
+        "N" => "↑",
+        "NE" | "NNE" | "ENE" => "↗",
+        "E" => "→",
+        "SE" | "ESE" | "SSE" => "↘",
+        "S" => "↓",
+        "SW" | "SSW" | "WSW" => "↙",
+        "W" => "←",
+        "NW" | "WNW" | "NNW" => "↖",
+        _ if normalized.starts_with('N') && normalized.ends_with('E') => "↗",
+        _ if normalized.starts_with('S') && normalized.ends_with('E') => "↘",
+        _ if normalized.starts_with('S') && normalized.ends_with('W') => "↙",
+        _ if normalized.starts_with('N') && normalized.ends_with('W') => "↖",
+        _ if normalized.starts_with('N') => "↑",
+        _ if normalized.starts_with('E') => "→",
+        _ if normalized.starts_with('S') => "↓",
+        _ if normalized.starts_with('W') => "←",
+        _ => "↑",
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::condition_label;
+    use super::{
+        condition_label, wttr_code_label, wttr_day_night_temperature_label, wttr_wind_label,
+    };
     use crate::weather::model::{WeatherLocale, WeatherSnapshot, WeatherSource, WeatherVisual};
 
     #[test]
@@ -219,6 +241,8 @@ mod tests {
             observed_at: chrono::Utc::now(),
             temperature_c: Some(10.0),
             feels_like_c: Some(8.0),
+            day_max_c: Some(12.0),
+            night_min_c: Some(6.0),
             humidity_pct: Some(76),
             wind_kph: Some(4.0),
             wind_dir: Some("E".to_string()),
@@ -237,5 +261,103 @@ mod tests {
             condition_label(&snapshot, WeatherLocale::Pl),
             "zachmurzenie"
         );
+    }
+
+    #[test]
+    fn polish_wttr_code_labels_follow_upstream_condition_strings() {
+        assert_eq!(
+            wttr_code_label(389, WeatherLocale::Pl),
+            Some("umiarkowane lub silne opady deszczu i burza z piorunami")
+        );
+        assert_eq!(
+            wttr_code_label(200, WeatherLocale::Pl),
+            Some("możliwa burza")
+        );
+        assert_eq!(wttr_code_label(113, WeatherLocale::Pl), Some("bezchmurnie"));
+    }
+
+    #[test]
+    fn day_night_temperature_label_uses_compact_spacing() {
+        let snapshot = WeatherSnapshot {
+            location_label: "Sulkowice".to_string(),
+            observed_at: chrono::Utc::now(),
+            temperature_c: Some(10.0),
+            feels_like_c: Some(8.0),
+            day_max_c: Some(18.0),
+            night_min_c: Some(5.0),
+            humidity_pct: Some(76),
+            wind_kph: Some(4.0),
+            wind_dir: Some("ENE".to_string()),
+            visibility_km: Some(10.0),
+            precip_mm: Some(0.0),
+            condition_text: Some("Clear".to_string()),
+            condition_code: Some(113),
+            forecast: Vec::new(),
+            source: WeatherSource::StaticPrototype,
+            stale: false,
+            visual: WeatherVisual::Sunny,
+        };
+
+        assert_eq!(
+            wttr_day_night_temperature_label(&snapshot),
+            " 5C |  18C"
+        );
+    }
+
+    #[test]
+    fn wind_label_uses_directional_arrow_for_compass_variant() {
+        let snapshot = WeatherSnapshot {
+            location_label: "Sulkowice".to_string(),
+            observed_at: chrono::Utc::now(),
+            temperature_c: Some(10.0),
+            feels_like_c: Some(8.0),
+            day_max_c: Some(18.0),
+            night_min_c: Some(5.0),
+            humidity_pct: Some(76),
+            wind_kph: Some(10.0),
+            wind_dir: Some("ENE".to_string()),
+            visibility_km: Some(10.0),
+            precip_mm: Some(0.0),
+            condition_text: Some("Clear".to_string()),
+            condition_code: Some(113),
+            forecast: Vec::new(),
+            source: WeatherSource::StaticPrototype,
+            stale: false,
+            visual: WeatherVisual::Sunny,
+        };
+
+        assert_eq!(wttr_wind_label(&snapshot), "↗ ENE 10 km/h");
+    }
+
+    #[test]
+    fn secondary_intercardinal_directions_collapse_to_single_ordinal_arrow() {
+        let base_snapshot = WeatherSnapshot {
+            location_label: "Sulkowice".to_string(),
+            observed_at: chrono::Utc::now(),
+            temperature_c: Some(10.0),
+            feels_like_c: Some(8.0),
+            day_max_c: Some(18.0),
+            night_min_c: Some(5.0),
+            humidity_pct: Some(76),
+            wind_kph: Some(10.0),
+            wind_dir: Some("NNE".to_string()),
+            visibility_km: Some(10.0),
+            precip_mm: Some(0.0),
+            condition_text: Some("Clear".to_string()),
+            condition_code: Some(113),
+            forecast: Vec::new(),
+            source: WeatherSource::StaticPrototype,
+            stale: false,
+            visual: WeatherVisual::Sunny,
+        };
+
+        let nne = wttr_wind_label(&base_snapshot);
+        let ese = wttr_wind_label(&WeatherSnapshot {
+            wind_dir: Some("ESE".to_string()),
+            ..base_snapshot.clone()
+        });
+
+        assert_eq!(nne, "↗ NNE 10 km/h");
+        assert_eq!(ese, "↘ ESE 10 km/h");
     }
 }

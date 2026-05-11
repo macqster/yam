@@ -28,6 +28,8 @@ pub struct MetaState {
     pub vines_visibility_mode: FeatureVisibilityMode,
     pub hotkeys_open: bool,
     pub move_mode_open: bool,
+    pub palette_open: bool,
+    pub weather_popup_open: bool,
     pub settings_open: bool,
     pub pointer_probe_open: bool,
     pub world_frame_visible: bool,
@@ -49,6 +51,8 @@ impl MetaState {
             vines_visibility_mode: FeatureVisibilityMode::On,
             hotkeys_open: false,
             move_mode_open: false,
+            palette_open: false,
+            weather_popup_open: false,
             settings_open: false,
             pointer_probe_open: false,
             world_frame_visible: true,
@@ -67,6 +71,8 @@ impl MetaState {
         if !self.dev_mode {
             self.hotkeys_open = false;
             self.move_mode_open = false;
+            self.palette_open = false;
+            self.weather_popup_open = false;
             self.settings_open = false;
             self.pointer_probe_open = false;
         }
@@ -76,6 +82,8 @@ impl MetaState {
         self.hotkeys_open = !self.hotkeys_open;
         if self.hotkeys_open {
             self.move_mode_open = false;
+            self.palette_open = false;
+            self.weather_popup_open = false;
             self.settings_open = false;
             self.pointer_probe_open = false;
         }
@@ -85,6 +93,30 @@ impl MetaState {
         self.move_mode_open = !self.move_mode_open;
         if self.move_mode_open {
             self.hotkeys_open = false;
+            self.palette_open = false;
+            self.weather_popup_open = false;
+            self.settings_open = false;
+            self.pointer_probe_open = false;
+        }
+    }
+
+    pub fn toggle_palette(&mut self) {
+        self.palette_open = !self.palette_open;
+        if self.palette_open {
+            self.hotkeys_open = false;
+            self.move_mode_open = false;
+            self.weather_popup_open = false;
+            self.settings_open = false;
+            self.pointer_probe_open = false;
+        }
+    }
+
+    pub fn toggle_weather_popup(&mut self) {
+        self.weather_popup_open = !self.weather_popup_open;
+        if self.weather_popup_open {
+            self.hotkeys_open = false;
+            self.move_mode_open = false;
+            self.palette_open = false;
             self.settings_open = false;
             self.pointer_probe_open = false;
         }
@@ -95,6 +127,8 @@ impl MetaState {
         if self.settings_open {
             self.hotkeys_open = false;
             self.move_mode_open = false;
+            self.palette_open = false;
+            self.weather_popup_open = false;
             self.pointer_probe_open = false;
         }
     }
@@ -104,6 +138,8 @@ impl MetaState {
         if self.pointer_probe_open {
             self.hotkeys_open = false;
             self.move_mode_open = false;
+            self.palette_open = false;
+            self.weather_popup_open = false;
             self.settings_open = false;
         }
     }
@@ -526,12 +562,12 @@ impl UiState {
             pointer_blink_on: true,
             settings_edit: SettingsEditState::default(),
             loading: LoadingState::default(),
-            weather_location: WeatherLocation::named("Sulkowice"),
+            weather_location: WeatherLocation::named("Krakow, Poland"),
             weather_snapshot: None,
             weather_last_refresh: None,
             weather_refresh_interval: Duration::from_secs(15 * 60),
             weather_refresh_rx: None,
-            weather_locale: WeatherLocale::En,
+            weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
         }
     }
@@ -683,6 +719,14 @@ impl UiState {
 
     pub fn toggle_move_mode(&mut self) {
         self.meta.toggle_move_mode();
+    }
+
+    pub fn toggle_palette(&mut self) {
+        self.meta.toggle_palette();
+    }
+
+    pub fn toggle_weather_popup(&mut self) {
+        self.meta.toggle_weather_popup();
     }
 
     pub fn toggle_settings(&mut self) {
@@ -1368,12 +1412,16 @@ mod tests {
         assert!(ui.meta.hotkeys_open);
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.pointer_probe_open);
 
         ui.toggle_settings();
         assert!(ui.meta.settings_open);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.pointer_probe_open);
     }
 
@@ -1393,6 +1441,8 @@ mod tests {
         assert!(!ui.meta.dev_mode);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.pointer_probe_open);
     }
@@ -1404,11 +1454,57 @@ mod tests {
         ui.toggle_move_mode();
         assert!(ui.meta.move_mode_open);
         assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.pointer_probe_open);
 
         ui.toggle_hotkeys();
         assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
+    }
+
+    #[test]
+    fn palette_and_popups_are_mutually_exclusive() {
+        let mut ui = UiState::new();
+
+        ui.toggle_palette();
+        assert!(ui.meta.palette_open);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.weather_popup_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
+
+        ui.toggle_hotkeys();
+        assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.weather_popup_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
+    }
+
+    #[test]
+    fn weather_popup_and_popups_are_mutually_exclusive() {
+        let mut ui = UiState::new();
+
+        ui.toggle_weather_popup();
+        assert!(ui.meta.weather_popup_open);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.meta.pointer_probe_open);
+
+        ui.toggle_palette();
+        assert!(ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
+        assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.pointer_probe_open);
@@ -1422,12 +1518,16 @@ mod tests {
         assert!(ui.meta.pointer_probe_open);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.settings_open);
 
         ui.toggle_hotkeys();
         assert!(ui.meta.hotkeys_open);
         assert!(!ui.meta.pointer_probe_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.settings_open);
     }
 
@@ -1521,7 +1621,7 @@ mod tests {
 
         assert!(ui.weather_snapshot.is_some());
         assert!(ui.weather_last_refresh.is_some());
-        assert_eq!(ui.weather_location.label, "Sulkowice");
+        assert_eq!(ui.weather_location.label, "Krakow, Poland");
     }
 
     #[test]
@@ -1622,6 +1722,8 @@ mod tests {
                 vines_visibility_mode: FeatureVisibilityMode::Last,
                 hotkeys_open: false,
                 move_mode_open: true,
+                palette_open: false,
+                weather_popup_open: false,
                 settings_open: true,
                 pointer_probe_open: true,
                 world_frame_visible: false,
@@ -1671,6 +1773,8 @@ mod tests {
         );
         assert!(round_trip.meta.settings_open);
         assert!(round_trip.meta.move_mode_open);
+        assert!(!round_trip.meta.palette_open);
+        assert!(!round_trip.meta.weather_popup_open);
         assert!(round_trip.meta.pointer_probe_open);
         assert!(!round_trip.meta.world_frame_visible);
         assert!(round_trip.meta.world_axis_visible);
@@ -1720,6 +1824,8 @@ mod tests {
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
         assert!(!snapshot.meta.dev_mode);
         assert!(!snapshot.meta.move_mode_open);
+        assert!(!snapshot.meta.palette_open);
+        assert!(!snapshot.meta.weather_popup_open);
         assert!(!snapshot.meta.settings_open);
         assert!(!snapshot.meta.pointer_probe_open);
         assert!(snapshot.meta.world_frame_visible);
@@ -1818,6 +1924,8 @@ mod tests {
         let mut ui = UiState::new();
         ui.offsets.hero_dy = 0;
         ui.offsets.clock_dy = 0;
+        ui.offsets.date_dy = 0;
+        ui.offsets.calendar_dy = 0;
         ui.offsets.pointer_y = 0;
         ui.offsets.camera_y = 0;
         ui.camera.y = 0;
@@ -1837,6 +1945,22 @@ mod tests {
         ui.move_selected_target_down()
             .expect("clock move should succeed");
         assert_eq!(ui.offsets.clock_dy, 0);
+
+        ui.meta.select_move_target(MoveTarget::Date);
+        ui.move_selected_target_up()
+            .expect("date move should succeed");
+        assert_eq!(ui.offsets.date_dy, 1);
+        ui.move_selected_target_down()
+            .expect("date move should succeed");
+        assert_eq!(ui.offsets.date_dy, 0);
+
+        ui.meta.select_move_target(MoveTarget::Calendar);
+        ui.move_selected_target_up()
+            .expect("calendar move should succeed");
+        assert_eq!(ui.offsets.calendar_dy, 1);
+        ui.move_selected_target_down()
+            .expect("calendar move should succeed");
+        assert_eq!(ui.offsets.calendar_dy, 0);
 
         ui.move_pointer_up();
         assert_eq!(ui.offsets.pointer_y, 1);
@@ -2070,6 +2194,8 @@ mod tests {
         ui.meta.dev_mode = true;
         ui.meta.hotkeys_open = true;
         ui.meta.move_mode_open = true;
+        ui.meta.palette_open = true;
+        ui.meta.weather_popup_open = true;
         ui.meta.settings_open = true;
         ui.meta.pointer_probe_open = true;
 
@@ -2078,6 +2204,8 @@ mod tests {
         assert!(!ui.meta.dev_mode);
         assert!(!ui.meta.hotkeys_open);
         assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.pointer_probe_open);
         assert_eq!(ui.active_world_kind(), WorldKind::MainScene);

@@ -1,4 +1,5 @@
 pub mod clock_layer;
+pub mod date_layer;
 pub mod debug_layer;
 pub mod field_layer;
 pub mod hero_layer;
@@ -6,8 +7,10 @@ pub mod hotkeys_layer;
 pub mod loading_layer;
 pub mod modal;
 pub mod move_layer;
+pub mod palette_layer;
 pub mod settings_layer;
 pub mod status_layer;
 pub mod vine_layer;
 pub mod weather_layer;
+pub mod weather_popup_layer;
 pub mod world_label_layer;

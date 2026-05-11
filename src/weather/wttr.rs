@@ -24,12 +24,18 @@ pub fn parse_snapshot(location_label: &str, body: &str) -> Result<WeatherSnapsho
         .map(visual_from_condition_code)
         .or_else(|| condition_text.as_deref().map(visual_from_condition_text))
         .unwrap_or(WeatherVisual::Unknown);
+    let today = root
+        .get("weather")
+        .and_then(Value::as_array)
+        .and_then(|items| items.first());
 
     Ok(WeatherSnapshot {
         location_label: location_label.to_string(),
         observed_at: chrono::Utc::now(),
         temperature_c: parse_f32(current.get("temp_C")),
         feels_like_c: parse_f32(current.get("FeelsLikeC")),
+        day_max_c: parse_f32(today.and_then(|day| day.get("maxtempC"))),
+        night_min_c: parse_f32(today.and_then(|day| day.get("mintempC"))),
         humidity_pct: parse_u8(current.get("humidity")),
         wind_kph: parse_f32(current.get("windspeedKmph")),
         wind_dir: current
@@ -170,6 +176,10 @@ mod tests {
     #[test]
     fn wttr_parser_normalizes_compact_current_conditions() {
         let body = r#"{
+          "weather": [{
+            "maxtempC": "18",
+            "mintempC": "9"
+          }],
           "current_condition": [{
             "temp_C": "14",
             "FeelsLikeC": "12",
@@ -188,6 +198,8 @@ mod tests {
         assert_eq!(snapshot.location_label, "Sulkowice");
         assert_eq!(snapshot.temperature_c, Some(14.0));
         assert_eq!(snapshot.feels_like_c, Some(12.0));
+        assert_eq!(snapshot.day_max_c, Some(18.0));
+        assert_eq!(snapshot.night_min_c, Some(9.0));
         assert_eq!(snapshot.humidity_pct, Some(81));
         assert_eq!(snapshot.wind_kph, Some(6.0));
         assert_eq!(snapshot.wind_dir.as_deref(), Some("NE"));

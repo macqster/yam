@@ -13,7 +13,7 @@ This document is the canonical design brief for the YAM weather widget.
 - The default compact layout now follows a more `wttr.in`-like vertical fact stack, with a left sprite column and right-side condition / temperature / wind / visibility / precipitation rows.
 - The default compact layout should behave like a strict two-column composition: a fixed-width sprite column on the left and a fixed-start facts column on the right, so weather facts never drift into the sprite silhouette when specific rows are shorter.
 - Weather sprite shapes are now stored as compile-time plain-text assets, while color remains a separate semantic render concern owned by YAM.
-- The sandbox world is now the intended visual-inspection surface for comparative weather sprite and layout trials, so future atlas reviews can happen away from the main-scene composition.
+- A dedicated dev-mode `[W]eather` popup now serves as the comparative sprite-inspection surface, so atlas reviews can happen away from the main-scene composition without consuming sandbox world-space.
 - The sandbox review should prefer grouped comparison sheets over flat state dumps, so hard visual boundaries like `cloudy / very cloudy / overcast` or `light showers / light rain / heavy showers / heavy rain` can be judged as a grammar rather than as isolated icons.
 - External ANSI/ASCII finds may still be useful as one-off provenance sources for individual shapes; when that happens, the imported shape should be converted into plain-text assets and semantic YAM color roles rather than embedded as raw ANSI escape art.
 - Treat XBIN/Moebius-style editors as a future offline sprite-authoring workflow only; do not make YAM depend on raw XBIN blobs at runtime unless a later dedicated import/export pass proves worth the complexity.
@@ -43,6 +43,7 @@ This document is the canonical design brief for the YAM weather widget.
 - `Open-Meteo` is the preferred serious backend for later structured forecasting work.
 - The runtime should not depend on one provider's decorative output format.
 - Location should be explicit and configured, not silently inferred every frame.
+- The current default runtime location is `Krakow, Poland`.
 - Upstream `wttr.in` translation files are a valid source for condition wording, especially for Polish localization, as long as YAM still owns final layout and rendering.
 
 ## Data Boundary
@@ -402,12 +403,15 @@ Rules:
 - English and Polish should both be supportable by the presentation layer
 - Polish does not need to be the default, but the infrastructure should make it available
 - abbreviated metric rows may remain language-light, but any named weather condition should have a localized path
+- the compact widget now prefers a two-line condition header for longer localized states, a dedicated day/night temperature row rendered as two compact icon/value units separated by a pipe (` 8C |  20C`), a wind row, and a precipitation row that disappears when there is no measurable precipitation
+- the compact wind row should use a direction-aware arrow glyph rather than a fixed up-arrow, so `N / NE / E / SE / S / SW / W / NW` families remain legible at a glance even in the narrow panel
 
 Recommended direction:
 
 - keep locale as an explicit weather-widget presentation setting
 - map `WeatherVisual` to localized human-facing labels
 - avoid hard-coding provider-origin strings as the canonical visible condition text
+- when `wttr.in` condition codes are available, prefer their upstream translation-table wording for locale-specific condition labels; for Polish, `share/translations/pl.txt` is now the reference wording source for numeric conditions, while YAM keeps a separate generalized visual-label fallback for non-code cases
 
 ## Recommended Rollout
 

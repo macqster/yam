@@ -323,7 +323,7 @@ The higher-level presentation stack maps this as:
 - world below HUD below overlay
 - overlays are modal when active
 - footer and passive indicators belong to the HUD, not the overlay
-- the current visible runtime controls are intentionally narrow: `[d]ev` in the footer, rendered in BTAS-grey, with `[h]otkeys`, `[m]ove`, `[s]ettings`, `[p]ointer`, `[C]` store camera home, `[c]` recall camera home, and `F5` available once dev mode is active
+- the current visible runtime controls are intentionally narrow: `[d]ev` in the footer, rendered in BTAS-grey, with `[h]otkeys`, `[m]ove`, `[p]ointer`, `[P]alette`, `[W]eather`, `[v]ines`, and the modal help surface carrying the denser developer vocabulary once dev mode is active
 
 ## Masking and Occlusion
 

@@ -42,11 +42,11 @@ pub fn loading_text() -> Style {
 }
 
 pub fn clock_text() -> Style {
-    Style::default().fg(palette::PRIMARY_FG)
+    Style::default().fg(palette::PRIMARY_FG_WARM)
 }
 
 pub fn weather_text() -> Style {
-    Style::default().fg(palette::PRIMARY_FG)
+    Style::default().fg(palette::PRIMARY_FG_WARM)
 }
 
 pub fn weather_text_dim() -> Style {
@@ -132,7 +132,7 @@ pub fn pointer_probe() -> Style {
 }
 
 pub fn footer_text() -> Style {
-    Style::default().fg(palette::SECONDARY_FG)
+    Style::default().fg(palette::NEUTRAL_SLATE)
 }
 
 pub fn debug_text() -> Style {

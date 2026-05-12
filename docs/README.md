@@ -19,6 +19,7 @@
 - [`reference-sigye.md`](reference-sigye.md) - reference study of `sigye` and the YAM-facing subsystem ideas worth emulating
 - [`release-model.md`](release-model.md) - branch and release policy
 - [`config.md`](config.md) - scene config ownership note and the current Ghostty boot/start frame note
+- [`resource-map.md`](resource-map.md) - future-development resource scouting and adopt/emulate/reference/reject map
 ## Notes
 
 - `docs/` is the active documentation surface.
@@ -27,6 +28,7 @@
 - `README.md` carries the one-line YAM slogan and non-goals; `docs/architecture.md` and `docs/scene-model.md` carry the detailed contracts.
 - `TODO.md` should stay execution-focused, `docs/audit.md` should stay risk-focused, and `docs/LOG.md` should stay append-only.
 - `known_issues.md` should stay issue-focused, timestamped, and tightly linked to the relevant backlog, log, and front-door docs.
+- `docs/resource-map.md` is a research/reference surface for future development; keep implementation work and active execution steps out of it.
 - `docs/LOG.md` prefers newest-first day headers with inline timestamps for new entries; older history stays intact unless a maintenance pass explicitly needs to refine it.
 - current project priority is stability and efficiency first, with hero GIF aesthetics held steady and flora deferred until the system is prepared for it.
 - `docs/glossary.md` is the shared terminology source of truth; the other docs should point back to it instead of redefining terms.

@@ -59,6 +59,7 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 - [`docs/architecture.md`](docs/architecture.md) - architecture contract
 - [`docs/rendering.md`](docs/rendering.md) - render order contract
 - [`docs/audit.md`](docs/audit.md) - current repo audit
+- [`docs/resource-map.md`](docs/resource-map.md) - future-development resource map
 - [`docs/config.md`](docs/config.md) - scene config ownership note
 - [`docs/archive/README.md`](docs/archive/README.md) - historical reports and reviews
 
@@ -89,7 +90,7 @@ Terminology lives in [`docs/glossary.md`](docs/glossary.md); scene and render co
 
 ## Current Work
 
-The active work order lives in [`TODO.md`](TODO.md), the current risk snapshot lives in [`docs/audit.md`](docs/audit.md), and the append-only record of decisions lives in [`docs/LOG.md`](docs/LOG.md).
+The active work order lives in [`TODO.md`](TODO.md), the current risk snapshot lives in [`docs/audit.md`](docs/audit.md), the append-only record of decisions lives in [`docs/LOG.md`](docs/LOG.md), and future-development resource scouting lives in [`docs/resource-map.md`](docs/resource-map.md).
 
 Current priority is stability and efficiency first, with hero GIF aesthetics held steady and flora deferred until the system is prepared for it.
 

@@ -13,6 +13,10 @@ Logging rule:
 - Prefer append-only additions over rewriting older lines.
 
 
+## 2026-05-12
+
+- [06:24] shifted the post-audit maintenance posture into future-development resource scouting by adding `docs/resource-map.md` as a dedicated adopt/emulate/reference/reject map for Ratatui ecosystem patterns, Chafa hero rendering, weather providers, ANSI/XBIN/REXPaint source-art workflows, terminal effects, flora-growth references, and theme/palette inputs; also linked it from the front door and docs index so research notes stay out of the active backlog and risk log.
+
 ## 2026-05-11
 
 - [18:17] ran a final small handoff-doc cleanup after the sixth external audit: rewrote `docs/release-model.md` around the real current `yam-rust` branch workflow and lightweight release-cut process, made the top of `TODO.md` more action-shaped, and removed the remaining positive coverage note from `docs/audit.md` so the active risk snapshot stays closer to real current risks.

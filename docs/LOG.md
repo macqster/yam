@@ -15,6 +15,7 @@ Logging rule:
 
 ## 2026-05-12
 
+- [06:40] evaluated `perkins` as a possible offline tool for doctoring Chafa-rendered hero frames and recorded it in `docs/resource-map.md` as a reference-only experiment: potentially useful for manual cleanup of selected braille-heavy frames, but explicitly not a runtime authority, animation pipeline, or replacement for a future YAM-owned `CellGrid` / frame-cache contract.
 - [06:24] shifted the post-audit maintenance posture into future-development resource scouting by adding `docs/resource-map.md` as a dedicated adopt/emulate/reference/reject map for Ratatui ecosystem patterns, Chafa hero rendering, weather providers, ANSI/XBIN/REXPaint source-art workflows, terminal effects, flora-growth references, and theme/palette inputs; also linked it from the front door and docs index so research notes stay out of the active backlog and risk log.
 
 ## 2026-05-11

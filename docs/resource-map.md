@@ -80,8 +80,14 @@ Current YAM baseline:
 Recommended posture:
 - `Reference` Moebius / MoebiusXBIN as strong source-art environments for colored ANSI/XBIN exploration
 - `Reference` REXPaint as a grid-discipline and interchange tool for text-mode composition experiments
+- `Reference` `perkins` as a braille-oriented offline doctoring experiment for selected Chafa-derived hero frames
 - `Emulate` useful composition and palette workflows from those tools while keeping runtime assets normalized for YAM
 - `Reject` XBIN, `.ans`, or `.xp` files as direct runtime sprite atlas sources
+
+Specific note on `perkins`:
+- treat it as an experiment for manual cleanup of a few important Chafa-derived hero frames, especially when silhouette or braille-cell readability needs hand correction
+- do not treat it as a replacement for Chafa, an animation-aware frame pipeline, or a runtime source-of-truth format
+- if `perkins` ever becomes part of a real workflow, define a YAM-owned `CellGrid` / frame-cache contract first and treat `perkins` edits as offline source material only
 
 Implementation gate:
 - if an offline art workflow is promoted, each asset family should keep the `runtime/` vs `source-art/` split already used in `src/weather/assets/`
@@ -139,6 +145,7 @@ Implementation gate:
 | weather TUIs / `wttr.in` presentation grammar | Emulate | compact fact ordering and condition-family inspiration |
 | Moebius / MoebiusXBIN | Reference | offline source-art workflow |
 | REXPaint | Reference | optional text-grid authoring/interchange workflow |
+| `perkins` | Reference | offline Chafa-frame doctoring experiment for selected braille-heavy hero frames |
 | `tui-widgets` / `tui-scrollview` | Reference | future inspector growth options |
 | `ratatui-image` | Reference | future image-protocol experiments only |
 | raw ANSI / XBIN / `.xp` runtime authority | Reject | not a runtime asset source by default |

@@ -33,7 +33,8 @@ impl Layer for VineLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.meta.vines_visible {
+        let render_shadow = !ui.meta.vines_visible && ui.meta.dev_mode;
+        if !ui.meta.vines_visible && !render_shadow {
             return LayerOutput { grid, mask: None };
         }
         let projection = VineProjection {
@@ -50,12 +51,13 @@ impl Layer for VineLayer {
                         segment.end,
                         segment.thickness,
                         segment.health,
+                        render_shadow,
                         projection,
                     );
                 }
             }
             for organ in &vine.organs {
-                draw_organ(&mut grid, organ, projection);
+                draw_organ(&mut grid, organ, render_shadow, projection);
             }
         }
         LayerOutput { grid, mask: None }
@@ -68,6 +70,7 @@ fn draw_segment(
     end: WorldPos,
     thickness: VineThicknessClass,
     health: VineHealth,
+    shadow: bool,
     projection: VineProjection,
 ) {
     let start = world_to_screen(
@@ -93,7 +96,11 @@ fn draw_segment(
             LinePoint { x: end.x, y: end.y },
         ],
         Brush {
-            style: theme_style::vine_stem(health),
+            style: if shadow {
+                theme_style::vine_shadow(health)
+            } else {
+                theme_style::vine_stem(health)
+            },
             weight: match thickness {
                 VineThicknessClass::Thread => StrokeWeight::Hairline,
                 VineThicknessClass::Stem => StrokeWeight::Stem,
@@ -103,7 +110,7 @@ fn draw_segment(
     );
 }
 
-fn draw_organ(grid: &mut Grid, organ: &VineOrgan, projection: VineProjection) {
+fn draw_organ(grid: &mut Grid, organ: &VineOrgan, shadow: bool, projection: VineProjection) {
     let screen = world_to_screen(
         organ.position,
         projection.camera_x,
@@ -132,13 +139,26 @@ fn draw_organ(grid: &mut Grid, organ: &VineOrgan, projection: VineProjection) {
                 VineOrganKind::Fruit => 'o',
                 VineOrganKind::ParticleSource => '.',
             },
-            style: theme_style::vine_stem(VineHealth::Healthy),
+            style: if shadow {
+                theme_style::vine_shadow(VineHealth::Healthy)
+            } else {
+                theme_style::vine_stem(VineHealth::Healthy)
+            },
         },
     );
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::core::world::WorldState;
+    use crate::render::fonts::FontRegistry;
+    use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
+    use crate::scene::camera::Camera;
+    use crate::scene::coords::WorldPos;
+    use crate::scene::viewport::Viewport;
+    use crate::scene::Layer;
+    use crate::ui::state::UiState;
+    use ratatui::prelude::Rect;
     use ratatui::style::Style;
 
     use crate::core::guide_line::LinePoint;
@@ -180,5 +200,55 @@ mod tests {
         );
         assert_eq!(grid.get_mut(0, 0).map(|cell| cell.symbol), Some('='));
         assert_eq!(grid.get_mut(1, 0).map(|cell| cell.symbol), Some('='));
+    }
+
+    #[test]
+    fn dev_mode_can_show_a_dim_vine_shadow_even_when_vines_are_disabled() {
+        let layer = super::VineLayer;
+        let world = WorldState::new();
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.vines_visible = false;
+        let fonts = FontRegistry::new();
+        let ctx = RenderState {
+            world: WorldFrame {
+                hero_world: WorldPos { x: 150, y: 60 },
+                hero_visual_anchor: WorldPos { x: -60, y: 21 },
+                clock_world: WorldPos { x: 33, y: 12 },
+                weather_world: WorldPos { x: 30, y: 1 },
+                date_world: WorldPos { x: 32, y: 12 },
+                calendar_world: WorldPos { x: 61, y: 12 },
+            },
+            hud: HudFrame {
+                viewport: Viewport {
+                    x: -61,
+                    y: -15,
+                    width: 124,
+                    height: 32,
+                },
+                viewport_rect: Rect::new(0, 0, 124, 32),
+                camera: Camera {
+                    x: -61,
+                    y: -15,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            },
+        };
+
+        let grid = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid;
+        let visible = grid
+            .cells
+            .iter()
+            .find(|cell| cell.symbol != ' ')
+            .expect("dev-mode vine shadow should still render visible geometry");
+
+        assert!(visible
+            .style
+            .add_modifier
+            .contains(ratatui::style::Modifier::DIM));
     }
 }

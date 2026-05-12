@@ -178,6 +178,18 @@ pub fn vine_stem(health: VineHealth) -> Style {
     }
 }
 
+pub fn vine_shadow(health: VineHealth) -> Style {
+    if matches!(health, VineHealth::Healthy) {
+        Style::default()
+            .fg(palette::BTAS_GREY_DISABLED)
+            .add_modifier(Modifier::DIM)
+    } else {
+        Style::default()
+            .fg(palette::DIVIDER)
+            .add_modifier(Modifier::DIM)
+    }
+}
+
 fn lerp_rgb(
     from: ratatui::style::Color,
     to: ratatui::style::Color,

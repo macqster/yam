@@ -47,8 +47,8 @@ impl MetaState {
         Self {
             dev_mode: false,
             active_world: WorldKindSnapshot::MainScene,
-            vines_visible: true,
-            vines_visibility_mode: FeatureVisibilityMode::On,
+            vines_visible: false,
+            vines_visibility_mode: FeatureVisibilityMode::Off,
             hotkeys_open: false,
             move_mode_open: false,
             palette_open: false,
@@ -490,22 +490,22 @@ pub struct UiOffsets {
 impl Default for UiOffsets {
     fn default() -> Self {
         Self {
-            camera_x: -63,
-            camera_y: -17,
-            camera_home_x: -63,
-            camera_home_y: -17,
+            camera_x: -60,
+            camera_y: -15,
+            camera_home_x: -60,
+            camera_home_y: -15,
             pointer_x: 0,
             pointer_y: 0,
-            hero_dx: -218,
-            hero_dy: -39,
-            clock_dx: 95,
-            clock_dy: -10,
-            weather_dx: 120,
-            weather_dy: 14,
-            date_dx: 95,
-            date_dy: -4,
-            calendar_dx: 126,
-            calendar_dy: -4,
+            hero_dx: -210,
+            hero_dy: 0,
+            clock_dx: 89,
+            clock_dy: -50,
+            weather_dx: 88,
+            weather_dy: -61,
+            date_dx: 91,
+            date_dy: -56,
+            calendar_dx: 118,
+            calendar_dy: -56,
             clock_font: "gothic".to_string(),
             hero_fps: 2.0,
         }
@@ -580,6 +580,7 @@ impl UiState {
         let world_datum_visible = self.meta.world_datum_visible;
         let sliders_visible = self.meta.sliders_visible;
         let debug_info_panel_visible = self.meta.debug_info_panel_visible;
+        let offsets = UiOffsets::default();
         self.meta = MetaState::new();
         self.meta.active_world = match world_kind {
             WorldKind::Boot => WorldKindSnapshot::MainScene,
@@ -593,6 +594,12 @@ impl UiState {
         self.meta.world_datum_visible = world_datum_visible;
         self.meta.sliders_visible = sliders_visible;
         self.meta.debug_info_panel_visible = debug_info_panel_visible;
+        self.offsets.camera_x = offsets.camera_x;
+        self.offsets.camera_y = offsets.camera_y;
+        self.offsets.camera_home_x = offsets.camera_home_x;
+        self.offsets.camera_home_y = offsets.camera_home_y;
+        self.camera.x = self.offsets.camera_x;
+        self.camera.y = self.offsets.camera_y;
         self.camera.follow_hero = false;
         self.settings_edit.clear();
         self.loading = LoadingState::default();
@@ -1329,6 +1336,20 @@ impl UiState {
         self.camera.y = self.offsets.camera_y;
     }
 
+    pub fn preserve_camera_center_on_resize(
+        &mut self,
+        old_screen_w: i32,
+        old_screen_h: i32,
+        new_screen_w: i32,
+        new_screen_h: i32,
+    ) {
+        let center_x = self.offsets.camera_x + old_screen_w / 2;
+        let center_y = self.offsets.camera_y + old_screen_h / 2;
+        self.offsets.camera_x = center_x - new_screen_w / 2;
+        self.offsets.camera_y = center_y - new_screen_h / 2;
+        self.clamp_camera(new_screen_w, new_screen_h);
+    }
+
     pub fn sync_camera_to_viewport_center(&mut self, screen_w: i32, screen_h: i32) {
         self.offsets.camera_x = -(screen_w / 2);
         self.offsets.camera_y = -(screen_h / 2);
@@ -1475,6 +1496,24 @@ mod tests {
     }
 
     #[test]
+    fn manual_camera_resize_preserves_the_current_viewport_center() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -61;
+        ui.offsets.camera_y = -14;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+        let old_center_x = ui.offsets.camera_x + 124 / 2;
+        let old_center_y = ui.offsets.camera_y + 32 / 2;
+
+        ui.preserve_camera_center_on_resize(124, 32, 156, 40);
+
+        assert_eq!(ui.offsets.camera_x + 156 / 2, old_center_x);
+        assert_eq!(ui.offsets.camera_y + 40 / 2, old_center_y);
+        assert_eq!(ui.camera.x, ui.offsets.camera_x);
+        assert_eq!(ui.camera.y, ui.offsets.camera_y);
+    }
+
+    #[test]
     fn store_camera_home_records_the_current_camera_position() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = -18;
@@ -1513,10 +1552,10 @@ mod tests {
         let ui = UiState::new();
 
         assert!(!ui.camera.follow_hero);
-        assert_eq!(ui.offsets.camera_x, -63);
-        assert_eq!(ui.offsets.camera_y, -17);
-        assert_eq!(ui.offsets.camera_home_x, -63);
-        assert_eq!(ui.offsets.camera_home_y, -17);
+        assert_eq!(ui.offsets.camera_x, -60);
+        assert_eq!(ui.offsets.camera_y, -15);
+        assert_eq!(ui.offsets.camera_home_x, -60);
+        assert_eq!(ui.offsets.camera_home_y, -15);
         assert_eq!(ui.camera.x, ui.offsets.camera_x);
         assert_eq!(ui.camera.y, ui.offsets.camera_y);
     }
@@ -1654,11 +1693,11 @@ mod tests {
         let attachment = ui.hero_scene_attachment();
 
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
-        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -68, y: 21 });
-        assert_eq!(attachment.clock_world(), WorldPos { x: 27, y: 11 });
-        assert_eq!(attachment.weather_world(), WorldPos { x: 52, y: 35 });
-        assert_eq!(attachment.date_world(), WorldPos { x: 27, y: 17 });
-        assert_eq!(attachment.calendar_world(), WorldPos { x: 58, y: 17 });
+        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -60, y: 60 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 29, y: 10 });
+        assert_eq!(attachment.weather_world(), WorldPos { x: 28, y: -1 });
+        assert_eq!(attachment.date_world(), WorldPos { x: 31, y: 4 });
+        assert_eq!(attachment.calendar_world(), WorldPos { x: 58, y: 4 });
     }
 
     #[test]
@@ -1925,18 +1964,18 @@ mod tests {
 
         assert_eq!(snapshot.offsets.camera_x, 3);
         assert_eq!(snapshot.offsets.camera_y, -4);
-        assert_eq!(snapshot.offsets.camera_home_x, -63);
-        assert_eq!(snapshot.offsets.camera_home_y, -17);
+        assert_eq!(snapshot.offsets.camera_home_x, -60);
+        assert_eq!(snapshot.offsets.camera_home_y, -15);
         assert_eq!(snapshot.offsets.pointer_x, 0);
         assert_eq!(snapshot.offsets.pointer_y, 0);
         assert_eq!(snapshot.offsets.hero_dx, -9);
         assert_eq!(snapshot.offsets.hero_dy, -8);
         assert_eq!(snapshot.offsets.clock_dx, 7);
         assert_eq!(snapshot.offsets.clock_dy, -6);
-        assert_eq!(snapshot.offsets.date_dx, 95);
-        assert_eq!(snapshot.offsets.date_dy, -4);
-        assert_eq!(snapshot.offsets.calendar_dx, 126);
-        assert_eq!(snapshot.offsets.calendar_dy, -4);
+        assert_eq!(snapshot.offsets.date_dx, 91);
+        assert_eq!(snapshot.offsets.date_dy, -56);
+        assert_eq!(snapshot.offsets.calendar_dx, 118);
+        assert_eq!(snapshot.offsets.calendar_dy, -56);
         assert_eq!(snapshot.offsets.clock_font, "small");
         assert_eq!(snapshot.offsets.hero_fps, 1.5);
         assert!(!snapshot.meta.dev_mode);
@@ -1948,10 +1987,10 @@ mod tests {
         assert!(snapshot.meta.world_frame_visible);
         assert!(snapshot.meta.world_axis_visible);
         assert!(snapshot.meta.world_datum_visible);
-        assert!(snapshot.meta.vines_visible);
+        assert!(!snapshot.meta.vines_visible);
         assert_eq!(
             snapshot.meta.vines_visibility_mode,
-            FeatureVisibilityMode::On
+            FeatureVisibilityMode::Off
         );
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
         assert_eq!(snapshot.meta.settings_cursor, SettingsCursor::default());
@@ -2001,14 +2040,14 @@ mod tests {
     }
 
     #[test]
-    fn vines_visibility_defaults_on_and_can_be_toggled() {
+    fn vines_visibility_defaults_off_and_can_be_toggled() {
         let mut ui = UiState::new();
 
-        assert!(ui.meta.vines_visible);
-        ui.toggle_vines_visible();
         assert!(!ui.meta.vines_visible);
         ui.toggle_vines_visible();
         assert!(ui.meta.vines_visible);
+        ui.toggle_vines_visible();
+        assert!(!ui.meta.vines_visible);
     }
 
     #[test]
@@ -2019,7 +2058,7 @@ mod tests {
 
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("feature toggle should succeed");
-        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Off);
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Last);
         assert!(!ui.meta.vines_visible);
 
         ui.toggle_vines_visible();
@@ -2027,13 +2066,13 @@ mod tests {
 
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("feature toggle should succeed");
-        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Last);
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::On);
         assert!(ui.meta.vines_visible);
 
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("feature toggle should succeed");
-        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::On);
-        assert!(ui.meta.vines_visible);
+        assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Off);
+        assert!(!ui.meta.vines_visible);
     }
 
     #[test]
@@ -2329,5 +2368,27 @@ mod tests {
         assert!(!ui.meta.settings_open);
         assert!(!ui.meta.pointer_probe_open);
         assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
+    }
+
+    #[test]
+    fn clean_launch_restores_default_camera_seed_and_home() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = 17;
+        ui.offsets.camera_y = -3;
+        ui.offsets.camera_home_x = 22;
+        ui.offsets.camera_home_y = 8;
+        ui.camera.x = ui.offsets.camera_x;
+        ui.camera.y = ui.offsets.camera_y;
+        ui.camera.follow_hero = true;
+
+        ui.reset_for_clean_launch(WorldKind::MainScene);
+
+        assert_eq!(ui.offsets.camera_x, -60);
+        assert_eq!(ui.offsets.camera_y, -15);
+        assert_eq!(ui.offsets.camera_home_x, -60);
+        assert_eq!(ui.offsets.camera_home_y, -15);
+        assert_eq!(ui.camera.x, -60);
+        assert_eq!(ui.camera.y, -15);
+        assert!(!ui.camera.follow_hero);
     }
 }

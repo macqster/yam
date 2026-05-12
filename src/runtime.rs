@@ -65,6 +65,7 @@ pub fn run(
     let world_tick = Duration::from_millis(250);
     let frame_time = Duration::from_secs_f64(1.0 / 120.0);
     let pointer_blink = Duration::from_millis(420);
+    let mut last_terminal_size = terminal.size()?;
     let mut last_world_tick = Instant::now();
     let mut last_hero_tick = Instant::now();
     let mut last_pointer_blink = Instant::now();
@@ -252,6 +253,19 @@ pub fn run(
 
         terminal.autoresize().ok();
         let size = terminal.size()?;
+        if size != last_terminal_size {
+            if ui_state.camera.follow_hero {
+                ui_state.sync_camera_to_viewport_center(size.width as i32, size.height as i32);
+            } else {
+                ui_state.preserve_camera_center_on_resize(
+                    last_terminal_size.width as i32,
+                    last_terminal_size.height as i32,
+                    size.width as i32,
+                    size.height as i32,
+                );
+            }
+            last_terminal_size = size;
+        }
         if ui_state.camera.follow_hero {
             ui_state.sync_camera_to_viewport_center(size.width as i32, size.height as i32);
         } else {

@@ -111,6 +111,7 @@ Current priority is stability and efficiency first, with hero GIF aesthetics hel
 
 ## Maintenance
 
+- the repo is pinned to the stable Rust toolchain through `rust-toolchain.toml`
 - run `scripts/check.sh` before committing
 - `cargo clippy -- -D warnings` must pass without warnings
 - keep active behavior contracts in the relevant docs under `docs/`

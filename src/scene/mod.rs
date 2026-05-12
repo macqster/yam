@@ -540,7 +540,8 @@ mod tests {
         let backend = TestBackend::new(132, 36);
         let mut terminal = Terminal::new(backend).expect("terminal should initialize");
         let world = crate::core::world::WorldState::new();
-        let ui = UiState::new();
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
         let fonts = crate::render::fonts::FontRegistry::new();
 
         terminal

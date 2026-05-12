@@ -496,8 +496,8 @@ impl Default for UiOffsets {
             camera_home_y: -15,
             pointer_x: 0,
             pointer_y: 0,
-            hero_dx: -210,
-            hero_dy: 0,
+            hero_dx: -209,
+            hero_dy: -40,
             clock_dx: 89,
             clock_dy: -50,
             weather_dx: 88,
@@ -594,10 +594,7 @@ impl UiState {
         self.meta.world_datum_visible = world_datum_visible;
         self.meta.sliders_visible = sliders_visible;
         self.meta.debug_info_panel_visible = debug_info_panel_visible;
-        self.offsets.camera_x = offsets.camera_x;
-        self.offsets.camera_y = offsets.camera_y;
-        self.offsets.camera_home_x = offsets.camera_home_x;
-        self.offsets.camera_home_y = offsets.camera_home_y;
+        self.offsets = offsets;
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
         self.camera.follow_hero = false;
@@ -1693,11 +1690,11 @@ mod tests {
         let attachment = ui.hero_scene_attachment();
 
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
-        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -60, y: 60 });
-        assert_eq!(attachment.clock_world(), WorldPos { x: 29, y: 10 });
-        assert_eq!(attachment.weather_world(), WorldPos { x: 28, y: -1 });
-        assert_eq!(attachment.date_world(), WorldPos { x: 31, y: 4 });
-        assert_eq!(attachment.calendar_world(), WorldPos { x: 58, y: 4 });
+        assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -59, y: 20 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 30, y: -30 });
+        assert_eq!(attachment.weather_world(), WorldPos { x: 29, y: -41 });
+        assert_eq!(attachment.date_world(), WorldPos { x: 32, y: -36 });
+        assert_eq!(attachment.calendar_world(), WorldPos { x: 59, y: -36 });
     }
 
     #[test]
@@ -2371,12 +2368,16 @@ mod tests {
     }
 
     #[test]
-    fn clean_launch_restores_default_camera_seed_and_home() {
+    fn clean_launch_restores_default_camera_seed_and_hero_offsets() {
         let mut ui = UiState::new();
         ui.offsets.camera_x = 17;
         ui.offsets.camera_y = -3;
         ui.offsets.camera_home_x = 22;
         ui.offsets.camera_home_y = 8;
+        ui.offsets.hero_dx = -150;
+        ui.offsets.hero_dy = 12;
+        ui.offsets.clock_dx = 44;
+        ui.offsets.clock_dy = 5;
         ui.camera.x = ui.offsets.camera_x;
         ui.camera.y = ui.offsets.camera_y;
         ui.camera.follow_hero = true;
@@ -2387,6 +2388,10 @@ mod tests {
         assert_eq!(ui.offsets.camera_y, -15);
         assert_eq!(ui.offsets.camera_home_x, -60);
         assert_eq!(ui.offsets.camera_home_y, -15);
+        assert_eq!(ui.offsets.hero_dx, -209);
+        assert_eq!(ui.offsets.hero_dy, -40);
+        assert_eq!(ui.offsets.clock_dx, 89);
+        assert_eq!(ui.offsets.clock_dy, -50);
         assert_eq!(ui.camera.x, -60);
         assert_eq!(ui.camera.y, -15);
         assert!(!ui.camera.follow_hero);

@@ -13,8 +13,9 @@ use std::{
 
 use crate::core::world::{WorldKind, WorldState};
 use crate::render::fonts::FontRegistry;
-use crate::scene::render_scene;
+use crate::scene::{render_scene_with_scene, Scene};
 use crate::systems::tick::tick;
+use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
@@ -62,6 +63,7 @@ pub fn run(
     let mut world = WorldState::for_kind(ui_state.active_world_kind());
     let boot_world = WorldState::for_boot();
     let fonts = FontRegistry::new();
+    let scene = Scene::new(build_ui_layers());
     let world_tick = Duration::from_millis(250);
     let frame_time = Duration::from_secs_f64(1.0 / 120.0);
     let pointer_blink = Duration::from_millis(420);
@@ -298,7 +300,7 @@ pub fn run(
             } else {
                 &world
             };
-            render_scene(frame, render_world, &ui_state, &fonts);
+            render_scene_with_scene(&scene, frame, render_world, &ui_state, &fonts);
             if let Some(phase) = ui_state.loading.effect_phase() {
                 if loading_effect_phase != Some(phase) {
                     loading_effect_phase = Some(phase);

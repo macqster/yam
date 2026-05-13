@@ -48,6 +48,7 @@
   - `hud`: viewport and camera facts that stay screen/terminal-attached
 - `UiState` owns the runtime attachment offsets that feed the hero-scene attachment object
 - `UiState` also owns the current cached weather snapshot and its refresh cadence, so the weather layer stays render-only instead of performing provider work inline; runtime is responsible for advancing that refresh seam outside the draw path
+- the live runtime loop now keeps one long-lived `Scene` instance instead of rebuilding the boxed layer list every frame; future render-loop optimization should build from that seam rather than reintroducing per-frame scene construction
 - `UiState` also owns the current weather presentation settings that are intentionally independent from the provider path, such as locale and layout selection, so future widget-shape changes do not leak back into fetch/normalization code
 - the current main-scene boot composition for hero, clock, and weather still comes from `UiOffsets::default()`; those hard-coded start values are acceptable as runtime defaults for now, but the `settings` layer is the intended eventual owner for user-tweakable composition values
 - `WorldState` owns `GuideState` so world-attached guide primitives stay in simulation data, not UI state

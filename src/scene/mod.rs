@@ -106,9 +106,20 @@ impl Scene {
     }
 }
 
+pub fn render_scene_with_scene(
+    scene: &Scene,
+    frame: &mut Frame<'_>,
+    world: &WorldState,
+    ui: &UiState,
+    fonts: &FontRegistry,
+) {
+    scene.render(frame, world, ui, fonts);
+}
+
+#[allow(dead_code)]
 pub fn render_scene(frame: &mut Frame<'_>, world: &WorldState, ui: &UiState, fonts: &FontRegistry) {
     let scene = Scene::new(build_ui_layers());
-    scene.render(frame, world, ui, fonts);
+    render_scene_with_scene(&scene, frame, world, ui, fonts);
 }
 
 pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {

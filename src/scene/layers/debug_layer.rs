@@ -25,32 +25,30 @@ impl Layer for DebugLayer {
         300
     }
 
-    fn render_to_grid(
+    fn render_into_grid(
         &self,
-        width: u16,
-        height: u16,
+        grid: &mut Grid,
         world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
-    ) -> LayerOutput {
-        let mut grid = Grid::new(width, height);
+    ) -> Option<crate::render::mask::Mask> {
         if !ui.show_dev_surfaces() {
-            return LayerOutput { grid, mask: None };
+            return None;
         }
 
         if ui.meta.sliders_visible {
-            draw_camera_scrollbars(&mut grid, width, height, ctx);
+            draw_camera_scrollbars(grid, grid.width, grid.height, ctx);
         }
-        draw_visible_guides(&mut grid, world, ui, ctx);
+        draw_visible_guides(grid, world, ui, ctx);
 
         let panel_x = 3u16;
         let tabs_y = 1u16;
         let panel_y = 2u16;
         let cam_x = ctx.hud.camera.x;
         let cam_y = ctx.hud.camera.y;
-        let screen_w = width as i32;
-        let screen_h = height as i32;
+        let screen_w = grid.width as i32;
+        let screen_h = grid.height as i32;
         // Datum-centered world-border probe:
         // the frame is defined in world space and projected through the current camera.
         let border = border_probe_bounds();
@@ -67,8 +65,8 @@ impl Layer for DebugLayer {
         let hero_visible = main_scene
             && hero_screen.x >= 0
             && hero_screen.y >= 0
-            && hero_screen.x < width as i32
-            && hero_screen.y < height as i32;
+            && hero_screen.x < grid.width as i32
+            && hero_screen.y < grid.height as i32;
         let pointer_world = WorldPos {
             x: ui.offsets.pointer_x,
             y: ui.offsets.pointer_y,
@@ -83,29 +81,29 @@ impl Layer for DebugLayer {
             && ui.pointer_blink_on
             && pointer_screen.x >= 0
             && pointer_screen.y >= 0
-            && pointer_screen.x < width as i32
-            && pointer_screen.y < height as i32;
+            && pointer_screen.x < grid.width as i32
+            && pointer_screen.y < grid.height as i32;
         let clock_world = ctx.world.clock_world;
         let clock_screen = ctx.clock_screen();
         let clock_visible = main_scene
             && clock_screen.x >= 0
             && clock_screen.y >= 0
-            && clock_screen.x < width as i32
-            && clock_screen.y < height as i32;
+            && clock_screen.x < grid.width as i32
+            && clock_screen.y < grid.height as i32;
         let weather_world = ctx.world.weather_world;
         let weather_screen = ctx.weather_screen();
         let weather_visible = main_scene
             && weather_screen.x >= 0
             && weather_screen.y >= 0
-            && weather_screen.x < width as i32
-            && weather_screen.y < height as i32;
+            && weather_screen.x < grid.width as i32
+            && weather_screen.y < grid.height as i32;
         let date_world = ctx.world.date_world;
         let date_screen = ctx.date_screen();
         let date_visible = main_scene
             && date_screen.x >= 0
             && date_screen.y >= 0
-            && date_screen.x < width as i32
-            && date_screen.y < height as i32;
+            && date_screen.x < grid.width as i32
+            && date_screen.y < grid.height as i32;
         let vine_count = world.flora.vines.len();
         let first_vine = world.flora.vines.first();
         let vine_line = if let Some(vine) = first_vine {
@@ -165,8 +163,8 @@ impl Layer for DebugLayer {
             if ui.meta.move_mode_open { "on" } else { "off" },
             ui.meta.move_target.title()
         );
-        let center_x = width as i32 / 2;
-        let center_y = height as i32 / 2;
+        let center_x = grid.width as i32 / 2;
+        let center_y = grid.height as i32 / 2;
         let cam_dx = cam_x - center_x;
         let cam_dy = cam_y - center_y;
         let soft_band_line = {
@@ -193,7 +191,7 @@ impl Layer for DebugLayer {
             format!("Soft band: {} / {:?}", family, key.band)
         };
         if ui.meta.debug_info_panel_visible {
-            draw_debug_tabs(&mut grid, panel_x, tabs_y, ui.meta.debug_panel_tab);
+            draw_debug_tabs(grid, panel_x, tabs_y, ui.meta.debug_panel_tab);
             let lines = debug_panel_lines(
                 ui.meta.debug_panel_tab,
                 main_scene,
@@ -238,7 +236,7 @@ impl Layer for DebugLayer {
             );
             for (row, line) in lines.iter().enumerate() {
                 write_string(
-                    &mut grid,
+                    grid,
                     panel_x,
                     panel_y + row as u16,
                     line,
@@ -248,7 +246,7 @@ impl Layer for DebugLayer {
         }
         if ui.meta.world_frame_visible {
             draw_world_frame(
-                &mut grid,
+                grid,
                 border,
                 cam_x,
                 cam_y,
@@ -259,7 +257,7 @@ impl Layer for DebugLayer {
         }
         if ui.meta.world_axis_visible {
             draw_world_axis(
-                &mut grid,
+                grid,
                 border,
                 cam_x,
                 cam_y,
@@ -270,7 +268,7 @@ impl Layer for DebugLayer {
         }
         if ui.meta.world_datum_visible {
             draw_world_datum(
-                &mut grid,
+                grid,
                 border,
                 cam_x,
                 cam_y,
@@ -279,8 +277,22 @@ impl Layer for DebugLayer {
                 screen_h,
             );
         }
-        draw_pointer_probe(&mut grid, pointer_screen, pointer_visible);
-        LayerOutput { grid, mask: None }
+        draw_pointer_probe(grid, pointer_screen, pointer_visible);
+        None
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        LayerOutput { grid, mask }
     }
 }
 

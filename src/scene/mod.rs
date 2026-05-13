@@ -65,12 +65,37 @@ impl Scene {
         Self { layers }
     }
 
+    pub fn render_with_final_grid(
+        &self,
+        frame: &mut Frame<'_>,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        final_grid: &mut Grid,
+    ) {
+        let full = frame.area();
+        final_grid.resize_and_clear(full.width, full.height);
+        self.render_into_grid(frame, world, ui, fonts, final_grid);
+    }
+
     pub fn render(
         &self,
         frame: &mut Frame<'_>,
         world: &WorldState,
         ui: &UiState,
         fonts: &FontRegistry,
+    ) {
+        let mut final_grid = Grid::new(frame.area().width, frame.area().height);
+        self.render_with_final_grid(frame, world, ui, fonts, &mut final_grid);
+    }
+
+    fn render_into_grid(
+        &self,
+        frame: &mut Frame<'_>,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        final_grid: &mut Grid,
     ) {
         let full = frame.area();
         let render_state = build_render_state(full, ui);
@@ -95,17 +120,16 @@ impl Scene {
         }
 
         let hero_mask: Option<Mask> = outputs.iter().find_map(|output| output.mask.clone());
-        let mut final_grid = Grid::new(full.width, full.height);
         for (layer, output) in layers.into_iter().zip(outputs) {
             let mask_to_apply = if layer.is_field_layer() {
                 hero_mask.as_ref()
             } else {
                 None
             };
-            merge_grid(&mut final_grid, &output.grid, mask_to_apply);
+            merge_grid(final_grid, &output.grid, mask_to_apply);
         }
 
-        let lines = grid_to_lines(&final_grid);
+        let lines = grid_to_lines(final_grid);
         frame.render_widget(Clear, full);
         frame.render_widget(Paragraph::new(lines), full);
     }
@@ -119,6 +143,17 @@ pub fn render_scene_with_scene(
     fonts: &FontRegistry,
 ) {
     scene.render(frame, world, ui, fonts);
+}
+
+pub fn render_scene_with_scene_and_grid(
+    scene: &Scene,
+    frame: &mut Frame<'_>,
+    world: &WorldState,
+    ui: &UiState,
+    fonts: &FontRegistry,
+    final_grid: &mut Grid,
+) {
+    scene.render_with_final_grid(frame, world, ui, fonts, final_grid);
 }
 
 #[allow(dead_code)]

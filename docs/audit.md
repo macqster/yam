@@ -40,7 +40,7 @@ Last reviewed: 2026-05-13
 
 - [medium] The current startup path still pays for live hero-frame compilation through GIF decode, temp-frame writes, and per-frame `chafa` invocation during `Hero::new()`, which is the clearest avoidable load-time and process-spawn cost in the repo.
   - evidence: `src/render/chafa.rs`, `src/render/hero.rs`
-- [medium] The first render-loop reuse and hidden-layer skip slices are now in place: runtime keeps one long-lived `Scene` and no longer asks obviously closed modal/help/quit layers to allocate empty grids. The remaining hot-path seam is fresh full-frame `Grid` allocation for active layers and the final composed frame.
+- [medium] The first render-loop reuse, hidden-layer skip, and final-buffer reuse slices are now in place: runtime keeps one long-lived `Scene`, no longer asks obviously closed modal/help/quit layers to allocate empty grids, and reuses the final composed `Grid` across frames. The remaining hot-path seam is fresh per-layer `Grid` allocation for active layers.
   - evidence: `src/scene/mod.rs`, `src/ui/scene.rs`, `src/render/compositor.rs`
 - [medium] The current renderer still relies on the fully general grapheme-aware text write path for lightweight ASCII UI chrome such as borders, footer hints, and modal copy; this is correct but likely more expensive than needed for the hottest non-image draw paths.
   - evidence: `src/render/compositor.rs`, `src/scene/layers/modal.rs`, `src/scene/layers/status_layer.rs`

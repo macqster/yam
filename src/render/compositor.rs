@@ -44,6 +44,22 @@ impl Grid {
         }
     }
 
+    pub fn resize_and_clear(&mut self, width: u16, height: u16) {
+        let new_len = width as usize * height as usize;
+        self.width = width;
+        self.height = height;
+        if self.cells.len() != new_len {
+            self.cells.resize(new_len, Cell::blank());
+        }
+        self.clear();
+    }
+
+    pub fn clear(&mut self) {
+        for cell in &mut self.cells {
+            *cell = Cell::blank();
+        }
+    }
+
     pub fn index(&self, x: u16, y: u16) -> usize {
         (y as usize * self.width as usize) + x as usize
     }
@@ -271,5 +287,29 @@ mod tests {
 
         assert_eq!(base.cells[0].symbol, ' ');
         assert_eq!(base.cells[0].style.bg, Some(Color::Blue));
+    }
+
+    #[test]
+    fn grid_resize_and_clear_resets_existing_cells() {
+        let mut grid = Grid::new(2, 1);
+        grid.cells[0].symbol = 'X';
+        grid.cells[0].style.fg = Some(Color::Red);
+        grid.resize_and_clear(2, 1);
+
+        assert_eq!(grid.width, 2);
+        assert_eq!(grid.height, 1);
+        assert_eq!(grid.cells[0].symbol, ' ');
+        assert_eq!(grid.cells[0].style, Style::default());
+    }
+
+    #[test]
+    fn grid_resize_and_clear_grows_to_new_dimensions() {
+        let mut grid = Grid::new(1, 1);
+        grid.resize_and_clear(3, 2);
+
+        assert_eq!(grid.width, 3);
+        assert_eq!(grid.height, 2);
+        assert_eq!(grid.cells.len(), 6);
+        assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
     }
 }

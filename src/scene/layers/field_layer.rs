@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{Layer, LayerOutput, RenderState};
+use crate::scene::{Layer, RenderState};
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 
@@ -16,16 +16,14 @@ impl Layer for FieldLayer {
         true
     }
 
-    fn render_to_grid(
+    fn render_into_grid(
         &self,
-        width: u16,
-        height: u16,
+        grid: &mut Grid,
         world: &WorldState,
         _ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
-    ) -> LayerOutput {
-        let mut grid = Grid::new(width, height);
+    ) -> Option<crate::render::mask::Mask> {
         for y in 0..ctx.hud.viewport_rect.height.min(grid.height) {
             let mut line = String::new();
             for x in 0..ctx.hud.viewport_rect.width.min(grid.width) {
@@ -49,14 +47,28 @@ impl Layer for FieldLayer {
                 }
             }
             write_string(
-                &mut grid,
+                grid,
                 ctx.hud.viewport_rect.x,
                 ctx.hud.viewport_rect.y + y,
                 &line,
                 Style::default(),
             );
         }
-        LayerOutput { grid, mask: None }
+        None
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> crate::scene::LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        crate::scene::LayerOutput { grid, mask }
     }
 }
 

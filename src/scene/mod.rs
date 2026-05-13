@@ -8,6 +8,7 @@ use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
 use ratatui::prelude::*;
 use ratatui::widgets::{Clear, Paragraph};
+use std::cell::RefCell;
 
 pub mod camera;
 pub mod coords;
@@ -39,6 +40,20 @@ pub trait Layer {
     }
 
     #[allow(clippy::too_many_arguments)]
+    fn render_into_grid(
+        &self,
+        grid: &mut Grid,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        render_state: &RenderState,
+    ) -> Option<Mask> {
+        let output = self.render_to_grid(grid.width, grid.height, world, ui, fonts, render_state);
+        *grid = output.grid;
+        output.mask
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn render_to_grid(
         &self,
         width: u16,
@@ -58,11 +73,16 @@ pub trait Layer {
 
 pub struct Scene {
     pub layers: Vec<Box<dyn Layer>>,
+    scratch_grids: RefCell<Vec<Grid>>,
 }
 
 impl Scene {
     pub fn new(layers: Vec<Box<dyn Layer>>) -> Self {
-        Self { layers }
+        let scratch_grids = (0..layers.len()).map(|_| Grid::new(0, 0)).collect();
+        Self {
+            layers,
+            scratch_grids: RefCell::new(scratch_grids),
+        }
     }
 
     pub fn render_with_final_grid(
@@ -102,31 +122,30 @@ impl Scene {
         let mut layers = self
             .layers
             .iter()
-            .filter(|layer| {
+            .enumerate()
+            .filter(|(_, layer)| {
                 (!ui.loading.active || layer.visible_during_loading()) && layer.should_render(ui)
             })
             .collect::<Vec<_>>();
-        layers.sort_by_key(|layer| layer.z_index());
-        let mut outputs = Vec::with_capacity(layers.len());
-        for layer in layers.iter() {
-            outputs.push(layer.render_to_grid(
-                full.width,
-                full.height,
-                world,
-                ui,
-                fonts,
-                &render_state,
-            ));
+        layers.sort_by_key(|(_, layer)| layer.z_index());
+        let mut scratch_grids = self.scratch_grids.borrow_mut();
+        let mut masks = Vec::with_capacity(layers.len());
+        for (index, layer) in layers.iter() {
+            let scratch = &mut scratch_grids[*index];
+            scratch.resize_and_clear(full.width, full.height);
+            masks.push(layer.render_into_grid(scratch, world, ui, fonts, &render_state));
         }
 
-        let hero_mask: Option<Mask> = outputs.iter().find_map(|output| output.mask.clone());
-        for (layer, output) in layers.into_iter().zip(outputs) {
+        let hero_mask: Option<Mask> = masks.iter().find_map(|mask| mask.clone());
+        for ((index, layer), mask) in layers.into_iter().zip(masks) {
             let mask_to_apply = if layer.is_field_layer() {
                 hero_mask.as_ref()
             } else {
                 None
             };
-            merge_grid(final_grid, &output.grid, mask_to_apply);
+            let scratch = &scratch_grids[index];
+            let _ = mask;
+            merge_grid(final_grid, scratch, mask_to_apply);
         }
 
         let lines = grid_to_lines(final_grid);

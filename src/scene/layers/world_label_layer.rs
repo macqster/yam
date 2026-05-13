@@ -1,7 +1,7 @@
 use crate::core::world::{WorldKind, WorldState};
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{Layer, LayerOutput, RenderState};
+use crate::scene::{Layer, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 
@@ -12,30 +12,42 @@ impl Layer for WorldLabelLayer {
         305
     }
 
+    fn render_into_grid(
+        &self,
+        grid: &mut Grid,
+        world: &WorldState,
+        ui: &UiState,
+        _fonts: &FontRegistry,
+        _ctx: &RenderState,
+    ) -> Option<crate::render::mask::Mask> {
+        if !ui.show_dev_surfaces() || grid.height == 0 || grid.width == 0 {
+            return None;
+        }
+
+        let label = match world.kind {
+            WorldKind::Boot => return None,
+            WorldKind::MainScene => "MAIN SCENE",
+            WorldKind::Sandbox => "SANDBOX",
+        };
+        let label_width = label.chars().count() as u16;
+        let x = grid.width.saturating_sub(label_width) / 2;
+        write_string(grid, x, 0, label, theme_style::debug_text());
+
+        None
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
         height: u16,
         world: &WorldState,
         ui: &UiState,
-        _fonts: &FontRegistry,
-        _ctx: &RenderState,
-    ) -> LayerOutput {
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> crate::scene::LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.show_dev_surfaces() || height == 0 || width == 0 {
-            return LayerOutput { grid, mask: None };
-        }
-
-        let label = match world.kind {
-            WorldKind::Boot => return LayerOutput { grid, mask: None },
-            WorldKind::MainScene => "MAIN SCENE",
-            WorldKind::Sandbox => "SANDBOX",
-        };
-        let label_width = label.chars().count() as u16;
-        let x = width.saturating_sub(label_width) / 2;
-        write_string(&mut grid, x, 0, label, theme_style::debug_text());
-
-        LayerOutput { grid, mask: None }
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        crate::scene::LayerOutput { grid, mask }
     }
 }
 

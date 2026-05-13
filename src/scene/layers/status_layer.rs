@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::{Layer, LayerOutput, RenderState};
+use crate::scene::{Layer, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 use crate::ui::widgets::status::build_status_label;
@@ -17,17 +17,15 @@ impl Layer for StatusLayer {
         true
     }
 
-    fn render_to_grid(
+    fn render_into_grid(
         &self,
-        width: u16,
-        height: u16,
+        grid: &mut Grid,
         _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         _ctx: &RenderState,
-    ) -> LayerOutput {
-        let mut grid = Grid::new(width, height);
-        let footer_y = footer_row(height);
+    ) -> Option<crate::render::mask::Mask> {
+        let footer_y = footer_row(grid.height);
         let left_text = if ui.loading.showing_start_prompt() {
             " [q]uit  •  [d]ev"
         } else if ui.loading.active {
@@ -36,14 +34,28 @@ impl Layer for StatusLayer {
             " [q]uit  •  [d]ev"
         };
         let footer_style = theme_style::footer_text();
-        write_string(&mut grid, 0, footer_y, left_text, footer_style);
+        write_string(grid, 0, footer_y, left_text, footer_style);
         if !ui.loading.active {
             let right_text = build_status_label();
             let stamp_width = right_text.chars().count() as u16 + 1;
-            let x = width.saturating_sub(stamp_width);
-            write_string(&mut grid, x, footer_y, &right_text, footer_style);
+            let x = grid.width.saturating_sub(stamp_width);
+            write_string(grid, x, footer_y, &right_text, footer_style);
         }
-        LayerOutput { grid, mask: None }
+        None
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> crate::scene::LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        crate::scene::LayerOutput { grid, mask }
     }
 }
 

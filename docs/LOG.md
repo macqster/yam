@@ -582,3 +582,9 @@ Logging rule:
 - refreshed `docs/audit.md` review freshness after the companion-layout stabilization pass
 - updated `TODO.md`'s immediate batch so it reflects actually pending audit-follow-up work instead of already-completed doc cleanup
 - renamed the debug overlay's `Hero visible` line to `Hero anchor visible` because the current fact measures projected anchor visibility, not full rendered hero-pixel visibility
+
+## 2026-05-13 - Release 0.3.6
+
+- bumped the crate and runtime release marker from `0.3.5` to `0.3.6`
+- cut the patch release after the companion-cluster stabilization work: default camera, hero, clock, weather, and date launch positions now follow the accepted clean-boot composition more reliably
+- carried forward the clean-launch reseeding fix, manual camera resize recentering fix, restored spaced weather temperature formatting, date visibility/debug-fact repair, and the debug wording cleanup that clarifies `Hero anchor visible`

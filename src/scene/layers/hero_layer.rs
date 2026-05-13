@@ -14,18 +14,16 @@ impl Layer for HeroLayer {
         10
     }
 
-    fn render_to_grid(
+    fn render_into_grid(
         &self,
-        width: u16,
-        height: u16,
+        grid: &mut Grid,
         world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
-    ) -> LayerOutput {
-        let mut grid = Grid::new(width, height);
+    ) -> Option<Mask> {
         if world.kind != WorldKind::MainScene {
-            return LayerOutput { grid, mask: None };
+            return None;
         }
         let hero = &ui.hero;
         let hero_x = ctx.world.hero_visual_anchor.x;
@@ -34,7 +32,7 @@ impl Layer for HeroLayer {
         let cam_y = ctx.hud.camera.y;
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
-        let mut mask = Mask::new(width as usize, height as usize);
+        let mut mask = Mask::new(grid.width as usize, grid.height as usize);
 
         for (row_idx, row) in normalized.into_iter().enumerate() {
             let py = hero_y - row_idx as i32;
@@ -60,7 +58,7 @@ impl Layer for HeroLayer {
                 if content.is_empty() {
                     continue;
                 }
-                write_string(&mut grid, cursor_x, draw_y, content, span.style);
+                write_string(grid, cursor_x, draw_y, content, span.style);
                 for (col_idx, ch) in content.chars().enumerate() {
                     let x = cursor_x as usize + col_idx;
                     let y = draw_y as usize;
@@ -75,10 +73,21 @@ impl Layer for HeroLayer {
             }
         }
 
-        LayerOutput {
-            grid,
-            mask: Some(mask),
-        }
+        Some(mask)
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        LayerOutput { grid, mask }
     }
 }
 

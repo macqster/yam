@@ -821,6 +821,10 @@ impl UiState {
         self.meta.dev_mode && !self.loading.active
     }
 
+    pub fn show_help_surface(&self) -> bool {
+        self.meta.hotkeys_open && !self.loading.active
+    }
+
     pub fn dev_free_roam(&self) -> bool {
         self.meta.dev_mode
             && !self.meta.settings_open
@@ -847,7 +851,7 @@ impl UiState {
     }
 
     pub fn global_help_active(&self) -> bool {
-        self.meta.dev_mode
+        !self.loading.active
     }
 
     pub fn toggle_help_globally(&mut self) {

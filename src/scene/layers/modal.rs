@@ -138,10 +138,12 @@ fn draw_border_footer(grid: &mut Grid, frame: ModalFrame, footer: Option<ModalFo
         return;
     }
 
-    let left_text = format!("  {}  ", footer.left);
-    let left_available = right_start.saturating_sub(left_start) as usize;
-    let left = left_text.chars().take(left_available).collect::<String>();
-    write_footer_text(grid, left_start, y, &left);
+    if !footer.left.is_empty() {
+        let left_text = format!("  {}  ", footer.left);
+        let left_available = right_start.saturating_sub(left_start) as usize;
+        let left = left_text.chars().take(left_available).collect::<String>();
+        write_footer_text(grid, left_start, y, &left);
+    }
 
     let start_x = right_start;
     write_footer_text(grid, start_x, y, &right_text);
@@ -258,6 +260,36 @@ mod tests {
                 .style
                 .fg,
             Some(palette::MODAL_FOOTER_SYMBOL)
+        );
+    }
+
+    #[test]
+    fn empty_left_footer_keeps_bottom_border_continuous() {
+        let mut grid = Grid::new(40, 12);
+        let frame = ModalFrame {
+            x: 4,
+            y: 2,
+            width: 24,
+            height: 7,
+        };
+
+        paint_modal_shell(
+            &mut grid,
+            frame,
+            "[?] help",
+            Some(ModalFooter {
+                left: "",
+                right: "? ⎋",
+            }),
+        );
+
+        assert_eq!(
+            grid.cells[grid.index(frame.x + 3, frame.y + frame.height - 1)].symbol,
+            '─'
+        );
+        assert_eq!(
+            grid.cells[grid.index(frame.x + 6, frame.y + frame.height - 1)].symbol,
+            '─'
         );
     }
 }

@@ -24,7 +24,7 @@ impl Layer for HotkeysLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.show_dev_surfaces() || !ui.meta.hotkeys_open {
+        if !ui.show_help_surface() {
             return LayerOutput { grid, mask: None };
         }
 
@@ -40,32 +40,65 @@ impl Layer for HotkeysLayer {
         );
 
         let (body_x, body_y) = frame.body_origin();
-        let left_lines = [
-            HelpLine::section("core"),
-            HelpLine::item("[q] quit app"),
-            HelpLine::item("[d] toggle dev mode"),
-            HelpLine::item("[?] open help"),
-            HelpLine::blank(),
-            HelpLine::section("inspect"),
-            HelpLine::item("[s] settings popup"),
-            HelpLine::item("[P] palette popup"),
-            HelpLine::item("[W] weather popup"),
-            HelpLine::item("[p] pointer probe"),
-            HelpLine::item("[v] vines"),
-            HelpLine::item("[F5] next font"),
-        ];
-        let right_lines = [
-            HelpLine::section("move"),
-            HelpLine::item("[m] move popup"),
-            HelpLine::item("[Tab/Shift+Tab] cycle target"),
-            HelpLine::item("[arrow keys] move target"),
-            HelpLine::item("[C] store camera home"),
-            HelpLine::item("[c] recall camera home"),
-            HelpLine::blank(),
-            HelpLine::section("animation"),
-            HelpLine::item("[space] play/pause"),
-            HelpLine::item("[.] step animation"),
-        ];
+        let (left_lines, right_lines) = if ui.meta.dev_mode {
+            (
+                vec![
+                    HelpLine::section("core"),
+                    HelpLine::item("[q] quit app"),
+                    HelpLine::item("[d] toggle dev mode"),
+                    HelpLine::item("[?] open help"),
+                    HelpLine::blank(),
+                    HelpLine::section("inspect"),
+                    HelpLine::item("[s] settings popup"),
+                    HelpLine::item("[P] palette popup"),
+                    HelpLine::item("[W] weather popup"),
+                    HelpLine::item("[p] pointer probe"),
+                    HelpLine::item("[v] vines"),
+                    HelpLine::item("[F5] next font"),
+                ],
+                vec![
+                    HelpLine::section("move"),
+                    HelpLine::item("[m] move popup"),
+                    HelpLine::item("[Tab/Shift+Tab] cycle target"),
+                    HelpLine::item("[arrow keys] move target"),
+                    HelpLine::item("[C] store camera home"),
+                    HelpLine::item("[c] recall camera home"),
+                    HelpLine::blank(),
+                    HelpLine::section("animation"),
+                    HelpLine::item("[space] play/pause"),
+                    HelpLine::item("[.] step animation"),
+                ],
+            )
+        } else {
+            (
+                vec![
+                    HelpLine::section("available now"),
+                    HelpLine::item("[q] quit app"),
+                    HelpLine::item("[d] enter dev mode"),
+                    HelpLine::item("[?] open help"),
+                    HelpLine::blank(),
+                    HelpLine::section("in dev mode"),
+                    HelpLine::item("[s] settings popup"),
+                    HelpLine::item("[m] move popup"),
+                    HelpLine::item("[P] palette popup"),
+                    HelpLine::item("[W] weather popup"),
+                    HelpLine::item("[p] pointer probe"),
+                ],
+                vec![
+                    HelpLine::section("dev mode tools"),
+                    HelpLine::item("[Tab/Shift+Tab] cycle move target"),
+                    HelpLine::item("[arrow keys] move target"),
+                    HelpLine::item("[C] store camera home"),
+                    HelpLine::item("[c] recall camera home"),
+                    HelpLine::item("[v] vines"),
+                    HelpLine::item("[F5] next font"),
+                    HelpLine::blank(),
+                    HelpLine::section("animation"),
+                    HelpLine::item("[space] play/pause"),
+                    HelpLine::item("[.] step animation"),
+                ],
+            )
+        };
         let body_width = frame.width.saturating_sub(4);
         let gap = 4u16;
         let column_width = body_width.saturating_sub(gap) / 2;
@@ -194,5 +227,26 @@ mod tests {
         assert!(!text.contains("[1/2/3/4/5] select target"));
         assert!(text.contains("[space] play/pause"));
         assert!(text.contains("? ⎋"));
+    }
+
+    #[test]
+    fn hotkeys_overlay_is_available_from_main_scene_when_dev_mode_is_off() {
+        let layer = HotkeysLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = render_state();
+        let mut ui = UiState::new();
+        ui.meta.hotkeys_open = true;
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("[?] help"));
+        assert!(text.contains("available now"));
+        assert!(text.contains("[d] enter dev mode"));
+        assert!(text.contains("in dev mode"));
+        assert!(text.contains("[m] move popup"));
+        assert!(text.contains("[Tab/Shift+Tab] cycle move target"));
+        assert!(!text.contains("inspect"));
     }
 }

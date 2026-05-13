@@ -13,5 +13,6 @@ pub mod figlet;
 pub mod fonts;
 pub mod guide;
 pub mod hero;
+pub mod hero_cache;
 pub mod mask;
 pub mod render_state;

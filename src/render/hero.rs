@@ -23,7 +23,8 @@ impl Hero {
     pub fn new(world_width: usize, world_height: usize) -> Self {
         // The source hero GIF is square (820x820); the terminal render target is intentionally
         // downscaled to a fixed 96x48 cell footprint to compensate for terminal cell aspect.
-        let frames = crate::render::chafa::hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
+        let frames =
+            crate::render::chafa::hero_frames_cached(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
         let first_frame = frames
             .first()
             .cloned()

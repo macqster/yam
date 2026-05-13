@@ -1,7 +1,7 @@
 use std::{
-    fs,
+    env, fs,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Output},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -10,14 +10,43 @@ use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageDecode
 use image::{Rgba, RgbaImage};
 use ratatui::text::{Line, Text};
 
+use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
+
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 const HERO_FRAME_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
 pub const HERO_RENDER_WIDTH: u16 = 96;
 pub const HERO_RENDER_HEIGHT: u16 = 48;
 
 pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
+    render_frame_with_command("chafa", path, width, height)
+}
+
+fn render_frame_with_command(
+    command: &str,
+    path: &str,
+    width: u16,
+    height: u16,
+) -> Vec<Line<'static>> {
     let size_arg = format!("{}x{}", width, height);
-    let output = Command::new("chafa")
+    let output = match chafa_output(command, path, &size_arg) {
+        Ok(output) => output,
+        Err(err) => return vec![format!("chafa unavailable: {err}").into()],
+    };
+
+    if !output.status.success() {
+        return vec![format!("chafa exited with status {}", output.status).into()];
+    }
+
+    let text: Text<'static> = output
+        .stdout
+        .as_slice()
+        .into_text()
+        .unwrap_or_else(|_| Text::raw("ANSI_PARSE_ERROR"));
+    text.lines
+}
+
+fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Output> {
+    Command::new(command)
         .arg(path)
         .arg("--size")
         .arg(size_arg)
@@ -31,18 +60,6 @@ pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
         .arg("--bg=#100100")
         .arg("--animate=off")
         .output()
-        .unwrap_or_else(|err| panic!("failed to run chafa: {err}"));
-
-    if !output.status.success() {
-        return vec![format!("chafa exited with status {}", output.status).into()];
-    }
-
-    let text: Text<'static> = output
-        .stdout
-        .as_slice()
-        .into_text()
-        .unwrap_or_else(|_| Text::raw("ANSI_PARSE_ERROR"));
-    text.lines
 }
 
 pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
@@ -57,12 +74,26 @@ pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
         .collect()
 }
 
+pub fn hero_frames_cached(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
+    let cache_path = hero_frame_cache_path(width, height);
+    if let Some(frame_set) = load_cached_hero_frames(&cache_path, width, height) {
+        return frame_set.to_lines();
+    }
+
+    let frames = hero_frames(width, height);
+    let frame_set = HeroFrameSet::from_lines(width, height, &frames);
+    let _ = save_hero_frame_set(&cache_path, &frame_set);
+    frames
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        decode_gif_frames, hero_frames, tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
+        cache_is_fresh_against, decode_gif_frames, hero_frames, render_frame_with_command,
+        tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
     };
     use image::Rgba;
+    use std::{fs, thread, time::Duration};
 
     #[test]
     fn hero_frame_buffer_has_multiple_frames() {
@@ -140,6 +171,45 @@ mod tests {
             "temp frame dir should be removed when the render batch ends"
         );
     }
+
+    #[test]
+    fn render_frame_returns_placeholder_when_chafa_is_unavailable() {
+        let lines =
+            render_frame_with_command("__yam_missing_chafa_binary__", super::HERO_GIF_PATH, 4, 2);
+        assert_eq!(lines.len(), 1);
+        let text = lines[0]
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+        assert!(text.starts_with("chafa unavailable:"));
+    }
+
+    #[test]
+    fn cache_freshness_accepts_newer_cache_file() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
+        fs::write(&source, b"source").expect("write source");
+        thread::sleep(Duration::from_millis(5));
+        fs::write(&cache, b"cache").expect("write cache");
+
+        assert!(cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn cache_freshness_rejects_stale_cache_file() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
+        fs::write(&cache, b"cache").expect("write cache");
+        thread::sleep(Duration::from_millis(5));
+        fs::write(&source, b"source").expect("write source");
+
+        assert!(!cache_is_fresh_against(&cache, &source));
+    }
 }
 
 fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
@@ -157,6 +227,57 @@ fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
         .into_iter()
         .map(|frame| DynamicImage::ImageRgba8(frame_to_canvas(frame, canvas)))
         .collect()
+}
+
+fn load_cached_hero_frames(path: &Path, width: u16, height: u16) -> Option<HeroFrameSet> {
+    if !hero_cache_is_fresh(path) {
+        return None;
+    }
+
+    let frame_set = load_hero_frame_set(path).ok()?;
+    if frame_set.render_width != width || frame_set.render_height != height {
+        return None;
+    }
+    if frame_set.frames.is_empty() {
+        return None;
+    }
+    Some(frame_set)
+}
+
+fn hero_cache_is_fresh(path: &Path) -> bool {
+    cache_is_fresh_against(path, Path::new(HERO_GIF_PATH))
+}
+
+fn cache_is_fresh_against(cache_path: &Path, source_path: &Path) -> bool {
+    let cache_meta = match fs::metadata(cache_path) {
+        Ok(meta) => meta,
+        Err(_) => return false,
+    };
+    let gif_meta = match fs::metadata(source_path) {
+        Ok(meta) => meta,
+        Err(_) => return false,
+    };
+
+    match (cache_meta.modified(), gif_meta.modified()) {
+        (Ok(cache_modified), Ok(gif_modified)) => cache_modified >= gif_modified,
+        _ => false,
+    }
+}
+
+fn hero_frame_cache_path(width: u16, height: u16) -> PathBuf {
+    hero_cache_dir().join(format!("hero_gif_1.{width}x{height}.frame_cache.json"))
+}
+
+fn hero_cache_dir() -> PathBuf {
+    if let Some(path) = env::var_os("XDG_CACHE_HOME") {
+        return PathBuf::from(path).join("yam");
+    }
+
+    if let Some(home) = env::var_os("HOME") {
+        return PathBuf::from(home).join(".cache").join("yam");
+    }
+
+    env::temp_dir().join("yam")
 }
 
 fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {

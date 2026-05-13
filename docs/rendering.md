@@ -195,7 +195,7 @@ The current debug/dev surface for guide capture is:
 
 - pointer probe: capture exact coordinates in world space
 - debug info panel: inspect the live pointer position, camera position, and projected entity facts through a small tabbed readout rather than one long mixed-purpose list
-- help popup: remind the user that pointer, camera-home, and move/settings are the current dev controls
+- help popup: remind the user that pointer, camera-home, and move/settings are the current dev controls, while staying context-aware enough to be opened from the main scene before `dev_mode` is enabled
 - move popup: step selected world-attached entities when authoring placement relationships
 
 Rules:
@@ -204,6 +204,7 @@ Rules:
 - the debug info panel should be the factual readout, not the authoring editor
 - the debug info panel now groups facts into `runtime`, `hero`, `companions`, and `vines` tabs, with the tab row rendered directly beneath the top scrollbar band and `Tab` / `Shift+Tab` cycling those groups when the settings modal is not active
 - the help popup should remain discoverability, not a second editor surface
+- `?` may be opened from the plain main scene as well as dev mode, but the popup should separate always-available actions from dev-only controls instead of implying that all listed tools are live immediately
 - move mode is for explicit world-attached positioning, not for hidden geometry mutation; its live grammar is `Tab` / `Shift+Tab` to cycle the visible target set and arrow keys to move the active target
 - the still-reserved `calendar` seam may remain editable in settings, but it should stay out of the lightweight move/help surfaces until it has a live rendered role
 - guide-set previews should be read-only by default and belong in the debug/inspect surface rather than the HUD footer
@@ -285,7 +286,7 @@ The active implementation treats camera as a viewport crop helper:
 - the pointer probe is the preferred absolute coordinate reference for guide authoring and future vines placement work
 - the debug info panel should stay compact and biased toward the live control facts needed for resize and entity-edit checks: the default `runtime` tab covers live session/control state, while `hero`, `companions`, and `vines` carry the denser placement and inspection facts without forcing them all into one always-visible list
 - the dev-mode footer stays compact and uses `[?]` to open the modal help popup, where camera centering, the pointer probe, the palette popup, the weather sprite popup, and other developer controls are described
-- `?` is a global modal/help shortcut across dev surfaces: it may promote the help popup above peer dev surfaces rather than requiring the user to back out first
+- `?` is a global modal/help shortcut across the app surface family: it may promote the help popup above peer dev surfaces rather than requiring the user to back out first, and it may also be opened from the plain main scene as the discoverability entry into `dev_mode`
 - `Esc` is the global back/close key across dev surfaces: it should first cancel the top-most dev/modal interaction, including the quit-confirm surface when present
 - layout-affecting dev edits remain live but unsaved until explicitly persisted: camera home, camera pan, companion offsets, selected UI/features toggles, and similar persisted controls mark the runtime state dirty instead of writing immediately
 - `q` still quits immediately from a clean state, but if persisted state is dirty it first opens a quit-confirm modal with explicit save/discard/cancel paths so the accepted frozen values are never redefined silently
@@ -338,10 +339,23 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero rendering must not use ratatui wrapping.
 - Hero rendering uses the chafa-backed frame conversion path; cached-frame ownership remains a future migration option if measurable instability returns.
 - Desired hero-rendering direction: keep the active Chafa path as the production baseline while moving future experiments toward an offline hero-frame compiler that emits a stable internal frame cache for runtime use.
+- The first runtime-efficiency slice should make that direction concrete without changing visible hero output: treat the live `chafa` path as an offline compiler/refresh step, and aim for runtime startup to load a previously prepared `HeroFrameSet` cache instead of decoding the GIF, writing temp frame PNGs, and spawning `chafa` per frame inside `Hero::new()`.
+- The safest migration order for that cache path is:
+  1. define the serialized `HeroFrameSet` / `CellGrid` runtime shape
+  2. add a cache loader that can hydrate hero frames without shelling out to `chafa`
+  3. keep the current live `chafa` path as the cache builder / fallback while the cache format stabilizes
+  4. only then flip normal runtime startup to prefer cached hero frames by default
+- The acceptance bar for that first hero-cache migration should stay conservative:
+  - startup should avoid the current GIF decode + temp-file + per-frame process-spawn cost on the common path
+  - visible hero geometry, frame count, and color stability should match the current Chafa baseline closely enough that the existing hero/render tests still describe the expected output
+  - the cache should stay runtime-local and deterministic rather than introducing a second live rendering authority
 - The missing tooling layer is a structured per-cell `CellGrid`, not a raw ANSI editor: ANSI snapshots can be imported and exported, but manual and scripted corrections should operate on cells containing glyph, foreground color, optional background color, and mask/style metadata.
 - The future compiler should evaluate hero rendering from two deliberately separate directions: a monochrome `2x4` braille shape pass that controls thresholding, dot packing, and optional error diffusion; and an independent color pass that controls source sampling, palette quantization, red-family protection, and frame-to-frame color stability.
 - Pre-generated hero art should be treated as asset authoring, not as runtime terminal capture: cached frames may include semi-manual correction overlays, region-specific lifts, and per-frame/cell stabilization where that improves face readability, red retention, silhouette stability, or animation consistency.
 - The preferred eventual workflow is `Chafa/custom backend -> ANSI or direct cells -> CellGrid -> scripted/manual patches -> HeroFrameSet -> scene grid`, with Chafa and custom braille experiments acting as compiler backends rather than live scene dependencies.
+- The first concrete runtime cache shape and migration note now live in [`docs/hero-cache.md`](hero-cache.md); that note should be kept narrow and runtime-facing, while broader renderer strategy still belongs here.
+- The common hero startup path now prefers a prepared `HeroFrameSet` cache in the user runtime cache directory (`$XDG_CACHE_HOME/yam/` when available, otherwise `~/.cache/yam/`), and only falls back to the live GIF-decode + temp-frame + `chafa` compilation path when that cache is missing, stale, or invalid. That keeps the current Chafa baseline as the visual authority while finally moving ordinary startup onto the cheaper load-first path without dirtying the repo checkout.
+- That fallback path is now intentionally non-fatal when `chafa` is unavailable: if no valid cache exists and the compiler backend cannot be spawned, the renderer returns an explicit placeholder frame instead of panicking, which keeps YAM alive on a fresh machine while still making the missing backend visible.
 - Third-party ANSI editors are useful references, but current tools tend to split between CP437/limited-color manual editing, destructive image conversion, and non-editable terminal replay; none should be treated as the primary YAM editing surface unless it proves Unicode braille, truecolor, animation, and lossless cell round-tripping.
 - REXPaint is viable through CrossOver as an optional manual editing node, but `.xp` should stay an interchange/export target rather than the YAM source of truth: REXPaint is CP437/font-atlas oriented, so braille glyphs require a controlled tile/font mapping and round-trip validation before edited frames can feed `HeroFrameSet`.
 - The REXPaint experiment path is `decoded frame -> custom braille renderer or Chafa import -> CellGrid -> .xp export -> REXPaint edits -> .xp import -> CellGrid patches -> HeroFrameSet`; existing PNG-to-XP converters are useful references but should not define final braille or color fidelity.

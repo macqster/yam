@@ -38,6 +38,12 @@ Last reviewed: 2026-05-13
 
 ## Active Risk Notes
 
+- [medium] The current startup path still pays for live hero-frame compilation through GIF decode, temp-frame writes, and per-frame `chafa` invocation during `Hero::new()`, which is the clearest avoidable load-time and process-spawn cost in the repo.
+  - evidence: `src/render/chafa.rs`, `src/render/hero.rs`
+- [medium] The frame path still rebuilds the `Scene` layer stack and allocates fresh full-frame `Grid` values each render, which is structurally simple but more allocation-heavy than it needs to be for a long-running terminal app.
+  - evidence: `src/scene/mod.rs`, `src/ui/scene.rs`, `src/render/compositor.rs`
+- [medium] The current renderer still relies on the fully general grapheme-aware text write path for lightweight ASCII UI chrome such as borders, footer hints, and modal copy; this is correct but likely more expensive than needed for the hottest non-image draw paths.
+  - evidence: `src/render/compositor.rs`, `src/scene/layers/modal.rs`, `src/scene/layers/status_layer.rs`
 - [medium] The current dev-mode cleanup seam is mostly about role tightening rather than missing features: the debug panel is still too crowded, `calendar (reserved)` remains too visible across move/settings/help surfaces, and the footer/hotkeys split is close but not fully settled.
   - evidence: `src/scene/layers/debug_layer.rs`, `src/scene/layers/hotkeys_layer.rs`, `src/scene/layers/move_layer.rs`, `src/scene/layers/settings_layer.rs`, `src/scene/layers/status_layer.rs`
 - [medium] Docs/runtime synchronization is currently weakest in the dev-UI vocabulary: the live settings tab title is `ui`, not `widgets`; the active clean-boot manual camera seed is `(-60, -15)`, not `(-63, -17)`; and some contracts still describe broader everyday debug visibility than the current dev-only gating actually provides.

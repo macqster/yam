@@ -529,6 +529,8 @@ pub struct UiState {
     pub weather_refresh_rx: Option<Receiver<Result<WeatherSnapshot, WeatherError>>>,
     pub weather_locale: WeatherLocale,
     pub weather_layout: WeatherLayout,
+    pub persisted_state_dirty: bool,
+    pub quit_confirm_open: bool,
 }
 
 impl UiState {
@@ -555,6 +557,8 @@ impl UiState {
             weather_refresh_rx: None,
             weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
+            persisted_state_dirty: false,
+            quit_confirm_open: false,
         }
     }
 
@@ -568,6 +572,8 @@ impl UiState {
         state.camera.x = state.offsets.camera_x;
         state.camera.y = state.offsets.camera_y;
         state.pointer_blink_on = true;
+        state.persisted_state_dirty = false;
+        state.quit_confirm_open = false;
         state.start_weather_refresh();
         state
     }
@@ -601,6 +607,8 @@ impl UiState {
         self.settings_edit.clear();
         self.loading = LoadingState::default();
         self.pointer_blink_on = true;
+        self.persisted_state_dirty = false;
+        self.quit_confirm_open = false;
     }
 
     pub fn refresh_weather_if_due(&mut self) {
@@ -687,24 +695,29 @@ impl UiState {
     pub fn next_font(&mut self) {
         self.clock_font = self.clock_font.next();
         self.offsets.clock_font = self.clock_font.display_name().to_string();
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn prev_font(&mut self) {
         self.clock_font = self.clock_font.prev();
         self.offsets.clock_font = self.clock_font.display_name().to_string();
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn toggle_dev_mode(&mut self) {
         self.meta.toggle_dev_mode();
         if !self.meta.dev_mode {
             self.settings_edit.clear();
+            self.quit_confirm_open = false;
         }
     }
 
     pub fn toggle_hotkeys(&mut self) {
         self.meta.toggle_hotkeys();
+        self.quit_confirm_open = false;
+        if !self.meta.settings_open {
+            self.settings_edit.clear();
+        }
     }
 
     pub fn move_mode_toggle_allowed(&self) -> bool {
@@ -713,14 +726,17 @@ impl UiState {
 
     pub fn toggle_move_mode(&mut self) {
         self.meta.toggle_move_mode();
+        self.quit_confirm_open = false;
     }
 
     pub fn toggle_palette(&mut self) {
         self.meta.toggle_palette();
+        self.quit_confirm_open = false;
     }
 
     pub fn toggle_weather_popup(&mut self) {
         self.meta.toggle_weather_popup();
+        self.quit_confirm_open = false;
     }
 
     pub fn settings_toggle_allowed(&self) -> bool {
@@ -729,6 +745,7 @@ impl UiState {
 
     pub fn toggle_settings(&mut self) {
         self.meta.toggle_settings();
+        self.quit_confirm_open = false;
         if !self.meta.settings_open {
             self.settings_edit.clear();
         }
@@ -736,11 +753,12 @@ impl UiState {
 
     pub fn toggle_pointer_probe(&mut self) {
         self.meta.toggle_pointer_probe();
+        self.quit_confirm_open = false;
     }
 
     pub fn toggle_vines_visible(&mut self) {
         self.meta.toggle_vines_visible();
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn show_dev_surfaces(&self) -> bool {
@@ -772,11 +790,13 @@ impl UiState {
             && !self.meta.palette_open
     }
 
-    pub fn hotkeys_toggle_allowed(&self) -> bool {
+    pub fn global_help_active(&self) -> bool {
         self.meta.dev_mode
-            && !self.meta.palette_open
-            && !self.meta.weather_popup_open
-            && !self.meta.move_mode_open
+    }
+
+    pub fn toggle_help_globally(&mut self) {
+        self.quit_confirm_open = false;
+        self.toggle_hotkeys();
     }
 
     pub fn settings_navigation_active(&self) -> bool {
@@ -801,26 +821,6 @@ impl UiState {
             && !self.meta.weather_popup_open
     }
 
-    pub fn palette_popup_active(&self) -> bool {
-        self.meta.dev_mode
-            && self.meta.palette_open
-            && !self.meta.settings_open
-            && !self.meta.hotkeys_open
-            && !self.meta.move_mode_open
-    }
-
-    pub fn weather_popup_active(&self) -> bool {
-        self.meta.dev_mode
-            && self.meta.weather_popup_open
-            && !self.meta.settings_open
-            && !self.meta.hotkeys_open
-            && !self.meta.move_mode_open
-    }
-
-    pub fn settings_close_active(&self) -> bool {
-        self.meta.dev_mode && self.meta.settings_open && !self.settings_edit.active
-    }
-
     pub fn settings_tab_switch_allowed(&self) -> bool {
         self.meta.dev_mode && self.meta.settings_open && !self.settings_edit.active
     }
@@ -837,8 +837,45 @@ impl UiState {
         self.meta.dev_mode && self.pointer_probe_active()
     }
 
-    pub fn move_mode_close_active(&self) -> bool {
-        self.meta.dev_mode && self.meta.move_mode_open
+    pub fn handle_global_escape(&mut self) -> bool {
+        if !self.meta.dev_mode {
+            return false;
+        }
+
+        if self.quit_confirm_open {
+            self.quit_confirm_open = false;
+            return true;
+        }
+        if self.settings_edit.active {
+            self.cancel_settings_edit();
+            return true;
+        }
+        if self.meta.hotkeys_open {
+            self.meta.hotkeys_open = false;
+            return true;
+        }
+        if self.meta.palette_open {
+            self.meta.palette_open = false;
+            return true;
+        }
+        if self.meta.weather_popup_open {
+            self.meta.weather_popup_open = false;
+            return true;
+        }
+        if self.meta.settings_open {
+            self.close_settings();
+            return true;
+        }
+        if self.meta.move_mode_open {
+            self.close_move_mode();
+            return true;
+        }
+        if self.meta.pointer_probe_open {
+            self.meta.pointer_probe_open = false;
+            return true;
+        }
+
+        false
     }
 
     pub fn font_cycle_allowed(&self) -> bool {
@@ -869,28 +906,25 @@ impl UiState {
             self.pointer_blink_on = true;
         }
         self.clamp_settings_cursor_to_world();
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn next_settings_tab(&mut self) {
         self.meta.next_settings_tab();
         self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
-        self.save_state();
     }
 
     pub fn prev_settings_tab(&mut self) {
         self.meta.prev_settings_tab();
         self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
-        self.save_state();
     }
 
     pub fn select_prev_settings_row(&mut self) {
         self.meta.select_prev_settings_row();
         self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
-        self.save_state();
     }
 
     pub fn select_next_settings_row(&mut self) {
@@ -906,7 +940,6 @@ impl UiState {
             .settings_cursor
             .set_row(self.meta.settings_tab, next);
         self.settings_edit.clear();
-        self.save_state();
     }
 
     pub fn begin_settings_edit(&mut self) {
@@ -977,14 +1010,14 @@ impl UiState {
                     4 => self.meta.debug_info_panel_visible = !self.meta.debug_info_panel_visible,
                     _ => {}
                 }
-                self.save_state();
+                self.mark_persisted_state_dirty();
                 Ok(())
             }
             SettingsTab::Features => {
                 if self.meta.selected_settings_row() == 0 {
                     self.meta.cycle_vines_visibility_mode();
                 }
-                self.save_state();
+                self.mark_persisted_state_dirty();
                 Ok(())
             }
             SettingsTab::Gif | SettingsTab::Theme => Ok(()),
@@ -1162,7 +1195,7 @@ impl UiState {
         }
 
         self.settings_edit.clear();
-        self.save_state();
+        self.mark_persisted_state_dirty();
         Ok(())
     }
 
@@ -1267,28 +1300,28 @@ impl UiState {
                 self.offsets.calendar_dy = (self.offsets.calendar_dy + dy).clamp(-200, 200);
             }
         }
-        self.save_state();
+        self.mark_persisted_state_dirty();
         Ok(())
     }
 
     pub fn move_pointer_left(&mut self) {
         self.offsets.pointer_x -= 1;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_pointer_right(&mut self) {
         self.offsets.pointer_x += 1;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_pointer_up(&mut self) {
         self.offsets.pointer_y += 1;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_pointer_down(&mut self) {
         self.offsets.pointer_y -= 1;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn toggle_follow_hero(&mut self) {
@@ -1298,7 +1331,7 @@ impl UiState {
     pub fn store_camera_home(&mut self) {
         self.offsets.camera_home_x = self.offsets.camera_x;
         self.offsets.camera_home_y = self.offsets.camera_y;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn recall_camera_home(&mut self) {
@@ -1307,17 +1340,17 @@ impl UiState {
         self.offsets.camera_y = self.offsets.camera_home_y;
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn increase_hero_fps(&mut self) {
         self.offsets.hero_fps = (self.offsets.hero_fps + 0.5).clamp(0.5, 120.0);
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn decrease_hero_fps(&mut self) {
         self.offsets.hero_fps = (self.offsets.hero_fps - 0.5).clamp(0.5, 120.0);
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn clamp_camera(&mut self, screen_w: i32, screen_h: i32) {
@@ -1358,28 +1391,60 @@ impl UiState {
         self.camera.follow_hero = false;
         self.offsets.camera_x -= 1;
         self.camera.x = self.offsets.camera_x;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_camera_right(&mut self) {
         self.camera.follow_hero = false;
         self.offsets.camera_x += 1;
         self.camera.x = self.offsets.camera_x;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_camera_up(&mut self) {
         self.camera.follow_hero = false;
         self.offsets.camera_y += 1;
         self.camera.y = self.offsets.camera_y;
-        self.save_state();
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_camera_down(&mut self) {
         self.camera.follow_hero = false;
         self.offsets.camera_y -= 1;
         self.camera.y = self.offsets.camera_y;
-        self.save_state();
+        self.mark_persisted_state_dirty();
+    }
+
+    pub fn begin_quit(&mut self) -> bool {
+        if self.persisted_state_dirty {
+            self.quit_confirm_open = true;
+            self.meta.hotkeys_open = false;
+            self.meta.move_mode_open = false;
+            self.meta.palette_open = false;
+            self.meta.weather_popup_open = false;
+            self.meta.settings_open = false;
+            self.meta.pointer_probe_open = false;
+            self.settings_edit.clear();
+            false
+        } else {
+            true
+        }
+    }
+
+    pub fn confirm_quit_without_saving(&mut self) -> bool {
+        self.quit_confirm_open = false;
+        self.persisted_state_dirty = false;
+        true
+    }
+
+    pub fn confirm_save_and_quit(&mut self) -> bool {
+        self.persist_state_now();
+        self.quit_confirm_open = false;
+        true
+    }
+
+    pub fn quit_confirm_active(&self) -> bool {
+        self.quit_confirm_open
     }
 
     fn state_path() -> PathBuf {
@@ -1408,7 +1473,11 @@ impl UiState {
         })
     }
 
-    fn save_state(&self) {
+    fn mark_persisted_state_dirty(&mut self) {
+        self.persisted_state_dirty = true;
+    }
+
+    fn persist_state_now(&mut self) {
         let path = Self::state_path();
         if let Some(parent) = path.parent() {
             if let Err(err) = fs::create_dir_all(parent) {
@@ -1424,10 +1493,15 @@ impl UiState {
             Ok(json) => {
                 if let Err(err) = fs::write(path, json) {
                     eprintln!("[yam] failed to write state: {err}");
+                    return;
                 }
             }
-            Err(err) => eprintln!("[yam] failed to encode state: {err}"),
+            Err(err) => {
+                eprintln!("[yam] failed to encode state: {err}");
+                return;
+            }
         }
+        self.persisted_state_dirty = false;
     }
 }
 
@@ -1682,6 +1756,94 @@ mod tests {
         assert!(!ui.meta.palette_open);
         assert!(!ui.meta.weather_popup_open);
         assert!(!ui.meta.settings_open);
+    }
+
+    #[test]
+    fn global_help_opens_from_other_dev_surfaces() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.move_mode_open = true;
+
+        ui.toggle_help_globally();
+
+        assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.palette_open);
+        assert!(!ui.meta.weather_popup_open);
+        assert!(!ui.meta.settings_open);
+    }
+
+    #[test]
+    fn global_help_clears_settings_edit_when_opened_from_settings() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.settings_edit.active = true;
+        ui.settings_edit.x_buffer = "12".to_string();
+
+        ui.toggle_help_globally();
+
+        assert!(ui.meta.hotkeys_open);
+        assert!(!ui.meta.settings_open);
+        assert!(!ui.settings_edit.active);
+        assert!(ui.settings_edit.x_buffer.is_empty());
+    }
+
+    #[test]
+    fn global_escape_closes_dev_surfaces_in_priority_order() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.palette_open = true;
+
+        assert!(ui.handle_global_escape());
+        assert!(!ui.meta.palette_open);
+
+        ui.meta.settings_open = true;
+        ui.settings_edit.active = true;
+        assert!(ui.handle_global_escape());
+        assert!(ui.meta.settings_open);
+        assert!(!ui.settings_edit.active);
+
+        assert!(ui.handle_global_escape());
+        assert!(!ui.meta.settings_open);
+
+        ui.meta.pointer_probe_open = true;
+        assert!(ui.handle_global_escape());
+        assert!(!ui.meta.pointer_probe_open);
+    }
+
+    #[test]
+    fn clean_state_quit_returns_immediately_without_modal() {
+        let mut ui = UiState::new();
+
+        assert!(ui.begin_quit());
+        assert!(!ui.quit_confirm_open);
+    }
+
+    #[test]
+    fn dirty_state_quit_opens_confirmation_modal() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.move_camera_left();
+
+        assert!(ui.persisted_state_dirty);
+        assert!(!ui.begin_quit());
+        assert!(ui.quit_confirm_open);
+        assert!(!ui.meta.hotkeys_open);
+        assert!(!ui.meta.move_mode_open);
+        assert!(!ui.meta.settings_open);
+    }
+
+    #[test]
+    fn discard_quit_clears_dirty_state_and_closes_modal() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.move_camera_left();
+        assert!(!ui.begin_quit());
+
+        assert!(ui.confirm_quit_without_saving());
+        assert!(!ui.quit_confirm_open);
+        assert!(!ui.persisted_state_dirty);
     }
 
     #[test]

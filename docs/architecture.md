@@ -65,7 +65,7 @@
 - the presentation stack is conceptualized as world -> HUD -> overlay, with overlays reserved for modal or top-z-index panels
 - metamechanics is a subordinate control/observation seam inside `ui/`; it may toggle overlays or presentation flags, but it does not own world state, projection, or render order
 - `dev_mode` is the umbrella metamechanics toggle: it enables the layout/editing surface and the debug overlay, while `debug` remains the actual diagnostic presentation
-- day-to-day debug visibility is distinct from dev-mode control surfaces: everyday debug overlays may remain available during normal use, while deeper mutation/editing controls stay gated behind dev mode
+- day-to-day debug visibility is conceptually distinct from dev-mode control surfaces, but the current implementation still gates the visible diagnostic overlays behind `dev_mode`; deeper mutation/editing controls should remain there until a narrower everyday-debug surface is deliberately introduced
 - keyboard interaction should follow stable muscle-memory conventions from ASCII TUIs and roguelike workflows, with explicit modes, discoverable hints, and predictable key reuse
 - the interface should prefer semantic structure over decorative novelty so future plant stats, morphology data, and lifecycle variables remain readable at high density
 - a command palette or similar action hub is the preferred discoverability fallback for rare actions, entity jumps, and overlay toggles
@@ -79,7 +79,7 @@
 - the settings modal is world-aware: it should only expose controls for assets and overlays that actually exist in the active world mode, instead of pretending every scene surface is always loaded
 - the world debug overlay is split into three independent surfaces: the rectangular world frame/border, the datum-centered crosshair/axis, and the world datum marker at `(0, 0)`; settings may toggle them separately without coupling their draw logic
 - `Esc` should act as a direct close affordance for transient dev popups like settings and move, while still canceling in-row edit mode first when the settings editor is actively buffering a value
-- `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, widgets, gif, and theme values without owning world state or projection
+- `settings` is the modal metamechanics popup: it shows tabbed, dev-mode controls for positions, ui, features, gif, and theme values without owning world state or projection
 - loading/splash-like presentation is a first-class UI state rather than an ad hoc render trick: the runtime may temporarily activate a loading overlay for boot, world switches, or other transitions, and that overlay should remain a reusable scene layer instead of being hardwired to one feature path
 - normal runtime boot should prefer entering the loading overlay as the first visible app surface; runtime/build identity text may remain available as an explicit diagnostic path, but it should not preempt the TUI during ordinary launches
 - the loading transition may use its own dedicated empty boot world/scene underneath the overlay rather than showing a half-initialized main scene; the current preferred visual treatment is transparent text/art over that empty scene, with no modal background shell, and later animation/effects may be layered on top
@@ -89,7 +89,7 @@
 - the settings popup should behave like a compact list UI: `Tab` changes tabs, `Up/Down` moves the active row within the current tab, and the active row should be called out with a clear background highlight rather than punctuation-heavy markers
 - in the `positions` tab, `Enter` opens a buffered edit mode for the active row, `Left/Right` switches between the `x` and `y` fields, typed numeric input edits the focused field, `Enter` commits, and `Esc` cancels
 - camera position is context-sensitive: when the active viewport already covers the full world, the camera row should read as locked/disabled because panning is no longer meaningful in that view
-- modal move/settings/hotkeys popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
+- modal help/move/settings popups now share one centered modal shell: the shell paints an opaque BTAS-style backdrop before text and border are drawn, so their controls stay readable over world content and stay architecturally unified
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal panels clear the GIF beneath them instead of tinting it through
 - the clock is not a UI entity: it is a world-attached hero companion, and the debug/info panels only observe its projected screen position
 - guides are world-attached semantic primitives owned by `WorldState`; for now they are linework-only primitives (points, lines, polylines, and outline shapes) that the debug overlay visualizes and vines may query, but they are not raster masks or solid fills; each guide carries its own label, may belong to an optional named group, and the state also carries named `GuideSet` collections so larger guide groups can be addressed explicitly
@@ -159,23 +159,27 @@
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored to the outermost terminal row/column, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
 - the debug overlay may also temporarily draw a faint soft-line probe for linework testing, using the atlas in [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be evaluated against real world coordinates before vines or other world annotations consume it; the same atlas also defines the longer slope families used to cover full-world line spans, and the live debug surface now renders visible `GuideState` linework through the same helper
-- the debug/info surface stays compact and reports only the live control facts that matter during resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, pointer probe state/absolute position, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
-- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering, the pointer probe, the palette popup, the weather popup, and other developer controls are described
+- the debug/info surface should stay compact and centered on the live control facts that matter during resize and entity-edit checks: camera mode, move mode/target, pointer probe state/absolute position, camera position, and the projected/visible companion facts being actively worked on; secondary diagnostics should be treated as optional overflow rather than default panel inventory
+- the dev-mode footer stays compact and uses `[?]` to open the modal help popup, where camera centering, the pointer probe, the palette popup, the weather popup, and other developer controls are described
+- `?` and `Esc` should behave as global modal-control keys across the current dev surface family: `?` promotes help above peer dev surfaces, while `Esc` closes or backs out of the top-most surface without requiring surface-specific memorization
 - `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
 - `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
-- the hotkeys popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current developer controls without adding footer clutter
+- the help popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current developer controls without adding footer clutter
 - the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it uses the shared modal shell to make entity movement explicit with `1/2/3/4/5` target selection and `hjkl` movement
-- the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, widgets, gif, and theme values
-- the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, `hotkeys`/`move`/`settings` are mutually exclusive modal surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
+- the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, ui, features, gif, and theme values
+- the quit-confirm popup is a modal overlay at `z_index = 405`; it is only opened when persisted tweak state is dirty and an exit is requested, and it keeps save/discard/cancel explicit instead of silently redefining the accepted baseline
+- the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, help/move/settings/palette/weather/quit-confirm are coordinated dev-facing surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
 - the dev-mode footer also uses `[m]ove` to open the modal move popup, where `1/2/3/4/5` select the active entity target and `hjkl` move that target while the popup is open
+- persisted composition state is now intentionally two-phase: live dev edits mutate the current runtime view immediately, but values such as camera/home, hero and companion offsets, selected persisted UI/features toggles, and similar saved controls only become the canonical persisted baseline when explicitly saved
+- quit behavior follows that ownership split: `q` quits immediately when no persisted tweak state is dirty, while dirty exits route through the quit-confirm modal so the user can `[s]ave and quit`, `[d]iscard and quit`, or `Esc` cancel
 
 ## UI / Metamechanics Working Set
 
-- current state: `dev_mode` is the umbrella toggle, `h` opens hotkeys, `m` opens move, and `s` opens settings
+- current state: `dev_mode` is the umbrella toggle, `?` opens help, `m` opens move, and `s` opens settings
 - current move grammar: `1/2/3/4/5` select the active target, `hjkl` move that target, and the popup itself stays modal
-- current settings grammar: tabbed positions/widgets/gif/theme controls stay presentation-only inside the modal popup
+- current settings grammar: tabbed positions/ui/features/gif/theme controls stay presentation-oriented inside the modal popup
 - current modal surface: move/settings panels use an opaque BTAS backdrop so the hero GIF does not bleed through
-- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position
+- current camera split: the screenshot-aligned manual boot seed `(-60, -15)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position
 - current guide model: `WorldState` owns `GuideState`, which stores linework-only world-space annotations for future vines, masks, rulers, and debug visualization; sprites and solid masks are explicitly future work; guides have labels and optional groups, and `GuideState` now also stores named `GuideSet` collections so larger sets can be queried or edited as collections; new sets should be created with `GuideSet::new(...)` and registered through `GuideState::add_set(...)`
 - current guide line grammar: soft linework is rendered through [`docs/soft-line-atlas.md`](soft-line-atlas.md) with a Bresenham-style geometry layer plus a glyph-appearance layer, plus slope-aware stroke selection and `|` / `:`-style vertical emphasis for guide axes and rulers; curves and turns are constructed as connected segments rather than filled shapes
 - current pointer probe: `p` toggles a dev-only blinking world-space pointer that can be moved with arrow keys and is surfaced as an absolute position in the debug info panel
@@ -194,9 +198,10 @@
 - clock/world companion: `z_index = 100`
 - weather/world companion: `z_index = 100`
 - debug overlay: `z_index = 300`
-- hotkeys popup: `z_index = 390`
+- help popup: `z_index = 390`
 - move popup: `z_index = 395`
 - settings popup: `z_index = 400`
+- quit-confirm popup: `z_index = 405`
 - status/footer: `z_index = 1000`
 
 ## Presentation Contract
@@ -225,7 +230,7 @@ The intended model is:
 - viewport: terminal-sized crop rectangle, not the camera itself
 - static full-screen world size: `212x56`
 - terminal full-screen frame: `212x57`, with the bottom row reserved for the footer
-- default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the screenshot-aligned hero/clock composition from boot; this manual seed is distinct from the centered `follow-hero` runtime path
+- default startup camera state is manual pan with the stored seed `(-60, -15)` so the boot view starts with the current frozen screenshot-aligned hero/clock/date/weather composition; this manual seed is distinct from the centered `follow-hero` runtime path
 - default follow-hero camera crops are centered on the world datum across resizes once follow-hero mode is enabled; manual pan mode is clamped to one cell of overscan beyond the world border/frame
 - the centered `124x32` follow-hero crop starts at camera `(-62, -16)`
 - anchor space: offsets relative to another rendered object

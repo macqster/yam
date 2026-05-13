@@ -8,6 +8,7 @@ pub mod loading_layer;
 pub mod modal;
 pub mod move_layer;
 pub mod palette_layer;
+pub mod quit_confirm_layer;
 pub mod settings_layer;
 pub mod status_layer;
 pub mod vine_layer;

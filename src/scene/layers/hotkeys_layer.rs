@@ -5,6 +5,7 @@ use crate::scene::layers::modal::{paint_modal_shell, ModalFooter, ModalFrame};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
+use ratatui::style::Style;
 
 pub struct HotkeysLayer;
 
@@ -27,11 +28,11 @@ impl Layer for HotkeysLayer {
             return LayerOutput { grid, mask: None };
         }
 
-        let frame = ModalFrame::centered(width, height, 68, 22);
+        let frame = ModalFrame::centered(width, height, 76, 17);
         paint_modal_shell(
             &mut grid,
             frame,
-            "[h]otkeys",
+            "[?] help",
             Some(ModalFooter {
                 left: "↑ ↓",
                 right: "? ⎋",
@@ -39,39 +40,81 @@ impl Layer for HotkeysLayer {
         );
 
         let (body_x, body_y) = frame.body_origin();
-        let lines = [
-            "[q] quit app",
-            "[d] toggle dev mode",
-            "[m] toggle move mode",
-            "[P] toggle palette popup",
-            "[W] toggle weather popup",
-            "  [1] hero",
-            "  [2] clock",
-            "  [3] weather",
-            "  [4] date",
-            "  [5] calendar (reserved)",
-            "[h/j/k/l] move selected target",
-            "[C] store camera home",
-            "[c] recall camera home",
-            "[p] toggle pointer probe",
-            "[v] toggle vines",
-            "[s] toggle settings popup",
-            "[F5] next font",
-            "[space] play/pause",
-            "[.] step animation",
+        let left_lines = [
+            HelpLine::section("core"),
+            HelpLine::item("[q] quit app"),
+            HelpLine::item("[d] toggle dev mode"),
+            HelpLine::item("[?] open help"),
+            HelpLine::blank(),
+            HelpLine::section("inspect"),
+            HelpLine::item("[s] settings popup"),
+            HelpLine::item("[P] palette popup"),
+            HelpLine::item("[W] weather popup"),
+            HelpLine::item("[p] pointer probe"),
+            HelpLine::item("[v] vines"),
+            HelpLine::item("[F5] next font"),
         ];
-        for (row, line) in lines.iter().enumerate() {
-            write_string(
-                &mut grid,
-                body_x,
-                body_y + row as u16,
-                line,
-                theme_style::panel_text(),
-            );
+        let right_lines = [
+            HelpLine::section("move"),
+            HelpLine::item("[m] move popup"),
+            HelpLine::item("[1/2/3/4/5] select target"),
+            HelpLine::item("[h/j/k/l] move selected target"),
+            HelpLine::item("[C] store camera home"),
+            HelpLine::item("[c] recall camera home"),
+            HelpLine::blank(),
+            HelpLine::section("animation"),
+            HelpLine::item("[space] play/pause"),
+            HelpLine::item("[.] step animation"),
+        ];
+        let body_width = frame.width.saturating_sub(4);
+        let gap = 4u16;
+        let column_width = body_width.saturating_sub(gap) / 2;
+        let right_x = body_x + column_width + gap;
+
+        for (row, line) in left_lines.iter().enumerate() {
+            write_clipped_help_line(&mut grid, body_x, body_y + row as u16, column_width, line);
+        }
+        for (row, line) in right_lines.iter().enumerate() {
+            write_clipped_help_line(&mut grid, right_x, body_y + row as u16, column_width, line);
         }
 
         LayerOutput { grid, mask: None }
     }
+}
+
+#[derive(Clone, Copy)]
+struct HelpLine {
+    text: &'static str,
+    style: Style,
+}
+
+impl HelpLine {
+    fn section(text: &'static str) -> Self {
+        Self {
+            text,
+            style: theme_style::settings_tab_inactive(),
+        }
+    }
+
+    fn item(text: &'static str) -> Self {
+        Self {
+            text,
+            style: theme_style::panel_text(),
+        }
+    }
+
+    fn blank() -> Self {
+        Self::item("")
+    }
+}
+
+fn write_clipped_help_line(grid: &mut Grid, x: u16, y: u16, width: u16, line: &HelpLine) {
+    let clipped = if line.text.chars().count() as u16 > width {
+        line.text.chars().take(width as usize).collect::<String>()
+    } else {
+        line.text.to_string()
+    };
+    write_string(grid, x, y, &clipped, line.style);
 }
 
 #[cfg(test)]
@@ -133,19 +176,20 @@ mod tests {
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert!(text.contains("[h]otkeys"));
-        assert!(text.contains("[P] toggle palette popup"));
-        assert!(text.contains("[W] toggle weather popup"));
+        assert!(text.contains("[?] help"));
+        assert!(text.contains("core"));
+        assert!(text.contains("inspect"));
+        assert!(text.contains("move"));
+        assert!(text.contains("animation"));
+        assert!(text.contains("[P] palette popup"));
+        assert!(text.contains("[W] weather popup"));
         assert!(text.contains("[C] store camera home"));
         assert!(text.contains("[c] recall camera home"));
-        assert!(text.contains("[p] toggle pointer probe"));
-        assert!(text.contains("[v] toggle vines"));
-        assert!(text.contains("[s] toggle settings popup"));
-        assert!(text.contains("[m] toggle move mode"));
-        assert!(text.contains("[1] hero"));
-        assert!(text.contains("[2] clock"));
-        assert!(text.contains("[4] date"));
-        assert!(text.contains("[5] calendar (reserved)"));
+        assert!(text.contains("[p] pointer probe"));
+        assert!(text.contains("[v] vines"));
+        assert!(text.contains("[s] settings popup"));
+        assert!(text.contains("[m] move popup"));
+        assert!(text.contains("[1/2/3/4/5] select target"));
         assert!(text.contains("[space] play/pause"));
         assert!(text.contains("? ⎋"));
     }

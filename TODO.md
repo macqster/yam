@@ -15,6 +15,8 @@ Coordination contract:
 ## Immediate Maintenance Batch
 
 - [inspect] decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
+- [inspect] run one small dev-mode UI cleanup batch focused on role tightening only: trim default debug-panel density, reduce visible `calendar (reserved)` exposure, and keep hotkeys/move/footer vocabulary cleanly separated.
+- [verify] keep dev-UI docs aligned with the live code path: `ui` tab naming, dev-only debug gating, `1/2/3/4/5` move grammar, and the frozen manual boot seed `(-60, -15)`.
 - [verify] keep `cargo fmt && bash scripts/check.sh` and full `cargo test` green together while maintenance continues.
 
 ## 1. Scene Model and Presentation Contract
@@ -42,15 +44,11 @@ Coordination contract:
 
 ## 3. Footer, HUD, and Debug
 
-- [verify] footer layout remains deterministic with left / center / right zones.
-- [verify] truncation rules remain:
-  - center collapses first
-  - right indicators survive longest
-  - no wrapping
-- [verify] debug stays split into passive HUD info and active overlay inspection.
+- [verify] footer layout remains deterministic as a compact left hint plus right-aligned status stamp on the bottom row, with no wrapping.
+- [verify] debug stays separate from footer and modal action surfaces, with factual readouts living outside the footer and dense controls staying inside explicit overlays.
 - [verify] scrollbars stay viewport indicators, not widget chrome.
 - [verify] hotkey visibility and hotkey behavior stay separate concerns.
-- [verify] passive debug stays in HUD and modal inspection stays in overlay.
+- [verify] modal inspection stays in overlay, and the current dev-only debug layer does not drift into a second command footer.
 
 ## 4. Hero GIF Rendering
 
@@ -159,13 +157,14 @@ Coordination contract:
   - anchor integrity
   - rounding / jitter stability
 - [verify] frame-level render snapshots keep the footer/dev hint and other visible mode labels pinned to their current contract.
-- [verify] dev-mode footer stays compact while the `[h]otkeys` popup carries the longer developer control list.
-- [verify] the dev-only pointer probe stays discoverable through the hotkeys popup and remains a blinking world-space marker with absolute-position reporting in the debug panel.
-- [verify] move mode keeps entity movement behind the `[m]ove` popup, with `1/2/3` selecting targets and `hjkl` moving only the active target.
-- [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/widgets/gif/theme tabs staying presentation-only.
+- [verify] dev-mode footer stays compact while the `[?] help` popup carries the longer developer control list.
+- [verify] the dev-only pointer probe stays discoverable through the help popup and remains a blinking world-space marker with absolute-position reporting in the debug panel.
+- [verify] move mode keeps entity movement behind the `[m]ove` popup, with `1/2/3/4/5` selecting targets and `hjkl` moving only the active target.
+- [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/ui/features/gif/theme tabs staying presentation-oriented.
+- [verify] persisted camera/composition tweaks stay explicit: live dev edits may mark saved state dirty, but quitting without dirty changes remains immediate while dirty quits route through the `[s]ave and quit` / `[d]iscard and quit` / `Esc cancel` confirmation surface.
 - [inspect] introduce a dedicated FIGlet/font subsystem for YAM text-art surfaces instead of continuing to hand-maintain one-off ASCII literals; use the `sigye` study in `docs/reference-sigye.md` as the starter reference.
 - [inspect] add a reusable styled hotkey-hint formatter so overlays can present compact cues like `↑↓ nav  ←→ change` with explicit token/description contrast.
-- [verify] hotkeys, move, and settings continue to share one centered modal shell so popup styling and geometry do not drift apart.
+- [verify] help, move, settings, and quit-confirm continue to share one centered modal shell so popup styling and geometry do not drift apart.
 - [verify] the clock remains a world-attached hero entity; debug info must report its projected screen position without implying a screen-attached UI clock.
 - [inspect] revisit future manual weather-sprite authoring through MoebiusXBIN or similar XBIN tooling only as an offline art workflow; keep runtime assets plain-text plus semantic role mapping unless a later experiment proves a cleaner import path.
 - [inspect] stage the first manual weather-sprite batch around the current seed grammar: keep `clear`, `partly_cloudy`, `cloudy`, and `unknown` as anchors; likely reclassify the current dense `mist` asset toward `fog`; and add `clear_night`, `very_cloudy`, `overcast`, lighter true `mist`, plus the first stronger overlay variants such as `light_showers`, `heavy_rain`, `heavy_snow`, and `light_sleet`.
@@ -197,6 +196,6 @@ Coordination contract:
 - [verify] boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.
 - [verify] metamechanics remains a subordinate control/observation seam inside `ui/`; `dev_mode` may toggle presentation flags, but it does not own world state, projection, or render order.
 - [verify] follow-hero camera mode stays centered on the world datum across terminal resizes, while manual pan mode remains clamped to world overscan.
-- [verify] the screenshot-aligned manual boot seed `(-63, -17)` remains distinct from the centered `follow-hero` runtime path, so boot composition and resize behavior stay separately owned.
+- [verify] the screenshot-aligned manual boot seed `(-60, -15)` remains distinct from the centered `follow-hero` runtime path, so boot composition and resize behavior stay separately owned.
 - [verify] docs-only and wording-only changes use `cargo fmt --check`, while compositor/camera/overlay changes use the full test suite before commit.
 - [verify] the UI / metamechanics working set remains summarized in `docs/architecture.md` and `docs/rendering.md`, so future UI work can resume from a compact handoff instead of rereading the changelog; keep the `C`/`c` camera-home contract documented there as the current boot/home split.

@@ -13,6 +13,12 @@ Logging rule:
 - Prefer append-only additions over rewriting older lines.
 
 
+## 2026-05-13
+
+- [11:15] recorded the dev-mode UI cleanup audit without changing runtime code: the active docs/audit/backlog now treat the next maintenance seam as a conservative surface-tightening pass rather than a redesign, call out the still-crowded debug panel and over-visible `calendar (reserved)` seam, and fix the most important docs/runtime drift by aligning the settings vocabulary to `ui`/`features`, clarifying that the currently visible debug surfaces are still dev-gated, and updating the frozen manual boot seed references from the old `(-63, -17)` notes to the current `(-60, -15)` composition baseline.
+- [12:03] tightened the dev-surface interaction contract around explicit persisted tweaks: help is now promoted by global `?`, `Esc` backs out of any current dev surface, persisted camera/composition/UI edits stay dirty until explicitly saved instead of writing immediately, and dirty quits now route through a shared-shell quit-confirm modal with save/discard/cancel choices; the owning rendering/architecture/TODO docs were updated in the same pass so the current modal stack and quit semantics stay documented together.
+- [12:28] refined the quit-confirm footer into a dedicated decision strip instead of a reused generic modal legend: the modal now centers one plain-text footer line, `[s]ave and quit • [d]iscard and quit • ⎋ cancel`, removes the redundant right-side `? ⎋` hint, and disables confirm-discard on double-tapped `q` by moving that action to `d`; the docs/backlog wording were updated in the same pass so the visible surface and key contract stay aligned.
+
 ## 2026-05-12
 
 - [16:58] pinned the repo to the stable Rust toolchain with `rust-toolchain.toml` and explicit `clippy`/`rustfmt` components after confirming the current maintenance/build path does not require nightly; this keeps `yam-rust` aligned with the wider `~/_git` workstation policy and removes silent dependence on whichever global default toolchain happens to be active.

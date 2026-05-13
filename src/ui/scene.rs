@@ -2,8 +2,8 @@ use crate::scene::layers::{
     clock_layer::ClockLayer, date_layer::DateLayer, debug_layer::DebugLayer,
     field_layer::FieldLayer, hero_layer::HeroLayer, hotkeys_layer::HotkeysLayer,
     loading_layer::LoadingLayer, move_layer::MoveLayer, palette_layer::PaletteLayer,
-    settings_layer::SettingsLayer, status_layer::StatusLayer, vine_layer::VineLayer,
-    weather_layer::WeatherLayer, weather_popup_layer::WeatherPopupLayer,
+    quit_confirm_layer::QuitConfirmLayer, settings_layer::SettingsLayer, status_layer::StatusLayer,
+    vine_layer::VineLayer, weather_layer::WeatherLayer, weather_popup_layer::WeatherPopupLayer,
     world_label_layer::WorldLabelLayer,
 };
 
@@ -22,6 +22,7 @@ pub fn build_ui_layers() -> Vec<Box<dyn crate::scene::Layer>> {
         Box::new(PaletteLayer),
         Box::new(WeatherPopupLayer),
         Box::new(SettingsLayer),
+        Box::new(QuitConfirmLayer),
         Box::new(LoadingLayer),
         Box::new(StatusLayer),
     ]

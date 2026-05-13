@@ -32,8 +32,6 @@ impl Layer for StatusLayer {
             " [q]uit  •  [d]ev"
         } else if ui.loading.active {
             ""
-        } else if ui.show_dev_surfaces() {
-            " [q]uit  •  [d]ev  •  [w]orld  •  [h]otkeys  •  [m]ove  •  [p]ointer  •  [P]alette  •  [W]eather  •  [v]ines"
         } else {
             " [q]uit  •  [d]ev"
         };
@@ -250,12 +248,12 @@ mod tests {
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains(" [q]uit  •  [d]ev"));
-        assert!(text.contains("[h]otkeys"));
-        assert!(text.contains("[w]orld"));
-        assert!(text.contains("[m]ove"));
-        assert!(text.contains("[p]ointer"));
-        assert!(text.contains("[P]alette"));
-        assert!(text.contains("[W]eather"));
+        assert!(!text.contains("[h]otkeys"));
+        assert!(!text.contains("[w]orld"));
+        assert!(!text.contains("[m]ove"));
+        assert!(!text.contains("[p]ointer"));
+        assert!(!text.contains("[P]alette"));
+        assert!(!text.contains("[W]eather"));
         assert!(!text.contains("[space] play/pause"));
         assert!(!text.contains("[.] step"));
     }

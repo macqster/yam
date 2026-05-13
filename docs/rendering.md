@@ -21,9 +21,10 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - L10 - world props and world-attached composition pieces
 - L100 - world-tied companions and anchored world widgets
 - L300 - world-tied debug/dev probes and diagnostic overlays
-- L390 - hotkeys popup
+- L390 - help popup
 - L395 - move popup
 - L400 - settings popup
+- L405 - quit-confirm popup
 - L1000 - HUD/footer/status
 
 ## Screen Zones
@@ -33,7 +34,7 @@ The full terminal frame is divided into stable presentation zones:
 - `main scene` - the `212x56` world playfield that carries the visualiser/screensaver composition, hero, flora, guides, and world-tied diagnostics
 - `hud/footer` - the reserved bottom row of the `212x57` terminal frame, used for compact status, hints, and runtime mode reminders
 - `debug/inspect` - world-tied diagnostic readouts and passive overlays that stay readable during normal use without becoming the footer
-- `modal overlay` - centered, top-most panels such as hotkeys, move, and settings that temporarily sit above both world and HUD
+- `modal overlay` - centered, top-most panels such as help, move, settings, and quit-confirm that temporarily sit above both world and HUD
 
 Rules:
 
@@ -53,13 +54,13 @@ Rules:
 - sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only
 - debug/inspect: coordinate readouts, camera/world position, probe state, entity detail, and other readable diagnostics; it may show numbers and labels, but not the main command vocabulary
-- modal overlay: hotkeys, move, settings, palette inspection, weather atlas inspection, command help, and temporary control surfaces that are opened intentionally
+- modal overlay: help, move, settings, palette inspection, weather atlas inspection, quit-confirm, and other temporary control surfaces that are opened intentionally
 
 ## Modal Vocabulary
 
 The currently implemented modal vocabulary is intentionally small and grouped:
 
-- `hotkeys` - the discoverability sheet for the current dev controls
+- `help` - the discoverability sheet for the current dev controls
 - `move` - target selection and movement for world-attached entities
 - `settings` - tabbed presentation/state inspection for positions, ui overlays, features, gif, and theme values
 - `palette` - curated plus extracted BTAS/TNBA swatch inspection in a dedicated dev modal
@@ -69,7 +70,7 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 
 Rules:
 
-- hotkeys should describe the currently implemented dev controls, not a hypothetical full command catalog
+- help should describe the currently implemented dev controls, not a hypothetical full command catalog
 - move should stay focused on target choice and explicit motion
 - settings should stay tabbed and presentation-oriented
 - palette and weather inspection should stay comparative and read-only, rather than turning those modals into editing surfaces
@@ -111,7 +112,7 @@ Rules:
 - linework rendering follows [`docs/soft-line-atlas.md`](soft-line-atlas.md), with a Bresenham-style geometry layer and a glyph-appearance layer, using a small slope-aware glyph grammar with `|` / `:` for vertical emphasis so rulers, vectors, and curves read as directional strokes instead of block fills; the engine target is universal line coverage across the full YAM world size, using the grammar key `LineFamily -> LengthBucket -> Direction -> PhaseRole -> CellBand -> LocalStep`
 - the soft-line renderer is intended to cover every possible line in world space; ad hoc block-fills or special-case line escapes are not the target architecture
 - the pointer probe is a practical guide-authoring tool: it can be used to record exact coordinates for points, guides, and masks, and the line renderer should make those recorded relations legible in world space; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
-- the pointer probe now belongs primarily to the sandbox world: it remains a world-space capture instrument for point-to-point drawing, guide authoring, and future mask outlines, and it should not be treated as a permanent main-scene overlay feature
+- the pointer probe remains a dev-only world-space capture instrument across both current worlds: it supports point-to-point drawing, guide authoring, and future mask outlines without becoming a permanent always-on main-scene overlay feature
 - the renderer should prefer Cartesian and Euclidean reasoning for world-space line work because signed axes and direct distance logic make precise authoring easier to validate
 
 ## Flora Model Contract
@@ -194,14 +195,14 @@ The current debug/dev surface for guide capture is:
 
 - pointer probe: capture exact coordinates in world space
 - debug info panel: inspect the live pointer position, camera position, and projected entity facts
-- hotkeys popup: remind the user that pointer, camera-home, and move/settings are the current dev controls
+- help popup: remind the user that pointer, camera-home, and move/settings are the current dev controls
 - move popup: step selected world-attached entities when authoring placement relationships
 
 Rules:
 
 - capture should happen in world space first, not in HUD space
 - the debug info panel should be the factual readout, not the authoring editor
-- the hotkeys popup should remain discoverability, not a second editor surface
+- the help popup should remain discoverability, not a second editor surface
 - move mode is for explicit world-attached positioning, not for hidden geometry mutation
 - guide-set previews should be read-only by default and belong in the debug/inspect surface rather than the HUD footer
 
@@ -232,7 +233,7 @@ The active implementation treats camera as a viewport crop helper:
 - the static full-screen world playfield is `212x56`
 - the terminal full-screen frame is `212x57`, with the bottom row reserved for the footer
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
-- the default startup camera state is manual pan with the stored seed `(-63, -17)` so the boot view starts with the screenshot-aligned hero/clock composition from boot; this manual seed is distinct from the centered `follow-hero` runtime path
+- the default startup camera state is manual pan with the stored seed `(-60, -15)` so the boot view starts with the current frozen screenshot-aligned hero/clock/date/weather composition; this manual seed is distinct from the centered `follow-hero` runtime path
 - follow-hero camera mode keeps the visible crop centered on the world datum across resizes once it is enabled; manual pan mode is still clamped in runtime state and in `build_render_state(...)` so the visible crop can overscan the world border/frame by at most one cell on any edge
 - the centered `124x32` follow-hero crop uses camera `(-62, -16)`
 - debug border sampling is a datum-centered world-space probe that is projected through the active camera; it is not HUD chrome
@@ -271,38 +272,43 @@ The active implementation treats camera as a viewport crop helper:
 - the interaction contract is mode-driven and keyboard-first:
   - `normal` uses familiar navigation and toggle keys for day-to-day scene use
   - `inspect` focuses on selection, entity reading, and drill-down navigation
-  - `debug` keeps safe diagnostic overlays available during normal use
+  - `debug` names the diagnostic surface family, while the currently implemented diagnostic overlays are shown through `dev` mode rather than as always-on normal-use chrome
   - `dev` gates editing, mutation, and simulation tooling behind explicit controls
   - `command palette` is the fallback for rare actions, search, and entity jumps
-- `dev` mode currently exposes the concrete runtime hotkeys already implemented in code: `[h]otkeys`, `[m]ove`, `[s]ettings`, `[p]ointer`, `[P]alette`, `[W]eather`, `[C]` store camera home, `[c]` recall camera home, and `F5` for font cycling when dev controls are enabled
+- `dev` mode currently exposes the concrete runtime hotkeys already implemented in code: `[?]` help, `[m]ove`, `[s]ettings`, `[p]ointer`, `[P]alette`, `[W]eather`, `[C]` store camera home, `[c]` recall camera home, and `F5` for font cycling when dev controls are enabled
 - the mode-specific layout contract should stay stable so the footer and overlays do not become the primary discoverability surface; rare actions belong in the command palette or the modal hotkey shell, not in the always-on footer
 - the debug overlay can include passive camera/world scrollbar indicators anchored to the outermost terminal row/column; they are read-only, derived from `RenderState`, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and sized/positioned from camera origins normalized across the world range so they report camera/world placement rather than acting like a scrollable panel
 - the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
 - the debug overlay may also temporarily render a faint soft-line probe for linework testing, using [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be exercised against real world coordinates; that atlas also covers longer slope families for full-world lines and future guide/mask edge drawing, and the live debug surface now renders visible `GuideState` linework through the same helper; the current calibration pair is the mirrored `64x10` long-shallow target in both directions, and its visible cadence should read closer to `--''` at the lead-in and `__. -` near the exit than to a mostly-underscore ramp; punctuation in that family should also lean with the stroke direction inside the cell, so comma-like and apostrophe-like marks are used intentionally instead of generic filler punctuation; the current classifier also adds a coarse `CellBand` so glyph choice can reflect top/middle/bottom placement inside the cell, and that band is now derived from the stroke’s sub-cell position relative to the ideal segment; the debug info panel now exposes a soft-band readout for the canonical probe so the band classifier can be checked while tuning, but the latest screenshots still show several unresolved issues: the rendered line does not closely resemble the manual `64x10` reference, the shape still reads as segmented rather than smooth, the band readout does not yet map cleanly to the visible lean, and mirrored long-shallow probes still share too much of the same body rhythm; the long-shallow renderer therefore remains a calibration target rather than a final proven grammar
 - the pointer probe is the preferred absolute coordinate reference for guide authoring and future vines placement work
-- the debug info panel stays compact and reports only the live control facts needed for resize and entity-edit checks: FPS, frame, play state, camera mode, move mode/target, pointer probe state/absolute position, camera position, hero world/screen position, hero visibility, clock world/screen position, and clock visibility
-- the dev-mode footer stays compact and uses `[h]otkeys` to open the modal hotkeys popup, where camera centering, the pointer probe, the palette popup, the weather sprite popup, and other developer controls are described
+- the debug info panel should stay compact and biased toward the live control facts needed for resize and entity-edit checks: camera mode, move mode/target, pointer probe state/absolute position, camera position, companion visibility/projection facts, and only the small amount of frame/animation data needed during active hero inspection
+- the dev-mode footer stays compact and uses `[?]` to open the modal help popup, where camera centering, the pointer probe, the palette popup, the weather sprite popup, and other developer controls are described
+- `?` is a global modal/help shortcut across dev surfaces: it may promote the help popup above peer dev surfaces rather than requiring the user to back out first
+- `Esc` is the global back/close key across dev surfaces: it should first cancel the top-most dev/modal interaction, including the quit-confirm surface when present
+- layout-affecting dev edits remain live but unsaved until explicitly persisted: camera home, camera pan, companion offsets, selected UI/features toggles, and similar persisted controls mark the runtime state dirty instead of writing immediately
+- `q` still quits immediately from a clean state, but if persisted state is dirty it first opens a quit-confirm modal with explicit save/discard/cancel paths so the accepted frozen values are never redefined silently
 - leaving `dev_mode` closes any open hotkeys, move, or settings modal state so the modal stack cannot reappear latched when the dev surface is restored
 - `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
 - `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
-- the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, `hotkeys`/`move`/`settings` are mutually exclusive modal surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
-- the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, widgets, gif, and theme values
-- modal hotkeys/move/settings overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
+- the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, help/move/settings/palette/weather/quit-confirm are dev-facing modal surfaces with shared close behavior, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
+- the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, ui, features, gif, and theme values
+- modal help/move/settings/quit-confirm overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
-- the hotkeys popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter
+- the help popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter
 - the move popup is a modal overlay rendered between hotkeys and settings; it uses the shared modal shell to make entity movement explicit with `1/2/3/4/5` selection and `hjkl` movement
+- the quit-confirm popup is a modal overlay rendered above settings and below loading; it uses the shared modal shell to make dirty persisted-state exits explicit with a centered decision footer: `[s]ave and quit • [d]iscard and quit • ⎋ cancel`
 - the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `1/2/3/4/5` select the active entity target and `hjkl` move that target
 - the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
-- the hotkeys popup now also lists the pointer probe, palette popup, and weather sprite popup so those dev-only tools stay discoverable without turning the footer into a full command legend
+- the help popup now also lists the pointer probe, palette popup, and weather sprite popup so those dev-only tools stay discoverable without turning the footer into a full command legend
 
 ## UI / Metamechanics Working Set
 
-- current state: the modal UI stack is `hotkeys` at `390`, `move` at `395`, and `settings` at `400`
+- current state: the modal UI stack is `help` at `390`, `move` at `395`, `settings` at `400`, and `quit-confirm` at `405`
 - current move grammar: `1/2/3/4/5` select the target and `hjkl` move it while move mode is open
-- current settings grammar: positions/widgets/gif/theme tabs are presentation-only and do not own world state
+- current settings grammar: positions/ui/features/gif/theme tabs stay presentation-oriented and do not own world state
 - current modal surface: move/settings panels paint an opaque BTAS backdrop before the border and text are drawn, and opaque space+background cells clear the GIF underneath
-- current camera split: the screenshot-aligned manual boot seed `(-63, -17)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position
+- current camera split: the screenshot-aligned manual boot seed `(-60, -15)` is distinct from the centered `follow-hero` runtime path, and the dev-mode camera-home controls now store and recall a user-chosen manual position
 - current pointer probe: `p` toggles a dev-only blinking world-space pointer that can be moved with arrow keys and is surfaced as an absolute position in the debug info panel
 - resume point later: if UI work resumes, start by editing values in the settings popup or by refining the camera-home store/recall flow from the dev-mode controls
 - this block should stay aligned with `docs/architecture.md` and the UI-related backlog entries

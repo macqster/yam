@@ -95,8 +95,25 @@ pub fn run(
                 }
 
                 match code {
-                    KeyCode::Char('q') => break 'run,
+                    KeyCode::Char('d')
+                        if ui_state.quit_confirm_active()
+                            && ui_state.confirm_quit_without_saving() =>
+                    {
+                        break 'run;
+                    }
+                    KeyCode::Char('s')
+                        if ui_state.quit_confirm_active() && ui_state.confirm_save_and_quit() =>
+                    {
+                        break 'run;
+                    }
+                    KeyCode::Char('q') if ui_state.begin_quit() => {
+                        break 'run;
+                    }
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
+                    KeyCode::Esc if ui_state.handle_global_escape() => {}
+                    KeyCode::Char('?') if ui_state.global_help_active() => {
+                        ui_state.toggle_help_globally()
+                    }
                     KeyCode::Char('f') => ui_state.toggle_follow_hero(),
                     KeyCode::Char('C') if ui_state.dev_free_roam() => {
                         ui_state.store_camera_home();
@@ -109,9 +126,6 @@ pub fn run(
                     }
                     KeyCode::Char('W') if ui_state.weather_popup_toggle_allowed() => {
                         ui_state.toggle_weather_popup();
-                    }
-                    KeyCode::Char('h') if ui_state.hotkeys_toggle_allowed() => {
-                        ui_state.toggle_hotkeys()
                     }
                     KeyCode::Char('m') if ui_state.move_mode_toggle_allowed() => {
                         ui_state.toggle_move_mode()
@@ -132,18 +146,6 @@ pub fn run(
                             size.width,
                             size.height.saturating_sub(1),
                         )?;
-                    }
-                    KeyCode::Esc if ui_state.palette_popup_active() => {
-                        ui_state.toggle_palette();
-                    }
-                    KeyCode::Esc if ui_state.weather_popup_active() => {
-                        ui_state.toggle_weather_popup();
-                    }
-                    KeyCode::Esc if ui_state.settings_edit_mode_active() => {
-                        ui_state.cancel_settings_edit();
-                    }
-                    KeyCode::Esc if ui_state.settings_close_active() => {
-                        ui_state.close_settings();
                     }
                     KeyCode::Char(' ') => ui_state.hero.toggle_animation(),
                     KeyCode::Char('.') => ui_state.hero.step_animation(),
@@ -219,9 +221,6 @@ pub fn run(
                     }
                     KeyCode::Backspace if ui_state.settings_edit_mode_active() => {
                         ui_state.settings_edit_backspace();
-                    }
-                    KeyCode::Esc if ui_state.move_mode_close_active() => {
-                        ui_state.close_move_mode();
                     }
                     KeyCode::F(5) if ui_state.font_cycle_allowed() => ui_state.next_font(),
                     _ => {}

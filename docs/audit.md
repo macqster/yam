@@ -8,6 +8,7 @@ Last reviewed: 2026-05-13
 - Highest-priority weak seam: the spatial relation layer is still the most structurally fragile area because anchor identity, projection typing, and guide relation ownership are still only partly unified.
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
+- The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
 
 ## Weakest Areas
 
@@ -37,6 +38,10 @@ Last reviewed: 2026-05-13
 
 ## Active Risk Notes
 
+- [medium] The current dev-mode cleanup seam is mostly about role tightening rather than missing features: the debug panel is still too crowded, `calendar (reserved)` remains too visible across move/settings/help surfaces, and the footer/hotkeys split is close but not fully settled.
+  - evidence: `src/scene/layers/debug_layer.rs`, `src/scene/layers/hotkeys_layer.rs`, `src/scene/layers/move_layer.rs`, `src/scene/layers/settings_layer.rs`, `src/scene/layers/status_layer.rs`
+- [medium] Docs/runtime synchronization is currently weakest in the dev-UI vocabulary: the live settings tab title is `ui`, not `widgets`; the active clean-boot manual camera seed is `(-60, -15)`, not `(-63, -17)`; and some contracts still describe broader everyday debug visibility than the current dev-only gating actually provides.
+  - evidence: `src/ui/state.rs`, `src/scene/layers/settings_layer.rs`, `docs/rendering.md`, `docs/architecture.md`, `TODO.md`
 - [medium] `scene_config.json` is active for tooling and should stay aligned with the tooling defaults if they change.
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
 - [medium] The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.

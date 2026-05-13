@@ -65,7 +65,7 @@ fn centered_date_screen_pos(text: &str, ui: &UiState, ctx: &RenderState) -> Worl
     let companion_center = (clock_left + weather_right) / 2;
 
     WorldPos {
-        x: companion_center - date_width / 2,
+        x: companion_center - date_width / 2 - 1,
         y: ctx.date_screen().y,
     }
 }

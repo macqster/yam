@@ -588,3 +588,8 @@ Logging rule:
 - bumped the crate and runtime release marker from `0.3.5` to `0.3.6`
 - cut the patch release after the companion-cluster stabilization work: default camera, hero, clock, weather, and date launch positions now follow the accepted clean-boot composition more reliably
 - carried forward the clean-launch reseeding fix, manual camera resize recentering fix, restored spaced weather temperature formatting, date visibility/debug-fact repair, and the debug wording cleanup that clarifies `Hero anchor visible`
+
+## 2026-05-13 - Visual companion nudge
+
+- nudged the weather companion one cell left relative to the frozen clock anchor
+- applied a matching one-cell left bias to the date line's self-centering so the date and weather pair stay visually grouped against the clock

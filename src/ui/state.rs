@@ -500,7 +500,7 @@ impl Default for UiOffsets {
             hero_dy: -40,
             clock_dx: 92,
             clock_dy: -9,
-            weather_dx: 91,
+            weather_dx: 90,
             weather_dy: -20,
             date_dx: 91,
             date_dy: -18,
@@ -1692,7 +1692,7 @@ mod tests {
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
         assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -59, y: 20 });
         assert_eq!(attachment.clock_world(), WorldPos { x: 33, y: 11 });
-        assert_eq!(attachment.weather_world(), WorldPos { x: 32, y: 0 });
+        assert_eq!(attachment.weather_world(), WorldPos { x: 31, y: 0 });
         assert_eq!(attachment.date_world(), WorldPos { x: 32, y: 2 });
         assert_eq!(attachment.calendar_world(), WorldPos { x: 59, y: -36 });
     }
@@ -2392,7 +2392,7 @@ mod tests {
         assert_eq!(ui.offsets.hero_dy, -40);
         assert_eq!(ui.offsets.clock_dx, 92);
         assert_eq!(ui.offsets.clock_dy, -9);
-        assert_eq!(ui.offsets.weather_dx, 91);
+        assert_eq!(ui.offsets.weather_dx, 90);
         assert_eq!(ui.offsets.weather_dy, -20);
         assert_eq!(ui.camera.x, -60);
         assert_eq!(ui.camera.y, -15);

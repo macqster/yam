@@ -214,7 +214,7 @@ impl Layer for DebugLayer {
                 format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
                 format!("Hero world: ({}, {})", hero_world.x, hero_world.y),
                 format!("Hero screen: ({}, {})", hero_screen.x, hero_screen.y),
-                format!("Hero visible: {}", hero_visible),
+                format!("Hero anchor visible: {}", hero_visible),
                 format!(
                     "Hero offset: ({}, {})",
                     ui.offsets.hero_dx, ui.offsets.hero_dy

@@ -14,8 +14,6 @@ Coordination contract:
 
 ## Immediate Maintenance Batch
 
-- [patch] align `docs/release-model.md` with the active `yam-rust` branch workflow and lightweight release-cut process.
-- [patch] keep `docs/audit.md` focused on actual current risks rather than positive coverage notes.
 - [inspect] decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
 - [verify] keep `cargo fmt && bash scripts/check.sh` and full `cargo test` green together while maintenance continues.
 

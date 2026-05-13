@@ -9,7 +9,7 @@ use super::layout::lines_for_snapshot;
 use super::model::{WeatherLocale, WeatherSnapshot, WeatherVisual};
 use super::text::visual_label;
 
-pub const COMPACT_WEATHER_WIDTH: usize = 28;
+pub const COMPACT_WEATHER_WIDTH: usize = 30;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -498,12 +498,12 @@ impl Default for UiOffsets {
             pointer_y: 0,
             hero_dx: -209,
             hero_dy: -40,
-            clock_dx: 89,
-            clock_dy: -50,
-            weather_dx: 88,
-            weather_dy: -61,
+            clock_dx: 92,
+            clock_dy: -9,
+            weather_dx: 91,
+            weather_dy: -20,
             date_dx: 91,
-            date_dy: -56,
+            date_dy: -18,
             calendar_dx: 118,
             calendar_dy: -56,
             clock_font: "gothic".to_string(),
@@ -1691,9 +1691,9 @@ mod tests {
 
         assert_eq!(attachment.hero_world(), WorldPos { x: 150, y: 60 });
         assert_eq!(attachment.hero_visual_anchor(), WorldPos { x: -59, y: 20 });
-        assert_eq!(attachment.clock_world(), WorldPos { x: 30, y: -30 });
-        assert_eq!(attachment.weather_world(), WorldPos { x: 29, y: -41 });
-        assert_eq!(attachment.date_world(), WorldPos { x: 32, y: -36 });
+        assert_eq!(attachment.clock_world(), WorldPos { x: 33, y: 11 });
+        assert_eq!(attachment.weather_world(), WorldPos { x: 32, y: 0 });
+        assert_eq!(attachment.date_world(), WorldPos { x: 32, y: 2 });
         assert_eq!(attachment.calendar_world(), WorldPos { x: 59, y: -36 });
     }
 
@@ -1970,7 +1970,7 @@ mod tests {
         assert_eq!(snapshot.offsets.clock_dx, 7);
         assert_eq!(snapshot.offsets.clock_dy, -6);
         assert_eq!(snapshot.offsets.date_dx, 91);
-        assert_eq!(snapshot.offsets.date_dy, -56);
+        assert_eq!(snapshot.offsets.date_dy, -18);
         assert_eq!(snapshot.offsets.calendar_dx, 118);
         assert_eq!(snapshot.offsets.calendar_dy, -56);
         assert_eq!(snapshot.offsets.clock_font, "small");
@@ -2390,8 +2390,10 @@ mod tests {
         assert_eq!(ui.offsets.camera_home_y, -15);
         assert_eq!(ui.offsets.hero_dx, -209);
         assert_eq!(ui.offsets.hero_dy, -40);
-        assert_eq!(ui.offsets.clock_dx, 89);
-        assert_eq!(ui.offsets.clock_dy, -50);
+        assert_eq!(ui.offsets.clock_dx, 92);
+        assert_eq!(ui.offsets.clock_dy, -9);
+        assert_eq!(ui.offsets.weather_dx, 91);
+        assert_eq!(ui.offsets.weather_dy, -20);
         assert_eq!(ui.camera.x, -60);
         assert_eq!(ui.camera.y, -15);
         assert!(!ui.camera.follow_hero);

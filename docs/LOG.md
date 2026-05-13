@@ -576,3 +576,4 @@ Logging rule:
 - fixed temp GIF frame export to deterministic PNG filenames and verified the hero buffer loads 64 frames in tests
 - preserved ANSI-derived style spans while clipping hero frame text in the renderer
 - introduced a minimal scene + layer compositor and routed the existing render order through it without changing output
+- [2026-05-13 10:12] finished the companion-cluster polish pass: froze the accepted default camera, hero, and clock launch positions; restored clean-launch reseeding so saved offsets cannot override those defaults; kept manual camera centered through terminal resizes; brought the date widget back into the visible companion band and exposed its world/screen/visible facts in the debug panel; nudged the default weather/date positions into the accepted final family; and restored the spaced compact temperature row (` 3C |  11C`) with a slightly wider compact weather contract and matching layout-test updates.

@@ -132,7 +132,23 @@ mod tests {
     use super::lines_for_snapshot;
     use crate::weather::model::{WeatherLocale, WeatherSnapshot, WeatherSource, WeatherVisual};
     use crate::weather::render::{line_width, WeatherLayout, COMPACT_WEATHER_WIDTH};
+    use ratatui::text::Line;
     use unicode_width::UnicodeWidthStr;
+
+    fn compact_info_text(line: &Line<'_>) -> String {
+        let gap_index = line
+            .spans
+            .iter()
+            .position(|span| span.content.as_ref() == "  ")
+            .expect("compact weather rows should include a column gap");
+        line.spans
+            .iter()
+            .skip(gap_index + 1)
+            .map(|span| span.content.as_ref())
+            .collect::<String>()
+            .trim_end()
+            .to_string()
+    }
 
     #[test]
     fn compact_layout_supports_polish_and_stays_within_width() {
@@ -229,18 +245,8 @@ mod tests {
         };
 
         let lines = lines_for_snapshot(&snapshot, WeatherLocale::Pl, WeatherLayout::WttrCompact);
-        let row_one = lines[0]
-            .spans
-            .last()
-            .expect("line should include info text")
-            .content
-            .to_string();
-        let row_two = lines[1]
-            .spans
-            .last()
-            .expect("line should include info text")
-            .content
-            .to_string();
+        let row_one = compact_info_text(&lines[0]);
+        let row_two = compact_info_text(&lines[1]);
 
         assert!(!row_one.trim().is_empty());
         assert!(!row_two.trim().is_empty());

@@ -19,7 +19,7 @@ pub fn wttr_day_night_temperature_label(snapshot: &WeatherSnapshot) -> String {
         .night_min_c
         .map(|temp| format!("{temp:.0}"))
         .unwrap_or_else(|| "--".to_string());
-    format!("{night}C {day}C")
+    format!(" {night}C |  {day}C")
 }
 
 pub fn wttr_wind_label(snapshot: &WeatherSnapshot) -> String {
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn day_night_temperature_label_uses_compact_spacing() {
+    fn day_night_temperature_label_uses_spaced_separator_format() {
         let snapshot = WeatherSnapshot {
             location_label: "Sulkowice".to_string(),
             observed_at: chrono::Utc::now(),
@@ -298,7 +298,10 @@ mod tests {
             visual: WeatherVisual::Sunny,
         };
 
-        assert_eq!(wttr_day_night_temperature_label(&snapshot), "5C 18C");
+        assert_eq!(
+            wttr_day_night_temperature_label(&snapshot),
+            " 5C |  18C"
+        );
     }
 
     #[test]

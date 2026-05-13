@@ -404,7 +404,7 @@ Rules:
 - English and Polish should both be supportable by the presentation layer
 - Polish does not need to be the default, but the infrastructure should make it available
 - abbreviated metric rows may remain language-light, but any named weather condition should have a localized path
-- the compact widget now prefers a two-line condition header for longer localized states, a dedicated day/night temperature row rendered as two compact icon/value units (`8C 20C`), a wind row, and a precipitation row that disappears when there is no measurable precipitation
+- the compact widget now prefers a two-line condition header for longer localized states, a dedicated day/night temperature row rendered as two compact icon/value units (` 8C |  20C`), a wind row, and a precipitation row that disappears when there is no measurable precipitation
 - the compact wind row should use a direction-aware arrow glyph rather than a fixed up-arrow, so `N / NE / E / SE / S / SW / W / NW` families remain legible at a glance even in the narrow panel
 
 Recommended direction:

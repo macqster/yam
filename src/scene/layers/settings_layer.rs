@@ -13,6 +13,10 @@ impl Layer for SettingsLayer {
         400
     }
 
+    fn should_render(&self, ui: &UiState) -> bool {
+        ui.show_dev_surfaces() && ui.meta.settings_open
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
@@ -23,7 +27,7 @@ impl Layer for SettingsLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.show_dev_surfaces() || !ui.meta.settings_open {
+        if !self.should_render(ui) {
             return LayerOutput { grid, mask: None };
         }
 

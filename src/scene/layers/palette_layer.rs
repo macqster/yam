@@ -17,17 +17,21 @@ impl Layer for PaletteLayer {
         397
     }
 
+    fn should_render(&self, ui: &UiState) -> bool {
+        ui.show_dev_surfaces() && ui.meta.palette_open
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
         height: u16,
         _world: &WorldState,
-        ui: &UiState,
+        _ui: &UiState,
         _fonts: &FontRegistry,
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.show_dev_surfaces() || !ui.meta.palette_open {
+        if !self.should_render(_ui) {
             return LayerOutput { grid, mask: None };
         }
 

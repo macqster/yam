@@ -14,6 +14,10 @@ impl Layer for HotkeysLayer {
         390
     }
 
+    fn should_render(&self, ui: &UiState) -> bool {
+        ui.show_help_surface()
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
@@ -24,7 +28,7 @@ impl Layer for HotkeysLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.show_help_surface() {
+        if !self.should_render(ui) {
             return LayerOutput { grid, mask: None };
         }
 

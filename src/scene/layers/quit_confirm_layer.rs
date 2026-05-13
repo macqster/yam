@@ -13,17 +13,21 @@ impl Layer for QuitConfirmLayer {
         405
     }
 
+    fn should_render(&self, ui: &UiState) -> bool {
+        ui.quit_confirm_active()
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
         height: u16,
         _world: &WorldState,
-        ui: &UiState,
+        _ui: &UiState,
         _fonts: &FontRegistry,
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.quit_confirm_active() {
+        if !self.should_render(_ui) {
             return LayerOutput { grid, mask: None };
         }
 

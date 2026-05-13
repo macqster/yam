@@ -17,6 +17,10 @@ impl Layer for WeatherPopupLayer {
         398
     }
 
+    fn should_render(&self, ui: &UiState) -> bool {
+        ui.show_dev_surfaces() && ui.meta.weather_popup_open
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
@@ -27,7 +31,7 @@ impl Layer for WeatherPopupLayer {
         _ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if !ui.show_dev_surfaces() || !ui.meta.weather_popup_open {
+        if !self.should_render(ui) {
             return LayerOutput { grid, mask: None };
         }
 

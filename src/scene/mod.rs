@@ -31,6 +31,9 @@ pub trait Layer {
     fn is_field_layer(&self) -> bool {
         false
     }
+    fn should_render(&self, _ui: &UiState) -> bool {
+        true
+    }
     fn visible_during_loading(&self) -> bool {
         false
     }
@@ -74,7 +77,9 @@ impl Scene {
         let mut layers = self
             .layers
             .iter()
-            .filter(|layer| !ui.loading.active || layer.visible_during_loading())
+            .filter(|layer| {
+                (!ui.loading.active || layer.visible_during_loading()) && layer.should_render(ui)
+            })
             .collect::<Vec<_>>();
         layers.sort_by_key(|layer| layer.z_index());
         let mut outputs = Vec::with_capacity(layers.len());
@@ -216,6 +221,10 @@ mod tests {
     use ratatui::Terminal;
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
 
     // invariant: docs/scene-model.md#projection
     fn buffer_hash(buffer: &ratatui::buffer::Buffer) -> u64 {
@@ -496,6 +505,55 @@ mod tests {
 
         let buffer = terminal.backend().buffer();
         assert_eq!(buffer.content[0].symbol(), "U");
+    }
+
+    struct CountedHiddenLayer {
+        calls: Arc<AtomicUsize>,
+    }
+
+    impl Layer for CountedHiddenLayer {
+        fn z_index(&self) -> i32 {
+            200
+        }
+
+        fn should_render(&self, _ui: &UiState) -> bool {
+            false
+        }
+
+        fn render_to_grid(
+            &self,
+            width: u16,
+            height: u16,
+            _world: &WorldState,
+            _ui: &UiState,
+            _fonts: &FontRegistry,
+            _render_state: &RenderState,
+        ) -> LayerOutput {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            LayerOutput {
+                grid: Grid::new(width, height),
+                mask: None,
+            }
+        }
+    }
+
+    #[test]
+    fn hidden_layers_are_skipped_before_grid_rendering() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let layers: Vec<Box<dyn Layer>> = vec![Box::new(CountedHiddenLayer {
+            calls: Arc::clone(&calls),
+        })];
+        let scene = Scene::new(layers);
+        let mut terminal = Terminal::new(TestBackend::new(2, 1)).expect("terminal should init");
+        let world = WorldState::new();
+        let ui = UiState::new();
+        let fonts = FontRegistry::new();
+
+        terminal
+            .draw(|frame| scene.render(frame, &world, &ui, &fonts))
+            .expect("scene render should succeed");
+
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
     }
 
     #[test]

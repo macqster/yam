@@ -1,5 +1,5 @@
 use crate::core::world::{WorldKind, WorldState};
-use crate::render::compositor::{write_string, Grid};
+use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::{Layer, RenderState};
 use crate::theme::style as theme_style;
@@ -31,7 +31,7 @@ impl Layer for WorldLabelLayer {
         };
         let label_width = label.chars().count() as u16;
         let x = grid.width.saturating_sub(label_width) / 2;
-        write_string(grid, x, 0, label, theme_style::debug_text());
+        write_ascii_string(grid, x, 0, label, theme_style::debug_text());
 
         None
     }

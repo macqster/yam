@@ -130,6 +130,34 @@ pub fn write_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
     }
 }
 
+pub fn write_ascii_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
+    if !text.is_ascii() {
+        write_string(grid, x, y, text, style);
+        return;
+    }
+
+    if y >= grid.height || x >= grid.width {
+        return;
+    }
+
+    let available = (grid.width - x) as usize;
+    for (offset, byte) in text.as_bytes().iter().take(available).enumerate() {
+        let idx = grid.index(x + offset as u16, y);
+        let cell = &mut grid.cells[idx];
+        if *byte != b' ' {
+            cell.symbol = *byte as char;
+        }
+        if let Some(fg) = style.fg {
+            cell.style.fg = Some(fg);
+        }
+        if let Some(bg) = style.bg {
+            cell.style.bg = Some(bg);
+        }
+        cell.style.add_modifier |= style.add_modifier;
+        cell.style.sub_modifier |= style.sub_modifier;
+    }
+}
+
 pub fn merge_cell(base: &mut Cell, top: &Cell) {
     if top.symbol != ' ' {
         base.symbol = top.symbol;
@@ -311,5 +339,34 @@ mod tests {
         assert_eq!(grid.height, 2);
         assert_eq!(grid.cells.len(), 6);
         assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
+    }
+
+    #[test]
+    fn write_ascii_string_matches_space_and_style_contract() {
+        let mut grid = Grid::new(4, 1);
+        grid.cells[1].symbol = 'Z';
+
+        let style = Style::default().fg(Color::Green);
+        write_ascii_string(&mut grid, 0, 0, "A B", style);
+
+        assert_eq!(grid.cells[0].symbol, 'A');
+        assert_eq!(grid.cells[1].symbol, 'Z');
+        assert_eq!(grid.cells[2].symbol, 'B');
+        assert_eq!(grid.cells[0].style.fg, Some(Color::Green));
+        assert_eq!(grid.cells[1].style.fg, Some(Color::Green));
+        assert_eq!(grid.cells[2].style.fg, Some(Color::Green));
+    }
+
+    #[test]
+    fn write_ascii_string_falls_back_for_non_ascii_text() {
+        let mut grid = Grid::new(4, 1);
+        let style = Style::default().fg(Color::Blue);
+
+        write_ascii_string(&mut grid, 0, 0, "zaż", style);
+
+        assert_eq!(grid.cells[0].symbol, 'z');
+        assert_eq!(grid.cells[1].symbol, 'a');
+        assert_eq!(grid.cells[2].symbol, 'ż');
+        assert_eq!(grid.cells[2].style.fg, Some(Color::Blue));
     }
 }

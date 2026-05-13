@@ -5,7 +5,7 @@ use crate::core::spatial::SpatialGuideIndex;
 use crate::core::world::WorldState;
 use crate::core::{flora::BORDER_VINE_GUIDE_SET_LABEL, guide::GuideState};
 use crate::render::compositor::Cell;
-use crate::render::compositor::{write_string, Grid};
+use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::guide::draw_guides;
 use crate::scene::coords::{world_to_screen, WorldPos};
@@ -235,7 +235,7 @@ impl Layer for DebugLayer {
                 },
             );
             for (row, line) in lines.iter().enumerate() {
-                write_string(
+                write_ascii_string(
                     grid,
                     panel_x,
                     panel_y + row as u16,
@@ -390,7 +390,7 @@ fn draw_debug_tabs(grid: &mut Grid, x: u16, y: u16, active: DebugPanelTab) {
         } else {
             theme_style::settings_tab_inactive()
         };
-        write_string(grid, cursor, y, &label, style);
+        write_ascii_string(grid, cursor, y, &label, style);
         cursor = cursor.saturating_add(label.chars().count() as u16 + 1);
     }
 }

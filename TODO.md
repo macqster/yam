@@ -18,7 +18,7 @@ Coordination contract:
 - [inspect] define the startup-performance plan around the hero pipeline explicitly: move GIF decode + temp-frame + `chafa` work toward an offline compiler / cached `HeroFrameSet` path instead of paying that cost inside `Hero::new()`.
 - [verify] validate the first cache-first hero startup path against real install/update flows under the installed wrapper path, including first-run cache generation timing and whether shipping a prebuilt cache should become part of release hygiene.
 - [inspect] continue the render-loop efficiency pass after the current scratch-grid adoption batch by evaluating whether any remaining hot draw paths deserve cheaper specialized helpers instead of more general `Grid`/text work.
-- [inspect] evaluate one fast ASCII-only compositor path for borders/footer/modal chrome so the general grapheme-aware write path is reserved for content that actually needs it.
+- [inspect] decide whether the new fast ASCII-only compositor path should spread any further than the current footer/debug/world-label chrome, or whether profiling says the remaining general text writes are already cheap enough.
 - [inspect] decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
 - [inspect] run one small dev-mode UI cleanup batch focused on role tightening only: keep `calendar (reserved)` demoted outside the lightweight move/help surfaces, and keep hotkeys/move/footer vocabulary cleanly separated.
 - [verify] keep dev-UI docs aligned with the live code path: `ui` tab naming, dev-only debug gating, `Tab`/arrow move grammar, and the frozen manual boot seed `(-60, -15)`.

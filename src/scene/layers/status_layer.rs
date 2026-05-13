@@ -1,5 +1,5 @@
 use crate::core::world::WorldState;
-use crate::render::compositor::{write_string, Grid};
+use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::{Layer, RenderState};
 use crate::theme::style as theme_style;
@@ -34,12 +34,12 @@ impl Layer for StatusLayer {
             " [q]uit  •  [d]ev"
         };
         let footer_style = theme_style::footer_text();
-        write_string(grid, 0, footer_y, left_text, footer_style);
+        write_ascii_string(grid, 0, footer_y, left_text, footer_style);
         if !ui.loading.active {
             let right_text = build_status_label();
             let stamp_width = right_text.chars().count() as u16 + 1;
             let x = grid.width.saturating_sub(stamp_width);
-            write_string(grid, x, footer_y, &right_text, footer_style);
+            write_ascii_string(grid, x, footer_y, &right_text, footer_style);
         }
         None
     }

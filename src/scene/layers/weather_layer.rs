@@ -13,26 +13,22 @@ impl Layer for WeatherLayer {
         100
     }
 
-    fn render_to_grid(
+    fn render_into_grid(
         &self,
-        width: u16,
-        height: u16,
+        grid: &mut Grid,
         world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
-    ) -> LayerOutput {
-        let mut grid = Grid::new(width, height);
+    ) -> Option<crate::render::mask::Mask> {
         match world.kind {
             WorldKind::MainScene => {
-                let Some(snapshot) = ui.weather_snapshot.as_ref() else {
-                    return LayerOutput { grid, mask: None };
-                };
+                let snapshot = ui.weather_snapshot.as_ref()?;
                 let lines = compact_widget_lines(snapshot, ui.weather_locale, ui.weather_layout);
                 let screen_pos = ctx.weather_screen();
-                if is_visible(screen_pos, width, height, &lines) {
+                if is_visible(screen_pos, grid.width, grid.height, &lines) {
                     write_lines(
-                        &mut grid,
+                        grid,
                         screen_pos.x.max(0) as u16,
                         screen_pos.y.max(0) as u16,
                         &lines,
@@ -43,7 +39,21 @@ impl Layer for WeatherLayer {
             WorldKind::Boot => {}
         }
 
-        LayerOutput { grid, mask: None }
+        None
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        LayerOutput { grid, mask }
     }
 }
 

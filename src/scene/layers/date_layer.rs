@@ -17,25 +17,23 @@ impl Layer for DateLayer {
         100
     }
 
-    fn render_to_grid(
+    fn render_into_grid(
         &self,
-        width: u16,
-        height: u16,
+        grid: &mut Grid,
         world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
-    ) -> LayerOutput {
-        let mut grid = Grid::new(width, height);
+    ) -> Option<crate::render::mask::Mask> {
         if world.kind != WorldKind::MainScene {
-            return LayerOutput { grid, mask: None };
+            return None;
         }
 
         let text = polish_date_label(Local::now().date_naive());
         let screen_pos = centered_date_screen_pos(&text, ui, ctx);
-        if is_visible(screen_pos, width, height, &text) {
+        if is_visible(screen_pos, grid.width, grid.height, &text) {
             write_string(
-                &mut grid,
+                grid,
                 screen_pos.x.max(0) as u16,
                 screen_pos.y.max(0) as u16,
                 &text,
@@ -43,7 +41,21 @@ impl Layer for DateLayer {
             );
         }
 
-        LayerOutput { grid, mask: None }
+        None
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        LayerOutput { grid, mask }
     }
 }
 

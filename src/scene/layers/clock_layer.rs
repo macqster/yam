@@ -14,6 +14,33 @@ impl Layer for ClockLayer {
         100
     }
 
+    fn render_into_grid(
+        &self,
+        grid: &mut Grid,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> Option<crate::render::mask::Mask> {
+        if world.kind != WorldKind::MainScene {
+            return None;
+        }
+        let lines = clock_lines(ui, fonts);
+        let screen_pos = ctx.clock_screen();
+        if is_visible(screen_pos, grid.width, grid.height, &lines) {
+            for (i, line) in lines.iter().enumerate() {
+                write_string(
+                    grid,
+                    screen_pos.x.max(0) as u16,
+                    screen_pos.y.max(0) as u16 + i as u16,
+                    line,
+                    theme_style::clock_text(),
+                );
+            }
+        }
+        None
+    }
+
     fn render_to_grid(
         &self,
         width: u16,
@@ -24,23 +51,8 @@ impl Layer for ClockLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        if world.kind != WorldKind::MainScene {
-            return LayerOutput { grid, mask: None };
-        }
-        let lines = clock_lines(ui, fonts);
-        let screen_pos = ctx.clock_screen();
-        if is_visible(screen_pos, width, height, &lines) {
-            for (i, line) in lines.iter().enumerate() {
-                write_string(
-                    &mut grid,
-                    screen_pos.x.max(0) as u16,
-                    screen_pos.y.max(0) as u16 + i as u16,
-                    line,
-                    theme_style::clock_text(),
-                );
-            }
-        }
-        LayerOutput { grid, mask: None }
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        LayerOutput { grid, mask }
     }
 }
 

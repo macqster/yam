@@ -15,8 +15,8 @@ Coordination contract:
 ## Immediate Maintenance Batch
 
 - [inspect] decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
-- [inspect] run one small dev-mode UI cleanup batch focused on role tightening only: trim default debug-panel density, reduce visible `calendar (reserved)` exposure, and keep hotkeys/move/footer vocabulary cleanly separated.
-- [verify] keep dev-UI docs aligned with the live code path: `ui` tab naming, dev-only debug gating, `1/2/3/4/5` move grammar, and the frozen manual boot seed `(-60, -15)`.
+- [inspect] run one small dev-mode UI cleanup batch focused on role tightening only: keep `calendar (reserved)` demoted outside the lightweight move/help surfaces, and keep hotkeys/move/footer vocabulary cleanly separated.
+- [verify] keep dev-UI docs aligned with the live code path: `ui` tab naming, dev-only debug gating, `Tab`/arrow move grammar, and the frozen manual boot seed `(-60, -15)`.
 - [verify] keep `cargo fmt && bash scripts/check.sh` and full `cargo test` green together while maintenance continues.
 
 ## 1. Scene Model and Presentation Contract
@@ -159,7 +159,8 @@ Coordination contract:
 - [verify] frame-level render snapshots keep the footer/dev hint and other visible mode labels pinned to their current contract.
 - [verify] dev-mode footer stays compact while the `[?] help` popup carries the longer developer control list.
 - [verify] the dev-only pointer probe stays discoverable through the help popup and remains a blinking world-space marker with absolute-position reporting in the debug panel.
-- [verify] move mode keeps entity movement behind the `[m]ove` popup, with `1/2/3/4/5` selecting targets and `hjkl` moving only the active target.
+- [verify] the debug info panel stays grouped by lightweight tabs instead of drifting back toward one long mixed-purpose fact dump.
+- [verify] move mode keeps entity movement behind the `[m]ove` strip, with `Tab` / `Shift+Tab` selecting targets and arrow keys moving only the active target.
 - [verify] the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/ui/features/gif/theme tabs staying presentation-oriented.
 - [verify] persisted camera/composition tweaks stay explicit: live dev edits may mark saved state dirty, but quitting without dirty changes remains immediate while dirty quits route through the `[s]ave and quit` / `[d]iscard and quit` / `Esc cancel` confirmation surface.
 - [inspect] introduce a dedicated FIGlet/font subsystem for YAM text-art surfaces instead of continuing to hand-maintain one-off ASCII literals; use the `sigye` study in `docs/reference-sigye.md` as the starter reference.

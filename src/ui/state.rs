@@ -37,6 +37,7 @@ pub struct MetaState {
     pub world_datum_visible: bool,
     pub sliders_visible: bool,
     pub debug_info_panel_visible: bool,
+    pub debug_panel_tab: DebugPanelTab,
     pub settings_tab: SettingsTab,
     pub settings_cursor: SettingsCursor,
     pub move_target: MoveTarget,
@@ -60,6 +61,7 @@ impl MetaState {
             world_datum_visible: true,
             sliders_visible: true,
             debug_info_panel_visible: true,
+            debug_panel_tab: DebugPanelTab::default(),
             settings_tab: SettingsTab::default(),
             settings_cursor: SettingsCursor::default(),
             move_target: MoveTarget::default(),
@@ -128,10 +130,6 @@ impl MetaState {
             self.close_dev_overlays();
             self.pointer_probe_open = true;
         }
-    }
-
-    pub fn select_move_target(&mut self, target: MoveTarget) {
-        self.move_target = target;
     }
 
     pub fn toggle_vines_visible(&mut self) {
@@ -211,6 +209,64 @@ impl MoveTarget {
             MoveTarget::Weather => "weather",
             MoveTarget::Date => "date",
             MoveTarget::Calendar => "calendar",
+        }
+    }
+
+    pub fn next(self) -> Self {
+        match self {
+            MoveTarget::Hero => MoveTarget::Clock,
+            MoveTarget::Clock => MoveTarget::Weather,
+            MoveTarget::Weather => MoveTarget::Date,
+            MoveTarget::Date => MoveTarget::Hero,
+            MoveTarget::Calendar => MoveTarget::Hero,
+        }
+    }
+
+    pub fn prev(self) -> Self {
+        match self {
+            MoveTarget::Hero => MoveTarget::Date,
+            MoveTarget::Clock => MoveTarget::Hero,
+            MoveTarget::Weather => MoveTarget::Clock,
+            MoveTarget::Date => MoveTarget::Weather,
+            MoveTarget::Calendar => MoveTarget::Date,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum DebugPanelTab {
+    #[default]
+    Runtime,
+    Hero,
+    Companions,
+    Vines,
+}
+
+impl DebugPanelTab {
+    pub fn next(self) -> Self {
+        match self {
+            DebugPanelTab::Runtime => DebugPanelTab::Hero,
+            DebugPanelTab::Hero => DebugPanelTab::Companions,
+            DebugPanelTab::Companions => DebugPanelTab::Vines,
+            DebugPanelTab::Vines => DebugPanelTab::Runtime,
+        }
+    }
+
+    pub fn prev(self) -> Self {
+        match self {
+            DebugPanelTab::Runtime => DebugPanelTab::Vines,
+            DebugPanelTab::Hero => DebugPanelTab::Runtime,
+            DebugPanelTab::Companions => DebugPanelTab::Hero,
+            DebugPanelTab::Vines => DebugPanelTab::Companions,
+        }
+    }
+
+    pub fn title(self) -> &'static str {
+        match self {
+            DebugPanelTab::Runtime => "runtime",
+            DebugPanelTab::Hero => "hero",
+            DebugPanelTab::Companions => "companions",
+            DebugPanelTab::Vines => "vines",
         }
     }
 }
@@ -821,8 +877,27 @@ impl UiState {
             && !self.meta.weather_popup_open
     }
 
+    pub fn next_move_target(&mut self) {
+        self.meta.move_target = self.meta.move_target.next();
+    }
+
+    pub fn prev_move_target(&mut self) {
+        self.meta.move_target = self.meta.move_target.prev();
+    }
+
     pub fn settings_tab_switch_allowed(&self) -> bool {
         self.meta.dev_mode && self.meta.settings_open && !self.settings_edit.active
+    }
+
+    pub fn debug_panel_tab_switch_allowed(&self) -> bool {
+        self.show_dev_surfaces()
+            && self.meta.debug_info_panel_visible
+            && !self.meta.hotkeys_open
+            && !self.meta.move_mode_open
+            && !self.meta.palette_open
+            && !self.meta.weather_popup_open
+            && !self.meta.settings_open
+            && !self.quit_confirm_open
     }
 
     pub fn settings_edit_mode_active(&self) -> bool {
@@ -915,10 +990,18 @@ impl UiState {
         self.settings_edit.clear();
     }
 
+    pub fn next_debug_panel_tab(&mut self) {
+        self.meta.debug_panel_tab = self.meta.debug_panel_tab.next();
+    }
+
     pub fn prev_settings_tab(&mut self) {
         self.meta.prev_settings_tab();
         self.clamp_settings_cursor_to_world();
         self.settings_edit.clear();
+    }
+
+    pub fn prev_debug_panel_tab(&mut self) {
+        self.meta.debug_panel_tab = self.meta.debug_panel_tab.prev();
     }
 
     pub fn select_prev_settings_row(&mut self) {
@@ -1032,22 +1115,6 @@ impl UiState {
 
     pub fn close_move_mode(&mut self) {
         self.meta.move_mode_open = false;
-    }
-
-    pub fn handle_move_mode_key(&mut self, key: char) -> Result<(), Box<dyn std::error::Error>> {
-        match key {
-            '1' => self.meta.select_move_target(MoveTarget::Hero),
-            '2' => self.meta.select_move_target(MoveTarget::Clock),
-            '3' => self.meta.select_move_target(MoveTarget::Weather),
-            '4' => self.meta.select_move_target(MoveTarget::Date),
-            '5' => self.meta.select_move_target(MoveTarget::Calendar),
-            'h' => self.move_selected_target_left()?,
-            'j' => self.move_selected_target_down()?,
-            'k' => self.move_selected_target_up()?,
-            'l' => self.move_selected_target_right()?,
-            _ => {}
-        }
-        Ok(())
     }
 
     pub fn close_settings(&mut self) {
@@ -1526,9 +1593,9 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        BootLoadingPhase, FeatureVisibilityMode, LoadingMode, LoadingState, MetaState, MoveTarget,
-        SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState, UiStateSnapshot,
-        WorldKindSnapshot,
+        BootLoadingPhase, DebugPanelTab, FeatureVisibilityMode, LoadingMode, LoadingState,
+        MetaState, MoveTarget, SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState,
+        UiStateSnapshot, WorldKindSnapshot,
     };
     use crate::core::world::WorldKind;
     use crate::scene::coords::WorldPos;
@@ -1813,6 +1880,24 @@ mod tests {
     }
 
     #[test]
+    fn debug_panel_tab_switching_is_available_only_when_settings_are_closed() {
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+
+        assert!(ui.debug_panel_tab_switch_allowed());
+        assert_eq!(ui.meta.debug_panel_tab, DebugPanelTab::Runtime);
+
+        ui.next_debug_panel_tab();
+        assert_eq!(ui.meta.debug_panel_tab, DebugPanelTab::Hero);
+
+        ui.prev_debug_panel_tab();
+        assert_eq!(ui.meta.debug_panel_tab, DebugPanelTab::Runtime);
+
+        ui.meta.settings_open = true;
+        assert!(!ui.debug_panel_tab_switch_allowed());
+    }
+
+    #[test]
     fn clean_state_quit_returns_immediately_without_modal() {
         let mut ui = UiState::new();
 
@@ -1909,7 +1994,7 @@ mod tests {
         let baseline = ui.hero_scene_attachment();
 
         ui.toggle_move_mode();
-        ui.meta.select_move_target(MoveTarget::Clock);
+        ui.meta.move_target = MoveTarget::Clock;
 
         let after_select = ui.hero_scene_attachment();
 
@@ -2046,6 +2131,7 @@ mod tests {
                 world_datum_visible: false,
                 sliders_visible: false,
                 debug_info_panel_visible: true,
+                debug_panel_tab: DebugPanelTab::Hero,
                 settings_tab: SettingsTab::Theme,
                 settings_cursor: SettingsCursor {
                     positions: 1,
@@ -2096,6 +2182,7 @@ mod tests {
         assert!(!round_trip.meta.world_datum_visible);
         assert!(!round_trip.meta.sliders_visible);
         assert!(round_trip.meta.debug_info_panel_visible);
+        assert_eq!(round_trip.meta.debug_panel_tab, DebugPanelTab::Hero);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
         assert_eq!(round_trip.meta.settings_cursor.positions, 1);
         assert_eq!(round_trip.meta.settings_cursor.widgets, 2);
@@ -2245,7 +2332,7 @@ mod tests {
         ui.offsets.camera_y = 0;
         ui.camera.y = 0;
 
-        ui.meta.select_move_target(MoveTarget::Hero);
+        ui.meta.move_target = MoveTarget::Hero;
         ui.move_selected_target_up()
             .expect("hero move should succeed");
         assert_eq!(ui.offsets.hero_dy, 1);
@@ -2253,7 +2340,7 @@ mod tests {
             .expect("hero move should succeed");
         assert_eq!(ui.offsets.hero_dy, 0);
 
-        ui.meta.select_move_target(MoveTarget::Clock);
+        ui.meta.move_target = MoveTarget::Clock;
         ui.move_selected_target_up()
             .expect("clock move should succeed");
         assert_eq!(ui.offsets.clock_dy, 1);
@@ -2261,7 +2348,7 @@ mod tests {
             .expect("clock move should succeed");
         assert_eq!(ui.offsets.clock_dy, 0);
 
-        ui.meta.select_move_target(MoveTarget::Date);
+        ui.meta.move_target = MoveTarget::Date;
         ui.move_selected_target_up()
             .expect("date move should succeed");
         assert_eq!(ui.offsets.date_dy, 1);
@@ -2269,7 +2356,7 @@ mod tests {
             .expect("date move should succeed");
         assert_eq!(ui.offsets.date_dy, 0);
 
-        ui.meta.select_move_target(MoveTarget::Calendar);
+        ui.meta.move_target = MoveTarget::Calendar;
         ui.move_selected_target_up()
             .expect("calendar move should succeed");
         assert_eq!(ui.offsets.calendar_dy, 1);

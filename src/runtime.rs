@@ -152,6 +152,9 @@ pub fn run(
                     KeyCode::Left if ui_state.settings_edit_active() => {
                         ui_state.toggle_settings_edit_field();
                     }
+                    KeyCode::Left if ui_state.move_mode_active() => {
+                        ui_state.move_selected_target_left()?;
+                    }
                     KeyCode::Left if ui_state.dev_free_roam() => {
                         if ui_state.pointer_probe_active() {
                             ui_state.move_pointer_left();
@@ -161,6 +164,9 @@ pub fn run(
                     }
                     KeyCode::Right if ui_state.settings_edit_active() => {
                         ui_state.toggle_settings_edit_field();
+                    }
+                    KeyCode::Right if ui_state.move_mode_active() => {
+                        ui_state.move_selected_target_right()?;
                     }
                     KeyCode::Right if ui_state.dev_free_roam() => {
                         if ui_state.pointer_probe_active() {
@@ -172,8 +178,14 @@ pub fn run(
                     KeyCode::Up if ui_state.settings_navigation_active() => {
                         ui_state.select_prev_settings_row();
                     }
+                    KeyCode::Up if ui_state.move_mode_active() => {
+                        ui_state.move_selected_target_up()?;
+                    }
                     KeyCode::Down if ui_state.settings_navigation_active() => {
                         ui_state.select_next_settings_row();
+                    }
+                    KeyCode::Down if ui_state.move_mode_active() => {
+                        ui_state.move_selected_target_down()?;
                     }
                     KeyCode::Up if ui_state.dev_free_roam() => {
                         if ui_state.pointer_probe_active() {
@@ -192,10 +204,14 @@ pub fn run(
                     KeyCode::Tab if ui_state.settings_tab_switch_allowed() => {
                         ui_state.next_settings_tab();
                     }
+                    KeyCode::Tab if ui_state.move_mode_active() => {
+                        ui_state.next_move_target();
+                    }
+                    KeyCode::Tab if ui_state.debug_panel_tab_switch_allowed() => {
+                        ui_state.next_debug_panel_tab();
+                    }
                     KeyCode::Char(c) => {
-                        if ui_state.move_mode_active() {
-                            ui_state.handle_move_mode_key(c)?;
-                        } else if ui_state.settings_edit_active() {
+                        if ui_state.settings_edit_active() {
                             ui_state.settings_edit_insert_char(c);
                         } else if ui_state.dev_free_roam() {
                             let is_shift = modifiers.contains(KeyModifiers::SHIFT);
@@ -218,6 +234,12 @@ pub fn run(
                     }
                     KeyCode::BackTab if ui_state.settings_tab_switch_allowed() => {
                         ui_state.prev_settings_tab();
+                    }
+                    KeyCode::BackTab if ui_state.move_mode_active() => {
+                        ui_state.prev_move_target();
+                    }
+                    KeyCode::BackTab if ui_state.debug_panel_tab_switch_allowed() => {
+                        ui_state.prev_debug_panel_tab();
                     }
                     KeyCode::Backspace if ui_state.settings_edit_mode_active() => {
                         ui_state.settings_edit_backspace();

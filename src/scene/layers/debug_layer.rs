@@ -3,6 +3,7 @@ use crate::core::guide_line::{classify_line, LineFamily, LinePoint};
 use crate::core::guide_line::{rasterize_line, soft_line_glyph};
 use crate::core::spatial::SpatialGuideIndex;
 use crate::core::world::WorldState;
+use crate::core::{flora::BORDER_VINE_GUIDE_SET_LABEL, guide::GuideState};
 use crate::render::compositor::Cell;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
@@ -10,7 +11,7 @@ use crate::render::guide::draw_guides;
 use crate::scene::coords::{world_to_screen, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
-use crate::ui::state::UiState;
+use crate::ui::state::{DebugPanelTab, UiState};
 use ratatui::prelude::*;
 use ratatui::{
     buffer::Buffer,
@@ -41,15 +42,10 @@ impl Layer for DebugLayer {
         if ui.meta.sliders_visible {
             draw_camera_scrollbars(&mut grid, width, height, ctx);
         }
-        draw_guides(
-            &mut grid,
-            SpatialGuideIndex::new(&world.guides),
-            ctx.hud.camera.x,
-            ctx.hud.camera.y,
-            ctx.hud.camera.height,
-        );
+        draw_visible_guides(&mut grid, world, ui, ctx);
 
         let panel_x = 3u16;
+        let tabs_y = 1u16;
         let panel_y = 2u16;
         let cam_x = ctx.hud.camera.x;
         let cam_y = ctx.hud.camera.y;
@@ -196,67 +192,50 @@ impl Layer for DebugLayer {
             };
             format!("Soft band: {} / {:?}", family, key.band)
         };
-        let lines = if main_scene {
-            vec![
-                format!("FPS: {:.1}", ui.fps),
-                format!("Hero FPS: {:.1}", ui.offsets.hero_fps),
-                format!("Frame: {} / {}", hero.current_frame, hero.frames.len()),
-                format!("Playing: {}", hero.playing),
-                format!("World: {}", world.kind.title()),
-                camera_mode.to_string(),
-                move_mode,
-                if ui.meta.pointer_probe_open {
-                    format!("Pointer: on ({}, {})", pointer_world.x, pointer_world.y)
-                } else {
-                    "Pointer: off".to_string()
-                },
-                format!("Camera: ({}, {})", cam_x, cam_y),
-                format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
-                format!("Hero world: ({}, {})", hero_world.x, hero_world.y),
-                format!("Hero screen: ({}, {})", hero_screen.x, hero_screen.y),
-                format!("Hero anchor visible: {}", hero_visible),
-                format!(
-                    "Hero offset: ({}, {})",
-                    ui.offsets.hero_dx, ui.offsets.hero_dy
-                ),
-                soft_band_line,
-                format!("Clock world: ({}, {})", clock_world.x, clock_world.y),
-                format!("Clock screen: ({}, {})", clock_screen.x, clock_screen.y),
-                format!("Clock visible: {}", clock_visible),
-                format!("Weather world: ({}, {})", weather_world.x, weather_world.y),
-                format!(
-                    "Weather screen: ({}, {})",
-                    weather_screen.x, weather_screen.y
-                ),
-                format!("Weather visible: {}", weather_visible),
-                format!("Date world: ({}, {})", date_world.x, date_world.y),
-                format!("Date screen: ({}, {})", date_screen.x, date_screen.y),
-                format!("Date visible: {}", date_visible),
-                vine_line,
-                vine_axis_line,
-                vine_tip_line,
-                vine_guide_line,
-            ]
-        } else {
-            vec![
-                format!("FPS: {:.1}", ui.fps),
-                format!("World: {}", world.kind.title()),
-                camera_mode.to_string(),
-                move_mode,
-                if ui.meta.pointer_probe_open {
-                    format!("Pointer: on ({}, {})", pointer_world.x, pointer_world.y)
-                } else {
-                    "Pointer: off".to_string()
-                },
-                format!("Pointer visible: {}", pointer_visible),
-                format!("Camera: ({}, {})", cam_x, cam_y),
-                format!("Camera Δ: ({}, {})", cam_dx, cam_dy),
-                soft_band_line,
-                format!("Guides: {}", world.guides.guides.len()),
-                format!("Vines: {}", vine_count),
-            ]
-        };
         if ui.meta.debug_info_panel_visible {
+            draw_debug_tabs(&mut grid, panel_x, tabs_y, ui.meta.debug_panel_tab);
+            let lines = debug_panel_lines(
+                ui.meta.debug_panel_tab,
+                main_scene,
+                DebugPanelFacts {
+                    fps: ui.fps,
+                    hero_fps: ui.offsets.hero_fps,
+                    current_frame: hero.current_frame,
+                    frame_count: hero.frames.len(),
+                    playing: hero.playing,
+                    world_title: world.kind.title(),
+                    camera_mode,
+                    move_mode: &move_mode,
+                    pointer_probe_open: ui.meta.pointer_probe_open,
+                    pointer_world,
+                    pointer_visible,
+                    camera_x: cam_x,
+                    camera_y: cam_y,
+                    camera_dx: cam_dx,
+                    camera_dy: cam_dy,
+                    hero_world,
+                    hero_screen,
+                    hero_visible,
+                    hero_dx: ui.offsets.hero_dx,
+                    hero_dy: ui.offsets.hero_dy,
+                    soft_band_line: &soft_band_line,
+                    clock_world,
+                    clock_screen,
+                    clock_visible,
+                    weather_world,
+                    weather_screen,
+                    weather_visible,
+                    date_world,
+                    date_screen,
+                    date_visible,
+                    vine_line: &vine_line,
+                    vine_axis_line: &vine_axis_line,
+                    vine_tip_line: &vine_tip_line,
+                    vine_guide_line: &vine_guide_line,
+                    guide_count: world.guides.guides.len(),
+                    vine_count,
+                },
+            );
             for (row, line) in lines.iter().enumerate() {
                 write_string(
                     &mut grid,
@@ -302,6 +281,219 @@ impl Layer for DebugLayer {
         }
         draw_pointer_probe(&mut grid, pointer_screen, pointer_visible);
         LayerOutput { grid, mask: None }
+    }
+}
+
+fn draw_visible_guides(grid: &mut Grid, world: &WorldState, ui: &UiState, ctx: &RenderState) {
+    if ui.meta.vines_visible {
+        draw_guides(
+            grid,
+            SpatialGuideIndex::new(&world.guides),
+            ctx.hud.camera.x,
+            ctx.hud.camera.y,
+            ctx.hud.camera.height,
+        );
+        return;
+    }
+
+    let mut visible_guides = world.guides.clone();
+    suppress_vine_guides(&mut visible_guides);
+    draw_guides(
+        grid,
+        SpatialGuideIndex::new(&visible_guides),
+        ctx.hud.camera.x,
+        ctx.hud.camera.y,
+        ctx.hud.camera.height,
+    );
+}
+
+fn suppress_vine_guides(guides: &mut GuideState) {
+    let vine_guide_ids = guides
+        .guide_set(BORDER_VINE_GUIDE_SET_LABEL)
+        .map(|set| set.guides.clone())
+        .unwrap_or_default();
+    for guide in &mut guides.guides {
+        if vine_guide_ids.contains(&guide.id) {
+            guide.enabled = false;
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct DebugPanelFacts<'a> {
+    fps: f64,
+    hero_fps: f32,
+    current_frame: usize,
+    frame_count: usize,
+    playing: bool,
+    world_title: &'a str,
+    camera_mode: &'a str,
+    move_mode: &'a str,
+    pointer_probe_open: bool,
+    pointer_world: WorldPos,
+    pointer_visible: bool,
+    camera_x: i32,
+    camera_y: i32,
+    camera_dx: i32,
+    camera_dy: i32,
+    hero_world: WorldPos,
+    hero_screen: WorldPos,
+    hero_visible: bool,
+    hero_dx: i32,
+    hero_dy: i32,
+    soft_band_line: &'a str,
+    clock_world: WorldPos,
+    clock_screen: WorldPos,
+    clock_visible: bool,
+    weather_world: WorldPos,
+    weather_screen: WorldPos,
+    weather_visible: bool,
+    date_world: WorldPos,
+    date_screen: WorldPos,
+    date_visible: bool,
+    vine_line: &'a str,
+    vine_axis_line: &'a str,
+    vine_tip_line: &'a str,
+    vine_guide_line: &'a str,
+    guide_count: usize,
+    vine_count: usize,
+}
+
+fn draw_debug_tabs(grid: &mut Grid, x: u16, y: u16, active: DebugPanelTab) {
+    let tabs = [
+        DebugPanelTab::Runtime,
+        DebugPanelTab::Hero,
+        DebugPanelTab::Companions,
+        DebugPanelTab::Vines,
+    ];
+    let mut cursor = x;
+    for tab in tabs {
+        let label = if tab == active {
+            format!("[{}]", tab.title())
+        } else {
+            format!(" {} ", tab.title())
+        };
+        let style = if tab == active {
+            theme_style::settings_tab_active()
+        } else {
+            theme_style::settings_tab_inactive()
+        };
+        write_string(grid, cursor, y, &label, style);
+        cursor = cursor.saturating_add(label.chars().count() as u16 + 1);
+    }
+}
+
+fn debug_panel_lines(
+    tab: DebugPanelTab,
+    main_scene: bool,
+    facts: DebugPanelFacts<'_>,
+) -> Vec<String> {
+    match tab {
+        DebugPanelTab::Runtime => {
+            let mut lines = vec![format!("FPS: {:.1}", facts.fps)];
+            if main_scene {
+                lines.extend([
+                    format!("Hero FPS: {:.1}", facts.hero_fps),
+                    format!("Frame: {} / {}", facts.current_frame, facts.frame_count),
+                    format!("Playing: {}", facts.playing),
+                ]);
+            }
+            lines.extend([
+                format!("World: {}", facts.world_title),
+                facts.camera_mode.to_string(),
+                facts.move_mode.to_string(),
+            ]);
+            if facts.pointer_probe_open {
+                lines.push(format!(
+                    "Pointer: on ({}, {})",
+                    facts.pointer_world.x, facts.pointer_world.y
+                ));
+            } else {
+                lines.push("Pointer: off".to_string());
+            }
+            if !main_scene {
+                lines.push(format!("Pointer visible: {}", facts.pointer_visible));
+            }
+            lines
+        }
+        DebugPanelTab::Hero => {
+            let mut lines = vec![
+                format!("Camera: ({}, {})", facts.camera_x, facts.camera_y),
+                format!("Camera Δ: ({}, {})", facts.camera_dx, facts.camera_dy),
+                facts.soft_band_line.to_string(),
+            ];
+            if main_scene {
+                lines.extend([
+                    format!(
+                        "Hero world: ({}, {})",
+                        facts.hero_world.x, facts.hero_world.y
+                    ),
+                    format!(
+                        "Hero screen: ({}, {})",
+                        facts.hero_screen.x, facts.hero_screen.y
+                    ),
+                    format!("Hero anchor visible: {}", facts.hero_visible),
+                    format!("Hero offset: ({}, {})", facts.hero_dx, facts.hero_dy),
+                ]);
+            }
+            lines
+        }
+        DebugPanelTab::Companions => {
+            if main_scene {
+                vec![
+                    format!(
+                        "Clock world: ({}, {})",
+                        facts.clock_world.x, facts.clock_world.y
+                    ),
+                    format!(
+                        "Clock screen: ({}, {})",
+                        facts.clock_screen.x, facts.clock_screen.y
+                    ),
+                    format!("Clock visible: {}", facts.clock_visible),
+                    format!(
+                        "Weather world: ({}, {})",
+                        facts.weather_world.x, facts.weather_world.y
+                    ),
+                    format!(
+                        "Weather screen: ({}, {})",
+                        facts.weather_screen.x, facts.weather_screen.y
+                    ),
+                    format!("Weather visible: {}", facts.weather_visible),
+                    format!(
+                        "Date world: ({}, {})",
+                        facts.date_world.x, facts.date_world.y
+                    ),
+                    format!(
+                        "Date screen: ({}, {})",
+                        facts.date_screen.x, facts.date_screen.y
+                    ),
+                    format!("Date visible: {}", facts.date_visible),
+                ]
+            } else {
+                vec![
+                    "Companions: main-scene only".to_string(),
+                    format!("World: {}", facts.world_title),
+                    format!("Pointer visible: {}", facts.pointer_visible),
+                ]
+            }
+        }
+        DebugPanelTab::Vines => {
+            let mut lines = vec![facts.soft_band_line.to_string()];
+            if main_scene {
+                lines.extend([
+                    facts.vine_line.to_string(),
+                    facts.vine_axis_line.to_string(),
+                    facts.vine_tip_line.to_string(),
+                    facts.vine_guide_line.to_string(),
+                ]);
+            } else {
+                lines.extend([
+                    format!("Guides: {}", facts.guide_count),
+                    format!("Vines: {}", facts.vine_count),
+                ]);
+            }
+            lines
+        }
     }
 }
 
@@ -643,6 +835,7 @@ mod tests {
     use crate::scene::Layer;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
     use crate::theme::palette;
+    use crate::ui::state::DebugPanelTab;
     use ratatui::prelude::Rect;
 
     fn world_frame() -> WorldFrame {
@@ -804,7 +997,7 @@ mod tests {
     }
 
     #[test]
-    fn debug_panel_stays_compact_and_focuses_on_live_facts() {
+    fn debug_panel_defaults_to_runtime_tab() {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::new();
         let fonts = crate::render::fonts::FontRegistry::new();
@@ -818,25 +1011,69 @@ mod tests {
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
+        assert!(text.contains("[runtime]"));
+        assert!(text.contains(" hero "));
+        assert!(text.contains(" companions "));
+        assert!(text.contains(" vines "));
         assert!(text.contains("Camera mode: follow-hero"));
         assert!(text.contains("Move mode: off (hero)"));
         assert!(text.contains("Pointer: on (0, 0)"));
-        assert!(text.contains("Hero world:"));
-        assert!(text.contains("Hero screen:"));
-        assert!(text.contains("Clock world:"));
-        assert!(text.contains("Clock screen:"));
-        assert!(text.contains("Weather world:"));
-        assert!(text.contains("Weather screen:"));
-        assert!(text.contains("Date world:"));
-        assert!(text.contains("Date screen:"));
-        assert!(text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
-        assert!(text.contains("Vine axes: 1 / segments:"));
-        assert!(text.contains("Vine tips: 1 active / 0 dormant"));
-        assert!(text.contains("Vine guide set: main-scene-vine-frame"));
-        assert!(!text.contains("Hero anchor:"));
-        assert!(!text.contains("Hero visual anchor:"));
-        assert!(!text.contains("Clock final:"));
-        assert!(!text.contains("Clock anchor:"));
+        assert!(!text.contains("Hero world:"));
+        assert!(!text.contains("Clock world:"));
+        assert!(!text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
+    }
+
+    #[test]
+    fn debug_panel_tabs_expose_focused_fact_groups() {
+        let layer = super::DebugLayer;
+        let world = crate::core::world::WorldState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+        let ctx = render_state(30, 10, 124, 32, 30, 10, true);
+        let mut ui = crate::ui::state::UiState::new();
+        ui.meta.dev_mode = true;
+
+        ui.meta.debug_panel_tab = DebugPanelTab::Hero;
+        let hero_text: String = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid
+            .cells
+            .iter()
+            .map(|cell| cell.symbol)
+            .collect();
+        assert!(hero_text.contains("[hero]"));
+        assert!(hero_text.contains("Camera: (30, 10)"));
+        assert!(hero_text.contains("Hero world:"));
+        assert!(hero_text.contains("Hero screen:"));
+        assert!(hero_text.contains("Hero anchor visible:"));
+        assert!(!hero_text.contains("Clock world:"));
+
+        ui.meta.debug_panel_tab = DebugPanelTab::Companions;
+        let companions_text: String = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid
+            .cells
+            .iter()
+            .map(|cell| cell.symbol)
+            .collect();
+        assert!(companions_text.contains("[companions]"));
+        assert!(companions_text.contains("Clock world:"));
+        assert!(companions_text.contains("Weather world:"));
+        assert!(companions_text.contains("Date world:"));
+        assert!(!companions_text.contains("Vines: 1"));
+
+        ui.meta.debug_panel_tab = DebugPanelTab::Vines;
+        let vines_text: String = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid
+            .cells
+            .iter()
+            .map(|cell| cell.symbol)
+            .collect();
+        assert!(vines_text.contains("[vines]"));
+        assert!(vines_text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
+        assert!(vines_text.contains("Vine axes: 1 / segments:"));
+        assert!(vines_text.contains("Vine tips: 1 active / 0 dormant"));
+        assert!(vines_text.contains("Vine guide set: main-scene-vine-frame"));
     }
 
     #[test]
@@ -877,6 +1114,26 @@ mod tests {
     }
 
     #[test]
+    fn vine_guides_hide_with_vines_when_other_debug_surfaces_are_off() {
+        let layer = super::DebugLayer;
+        let world = crate::core::world::WorldState::new();
+        let fonts = crate::render::fonts::FontRegistry::new();
+        let ctx = render_state(30, 10, 124, 32, 30, 10, true);
+        let mut ui = crate::ui::state::UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.vines_visible = false;
+        ui.meta.debug_info_panel_visible = false;
+        ui.meta.sliders_visible = false;
+        ui.meta.world_frame_visible = false;
+        ui.meta.world_axis_visible = false;
+        ui.meta.world_datum_visible = false;
+
+        let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+
+        assert!(output.grid.cells.iter().all(|cell| cell.symbol == ' '));
+    }
+
+    #[test]
     fn sandbox_debug_panel_focuses_on_spatial_trials_not_main_scene_telemetry() {
         let layer = super::DebugLayer;
         let world = crate::core::world::WorldState::for_sandbox();
@@ -891,11 +1148,12 @@ mod tests {
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
+        assert!(text.contains("[runtime]"));
         assert!(text.contains("World: sandbox"));
         assert!(text.contains("Pointer: on (0, 0)"));
         assert!(text.contains("Pointer visible:"));
-        assert!(text.contains("Guides: 0"));
-        assert!(text.contains("Vines: 0"));
+        assert!(!text.contains("Guides: 0"));
+        assert!(!text.contains("Vines: 0"));
         assert!(!text.contains("Hero world:"));
         assert!(!text.contains("Hero screen:"));
         assert!(!text.contains("Clock world:"));
@@ -904,6 +1162,18 @@ mod tests {
         assert!(!text.contains("Date screen:"));
         assert!(!text.contains("Hero FPS:"));
         assert!(!text.contains("Frame:"));
+
+        ui.meta.debug_panel_tab = DebugPanelTab::Vines;
+        let vines_output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+        let vines_text: String = vines_output
+            .grid
+            .cells
+            .iter()
+            .map(|cell| cell.symbol)
+            .collect();
+        assert!(vines_text.contains("[vines]"));
+        assert!(vines_text.contains("Guides: 0"));
+        assert!(vines_text.contains("Vines: 0"));
     }
 
     #[test]

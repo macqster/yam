@@ -34,7 +34,7 @@ impl Layer for HotkeysLayer {
             frame,
             "[?] help",
             Some(ModalFooter {
-                left: "↑ ↓",
+                left: "",
                 right: "? ⎋",
             }),
         );
@@ -57,8 +57,8 @@ impl Layer for HotkeysLayer {
         let right_lines = [
             HelpLine::section("move"),
             HelpLine::item("[m] move popup"),
-            HelpLine::item("[1/2/3/4/5] select target"),
-            HelpLine::item("[h/j/k/l] move selected target"),
+            HelpLine::item("[Tab/Shift+Tab] cycle target"),
+            HelpLine::item("[arrow keys] move target"),
             HelpLine::item("[C] store camera home"),
             HelpLine::item("[c] recall camera home"),
             HelpLine::blank(),
@@ -189,7 +189,9 @@ mod tests {
         assert!(text.contains("[v] vines"));
         assert!(text.contains("[s] settings popup"));
         assert!(text.contains("[m] move popup"));
-        assert!(text.contains("[1/2/3/4/5] select target"));
+        assert!(text.contains("[Tab/Shift+Tab] cycle target"));
+        assert!(text.contains("[arrow keys] move target"));
+        assert!(!text.contains("[1/2/3/4/5] select target"));
         assert!(text.contains("[space] play/pause"));
         assert!(text.contains("? ⎋"));
     }

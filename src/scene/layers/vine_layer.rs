@@ -33,8 +33,7 @@ impl Layer for VineLayer {
         ctx: &RenderState,
     ) -> LayerOutput {
         let mut grid = Grid::new(width, height);
-        let render_shadow = !ui.meta.vines_visible && ui.meta.dev_mode;
-        if !ui.meta.vines_visible && !render_shadow {
+        if !ui.meta.vines_visible {
             return LayerOutput { grid, mask: None };
         }
         let projection = VineProjection {
@@ -51,13 +50,13 @@ impl Layer for VineLayer {
                         segment.end,
                         segment.thickness,
                         segment.health,
-                        render_shadow,
+                        false,
                         projection,
                     );
                 }
             }
             for organ in &vine.organs {
-                draw_organ(&mut grid, organ, render_shadow, projection);
+                draw_organ(&mut grid, organ, false, projection);
             }
         }
         LayerOutput { grid, mask: None }
@@ -203,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn dev_mode_can_show_a_dim_vine_shadow_even_when_vines_are_disabled() {
+    fn vines_do_not_render_when_visibility_is_disabled() {
         let layer = super::VineLayer;
         let world = WorldState::new();
         let mut ui = UiState::new();
@@ -240,15 +239,6 @@ mod tests {
         let grid = layer
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;
-        let visible = grid
-            .cells
-            .iter()
-            .find(|cell| cell.symbol != ' ')
-            .expect("dev-mode vine shadow should still render visible geometry");
-
-        assert!(visible
-            .style
-            .add_modifier
-            .contains(ratatui::style::Modifier::DIM));
+        assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
     }
 }

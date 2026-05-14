@@ -1,4 +1,4 @@
-# yam-rust
+# yam
 
 Rust terminal scene engine for YAM.
 
@@ -41,7 +41,7 @@ Reserved or future-facing:
 
 - `yam` is the canonical launcher command
 - `yam-sandbox` launches the sparse sandbox world
-- `yam-rust` is the direct runtime binary for debugging or manual execution
+- `yam-rust` is the current direct runtime binary for debugging or manual execution
 - `yam-install` rebuilds and reinstalls the fallback binary and launcher wrappers
 - `q` exits
 

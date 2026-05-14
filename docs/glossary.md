@@ -21,7 +21,7 @@ This glossary is the shared vocabulary for YAM-specific nomenclature, recurring 
 | Term | Authority | YAM Meaning | Use For |
 | --- | --- | --- | --- |
 | `YAM` | repo | the overall terminal scene/simulation project | project-wide reference |
-| `yam-rust` | repo | the active Rust runtime tree and runtime crate | repo/runtime naming |
+| `yam-rust` | repo | the current Rust crate/binary name inside the broader YAM project, not the active branch name | crate/runtime naming |
 | `datum` | inferred | the shared absolute world reference at `(0, 0)` | projection, guides, border probes, anchor math |
 | `world space` | strict | simulation-space coordinates centered on the datum | entities, flora, guides, attachment logic |
 | `screen space` | strict | terminal-attached coordinates after projection | HUD and overlay placement |

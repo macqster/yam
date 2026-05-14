@@ -22,7 +22,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 - L100 - world-tied companions and anchored world widgets
 - L300 - world-tied debug/dev probes and diagnostic overlays
 - L390 - help popup
-- L395 - move popup
+- L395 - move strip
 - L400 - settings popup
 - L405 - quit-confirm popup
 - L1000 - HUD/footer/status
@@ -196,7 +196,7 @@ The current debug/dev surface for guide capture is:
 - pointer probe: capture exact coordinates in world space
 - debug info panel: inspect the live pointer position, camera position, and projected entity facts through a small tabbed readout rather than one long mixed-purpose list
 - help popup: remind the user that pointer, camera-home, and move/settings are the current dev controls, while staying context-aware enough to be opened from the main scene before `dev_mode` is enabled
-- move popup: step selected world-attached entities when authoring placement relationships
+- move strip: step selected world-attached entities when authoring placement relationships
 
 Rules:
 
@@ -299,10 +299,10 @@ The active implementation treats camera as a viewport crop helper:
 - modal help/move/settings/quit-confirm overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
 - the help popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter
-- the move popup is a modal overlay rendered between hotkeys and settings; it now sits as a compact lower-band strip so the moved scene elements stay visible, and it uses `Tab` / `Shift+Tab` to cycle targets with arrow keys for movement
+- the move surface is a modal overlay rendered between hotkeys and settings; it now takes the form of a compact lower-band strip so the moved scene elements stay visible, and it uses `Tab` / `Shift+Tab` to cycle targets with arrow keys for movement
 - the quit-confirm popup is a modal overlay rendered above settings and below loading; it uses the shared modal shell to make dirty persisted-state exits explicit with a centered decision footer: `[s]ave and quit • [d]iscard and quit • ⎋ cancel`
-- the dev-mode footer also uses `[m]ove` to open the modal move popup; while it is open, `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target
-- the move popup shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
+- the dev-mode footer also uses `[m]ove` to open the modal move strip; while it is open, `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target
+- the move strip shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
 - the help popup now also lists the pointer probe, palette popup, and weather sprite popup so those dev-only tools stay discoverable without turning the footer into a full command legend
 
 ## UI / Metamechanics Working Set

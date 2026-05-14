@@ -62,7 +62,7 @@ impl Layer for HotkeysLayer {
                 ],
                 vec![
                     HelpLine::section("move"),
-                    HelpLine::item("[m] move popup"),
+                    HelpLine::item("[m] move strip"),
                     HelpLine::item("[Tab/Shift+Tab] cycle target"),
                     HelpLine::item("[arrow keys] move target"),
                     HelpLine::item("[C] store camera home"),
@@ -83,7 +83,7 @@ impl Layer for HotkeysLayer {
                     HelpLine::blank(),
                     HelpLine::section("in dev mode"),
                     HelpLine::item("[s] settings popup"),
-                    HelpLine::item("[m] move popup"),
+                    HelpLine::item("[m] move strip"),
                     HelpLine::item("[P] palette popup"),
                     HelpLine::item("[W] weather popup"),
                     HelpLine::item("[p] pointer probe"),
@@ -225,7 +225,7 @@ mod tests {
         assert!(text.contains("[p] pointer probe"));
         assert!(text.contains("[v] vines"));
         assert!(text.contains("[s] settings popup"));
-        assert!(text.contains("[m] move popup"));
+        assert!(text.contains("[m] move strip"));
         assert!(text.contains("[Tab/Shift+Tab] cycle target"));
         assert!(text.contains("[arrow keys] move target"));
         assert!(!text.contains("[1/2/3/4/5] select target"));
@@ -249,7 +249,7 @@ mod tests {
         assert!(text.contains("available now"));
         assert!(text.contains("[d] enter dev mode"));
         assert!(text.contains("in dev mode"));
-        assert!(text.contains("[m] move popup"));
+        assert!(text.contains("[m] move strip"));
         assert!(text.contains("[Tab/Shift+Tab] cycle move target"));
         assert!(!text.contains("inspect"));
     }

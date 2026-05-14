@@ -38,8 +38,8 @@ Last reviewed: 2026-05-13
 
 ## Active Risk Notes
 
-- [medium] The current startup path still pays for live hero-frame compilation through GIF decode, temp-frame writes, and per-frame `chafa` invocation during `Hero::new()`, which is the clearest avoidable load-time and process-spawn cost in the repo.
-  - evidence: `src/render/chafa.rs`, `src/render/hero.rs`
+- [low] The common direct-binary startup path is no longer an obvious performance problem after the hero-cache work: a small local audit on 2026-05-14 showed `./target/debug/yam-rust --version` effectively instant for a single run and about `1.21s` total over 200 repeated launches (roughly `6ms` per launch), while the much slower `cargo run -- --version` path was dominated by Cargo wrapper overhead rather than YAM runtime initialization.
+  - evidence: local timing audit on 2026-05-14; `src/render/chafa.rs`, `src/render/hero.rs`
 - [medium] The first render-loop reuse, hidden-layer skip, final-buffer reuse, and scratch-grid adoption slices are now in place: runtime keeps one long-lived `Scene`, no longer asks obviously closed modal/help/quit layers to allocate empty grids, reuses the final composed `Grid` across frames, and can now reuse scratch grids for the simple active layers, the lightweight companion projection layers, the hero layer, the debug overlay, and the vine layer. The remaining hot-path seam is no longer another obvious layer conversion, but deciding whether any of the still-general draw paths deserve cheaper specialized helpers.
   - evidence: `src/scene/mod.rs`, `src/ui/scene.rs`, `src/render/compositor.rs`
 - [medium] The renderer now has a narrow fast ASCII-only text-write helper for the hottest plain-ASCII chrome, and it is adopted by the always-on footer plus the debug/world-label chrome. The remaining question is whether more UI surfaces actually need it, not whether the seam should exist.

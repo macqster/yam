@@ -176,7 +176,7 @@ The current debug/dev surface for guide capture is:
 - pointer probe: capture exact coordinates in world space
 - debug info panel: inspect the live pointer position, camera position, and projected entity facts
 - hotkeys popup: remind the user that pointer, camera-home, and move/settings are the current dev controls
-- move popup: step selected world-attached entities when authoring placement relationships
+- move strip: step selected world-attached entities when authoring placement relationships
 
 Rules:
 

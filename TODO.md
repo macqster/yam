@@ -19,6 +19,7 @@ Coordination contract:
 - [verify] validate the first cache-first hero startup path against real install/update flows under the installed wrapper path, including first-run cache generation timing and whether shipping a prebuilt cache should become part of release hygiene.
 - [inspect] continue the render-loop efficiency pass after the current scratch-grid adoption batch by evaluating whether any remaining hot draw paths deserve cheaper specialized helpers instead of more general `Grid`/text work.
 - [inspect] decide whether the new fast ASCII-only compositor path should spread any further than the current footer/debug/world-label chrome, or whether profiling says the remaining general text writes are already cheap enough.
+- [inspect] do not start another speculative startup optimization pass until one interactive/profile-driven measurement points at a real remaining hot path; the direct cached binary startup path is now already cheap enough that Cargo wrapper time is a bigger source of confusion than YAM initialization.
 - [inspect] decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
 - [inspect] run one small dev-mode UI cleanup batch focused on role tightening only: keep `calendar (reserved)` demoted outside the lightweight move/help surfaces, and keep hotkeys/move/footer vocabulary cleanly separated.
 - [verify] keep dev-UI docs aligned with the live code path: `ui` tab naming, dev-only debug gating, `Tab`/arrow move grammar, and the frozen manual boot seed `(-60, -15)`.

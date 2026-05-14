@@ -177,11 +177,11 @@
 - `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
 - `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
 - the help popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current controls without adding footer clutter; outside `dev_mode` it should stay context-aware and explain which actions require entering dev mode first
-- the move popup is a modal overlay at `z_index = 395`, between hotkeys and settings, and it now uses a compact lower-band strip so scene elements remain visible while `Tab` / `Shift+Tab` cycle the live target strip and arrow keys move the active target
+- the move surface is a modal overlay at `z_index = 395`, between hotkeys and settings, and it now uses a compact lower-band strip so scene elements remain visible while `Tab` / `Shift+Tab` cycle the live target strip and arrow keys move the active target
 - the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, ui, features, gif, and theme values
 - the quit-confirm popup is a modal overlay at `z_index = 405`; it is only opened when persisted tweak state is dirty and an exit is requested, and it keeps save/discard/cancel explicit instead of silently redefining the accepted baseline
 - the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, help/move/settings/palette/weather/quit-confirm are coordinated dev-facing surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
-- the dev-mode footer also uses `[m]ove` to open the modal move popup, where `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target while the strip is open
+- the dev-mode footer also uses `[m]ove` to open the modal move strip, where `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target while the strip is open
 - persisted composition state is now intentionally two-phase: live dev edits mutate the current runtime view immediately, but values such as camera/home, hero and companion offsets, selected persisted UI/features toggles, and similar saved controls only become the canonical persisted baseline when explicitly saved
 - quit behavior follows that ownership split: `q` quits immediately when no persisted tweak state is dirty, while dirty exits route through the quit-confirm modal so the user can `[s]ave and quit`, `[d]iscard and quit`, or `Esc` cancel
 
@@ -212,7 +212,7 @@
 - weather/world companion: `z_index = 100`
 - debug overlay: `z_index = 300`
 - help popup: `z_index = 390`
-- move popup: `z_index = 395`
+- move strip: `z_index = 395`
 - settings popup: `z_index = 400`
 - quit-confirm popup: `z_index = 405`
 - status/footer: `z_index = 1000`

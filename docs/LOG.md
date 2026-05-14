@@ -13,6 +13,10 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-05-14
+
+- `10:32` bumped the crate and runtime release marker from `0.3.7` to `0.3.8` after the release-readiness pass: this release carries the render-loop optimization wave, the repo simplification onto `main`, the front-door/docs-role cleanup, the shared markdown/spelling hygiene configuration, and the explicit pre-bump honesty posture that keeps `KI-001` documented as the one minor non-blocking known issue.
+
 ## 2026-05-13
 
 - `02:46` ran a final pre-bump coherence audit across the repo front door, docs map, backlog, issue register, and audit snapshot; the set is now aligned on one explicit release-honesty point: `KI-001` remains the only tracked known issue, and it is currently treated as a minor non-blocking boot-screen centering issue rather than something to “fix” blindly without a deliberate visual pass.

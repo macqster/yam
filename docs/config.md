@@ -23,7 +23,7 @@ This note owns the active, repo-tracked default scene configuration for the visu
 
 - Ghostty default config currently uses `JetBrainsMono Nerd Font` with ligatures enabled, `font-size = 12`, and `font-thicken = true`
 - `adjust-cell-height` is currently commented out, with `8%` noted as the candidate value if cell metrics need tuning later
-- the current Ghostty config uses `window-width = 120`, `window-height = 31`, and `macos-titlebar-style = hidden`; in practice this opens to about `124x32` usable cells on the current macOS setup, so that is the present boot/start frame note for the Ghostty environment
+- the current Ghostty config uses `window-width = 120`, `window-height = 31`, and a hidden macOS title bar style; in practice this opens to about `124x32` usable cells on the current macOS setup, so that is the present boot/start frame note for the Ghostty environment
 - these settings are environment notes for layout and glyph-appearance tuning, not Rust runtime source of truth
 
 ## What It Controls
@@ -31,7 +31,7 @@ This note owns the active, repo-tracked default scene configuration for the visu
 - clock font and formats
 - hero GIF path and placement
 - theme selection
-- boot/loading wordmark rendering now comes from the shared FIGlet subsystem rather than a one-off ASCII asset literal
+- boot/loading logo-text rendering now comes from the shared FIGlet subsystem rather than a one-off ASCII asset literal
 
 ## Rule
 

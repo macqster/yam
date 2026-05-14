@@ -4,8 +4,8 @@ This repository currently uses one active Rust maintenance branch with lightweig
 
 ## Active Branch
 
-- `yam-rust` is the active branch for ongoing Rust runtime maintenance.
-- Current stabilization, review, and release-prep work happens directly on `yam-rust`.
+- `main` is the active branch for ongoing Rust runtime maintenance.
+- Current stabilization, review, and release-prep work happens directly on `main`.
 - Historical branch models such as `stable` / `experimental` are not the active workflow for the current repo state unless a future release process explicitly reinstates them.
 
 ## Versioning
@@ -16,9 +16,9 @@ This repository currently uses one active Rust maintenance branch with lightweig
 
 ## Workflow
 
-1. Keep `yam-rust` green under `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite.
-2. Land maintenance batches directly on `yam-rust` with docs/tests/log updates in the same change.
-3. Cut and tag releases from the clean pushed `yam-rust` state when the branch is ready.
+1. Keep `main` green under `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite.
+2. Land maintenance batches directly on `main` with docs/tests/log updates in the same change.
+3. Cut and tag releases from the clean pushed `main` state when the branch is ready.
 4. Document any future branch-model change here before treating it as active workflow.
 
 ## Repo Shape Goal

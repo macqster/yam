@@ -12,8 +12,13 @@ Coordination contract:
 - if a TODO item is blocked on or clarified by an active issue, link the matching `known_issues.md` entry
 - if a TODO item becomes historical, record the closure in the log and remove it here
 
+Issue link rule:
+
+- use explicit `known_issues.md` ids such as `KI-001` when an execution item is directly tied to an active unresolved issue
+
 ## Immediate Maintenance Batch
 
+- [fix] correct the boot `press [space] to continue` prompt centering with one deliberate visual pass; link: `KI-001` in `known_issues.md`.
 - [inspect] record and preserve the current runtime/code efficiency priority order before any hot-path refactors start: hero-frame startup caching first, persistent `Scene`/layer reuse second, reusable frame buffers third, then smaller UI-write/runtime-branch cleanup.
 - [inspect] define the startup-performance plan around the hero pipeline explicitly: move GIF decode + temp-frame + `chafa` work toward an offline compiler / cached `HeroFrameSet` path instead of paying that cost inside `Hero::new()`.
 - [verify] validate the first cache-first hero startup path against real install/update flows under the installed wrapper path, including first-run cache generation timing and whether shipping a prebuilt cache should become part of release hygiene.

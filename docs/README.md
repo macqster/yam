@@ -1,58 +1,62 @@
 # Documentation Index
 
-## Active Docs
+This file is the docs map.  
+The repo front door is [../README.md](../README.md).
 
-- [`../README.md`](../README.md) - current repo and runtime overview
-- [`../TODO.md`](../TODO.md) - active backlog
-- [`../known_issues.md`](../known_issues.md) - active unresolved issue tracker
-- [`LOG.md`](LOG.md) - current repository log
-- [`hygiene.md`](hygiene.md) - repo hygiene rules
-- [`audit.md`](audit.md) - current repo audit
-- [`glossary.md`](glossary.md) - YAM glossary and terminology source of truth
-- [`theme.md`](theme.md) - reusable BTAS theme contract for the architecture
-- [`weather-widget.md`](weather-widget.md) - canonical weather-widget design brief
-- [`vines.md`](vines.md) - pre-runtime ownership contract for future vine work
-- [`architecture.md`](architecture.md) - implementation architecture contract and current vs intended spatial model
-- [`scene-model.md`](scene-model.md) - deterministic scene model above ratatui
-- [`rendering.md`](rendering.md) - render order contract
-- [`loading-screen.md`](loading-screen.md) - boot/loading-screen architecture, sequence, lessons learned, and current visual pause point
-- [`reference-sigye.md`](reference-sigye.md) - reference study of `sigye` and the YAM-facing subsystem ideas worth emulating
-- [`release-model.md`](release-model.md) - branch and release policy
-- [`config.md`](config.md) - scene config ownership note and the current Ghostty boot/start frame note
-- [`resource-map.md`](resource-map.md) - future-development resource scouting and adopt/emulate/reference/reject map
-## Notes
+## Start Here
 
-- `docs/` is the active documentation surface.
-- `README.md` is the repo front door; `docs/README.md` is the docs map.
-- If unsure where to make a change, start here.
-- `README.md` carries the one-line YAM slogan and non-goals; `docs/architecture.md` and `docs/scene-model.md` carry the detailed contracts.
-- `TODO.md` should stay execution-focused, `docs/audit.md` should stay risk-focused, and `docs/LOG.md` should stay append-only.
-- `known_issues.md` should stay issue-focused, timestamped, and tightly linked to the relevant backlog, log, and front-door docs.
-- `docs/resource-map.md` is a research/reference surface for future development; keep implementation work and active execution steps out of it.
-- `docs/LOG.md` prefers newest-first day headers with inline timestamps for new entries; older history stays intact unless a maintenance pass explicitly needs to refine it.
-- current project priority is stability and efficiency first, with hero GIF aesthetics held steady and flora deferred until the system is prepared for it.
-- `docs/glossary.md` is the shared terminology source of truth; the other docs should point back to it instead of redefining terms.
-- if a term looks shared or ambiguous, check `docs/glossary.md` before extending a contract doc.
-- historical reconstruction notes were consolidated into the current docs set.
-- uppercase markdown filenames are reserved for the highest-visibility entry points; lower-case names are preferred for most active contracts and archive reports.
+- [../README.md](../README.md) - repo/runtime overview
+- [../TODO.md](../TODO.md) - active execution backlog
+- [../known_issues.md](../known_issues.md) - active unresolved issues only
+- [LOG.md](LOG.md) - append-only project history
+- [audit.md](audit.md) - current risk and drift snapshot
+
+## Core Contracts
+
+- [glossary.md](glossary.md) - shared terminology source of truth
+- [architecture.md](architecture.md) - ownership and implementation architecture
+- [scene-model.md](scene-model.md) - deterministic scene model
+- [rendering.md](rendering.md) - render order, layering, and UI/render contracts
+- [theme.md](theme.md) - reusable BTAS theme contract
+- [hygiene.md](hygiene.md) - repo hygiene rules
+
+## Active Surface Contracts
+
+- [loading-screen.md](loading-screen.md) - boot/loading-screen contract
+- [weather-widget.md](weather-widget.md) - weather-widget contract
+- [vines.md](vines.md) - vine ownership/readiness contract
+- [config.md](config.md) - config ownership and boot-frame note
+- [hero-cache.md](hero-cache.md) - hero-frame cache design/runtime path
+
+## Research And Policy
+
+- [reference-sigye.md](reference-sigye.md) - reference study of `sigye`
+- [release-model.md](release-model.md) - branch and release policy
+- [resource-map.md](resource-map.md) - research/reference map
 
 ## Archive Entry Points
 
-- [`REFERENCE_ARCHIVE.md`](REFERENCE_ARCHIVE.md) - reference-only dump of imported historical notes
-- [`archive/README.md`](archive/README.md) - archive index for older reports and reviews
+- [archive/README.md](archive/README.md) - archive index
+- [REFERENCE_ARCHIVE.md](REFERENCE_ARCHIVE.md) - imported historical reference dump
 
-## Where to Change Things
+## Where To Change Things
 
-- If unsure where to change something, start here.
-- Conceptual behavior changes -> `docs/scene-model.md`
-- Ownership and architecture changes -> `docs/architecture.md`
-- Rendering and layer-order changes -> `docs/rendering.md`
-- Weather provider/model/widget design changes -> `docs/weather-widget.md`
-- Vine ownership and readiness changes -> `docs/vines.md`
-- Work order and validation changes -> `TODO.md`
-- Risk and status changes -> `docs/audit.md`
+- repo/runtime overview -> [../README.md](../README.md)
+- work order and execution checks -> [../TODO.md](../TODO.md)
+- active unresolved issues -> [../known_issues.md](../known_issues.md)
+- risk, drift, and next cleanup seams -> [audit.md](audit.md)
+- historical record -> [LOG.md](LOG.md)
+- terminology -> [glossary.md](glossary.md)
+- ownership/architecture -> [architecture.md](architecture.md)
+- scene behavior -> [scene-model.md](scene-model.md)
+- rendering/layer/UI contracts -> [rendering.md](rendering.md)
 
-## Archive Notes
+## Role Rules
 
-- [`archive/notes/flattening-plan.md`](archive/notes/flattening-plan.md) - completed flattening note
-- [`archive/notes/version-map.md`](archive/notes/version-map.md) - runtime/version mapping note
+- `README.md` is the front door, not the full contract set
+- `docs/README.md` is the map, not the backlog
+- `TODO.md` stays execution-focused
+- `known_issues.md` stays issue-focused and timestamped
+- `docs/audit.md` stays risk-focused
+- `docs/LOG.md` stays append-only
+- if a term looks shared or ambiguous, check [glossary.md](glossary.md) before extending another doc

@@ -56,6 +56,8 @@ Current project priority is:
 
 Hero aesthetics are intentionally held steady while runtime and contract seams are cleaned up.
 
+The only explicitly tracked known issue at the moment is `KI-001`: the boot `press [space] to continue` prompt still needs one deliberate centering pass, but it is currently treated as a minor visual issue rather than a release blocker. See [known_issues.md](known_issues.md).
+
 ## Document Roles
 
 Use the docs by role:

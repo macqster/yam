@@ -1,3 +1,14 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/visualizer/.venv/bin/python"
+  "python.defaultInterpreterPath": "${workspaceFolder}/visualizer/.venv/bin/python",
+  "cSpell.configFile": "${workspaceFolder}/.cspell.json",
+  "cSpell.useGitignore": true,
+  "markdownlint.config": {
+    "default": true,
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD024": {
+      "siblings_only": true
+    }
+  }
 }

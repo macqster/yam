@@ -25,5 +25,9 @@
 - temp files and shared runtime artifacts used by tests or helpers should be isolated per run when practical
 - boundary changes should add a negative test when practical so forbidden behavior stays explicit
 - use `cargo fmt --check` for docs-only or wording-only changes; run the full test suite for compositor, camera, overlay, or other shared-rendering behavior changes
+- active markdown docs should stay clean under the repo-configured `cSpell` and `markdownlint` rules; fix real typos and malformed markdown, but prefer adding recurring valid repo vocabulary to shared config rather than repeatedly rewriting good technical terms
+- prefer repo-level spell/lint configuration for recurring terminology; use file-local `cspell:ignore` comments only for narrow local exceptions that would add noise to the shared dictionary
+- avoid link-like bracket labels such as `[fix]` or `[12:34]` in docs unless they are real markdown links or task checkboxes; use code-style labels like ``fix`` or ``12:34`` for lightweight tags and timestamps
+- front-door and active contract docs should prefer broadly readable English, while archive/history docs may keep source-accurate jargon, tool names, and quoted vocabulary as long as the shared spell/lint config recognizes them
 - soft feature freeze: prefer polish and stability work only; avoid new features unless they fix a correctness bug, a regression, or a contract violation
 - pre-new-feature gate: before starting any new feature, verify the modal/UI state is clean, camera behavior is explicit, hero rendering is stable, docs/logs match the current contract, and the relevant regression tests still pass

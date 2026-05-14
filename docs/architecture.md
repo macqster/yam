@@ -183,7 +183,7 @@
 - the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, help/move/settings/palette/weather/quit-confirm are coordinated dev-facing surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
 - the dev-mode footer also uses `[m]ove` to open the modal move strip, where `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target while the strip is open
 - persisted composition state is now intentionally two-phase: live dev edits mutate the current runtime view immediately, but values such as camera/home, hero and companion offsets, selected persisted UI/features toggles, and similar saved controls only become the canonical persisted baseline when explicitly saved
-- quit behavior follows that ownership split: `q` quits immediately when no persisted tweak state is dirty, while dirty exits route through the quit-confirm modal so the user can `[s]ave and quit`, `[d]iscard and quit`, or `Esc` cancel
+- quit behavior follows that ownership split: `q` quits immediately when no persisted tweak state is dirty, while dirty exits route through the quit-confirm modal so the user can `save and quit`, `discard and quit`, or `Esc` cancel
 
 ## UI / Metamechanics Working Set
 

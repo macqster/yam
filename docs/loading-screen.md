@@ -24,10 +24,10 @@ The active loading state is composed from:
 - a small caption: `a very special`
 - a central ASCII YAM wordmark
 - a version/build line
-- `loading...`
-- a progress bar using filled `■` cells and unfilled `⋄` cells
+- a slate `loading` label with a quieter green animated dot suffix that keeps a fixed three-cell width so the line does not re-center as the dot count changes
+- a thin transparent progress line that keeps the OMP-derived green/slate palette but drops the heavy Powerline seam glyphs in favor of a lighter `━` fill, `╸` active edge, and `┄` empty tail
 
-The bar and text are no longer hard-coded one-off literals. The caption, wordmark, version/build line, loading label, and bar are positioned as one centered assembly with a few small deliberate per-line offsets for visual tuning.
+The bar and text are no longer hard-coded one-off literals. The loading screen now uses explicit named rows for the caption, the FIGlet wordmark, the version/build line, and the lower prompt/bar area so those elements can be tuned without reintroducing row-overlap regressions. The FIGlet logo path also trims any leading fully blank font rows and now renders through a dedicated writer that skips spaces entirely, which matters because the more general text writers still paint foreground color through space cells and can make neighboring caption text look like it inherited the logo color. The loading-state palette now follows one tighter rule: slate for meta text, green for in-progress growth, blue for ready/action.
 
 ### 2. Await Start
 

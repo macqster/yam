@@ -1,10 +1,11 @@
 use crate::build_info;
 use crate::core::world::WorldState;
-use crate::render::compositor::{write_string, Grid};
+use crate::render::compositor::{write_ascii_string_skip_spaces, write_string, Grid};
 use crate::render::fonts::{FigletFontId, FontRegistry};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
+use ratatui::style::Style;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 pub struct LoadingLayer;
@@ -38,72 +39,65 @@ impl Layer for LoadingLayer {
             return LayerOutput { grid, mask: None };
         }
 
-        let art_lines = loading_art_lines(fonts);
+        let caption_line = "a very special";
+        let logo_lines = loading_logo_lines(fonts);
         let version_line = format!("{} ({})", build_info::VERSION, build_info::build_hash());
         let now = Instant::now();
-        let label_line = ui.loading.label.clone();
-        let bar_line = progress_bar(ui.loading.bar_progress(now), 20);
+        let label_segments = loading_label_segments(&ui.loading.label, now);
+        let bar_segments = progress_bar_segments(ui.loading.bar_progress(now), 16);
         let showing_start_prompt = ui.loading.showing_start_prompt();
         let tail_rows = 5;
 
         let center_x = width / 2;
         let lower_text_center_x = center_x + 1;
-        let origin_y = height
-            .saturating_sub(art_lines.len() as u16 + tail_rows)
+        let assembly_height = 1u16 + 1u16 + logo_lines.len() as u16 + tail_rows;
+        let assembly_top = height
+            .saturating_sub(assembly_height)
             .saturating_div(2)
             .saturating_sub(1);
+        let caption_y = assembly_top + 1;
+        let logo_y = caption_y + 1;
+        let version_y = logo_y + logo_lines.len() as u16;
+        let prompt_y = version_y + 4;
+        let bar_y = version_y + 5;
 
-        for (row, line) in art_lines.iter().enumerate() {
-            let row_center_x = if row == 0 {
-                center_x.saturating_sub(3)
-            } else {
-                center_x
-            };
-            let row_y = if row == 0 {
-                origin_y + 1
-            } else {
-                origin_y + row as u16
-            };
-            write_centered_line(
+        write_centered_line(
+            &mut grid,
+            center_x.saturating_sub(3),
+            caption_y,
+            caption_line,
+            theme_style::loading_meta_text(),
+        );
+
+        for (row, line) in logo_lines.iter().enumerate() {
+            write_centered_ascii_line(
                 &mut grid,
-                row_center_x,
-                row_y,
+                center_x,
+                logo_y + row as u16,
                 line,
-                theme_style::loading_text(),
+                theme_style::loading_logo(),
             );
         }
 
         write_centered_line(
             &mut grid,
             center_x + 4,
-            origin_y + art_lines.len() as u16,
+            version_y,
             &version_line,
-            theme_style::loading_text(),
+            theme_style::loading_meta_text(),
         );
 
         if showing_start_prompt {
             write_centered_line(
                 &mut grid,
                 center_x + 1,
-                origin_y + art_lines.len() as u16 + 3,
+                prompt_y,
                 "press [space] to continue",
                 theme_style::loading_prompt(prompt_pulse(now)),
             );
         } else {
-            write_centered_line(
-                &mut grid,
-                lower_text_center_x,
-                origin_y + art_lines.len() as u16 + 3,
-                &label_line,
-                theme_style::loading_text(),
-            );
-            write_centered_line(
-                &mut grid,
-                center_x,
-                origin_y + art_lines.len() as u16 + 5,
-                &bar_line,
-                theme_style::loading_text(),
-            );
+            write_centered_segments(&mut grid, lower_text_center_x, prompt_y, &label_segments);
+            write_centered_segments(&mut grid, center_x, bar_y, &bar_segments);
         }
 
         LayerOutput { grid, mask: None }
@@ -124,9 +118,13 @@ fn prompt_pulse(_now: Instant) -> f32 {
     ping_pong * ping_pong * (3.0 - 2.0 * ping_pong)
 }
 
-fn loading_art_lines(fonts: &FontRegistry) -> Vec<String> {
-    let mut lines = vec!["a very special".to_string()];
-    lines.extend(fonts.render(FigletFontId::Standard, "yam"));
+fn loading_logo_lines(fonts: &FontRegistry) -> Vec<String> {
+    let mut lines = fonts.render(FigletFontId::Standard, "yam");
+    let first_non_blank = lines
+        .iter()
+        .position(|line| line.chars().any(|ch| ch != ' '))
+        .unwrap_or(lines.len());
+    lines.drain(..first_non_blank);
     lines
 }
 
@@ -142,18 +140,73 @@ fn write_centered_line(
     write_string(grid, start_x, y, line, style);
 }
 
-fn progress_bar(progress: f32, width: usize) -> String {
-    let filled = (progress.clamp(0.0, 1.0) * width as f32).round() as usize;
-    let mut bar = String::with_capacity(width);
-    for index in 0..width {
-        if index < filled {
-            bar.push('■');
-        } else {
-            bar.push('⋄');
-        }
+fn write_centered_ascii_line(
+    grid: &mut Grid,
+    center_x: u16,
+    y: u16,
+    line: &str,
+    style: ratatui::style::Style,
+) {
+    let line_width = line.chars().count() as u16;
+    let start_x = center_x.saturating_sub(line_width / 2);
+    write_ascii_string_skip_spaces(grid, start_x, y, line, style);
+}
+
+fn write_centered_segments(grid: &mut Grid, center_x: u16, y: u16, segments: &[(String, Style)]) {
+    let line_width: u16 = segments
+        .iter()
+        .map(|(text, _)| text.chars().count() as u16)
+        .sum();
+    let mut x = center_x.saturating_sub(line_width / 2);
+    for (text, style) in segments {
+        write_string(grid, x, y, text, *style);
+        x = x.saturating_add(text.chars().count() as u16);
     }
-    bar.pop();
-    bar
+}
+
+fn loading_label_segments(label: &str, now: Instant) -> Vec<(String, Style)> {
+    let trimmed = label.trim_end_matches('.');
+    let had_ellipsis = trimmed.len() != label.len();
+    let dot_count = if had_ellipsis {
+        animated_dot_count(now)
+    } else {
+        0
+    };
+
+    let mut segments = vec![(trimmed.to_string(), theme_style::loading_text())];
+    let suffix = format!("{}{}", ".".repeat(dot_count), " ".repeat(3 - dot_count));
+    segments.push((suffix, theme_style::loading_dot()));
+    segments
+}
+
+fn animated_dot_count(_now: Instant) -> usize {
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_millis())
+        .unwrap_or(0);
+    ((millis / 300) % 3 + 1) as usize
+}
+
+fn progress_bar_segments(progress: f32, slot_count: usize) -> Vec<(String, Style)> {
+    let filled = ((progress.clamp(0.0, 1.0) * slot_count as f32).round() as usize)
+        .clamp(0, slot_count.max(1));
+    let empty = slot_count.saturating_sub(filled);
+
+    let mut segments = Vec::new();
+    if filled > 0 {
+        let body = filled.saturating_sub(1);
+        if body > 0 {
+            segments.push(("━".repeat(body), theme_style::loading_bar_fill()));
+        }
+        segments.push(("╸".to_string(), theme_style::loading_bar_edge()));
+    }
+    if empty > 0 {
+        segments.push(("┄".repeat(empty), theme_style::loading_bar_empty()));
+    }
+    if segments.is_empty() {
+        segments.push(("┄".repeat(slot_count), theme_style::loading_bar_empty()));
+    }
+    segments
 }
 
 #[cfg(test)]
@@ -166,9 +219,10 @@ mod tests {
     use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
+    use crate::theme::{palette, style as theme_style};
     use crate::ui::state::UiState;
     use ratatui::prelude::Rect;
-    use std::time::Instant;
+    use std::time::{Duration, Instant};
 
     fn render_state() -> RenderState {
         RenderState {
@@ -244,6 +298,10 @@ mod tests {
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
         ui.start_loading_boot();
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::Bar);
+        ui.loading.started_at = Some(Instant::now() - Duration::from_millis(1500));
+        ui.loading.duration = crate::ui::state::LoadingState::BOOT_BAR;
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
         let text = grid_text(&open.grid);
@@ -252,7 +310,7 @@ mod tests {
         assert!(text.contains("_   _  __ _ _ __ ___"));
         assert!(text.contains("| |_| | (_| | | | | | |"));
         assert!(text.contains("loading"));
-        assert!(text.contains("⋄"));
+        assert!(text.contains("╸") || text.contains("┄"));
     }
 
     #[test]
@@ -271,7 +329,8 @@ mod tests {
         assert!(text.contains("press [space] to continue"));
         assert!(!text.contains("loading..."));
         assert!(!text.contains("■"));
-        assert!(!text.contains("⋄"));
+        assert!(!text.contains("╸"));
+        assert!(!text.contains("┄"));
     }
 
     #[test]
@@ -331,7 +390,135 @@ mod tests {
         assert!(!text.contains("loading"));
         assert!(!text.contains("press [space] to continue"));
         assert!(!text.contains("■"));
-        assert!(!text.contains("⋄"));
+        assert!(!text.contains("╸"));
+        assert!(!text.contains("┄"));
+    }
+
+    #[test]
+    fn loading_overlay_uses_requested_palette_split() {
+        let layer = LoadingLayer;
+        let world = WorldState::for_boot();
+        let fonts = FontRegistry::new();
+        let mut ui = UiState::new();
+        ui.start_loading_boot();
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
+        let logo_lines = super::loading_logo_lines(&fonts);
+        let center_x = open.grid.width / 2;
+        let assembly_height = 1u16 + 1u16 + logo_lines.len() as u16 + 5;
+        let assembly_top = open
+            .grid
+            .height
+            .saturating_sub(assembly_height)
+            .saturating_div(2)
+            .saturating_sub(1);
+        let version_y = assembly_top + 1 + 1 + logo_lines.len() as u16;
+        let prompt_y = version_y + 4;
+
+        let (tag_x, tag_y) =
+            find_text_position(&open.grid, "a very special").expect("subtitle should render");
+        let tag_probe_offset = "a very special".chars().count() as u16 - 1;
+        let tag_cell = &open.grid.cells[open.grid.index(tag_x + tag_probe_offset, tag_y)];
+        assert_eq!(tag_cell.style.fg, Some(palette::NEUTRAL_SLATE));
+
+        let (logo_x, logo_y) =
+            find_text_position(&open.grid, "_   _  __ _ _ __ ___").expect("logo should render");
+        let logo_cell = &open.grid.cells[open.grid.index(logo_x, logo_y)];
+        assert_eq!(logo_cell.style.fg, Some(palette::GREEN_DEEP));
+
+        let version = format!(
+            "{} ({})",
+            crate::build_info::VERSION,
+            crate::build_info::build_hash()
+        );
+        let (version_x, version_y) =
+            find_text_position(&open.grid, &version).expect("version should render");
+        let version_probe_offset = version
+            .find('(')
+            .expect("version line should contain build hash delimiter")
+            as u16;
+        let version_cell =
+            &open.grid.cells[open.grid.index(version_x + version_probe_offset, version_y)];
+        assert_eq!(version_cell.style.fg, Some(palette::NEUTRAL_SLATE));
+
+        let prompt = "press [space] to continue";
+        let prompt_x = center_x
+            .saturating_add(1)
+            .saturating_sub(prompt.chars().count() as u16 / 2);
+        let prompt_cell = &open.grid.cells[open.grid.index(prompt_x, prompt_y)];
+        assert_eq!(prompt_cell.style.fg, Some(palette::BLUE_DECO));
+    }
+
+    #[test]
+    fn loading_overlay_uses_omp_inspired_label_and_bar_colors() {
+        let layer = LoadingLayer;
+        let world = WorldState::for_boot();
+        let fonts = FontRegistry::new();
+        let mut ui = UiState::new();
+        ui.start_loading_boot();
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
+
+        let (loading_x, loading_y) =
+            find_text_position(&open.grid, "loading").expect("loading label should render");
+        let loading_cell = &open.grid.cells[open.grid.index(loading_x, loading_y)];
+        assert_eq!(loading_cell.style.fg, Some(palette::LOADING_TEXT));
+
+        let dot_cell = &open.grid.cells[open
+            .grid
+            .index(loading_x + "loading".len() as u16, loading_y)];
+        assert_eq!(dot_cell.style.fg, Some(palette::GREEN_MID));
+
+        let bar_segments =
+            super::progress_bar_segments(ui.loading.bar_progress(Instant::now()), 16);
+        let bar_text: String = bar_segments.iter().map(|(text, _)| text.as_str()).collect();
+        assert!(
+            find_text_position(&open.grid, &bar_text).is_some(),
+            "progress bar should render"
+        );
+
+        let role_segments = super::progress_bar_segments(0.5, 16);
+        assert!(role_segments
+            .iter()
+            .any(|(text, style)| text.contains('╸') && *style == theme_style::loading_bar_edge()));
+        assert!(role_segments
+            .iter()
+            .any(|(text, style)| text.contains('┄') && *style == theme_style::loading_bar_empty()));
+    }
+
+    #[test]
+    fn loading_label_segments_keep_a_fixed_width_for_dot_animation() {
+        let one = super::loading_label_segments("loading...", Instant::now());
+        let two = super::loading_label_segments("loading...", Instant::now());
+        let width_one: usize = one.iter().map(|(text, _)| text.chars().count()).sum();
+        let width_two: usize = two.iter().map(|(text, _)| text.chars().count()).sum();
+
+        assert_eq!(width_one, "loading...".chars().count());
+        assert_eq!(width_one, width_two);
+    }
+
+    #[test]
+    fn loading_bar_segments_use_thin_transparent_progress_grammar() {
+        let segments = super::progress_bar_segments(0.5, 16);
+        let text: String = segments.iter().map(|(text, _)| text.as_str()).collect();
+
+        assert!(text.contains('╸'));
+        assert!(text.contains('┄'));
+        assert!(text.contains('━'));
+        assert!(segments
+            .iter()
+            .any(|(text, style)| text.contains('╸') && *style == theme_style::loading_bar_edge()));
+    }
+
+    #[test]
+    fn loading_logo_lines_trim_leading_blank_rows() {
+        let fonts = FontRegistry::new();
+        let logo_lines = super::loading_logo_lines(&fonts);
+
+        assert!(!logo_lines.is_empty());
+        assert!(logo_lines[0].chars().any(|ch| ch != ' '));
     }
 
     #[test]

@@ -656,8 +656,36 @@ mod tests {
             .collect();
 
         assert!(footer_line.contains("[d]ev"));
-        assert!(footer_line.contains("[?] help"));
-        assert!(!footer_line.contains("[m]ove"));
+        assert!(!footer_line.contains("[?] help"));
+    }
+
+    #[test]
+    fn loading_screen_keeps_footer_row_visually_empty() {
+        let backend = TestBackend::new(132, 36);
+        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
+        let world = crate::core::world::WorldState::for_boot();
+        let mut ui = UiState::new();
+        ui.start_loading_boot();
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
+        let fonts = crate::render::fonts::FontRegistry::new();
+
+        terminal
+            .draw(|frame| render_scene(frame, &world, &ui, &fonts))
+            .expect("frame should render");
+
+        let buffer = terminal.backend().buffer();
+        let footer_y = buffer.area.height.saturating_sub(1) as usize;
+        let footer_start = footer_y * buffer.area.width as usize;
+        let footer_end = footer_start + buffer.area.width as usize;
+        let footer_line: String = buffer.content[footer_start..footer_end]
+            .iter()
+            .map(|cell| cell.symbol().to_string())
+            .collect();
+
+        assert!(!footer_line.contains("[q]uit"));
+        assert!(!footer_line.contains("[d]ev"));
+        assert!(!footer_line.contains("[?] help"));
     }
 
     #[test]

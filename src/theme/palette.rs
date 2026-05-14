@@ -9,6 +9,11 @@ pub const PRIMARY_FG: Color = BTAS.pms_427;
 pub const PRIMARY_FG_WARM: Color = Color::Rgb(220, 216, 203);
 pub const SECONDARY_FG: Color = BTAS.pms_430;
 pub const NEUTRAL_SLATE: Color = Color::Rgb(114, 124, 118);
+pub const LOADING_TEXT: Color = Color::Rgb(160, 166, 173);
+pub const GREEN_MID: Color = Color::Rgb(62, 115, 87);
+pub const GREEN_BAR: Color = Color::Rgb(47, 90, 69);
+pub const GREEN_DEEP: Color = Color::Rgb(8, 100, 25);
+pub const BLUE_DECO: Color = Color::Rgb(25, 75, 143);
 #[allow(dead_code)]
 pub const SURFACE_LIFTED: Color = Color::Rgb(38, 42, 46);
 #[allow(dead_code)]

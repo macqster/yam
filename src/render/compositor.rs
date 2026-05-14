@@ -158,6 +158,68 @@ pub fn write_ascii_string(grid: &mut Grid, x: u16, y: u16, text: &str, style: St
     }
 }
 
+pub fn write_ascii_string_skip_spaces(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
+    if !text.is_ascii() {
+        write_string_skip_spaces(grid, x, y, text, style);
+        return;
+    }
+
+    if y >= grid.height || x >= grid.width {
+        return;
+    }
+
+    let available = (grid.width - x) as usize;
+    for (offset, byte) in text.as_bytes().iter().take(available).enumerate() {
+        if *byte == b' ' {
+            continue;
+        }
+
+        let idx = grid.index(x + offset as u16, y);
+        let cell = &mut grid.cells[idx];
+        cell.symbol = *byte as char;
+        if let Some(fg) = style.fg {
+            cell.style.fg = Some(fg);
+        }
+        if let Some(bg) = style.bg {
+            cell.style.bg = Some(bg);
+        }
+        cell.style.add_modifier |= style.add_modifier;
+        cell.style.sub_modifier |= style.sub_modifier;
+    }
+}
+
+pub fn write_string_skip_spaces(grid: &mut Grid, x: u16, y: u16, text: &str, style: Style) {
+    let mut px = x;
+    for grapheme in text.graphemes(true) {
+        let grapheme_width = UnicodeWidthStr::width(grapheme).max(1) as u16;
+        if px >= grid.width || y >= grid.height {
+            break;
+        }
+        if px.saturating_add(grapheme_width) > grid.width {
+            break;
+        }
+        if grapheme == " " {
+            px = px.saturating_add(grapheme_width);
+            continue;
+        }
+
+        let idx = grid.index(px, y);
+        let cell = &mut grid.cells[idx];
+        if let Some(ch) = grapheme.chars().next() {
+            cell.symbol = ch;
+        }
+        if let Some(fg) = style.fg {
+            cell.style.fg = Some(fg);
+        }
+        if let Some(bg) = style.bg {
+            cell.style.bg = Some(bg);
+        }
+        cell.style.add_modifier |= style.add_modifier;
+        cell.style.sub_modifier |= style.sub_modifier;
+        px = px.saturating_add(grapheme_width);
+    }
+}
+
 pub fn merge_cell(base: &mut Cell, top: &Cell) {
     if top.symbol != ' ' {
         base.symbol = top.symbol;
@@ -368,5 +430,22 @@ mod tests {
         assert_eq!(grid.cells[1].symbol, 'a');
         assert_eq!(grid.cells[2].symbol, 'ż');
         assert_eq!(grid.cells[2].style.fg, Some(Color::Blue));
+    }
+
+    #[test]
+    fn write_ascii_string_skip_spaces_preserves_existing_cell_style_on_spaces() {
+        let mut grid = Grid::new(3, 1);
+        grid.cells[1].symbol = 'x';
+        grid.cells[1].style.fg = Some(Color::Gray);
+        let style = Style::default().fg(Color::Green);
+
+        write_ascii_string_skip_spaces(&mut grid, 0, 0, "A B", style);
+
+        assert_eq!(grid.cells[0].symbol, 'A');
+        assert_eq!(grid.cells[0].style.fg, Some(Color::Green));
+        assert_eq!(grid.cells[1].symbol, 'x');
+        assert_eq!(grid.cells[1].style.fg, Some(Color::Gray));
+        assert_eq!(grid.cells[2].symbol, 'B');
+        assert_eq!(grid.cells[2].style.fg, Some(Color::Green));
     }
 }

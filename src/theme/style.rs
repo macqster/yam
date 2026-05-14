@@ -38,7 +38,31 @@ pub fn settings_tab_active() -> Style {
 }
 
 pub fn loading_text() -> Style {
-    Style::default().fg(palette::PRIMARY_FG)
+    Style::default().fg(palette::LOADING_TEXT)
+}
+
+pub fn loading_meta_text() -> Style {
+    Style::default().fg(palette::NEUTRAL_SLATE)
+}
+
+pub fn loading_logo() -> Style {
+    Style::default().fg(palette::GREEN_DEEP)
+}
+
+pub fn loading_dot() -> Style {
+    Style::default().fg(palette::GREEN_MID)
+}
+
+pub fn loading_bar_fill() -> Style {
+    Style::default().fg(palette::GREEN_BAR)
+}
+
+pub fn loading_bar_edge() -> Style {
+    Style::default().fg(palette::GREEN_MID)
+}
+
+pub fn loading_bar_empty() -> Style {
+    Style::default().fg(palette::DIVIDER)
 }
 
 pub fn clock_text() -> Style {
@@ -98,17 +122,8 @@ pub fn weather_alert() -> Style {
 }
 
 pub fn loading_prompt(pulse: f32) -> Style {
-    let pulse = pulse.clamp(0.0, 1.0);
-    let fg = if pulse < 0.6 {
-        lerp_rgb(palette::PRIMARY_FG, palette::SECONDARY_FG, pulse / 0.6)
-    } else {
-        lerp_rgb(
-            palette::SECONDARY_FG,
-            palette::VINE_HEALTHY,
-            (pulse - 0.6) / 0.4,
-        )
-    };
-    Style::default().fg(fg)
+    let _ = pulse;
+    Style::default().fg(palette::BLUE_DECO)
 }
 
 pub fn modal_panel() -> Style {
@@ -187,20 +202,5 @@ pub fn vine_shadow(health: VineHealth) -> Style {
         Style::default()
             .fg(palette::DIVIDER)
             .add_modifier(Modifier::DIM)
-    }
-}
-
-fn lerp_rgb(
-    from: ratatui::style::Color,
-    to: ratatui::style::Color,
-    t: f32,
-) -> ratatui::style::Color {
-    match (from, to) {
-        (ratatui::style::Color::Rgb(fr, fg, fb), ratatui::style::Color::Rgb(tr, tg, tb)) => {
-            let lerp =
-                |a: u8, b: u8| -> u8 { (a as f32 + (b as f32 - a as f32) * t).round() as u8 };
-            ratatui::style::Color::Rgb(lerp(fr, tr), lerp(fg, tg), lerp(fb, tb))
-        }
-        _ => to,
     }
 }

@@ -3,7 +3,6 @@
 set -euo pipefail
 
 ROOT="${YAM_ROOT:-$HOME/_git/yam}"
-GHOSTTY_OPEN=(open -na Ghostty --args)
 INSTALLED_CMD="\"${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}\" --sandbox --clean-launch"
 UPDATE_CMD="cd \"$ROOT\" && bash scripts/update.sh"
 INSTALLED_BIN="${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}"
@@ -68,24 +67,41 @@ ensure_installed_runtime_is_current() {
   fi
 }
 
-launch_in_new_window() {
+post_exit_refresh() {
+  [[ "${YAM_POST_FASTFETCH:-1}" == "0" ]] && return 0
+  printf '\033[H\033[2J\033[3J'
+  if [[ -x "$HOME/.local/bin/fastfetch-chafa" ]]; then
+    printf '\n\n'
+    "$HOME/.local/bin/fastfetch-chafa"
+    printf '\n'
+  elif command -v fastfetch >/dev/null 2>&1; then
+    printf '\n\n'
+    fastfetch --config "$HOME/_git/dotfiles/fastfetch/config.jsonc"
+    printf '\n'
+  fi
+}
+
+launch_in_current_window() {
   local cmd="$1"
   if [[ "${YAM_WRAPPER_DRY_RUN:-0}" == "1" ]]; then
     echo "$cmd"
     return 0
   fi
-  if [[ "$OSTYPE" == darwin* ]] && open -Ra Ghostty >/dev/null 2>&1; then
-    exec "${GHOSTTY_OPEN[@]}" -e /bin/zsh -lc "$cmd"
-  fi
-  exec /bin/zsh -lc "$cmd"
+  # Clear the visible screen and scrollback before entering YAM so quit returns
+  # to a fresh prompt instead of the prior install/output trace.
+  printf '\033[H\033[2J\033[3J'
+  /bin/zsh -lc "$cmd"
+  local exit_code=$?
+  post_exit_refresh
+  return "$exit_code"
 }
 
 ARGS="$(quote_args "$@")"
 
 if [[ "${YAM_USE_REPO_RUN:-0}" == "1" && -f "$ROOT/Cargo.toml" ]]; then
-  launch_in_new_window "cd \"$ROOT\" && cargo run --release --quiet -- --sandbox --clean-launch${ARGS:+ $ARGS}"
+  launch_in_current_window "cd \"$ROOT\" && cargo run --release --quiet -- --sandbox --clean-launch${ARGS:+ $ARGS}"
 else
   ensure_diagnostics_session
   ensure_installed_runtime_is_current
-  launch_in_new_window "$INSTALLED_CMD${ARGS:+ $ARGS}"
+  launch_in_current_window "$INSTALLED_CMD${ARGS:+ $ARGS}"
 fi

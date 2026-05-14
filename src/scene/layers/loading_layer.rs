@@ -47,6 +47,7 @@ impl Layer for LoadingLayer {
         let tail_rows = 5;
 
         let center_x = width / 2;
+        let lower_text_center_x = center_x + 1;
         let origin_y = height
             .saturating_sub(art_lines.len() as u16 + tail_rows)
             .saturating_div(2)
@@ -91,7 +92,7 @@ impl Layer for LoadingLayer {
         } else {
             write_centered_line(
                 &mut grid,
-                center_x + 1,
+                lower_text_center_x,
                 origin_y + art_lines.len() as u16 + 3,
                 &label_line,
                 theme_style::loading_text(),
@@ -168,6 +169,7 @@ mod tests {
     use crate::ui::state::UiState;
     use ratatui::prelude::Rect;
     use std::time::Instant;
+
     fn render_state() -> RenderState {
         RenderState {
             world: WorldFrame {
@@ -197,6 +199,33 @@ mod tests {
         }
     }
 
+    fn grid_text(grid: &crate::render::compositor::Grid) -> String {
+        grid.cells.iter().map(|cell| cell.symbol).collect()
+    }
+
+    fn find_text_position(
+        grid: &crate::render::compositor::Grid,
+        text: &str,
+    ) -> Option<(u16, u16)> {
+        let text_len = text.chars().count();
+        if text_len == 0 || text_len > grid.width as usize {
+            return None;
+        }
+
+        for y in 0..grid.height {
+            for x in 0..=grid.width.saturating_sub(text_len as u16) {
+                let candidate: String = (0..text_len)
+                    .map(|offset| grid.cells[grid.index(x + offset as u16, y)].symbol)
+                    .collect();
+                if candidate == text {
+                    return Some((x, y));
+                }
+            }
+        }
+
+        None
+    }
+
     #[test]
     fn loading_overlay_requires_active_loading_state() {
         let layer = LoadingLayer;
@@ -217,7 +246,7 @@ mod tests {
         ui.start_loading_boot();
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
-        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+        let text = grid_text(&open.grid);
 
         assert!(text.contains("a very special"));
         assert!(text.contains("_   _  __ _ _ __ ___"));
@@ -237,12 +266,31 @@ mod tests {
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
-        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+        let text = grid_text(&open.grid);
 
         assert!(text.contains("press [space] to continue"));
         assert!(!text.contains("loading..."));
         assert!(!text.contains("■"));
         assert!(!text.contains("⋄"));
+    }
+
+    #[test]
+    fn loading_overlay_gives_space_prompt_one_cell_visual_right_nudge() {
+        let layer = LoadingLayer;
+        let world = WorldState::for_boot();
+        let fonts = FontRegistry::new();
+        let mut ui = UiState::new();
+        ui.start_loading_boot();
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
+        let prompt = "press [space] to continue";
+        let (prompt_x, _) = find_text_position(&open.grid, prompt).expect("prompt should render");
+        let prompt_center = prompt_x as i32 + prompt.chars().count() as i32 / 2;
+        let visual_center = open.grid.width as i32 / 2 + 1;
+
+        assert_eq!(prompt_center, visual_center);
     }
 
     #[test]
@@ -258,7 +306,7 @@ mod tests {
         ui.loading.duration = crate::ui::state::LoadingState::BOOT_DISSOLVE;
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
-        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+        let text = grid_text(&open.grid);
 
         assert!(text.contains("press [space] to continue"));
         assert!(!text.contains("loading..."));
@@ -277,7 +325,7 @@ mod tests {
         ui.loading.duration = crate::ui::state::LoadingState::BOOT_HOLD;
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
-        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+        let text = grid_text(&open.grid);
 
         assert!(!text.contains("a very special"));
         assert!(!text.contains("loading"));

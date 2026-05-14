@@ -11,7 +11,10 @@ use std::{
     time::{Duration, Instant},
 };
 
+use serde_json::json;
+
 use crate::core::world::{WorldKind, WorldState};
+use crate::diagnostics::append_event;
 use crate::render::compositor::Grid;
 use crate::render::fonts::FontRegistry;
 use crate::scene::{render_scene_with_scene_and_grid, Scene};
@@ -46,6 +49,7 @@ pub fn run(
     initial_world_kind: WorldKind,
     clean_launch: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let runtime_start = Instant::now();
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -76,9 +80,41 @@ pub fn run(
     let mut loading_effect_phase = None;
     let mut loading_effect: Option<Effect> = None;
     let mut loading_effect_last_tick = Instant::now();
+    let mut last_boot_phase = ui_state.loading.boot_phase();
+    let mut logged_world_ready = false;
+
+    append_event(
+        "boot_start",
+        &[
+            ("initial_world", json!(initial_world_kind.title())),
+            ("clean_launch", json!(clean_launch)),
+            ("version", json!(crate::build_info::VERSION)),
+            ("build", json!(crate::build_info::build_hash())),
+        ],
+    );
+    if let Some(phase) = last_boot_phase {
+        append_event("boot_phase", &[("phase", json!(format!("{phase:?}")))]);
+    }
+
     'run: loop {
         let frame_start = Instant::now();
         ui_state.update_loading();
+        let boot_phase = ui_state.loading.boot_phase();
+        if boot_phase != last_boot_phase {
+            if let Some(phase) = boot_phase {
+                append_event("boot_phase", &[("phase", json!(format!("{phase:?}")))]);
+            } else if last_boot_phase.is_some() {
+                append_event(
+                    "world_ready",
+                    &[
+                        ("boot_ms", json!(runtime_start.elapsed().as_millis() as u64)),
+                        ("world", json!(ui_state.active_world_kind().title())),
+                    ],
+                );
+                logged_world_ready = true;
+            }
+            last_boot_phase = boot_phase;
+        }
         ui_state.refresh_weather_if_due();
 
         while event::poll(Duration::from_millis(0))? {
@@ -340,6 +376,19 @@ pub fn run(
         } else {
             0.0
         };
+    }
+
+    if !logged_world_ready {
+        append_event(
+            "runtime_exit",
+            &[
+                ("boot_completed", json!(!ui_state.loading.active)),
+                (
+                    "runtime_ms",
+                    json!(runtime_start.elapsed().as_millis() as u64),
+                ),
+            ],
+        );
     }
 
     disable_raw_mode()?;

@@ -361,7 +361,8 @@ impl FeatureVisibilityMode {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct SettingsCursor {
     pub positions: u16,
-    pub widgets: u16,
+    #[serde(alias = "widgets")]
+    pub ui: u16,
     pub features: u16,
     pub gif: u16,
     pub theme: u16,
@@ -371,7 +372,7 @@ impl SettingsCursor {
     pub fn row(self, tab: SettingsTab) -> u16 {
         match tab {
             SettingsTab::Positions => self.positions,
-            SettingsTab::Ui => self.widgets,
+            SettingsTab::Ui => self.ui,
             SettingsTab::Features => self.features,
             SettingsTab::Gif => self.gif,
             SettingsTab::Theme => self.theme,
@@ -381,7 +382,7 @@ impl SettingsCursor {
     pub fn set_row(&mut self, tab: SettingsTab, row: u16) {
         match tab {
             SettingsTab::Positions => self.positions = row,
-            SettingsTab::Ui => self.widgets = row,
+            SettingsTab::Ui => self.ui = row,
             SettingsTab::Features => self.features = row,
             SettingsTab::Gif => self.gif = row,
             SettingsTab::Theme => self.theme = row,
@@ -473,7 +474,6 @@ impl LoadingState {
         (now.duration_since(started_at).as_secs_f32() / duration).clamp(0.0, 1.0)
     }
 
-    #[cfg(test)]
     pub fn boot_phase(&self) -> Option<BootLoadingPhase> {
         match self.mode {
             LoadingMode::Boot(phase) => Some(phase),
@@ -2139,7 +2139,7 @@ mod tests {
                 settings_tab: SettingsTab::Theme,
                 settings_cursor: SettingsCursor {
                     positions: 1,
-                    widgets: 2,
+                    ui: 2,
                     features: 0,
                     gif: 0,
                     theme: 1,
@@ -2189,7 +2189,7 @@ mod tests {
         assert_eq!(round_trip.meta.debug_panel_tab, DebugPanelTab::Hero);
         assert_eq!(round_trip.meta.settings_tab, SettingsTab::Theme);
         assert_eq!(round_trip.meta.settings_cursor.positions, 1);
-        assert_eq!(round_trip.meta.settings_cursor.widgets, 2);
+        assert_eq!(round_trip.meta.settings_cursor.ui, 2);
         assert_eq!(round_trip.meta.settings_cursor.features, 0);
         assert_eq!(round_trip.meta.settings_cursor.gif, 0);
         assert_eq!(round_trip.meta.settings_cursor.theme, 1);
@@ -2448,7 +2448,7 @@ mod tests {
     fn ui_settings_toggle_world_overlay_flags() {
         let mut ui = UiState::new();
         ui.meta.settings_tab = SettingsTab::Ui;
-        ui.meta.settings_cursor.widgets = 0;
+        ui.meta.settings_cursor.ui = 0;
 
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
@@ -2458,22 +2458,22 @@ mod tests {
         assert!(ui.meta.sliders_visible);
         assert!(ui.meta.debug_info_panel_visible);
 
-        ui.meta.settings_cursor.widgets = 1;
+        ui.meta.settings_cursor.ui = 1;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
         assert!(!ui.meta.world_axis_visible);
 
-        ui.meta.settings_cursor.widgets = 2;
+        ui.meta.settings_cursor.ui = 2;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
         assert!(!ui.meta.world_datum_visible);
 
-        ui.meta.settings_cursor.widgets = 3;
+        ui.meta.settings_cursor.ui = 3;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
         assert!(!ui.meta.sliders_visible);
 
-        ui.meta.settings_cursor.widgets = 4;
+        ui.meta.settings_cursor.ui = 4;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("ui toggle should succeed");
         assert!(!ui.meta.debug_info_panel_visible);

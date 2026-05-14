@@ -14,11 +14,10 @@ Coordination contract:
 
 Issue link rule:
 
-- use explicit `known_issues.md` ids such as `KI-001` when an execution item is directly tied to an active unresolved issue
+- use explicit `known_issues.md` ids such as `KI-###` when an execution item is directly tied to an active unresolved issue
 
 ## Immediate Maintenance Batch
 
-- `fix` correct the boot `press [space] to continue` prompt centering with one deliberate visual pass; link: `KI-001` in `known_issues.md`.
 - `inspect` record and preserve the current runtime/code efficiency priority order before any hot-path refactors start: hero-frame startup caching first, persistent `Scene`/layer reuse second, reusable frame buffers third, then smaller UI-write/runtime-branch cleanup.
 - `inspect` define the startup-performance plan around the hero pipeline explicitly: move GIF decode + temp-frame + `chafa` work toward an offline compiler / cached `HeroFrameSet` path instead of paying that cost inside `Hero::new()`.
 - `verify` validate the first cache-first hero startup path against real install/update flows under the installed wrapper path, including first-run cache generation timing and whether shipping a prebuilt cache should become part of release hygiene.
@@ -105,9 +104,9 @@ Issue link rule:
 
 ### 5.1 UI Phase Checklist
 
-- `verify` `ui/` remains runtime UI state and screen-space widgets only.
-- `verify` world-state mutation stays out of UI widgets.
-- `verify` camera/viewport ownership stays in the projection path, not in UI widgets.
+- `verify` `ui/` remains runtime UI state and screen-space presentation only.
+- `verify` world-state mutation stays out of UI presentation helpers.
+- `verify` camera/viewport ownership stays in the projection path, not in UI presentation helpers.
 - `verify` footer, HUD, and overlay responsibilities stay explicit before changing scene code.
 - `verify` the UI phase does not reintroduce panel-style layout as the primary model.
 

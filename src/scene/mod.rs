@@ -656,6 +656,8 @@ mod tests {
             .collect();
 
         assert!(footer_line.contains("[d]ev"));
+        assert!(footer_line.contains("[?] help"));
+        assert!(!footer_line.contains("[m]ove"));
     }
 
     #[test]

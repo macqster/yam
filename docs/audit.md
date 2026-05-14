@@ -1,7 +1,7 @@
 # Repo Audit
 
 Date: 2026-04-27
-Last reviewed: 2026-05-13
+Last reviewed: 2026-05-14
 
 ## Unresolved Risks
 
@@ -40,16 +40,22 @@ Last reviewed: 2026-05-13
 
 - `low` The common direct-binary startup path is no longer an obvious performance problem after the hero-cache work: a small local audit on 2026-05-14 showed `./target/debug/yam-rust --version` effectively instant for a single run and about `1.21s` total over 200 repeated launches (roughly `6ms` per launch), while the much slower `cargo run -- --version` path was dominated by Cargo wrapper overhead rather than YAM runtime initialization.
   - evidence: local timing audit on 2026-05-14; `src/render/chafa.rs`, `src/render/hero.rs`
+- `low` Recent `yam-install && yam` wall-clock variance is currently better explained by Cargo/install-path work than by YAM runtime startup: the pasted terminal history ranged from about `1.64s` to `21.78s` for the install step, including one near-no-op reinstall with no visible compile work. That output shape looked like an older direct Cargo install path rather than the newer offline-first wrapper; the repo now ships an explicit `bin/yam-install` wrapper that routes through `scripts/update.sh` so future timing reads are easier to interpret. Treat those numbers as build/install variance unless a timed direct-binary launch sample says otherwise.
+  - evidence: pasted terminal history on 2026-05-14; `bin/yam-install`, `scripts/update.sh`, `src/main.rs`
+- `low` The first opt-in diagnostics smoke test on 2026-05-14 also exposed brief Cargo package-cache lock waits during both install and full-verify flows, which is a much better match for the recent install-time wobble than any runtime startup regression. The new local NDJSON diagnostics path now gives the repo one concrete way to separate Cargo lock/build variance from launcher and runtime boot timing before any deeper optimization pass is justified.
+  - evidence: local `YAM_DIAGNOSTICS=1` smoke test on 2026-05-14; `scripts/update.sh`, `src/diagnostics.rs`, `src/runtime.rs`
+- `low` The launch wrappers were also still biasing measurements toward Cargo work because `bin/yam` and `bin/yam-sandbox` would unconditionally use `cargo run --release` whenever the repo checkout existed. They now prefer the installed runtime and only trigger the install/update path when the installed binary is missing or older than repo runtime inputs, with an explicit `YAM_USE_REPO_RUN=1` escape hatch for deliberate development runs.
+  - evidence: `bin/yam`, `bin/yam-sandbox`, `bin/yam-install`, `scripts/update.sh`
 - `low` A first interactive wall-clock timing sample is not a good proxy for steady-state runtime cost yet: launching the built binary into the real TUI and quitting under automation took about `33.89s`, but that figure is dominated by the intentional boot/loading sequence and terminal-session orchestration rather than ordinary per-frame render cost. Future profiling should sample inside the live loop or through a boot-bypass harness instead of reading wall-clock boot time as a render benchmark.
   - evidence: local interactive timing audit on 2026-05-14; `src/runtime.rs`, `src/scene/mod.rs`
 - `medium` The first render-loop reuse, hidden-layer skip, final-buffer reuse, and scratch-grid adoption slices are now in place: runtime keeps one long-lived `Scene`, no longer asks obviously closed modal/help/quit layers to allocate empty grids, reuses the final composed `Grid` across frames, and can now reuse scratch grids for the simple active layers, the lightweight companion projection layers, the hero layer, the debug overlay, and the vine layer. The remaining hot-path seam is no longer another obvious layer conversion, but deciding whether any of the still-general draw paths deserve cheaper specialized helpers.
   - evidence: `src/scene/mod.rs`, `src/ui/scene.rs`, `src/render/compositor.rs`
 - `medium` The renderer now has a narrow fast ASCII-only text-write helper for the hottest plain-ASCII chrome, and it is adopted by the always-on footer plus the debug/world-label chrome. The remaining question is whether more UI surfaces actually need it, not whether the seam should exist.
   - evidence: `src/render/compositor.rs`, `src/scene/layers/modal.rs`, `src/scene/layers/status_layer.rs`
-- `medium` The current dev-mode cleanup seam is mostly about role tightening rather than missing features: the debug panel is still too crowded, `calendar (reserved)` remains too visible across move/settings/help surfaces, and the footer/hotkeys split is close but not fully settled.
+- `medium` The current dev-mode cleanup seam is mostly about role tightening rather than missing features: the debug panel tab split is cleaner again after separating runtime control facts from hero-specific animation/placement facts, and the footer/help split is tighter now that the footer uses a stable left quit/dev anchor plus a right help/version catling, but `calendar (reserved)` still remains too visible across some move/settings/help-adjacent surfaces.
   - evidence: `src/scene/layers/debug_layer.rs`, `src/scene/layers/hotkeys_layer.rs`, `src/scene/layers/move_layer.rs`, `src/scene/layers/settings_layer.rs`, `src/scene/layers/status_layer.rs`
-- `medium` Docs/runtime synchronization is currently weakest in the dev-UI vocabulary: the live settings tab title is `ui`, not `widgets`; the active clean-boot manual camera seed is `(-60, -15)`, not `(-63, -17)`; and some contracts still describe broader everyday debug visibility than the current dev-only gating actually provides.
-  - evidence: `src/ui/state.rs`, `src/scene/layers/settings_layer.rs`, `docs/rendering.md`, `docs/architecture.md`, `TODO.md`
+- `low` The last meaningful dev-UI vocabulary drift was tightened on 2026-05-14: the live settings tab and docs now agree on `ui`, the clean-boot manual camera seed references now agree on `(-60, -15)`, and the active contracts now describe the current dev-gated debug posture instead of implying a broader always-visible debug surface.
+  - evidence: `src/ui/state.rs`, `src/scene/layers/settings_layer.rs`, `docs/rendering.md`, `docs/architecture.md`, `docs/scene-model.md`, `TODO.md`
 - `medium` `scene_config.json` is active for tooling and should stay aligned with the tooling defaults if they change.
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
 - `medium` The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.

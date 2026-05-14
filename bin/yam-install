@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+ROOT="${YAM_ROOT:-$HOME/_git/yam}"
+REPO_CMD="cd \"$ROOT\" && bash scripts/update.sh"
+INSTALLED_CMD="\"${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}\" --update"
+
+if [[ -f "$ROOT/Cargo.toml" ]]; then
+  exec /bin/zsh -lc "$REPO_CMD"
+else
+  exec /bin/zsh -lc "$INSTALLED_CMD"
+fi

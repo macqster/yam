@@ -1,0 +1,114 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+if [[ -n "${YAM_DIAGNOSTICS_PATH:-}" ]]; then
+  LOG_PATH="${YAM_DIAGNOSTICS_PATH}"
+elif [[ -n "${XDG_STATE_HOME:-}" ]]; then
+  LOG_PATH="${XDG_STATE_HOME}/yam/diagnostics.ndjson"
+else
+  LOG_PATH="${HOME}/.local/state/yam/diagnostics.ndjson"
+fi
+
+SESSION_LIMIT="${YAM_DIAGNOSTICS_SESSIONS:-3}"
+
+if [[ ! -f "$LOG_PATH" ]]; then
+  echo "No diagnostics log found at: $LOG_PATH" >&2
+  exit 1
+fi
+
+python3 - "$LOG_PATH" "$SESSION_LIMIT" "$@" <<'PY'
+import json
+import sys
+from collections import OrderedDict
+
+path = sys.argv[1]
+default_limit = int(sys.argv[2])
+args = sys.argv[3:]
+
+mode = "summary"
+session_filter = None
+line_limit = None
+
+i = 0
+while i < len(args):
+    arg = args[i]
+    if arg in ("--tail", "tail"):
+        mode = "tail"
+    elif arg in ("--summary", "summary"):
+        mode = "summary"
+    elif arg == "--session":
+        i += 1
+        if i >= len(args):
+            raise SystemExit("--session requires a value")
+        session_filter = args[i]
+    elif arg == "--lines":
+        i += 1
+        if i >= len(args):
+            raise SystemExit("--lines requires a value")
+        line_limit = int(args[i])
+    else:
+        raise SystemExit(f"unknown argument: {arg}")
+    i += 1
+
+with open(path, "r", encoding="utf-8") as handle:
+    events = [json.loads(line) for line in handle if line.strip()]
+
+if session_filter is not None:
+    events = [event for event in events if event.get("session") == session_filter]
+    if not events:
+        raise SystemExit(f"no diagnostics events found for session: {session_filter}")
+
+if mode == "tail":
+    if line_limit is None:
+        line_limit = 20
+    for event in events[-line_limit:]:
+        print(json.dumps(event, ensure_ascii=True))
+    raise SystemExit(0)
+
+sessions = OrderedDict()
+for event in events:
+    session = event.get("session", "<unknown>")
+    sessions.setdefault(session, []).append(event)
+
+items = list(sessions.items())
+if session_filter is None:
+    items = items[-default_limit:]
+
+for idx, (session, session_events) in enumerate(items):
+    first = session_events[0]
+    last = session_events[-1]
+    kinds = [event.get("kind", "?") for event in session_events]
+    install_steps = [
+        event for event in session_events if event.get("kind") == "install_step"
+    ]
+    install_ms = sum(
+        int(event.get("duration_ms", 0))
+        for event in install_steps
+        if str(event.get("duration_ms", "")).isdigit()
+    )
+    world_ready = next(
+        (event for event in session_events if event.get("kind") == "world_ready"),
+        None,
+    )
+
+    print(f"session: {session}")
+    print(f"  first: {first.get('ts', '?')}")
+    print(f"  last:  {last.get('ts', '?')}")
+    print(f"  events: {len(session_events)}")
+    print(f"  kinds: {', '.join(kinds)}")
+    if install_steps:
+        modes = ", ".join(
+            OrderedDict.fromkeys(
+                str(event.get("mode", "?")) for event in install_steps
+            ).keys()
+        )
+        print(f"  install_ms: {install_ms}")
+        print(f"  install_modes: {modes}")
+    if world_ready is not None:
+        boot_ms = world_ready.get("boot_ms", "?")
+        world = world_ready.get("world", "?")
+        print(f"  world_ready: {world} in {boot_ms} ms")
+    if idx != len(items) - 1:
+        print()
+PY

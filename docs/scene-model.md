@@ -132,7 +132,7 @@ Rules:
 - the initial flora implementation should favor a small, inspectable set of prototypes: the Y-shaped tree-stump scaffold, a guide-following vine family, and a monstera-like plant with large leaf organs
 - UI is screen-attached presentation, not world-attached simulation state
 - HUD and UI may still derive spacing, insets, and alignment rules from the shared world-spacing model, but their final placement remains screen-attached presentation
-- everyday debug overlays may stay available in the normal experience, while deeper dev controls remain explicitly gated and visually distinct
+- the current diagnostic overlays remain dev-gated in the live runtime, while deeper mutation/editing controls stay within the same explicit dev surface family until a narrower everyday-debug surface is deliberately introduced
 - keyboard interaction should preserve muscle-memory conventions, with stable mode boundaries and a discoverability path for rare actions
 - visual hygiene is a scene-model requirement: text, glyphs, and numerals must remain readable as density increases
 - a command palette or similar action hub should exist as the fallback route for infrequent actions and entity jumps
@@ -226,7 +226,7 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 
 - `hotkeys` - discoverability for the current dev controls
 - `move` - target selection and movement for world-attached entities
-- `settings` - tabbed presentation/state inspection for positions, widgets, gif, and theme values
+- `settings` - tabbed presentation/state inspection for positions, ui, features, gif, and theme values
 - `palette` - curated plus extracted BTAS/TNBA swatch inspection in a dedicated dev modal
 - `weather` - comparative weather atlas inspection in a dedicated dev modal
 - `pointer` - dev-only probe state, shown through the debug surface rather than as a standalone modal
@@ -244,7 +244,7 @@ Rules:
 
 - the footer must stay compact and instruction-oriented
 - the main scene should carry composition and density, not control help
-- debug/inspect may be visible in daily use, but they must remain legible and secondary to the footer
+- debug/inspect remains subordinate to the footer and currently reaches the screen through the dev-gated diagnostic surfaces
 - overlays are temporary action surfaces and should not replace the permanent HUD contract
 - the footer may show the current mode and the minimal runtime hint only
 - debug/inspect may show state facts and labels, but not the full action menu

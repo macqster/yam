@@ -6,6 +6,8 @@ Rust terminal scene engine for YAM.
 
 This repository contains the active Rust runtime tree for YAM.
 
+Current release: `0.3.8`
+
 ## What YAM Is
 
 YAM is a datum-first terminal scene engine built around:
@@ -42,8 +44,17 @@ Reserved or future-facing:
 - `yam` is the canonical launcher command
 - `yam-sandbox` launches the sparse sandbox world
 - `yam-rust` is the current direct runtime binary for debugging or manual execution
-- `yam-install` rebuilds and reinstalls the fallback binary and launcher wrappers
+- `yam-install` rebuilds and reinstalls the fallback binary and launcher wrappers through the current offline-first update path
+- `yam-diagnostics` summarizes the recent local diagnostics sessions or tails the raw NDJSON events
 - `q` exits
+
+Launcher behavior:
+
+- `yam` and `yam-sandbox` now prefer the installed runtime binary
+- if the repo checkout exists and the installed binary is missing or older than repo runtime inputs, the launcher refreshes through the current `yam-install` path before launch
+- set `YAM_USE_REPO_RUN=1` only when you intentionally want the older direct `cargo run --release` development path
+- set `YAM_DIAGNOSTICS=1` to write a small local NDJSON diagnostics log for install/runtime timing under `~/.local/state/yam/diagnostics.ndjson` (or `$XDG_STATE_HOME/yam/diagnostics.ndjson`)
+- use `yam-diagnostics` to read the most recent local diagnostics sessions; add `--tail` to print raw events or `--session <id>` to focus on one run
 
 ## Current Priorities
 
@@ -55,8 +66,6 @@ Current project priority is:
 4. only then broader new surface work
 
 Hero aesthetics are intentionally held steady while runtime and contract seams are cleaned up.
-
-The only explicitly tracked known issue at the moment is `KI-001`: the boot `press [space] to continue` prompt still needs one deliberate centering pass, but it is currently treated as a minor visual issue rather than a release blocker. See [known_issues.md](known_issues.md).
 
 ## Document Roles
 
@@ -91,7 +100,9 @@ Use the docs by role:
 ## Maintenance
 
 - the repo is pinned to stable Rust through `rust-toolchain.toml`
-- run `scripts/check.sh` before committing
+- run `scripts/verify.sh` for the full maintenance/release gate
+- run `scripts/check.sh` for the smaller Rust-only gate
+- run `scripts/check-docs.sh` for active-doc hygiene batches
 - `cargo clippy -- -D warnings` must pass without warnings
 - use `docs/README.md` when you need the docs map
 

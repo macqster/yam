@@ -11,12 +11,12 @@ This repository currently uses one active Rust maintenance branch with lightweig
 ## Versioning
 
 - Releases advance monotonically: `0.2`, `0.3`, `0.4`, and so on.
-- The current branch version should stay explicit in the repo, docs, and release notes.
+- The current branch version should stay explicit in the repo, docs, and release notes, with `Cargo.toml` and the root `README.md` kept in sync as the canonical package/front-door pair.
 - Tags and release notes should carry the long-term release history; the branch itself stays focused on the active maintenance line.
 
 ## Workflow
 
-1. Keep `main` green under `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite.
+1. Keep `main` green under `bash scripts/verify.sh`.
 2. Land maintenance batches directly on `main` with docs/tests/log updates in the same change.
 3. Cut and tag releases from the clean pushed `main` state when the branch is ready.
 4. Document any future branch-model change here before treating it as active workflow.

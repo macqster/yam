@@ -1,5 +1,6 @@
 mod build_info;
 mod core;
+mod diagnostics;
 mod render;
 mod runtime;
 mod scene;

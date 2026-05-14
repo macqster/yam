@@ -402,19 +402,14 @@ fn debug_panel_lines(
 ) -> Vec<String> {
     match tab {
         DebugPanelTab::Runtime => {
-            let mut lines = vec![format!("FPS: {:.1}", facts.fps)];
-            if main_scene {
-                lines.extend([
-                    format!("Hero FPS: {:.1}", facts.hero_fps),
-                    format!("Frame: {} / {}", facts.current_frame, facts.frame_count),
-                    format!("Playing: {}", facts.playing),
-                ]);
-            }
-            lines.extend([
+            let mut lines = vec![
+                format!("FPS: {:.1}", facts.fps),
                 format!("World: {}", facts.world_title),
                 facts.camera_mode.to_string(),
                 facts.move_mode.to_string(),
-            ]);
+                format!("Camera: ({}, {})", facts.camera_x, facts.camera_y),
+                format!("Camera Δ: ({}, {})", facts.camera_dx, facts.camera_dy),
+            ];
             if facts.pointer_probe_open {
                 lines.push(format!(
                     "Pointer: on ({}, {})",
@@ -429,13 +424,11 @@ fn debug_panel_lines(
             lines
         }
         DebugPanelTab::Hero => {
-            let mut lines = vec![
-                format!("Camera: ({}, {})", facts.camera_x, facts.camera_y),
-                format!("Camera Δ: ({}, {})", facts.camera_dx, facts.camera_dy),
-                facts.soft_band_line.to_string(),
-            ];
             if main_scene {
-                lines.extend([
+                vec![
+                    format!("Hero FPS: {:.1}", facts.hero_fps),
+                    format!("Frame: {} / {}", facts.current_frame, facts.frame_count),
+                    format!("Playing: {}", facts.playing),
                     format!(
                         "Hero world: ({}, {})",
                         facts.hero_world.x, facts.hero_world.y
@@ -446,9 +439,14 @@ fn debug_panel_lines(
                     ),
                     format!("Hero anchor visible: {}", facts.hero_visible),
                     format!("Hero offset: ({}, {})", facts.hero_dx, facts.hero_dy),
-                ]);
+                ]
+            } else {
+                vec![
+                    "Hero: main-scene only".to_string(),
+                    format!("World: {}", facts.world_title),
+                    format!("Pointer visible: {}", facts.pointer_visible),
+                ]
             }
-            lines
         }
         DebugPanelTab::Companions => {
             if main_scene {
@@ -493,6 +491,7 @@ fn debug_panel_lines(
             let mut lines = vec![facts.soft_band_line.to_string()];
             if main_scene {
                 lines.extend([
+                    format!("Guides: {}", facts.guide_count),
                     facts.vine_line.to_string(),
                     facts.vine_axis_line.to_string(),
                     facts.vine_tip_line.to_string(),
@@ -1027,10 +1026,13 @@ mod tests {
         assert!(text.contains(" hero "));
         assert!(text.contains(" companions "));
         assert!(text.contains(" vines "));
+        assert!(text.contains("FPS:"));
+        assert!(text.contains("Camera: (30, 10)"));
         assert!(text.contains("Camera mode: follow-hero"));
         assert!(text.contains("Move mode: off (hero)"));
         assert!(text.contains("Pointer: on (0, 0)"));
         assert!(!text.contains("Hero world:"));
+        assert!(!text.contains("Hero FPS:"));
         assert!(!text.contains("Clock world:"));
         assert!(!text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
     }
@@ -1053,10 +1055,14 @@ mod tests {
             .map(|cell| cell.symbol)
             .collect();
         assert!(hero_text.contains("[hero]"));
-        assert!(hero_text.contains("Camera: (30, 10)"));
+        assert!(hero_text.contains("Hero FPS:"));
+        assert!(hero_text.contains("Frame:"));
+        assert!(hero_text.contains("Playing:"));
         assert!(hero_text.contains("Hero world:"));
         assert!(hero_text.contains("Hero screen:"));
         assert!(hero_text.contains("Hero anchor visible:"));
+        assert!(!hero_text.contains("Camera: (30, 10)"));
+        assert!(!hero_text.contains("Soft band:"));
         assert!(!hero_text.contains("Clock world:"));
 
         ui.meta.debug_panel_tab = DebugPanelTab::Companions;
@@ -1082,6 +1088,8 @@ mod tests {
             .map(|cell| cell.symbol)
             .collect();
         assert!(vines_text.contains("[vines]"));
+        assert!(vines_text.contains("Guides: "));
+        assert!(vines_text.contains("Soft band:"));
         assert!(vines_text.contains("Vines: 1 (id 1, yam.vine.border_v1)"));
         assert!(vines_text.contains("Vine axes: 1 / segments:"));
         assert!(vines_text.contains("Vine tips: 1 active / 0 dormant"));
@@ -1166,6 +1174,7 @@ mod tests {
         assert!(text.contains("Pointer visible:"));
         assert!(!text.contains("Guides: 0"));
         assert!(!text.contains("Vines: 0"));
+        assert!(!text.contains("Hero: main-scene only"));
         assert!(!text.contains("Hero world:"));
         assert!(!text.contains("Hero screen:"));
         assert!(!text.contains("Clock world:"));
@@ -1184,8 +1193,22 @@ mod tests {
             .map(|cell| cell.symbol)
             .collect();
         assert!(vines_text.contains("[vines]"));
+        assert!(vines_text.contains("Soft band:"));
         assert!(vines_text.contains("Guides: 0"));
         assert!(vines_text.contains("Vines: 0"));
+
+        ui.meta.debug_panel_tab = DebugPanelTab::Hero;
+        let hero_output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
+        let hero_text: String = hero_output
+            .grid
+            .cells
+            .iter()
+            .map(|cell| cell.symbol)
+            .collect();
+        assert!(hero_text.contains("[hero]"));
+        assert!(hero_text.contains("Hero: main-scene only"));
+        assert!(hero_text.contains("World: sandbox"));
+        assert!(!hero_text.contains("Hero world:"));
     }
 
     #[test]

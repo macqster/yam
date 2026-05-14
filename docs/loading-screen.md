@@ -34,7 +34,7 @@ The bar and text are no longer hard-coded one-off literals. The caption, wordmar
 Once the bar phase completes, the loading label and bar are replaced with:
 
 - two empty rows beneath the version/build line
-- a centered `press [space] to continue` prompt
+- a visually centered `press [space] to continue` prompt that uses one deliberate cell of rightward nudge relative to the raw terminal centerline, rather than inheriting any offset from the active-loading label or version/build row
 
 This state is intentionally quiet. It is meant to communicate that boot work is complete and the app is now waiting on the user, not hung.
 

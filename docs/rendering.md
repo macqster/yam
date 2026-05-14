@@ -202,7 +202,7 @@ Rules:
 
 - capture should happen in world space first, not in HUD space
 - the debug info panel should be the factual readout, not the authoring editor
-- the debug info panel now groups facts into `runtime`, `hero`, `companions`, and `vines` tabs, with the tab row rendered directly beneath the top scrollbar band and `Tab` / `Shift+Tab` cycling those groups when the settings modal is not active
+- the debug info panel now groups facts into `runtime`, `hero`, `companions`, and `vines` tabs, with the tab row rendered directly beneath the top scrollbar band and `Tab` / `Shift+Tab` cycling those groups when the settings modal is not active; the intended split is `runtime` for session/control plus camera/pointer facts, `hero` for hero animation/placement facts, `companions` for clock/weather/date projection facts, and `vines` for guide/vine inspection plus the soft-band spatial probe readout
 - the help popup should remain discoverability, not a second editor surface
 - `?` may be opened from the plain main scene as well as dev mode, but the popup should separate always-available actions from dev-only controls instead of implying that all listed tools are live immediately
 - move mode is for explicit world-attached positioning, not for hidden geometry mutation; its live grammar is `Tab` / `Shift+Tab` to cycle the visible target set and arrow keys to move the active target
@@ -213,7 +213,7 @@ Rules:
 
 - `runtime` receives input and ticks state
 - all scene rendering passes through `render_scene`
-- `render_scene` builds a temporary `Scene`
+- the common runtime path keeps one long-lived `Scene`; the plain `render_scene(...)` helper still exists as a compatibility seam for direct callers and tests
 - `Scene::render` uses the full terminal area for viewport and viewport rect values
 - `Scene::render` also computes a single read-only `RenderState` for hero/clock/debug values
 - `Scene::render` builds `RenderState` through `build_render_state(...)`, which is covered by a resize-invariance test
@@ -271,7 +271,7 @@ The active implementation treats camera as a viewport crop helper:
 - `GuideState` in `core/guide.rs` is the queryable world-space guide store that future vines can use for linework primitives such as points, lines, polylines, and outline shapes; each guide is individually labeled and may also participate in an optional named group, and `GuideState` also carries named `GuideSet` collections so larger guide groups can be queried or edited as collections; guide sets are constructed with `GuideSet::new(...)` and registered through `GuideState::add_set(...)`
 - footer placement is intentionally the bottom row of the full terminal frame via `footer_row(height)`, while the world playfield occupies the `212x56` area above it
 - the footer is plain text on the bottom row, with no green background highlight, rendered in BTAS-grey, and the version stamp stays right-aligned
-- the default footer help is a compact `[q]uit • [d]ev` hint, and the dev-mode footer keeps the same compact punctuation style for the runtime controls
+- the footer now uses a split compact layout: the left side stays on `[q]uit • [d]ev`, while the right side pairs `[?] help` with the version stamp instead of trying to carry more dev-only vocabulary inline
 - the interaction contract is mode-driven and keyboard-first:
   - `normal` uses familiar navigation and toggle keys for day-to-day scene use
   - `inspect` focuses on selection, entity reading, and drill-down navigation
@@ -284,8 +284,8 @@ The active implementation treats camera as a viewport crop helper:
 - the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
 - the debug overlay may also temporarily render a faint soft-line probe for linework testing, using [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be exercised against real world coordinates; that atlas also covers longer slope families for full-world lines and future guide/mask edge drawing, and the live debug surface now renders visible `GuideState` linework through the same helper; the current calibration pair is the mirrored `64x10` long-shallow target in both directions, and its visible cadence should read closer to `--''` at the lead-in and `__. -` near the exit than to a mostly-underscore ramp; punctuation in that family should also lean with the stroke direction inside the cell, so comma-like and apostrophe-like marks are used intentionally instead of generic filler punctuation; the current classifier also adds a coarse `CellBand` so glyph choice can reflect top/middle/bottom placement inside the cell, and that band is now derived from the stroke’s sub-cell position relative to the ideal segment; the debug info panel now exposes a soft-band readout for the canonical probe so the band classifier can be checked while tuning, but the latest screenshots still show several unresolved issues: the rendered line does not closely resemble the manual `64x10` reference, the shape still reads as segmented rather than smooth, the band readout does not yet map cleanly to the visible lean, and mirrored long-shallow probes still share too much of the same body rhythm; the long-shallow renderer therefore remains a calibration target rather than a final proven grammar
 - the pointer probe is the preferred absolute coordinate reference for guide authoring and future vines placement work
-- the debug info panel should stay compact and biased toward the live control facts needed for resize and entity-edit checks: the default `runtime` tab covers live session/control state, while `hero`, `companions`, and `vines` carry the denser placement and inspection facts without forcing them all into one always-visible list
-- the dev-mode footer stays compact and uses `[?]` to open the modal help popup, where camera centering, the pointer probe, the palette popup, the weather sprite popup, and other developer controls are described
+- the debug info panel should stay compact and biased toward the live control facts needed for resize and entity-edit checks: the default `runtime` tab covers live session/control state plus camera/pointer facts, while `hero`, `companions`, and `vines` carry the denser entity-placement and spatial-inspection facts without forcing them all into one always-visible list
+- the footer stays compact and role-separated instead of becoming a second command sheet: it keeps quit/dev on the left and a help-plus-version catling on the right, while the modal help popup carries the denser developer control list such as move, camera-home, pointer probe, palette, and weather tools
 - `?` is a global modal/help shortcut across the app surface family: it may promote the help popup above peer dev surfaces rather than requiring the user to back out first, and it may also be opened from the plain main scene as the discoverability entry into `dev_mode`
 - `Esc` is the global back/close key across dev surfaces: it should first cancel the top-most dev/modal interaction, including the quit-confirm surface when present
 - layout-affecting dev edits remain live but unsaved until explicitly persisted: camera home, camera pan, companion offsets, selected UI/features toggles, and similar persisted controls mark the runtime state dirty instead of writing immediately
@@ -298,10 +298,10 @@ The active implementation treats camera as a viewport crop helper:
 - the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, ui, features, gif, and theme values
 - modal help/move/settings/quit-confirm overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
-- the help popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter
+- the help popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter, and when it is already open it should not spend body rows repeating the trivial “open help” affordance
 - the move surface is a modal overlay rendered between hotkeys and settings; it now takes the form of a compact lower-band strip so the moved scene elements stay visible, and it uses `Tab` / `Shift+Tab` to cycle targets with arrow keys for movement
 - the quit-confirm popup is a modal overlay rendered above settings and below loading; it uses the shared modal shell to make dirty persisted-state exits explicit with a centered decision footer: `[s]ave and quit • [d]iscard and quit • ⎋ cancel`
-- the dev-mode footer also uses `[m]ove` to open the modal move strip; while it is open, `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target
+- the move strip is opened with `[m]`; while it is open, `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target, but that control now lives in the help popup instead of the always-on footer
 - the move strip shows the active target and keeps entity movement explicit instead of spreading more hotkeys into the footer
 - the help popup now also lists the pointer probe, palette popup, and weather sprite popup so those dev-only tools stay discoverable without turning the footer into a full command legend
 

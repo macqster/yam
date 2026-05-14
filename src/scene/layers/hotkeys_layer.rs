@@ -50,7 +50,6 @@ impl Layer for HotkeysLayer {
                     HelpLine::section("core"),
                     HelpLine::item("[q] quit app"),
                     HelpLine::item("[d] toggle dev mode"),
-                    HelpLine::item("[?] open help"),
                     HelpLine::blank(),
                     HelpLine::section("inspect"),
                     HelpLine::item("[s] settings popup"),
@@ -78,8 +77,8 @@ impl Layer for HotkeysLayer {
                 vec![
                     HelpLine::section("available now"),
                     HelpLine::item("[q] quit app"),
-                    HelpLine::item("[d] enter dev mode"),
                     HelpLine::item("[?] open help"),
+                    HelpLine::item("[d] enter dev mode"),
                     HelpLine::blank(),
                     HelpLine::section("in dev mode"),
                     HelpLine::item("[s] settings popup"),
@@ -218,6 +217,7 @@ mod tests {
         assert!(text.contains("inspect"));
         assert!(text.contains("move"));
         assert!(text.contains("animation"));
+        assert!(!text.contains("[?] open help"));
         assert!(text.contains("[P] palette popup"));
         assert!(text.contains("[W] weather popup"));
         assert!(text.contains("[C] store camera home"));

@@ -8,6 +8,24 @@ use crate::ui::widgets::status::build_status_label;
 
 pub struct StatusLayer;
 
+fn footer_hint(ui: &UiState) -> &'static str {
+    if ui.loading.showing_start_prompt() {
+        " [q]uit  •  [d]ev"
+    } else if ui.loading.active {
+        ""
+    } else {
+        " [q]uit  •  [d]ev"
+    }
+}
+
+fn footer_stamp(ui: &UiState) -> String {
+    if ui.loading.active {
+        String::new()
+    } else {
+        format!("[?] help  •  {}", build_status_label())
+    }
+}
+
 impl Layer for StatusLayer {
     fn z_index(&self) -> i32 {
         1000
@@ -26,17 +44,11 @@ impl Layer for StatusLayer {
         _ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
         let footer_y = footer_row(grid.height);
-        let left_text = if ui.loading.showing_start_prompt() {
-            " [q]uit  •  [d]ev"
-        } else if ui.loading.active {
-            ""
-        } else {
-            " [q]uit  •  [d]ev"
-        };
+        let left_text = footer_hint(ui);
         let footer_style = theme_style::footer_text();
         write_ascii_string(grid, 0, footer_y, left_text, footer_style);
-        if !ui.loading.active {
-            let right_text = build_status_label();
+        let right_text = footer_stamp(ui);
+        if !right_text.is_empty() {
             let stamp_width = right_text.chars().count() as u16 + 1;
             let x = grid.width.saturating_sub(stamp_width);
             write_ascii_string(grid, x, footer_y, &right_text, footer_style);
@@ -65,7 +77,7 @@ fn footer_row(height: u16) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use super::{build_status_label, footer_row, StatusLayer};
+    use super::{build_status_label, footer_hint, footer_row, footer_stamp, StatusLayer};
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
@@ -164,7 +176,7 @@ mod tests {
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains(" [q]uit  •  [d]ev"));
-        assert!(text.contains(&build_status_label()));
+        assert!(text.contains(&format!("[?] help  •  {}", build_status_label())));
         assert!(!text.contains("space - play/pause"));
         assert!(!text.contains(". - step"));
     }
@@ -213,6 +225,7 @@ mod tests {
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
         assert!(text.contains("[q]uit"));
         assert!(text.contains("[d]ev"));
+        assert!(!text.contains("[?] help"));
         assert!(!text.contains(&build_status_label()));
 
         ui.loading.mode =
@@ -260,6 +273,7 @@ mod tests {
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains(" [q]uit  •  [d]ev"));
+        assert!(text.contains("[?] help"));
         assert!(!text.contains("[h]otkeys"));
         assert!(!text.contains("[w]orld"));
         assert!(!text.contains("[m]ove"));
@@ -268,5 +282,31 @@ mod tests {
         assert!(!text.contains("[W]eather"));
         assert!(!text.contains("[space] play/pause"));
         assert!(!text.contains("[.] step"));
+    }
+
+    #[test]
+    fn footer_hint_tracks_loading_and_dev_mode() {
+        let mut ui = UiState::new();
+        assert_eq!(footer_hint(&ui), " [q]uit  •  [d]ev");
+        assert_eq!(
+            footer_stamp(&ui),
+            format!("[?] help  •  {}", build_status_label())
+        );
+
+        ui.meta.dev_mode = true;
+        assert_eq!(footer_hint(&ui), " [q]uit  •  [d]ev");
+        assert_eq!(
+            footer_stamp(&ui),
+            format!("[?] help  •  {}", build_status_label())
+        );
+
+        ui.start_loading_boot();
+        assert_eq!(footer_hint(&ui), "");
+        assert_eq!(footer_stamp(&ui), "");
+
+        ui.loading.mode =
+            crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
+        assert_eq!(footer_hint(&ui), " [q]uit  •  [d]ev");
+        assert_eq!(footer_stamp(&ui), "");
     }
 }

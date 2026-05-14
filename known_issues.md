@@ -20,11 +20,4 @@ This file tracks active unresolved issues only.
 
 ## Active Issues
 
-### KI-001
-
-- `status: open` `severity: minor` `surface: loading` `system: alignment` `links: TODO.md immediate maintenance`
-- first recorded: `2026-05-08 06:49 CEST`
-- summary:
-  loading-screen prompt alignment remains slightly off: `press [space] to continue` still reads as visually non-symmetrical relative to the rest of the centered boot assembly and needs one deliberate centering pass rather than further blind nudging.
-- current release posture:
-  acceptable to carry as a minor known issue through the next version bump unless a clean visual fix lands first.
+No active known issues are currently tracked.

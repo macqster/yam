@@ -19,7 +19,7 @@
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, shared drawing-engine primitives, and final text conversion
 - `render/drawing.rs` - reusable path stroke, glyph stamping, and occupancy tracking for features that need deterministic generative cell drawing without re-owning raster logic in a single layer
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
-- `ui/` - runtime UI state, persisted offsets/settings, screen-space widgets, and temporary scene adapter
+- `ui/` - runtime UI state, persisted offsets/settings, screen-space presentation helpers, and the temporary scene adapter entrypoint
 - `runtime.rs` - event loop, input, tick, and render orchestration only
 - Rust should remain the runtime and simulation core because it already owns the deterministic frame loop, scene layers, world state, and render contracts; other tools should be justified by whether they improve data authoring, offline analysis, or botanical research rather than by fashion
 - if a non-Rust tool is useful, it should usually live outside the hot path: Python or notebooks can help with offline botanical research or exploratory data analysis, and structured data files or a small database can help with species registries and journals without moving the runtime core out of Rust
@@ -72,7 +72,7 @@
 - the interface should prefer semantic structure over decorative novelty so future plant stats, morphology data, and lifecycle variables remain readable at high density
 - a command palette or similar action hub is the preferred discoverability fallback for rare actions, entity jumps, and overlay toggles
 - the interface mode map should remain stable and explicit:
-  - `normal`: day-to-day scene use, lightweight HUD, and everyday debug visibility
+  - `normal`: day-to-day scene use and lightweight HUD, without implying that the current diagnostic overlays are always visible outside `dev_mode`
   - `inspect`: focus, entity detail, and drill-down reading
   - `debug`: diagnostic overlays that are safe to leave available in normal use
   - `dev`: gated mutation/editing controls and simulation tooling
@@ -169,19 +169,19 @@
 - the debug overlay may also show passive scrollbar indicators for camera/world position, anchored to the outermost terminal row/column, rendered as a minimal dark-blue gauge using `┄`/`═` horizontally and `┊`/`║` vertically, and derived from `RenderState` camera origins normalized across their full world range
 - the debug overlay may also expose a dev-only blinking pointer probe that moves with arrow keys while enabled and reports its absolute world position in the debug info panel, so future masking and offset debugging can read a precise world-space point
 - the debug overlay may also temporarily draw a faint soft-line probe for linework testing, using the atlas in [`docs/soft-line-atlas.md`](soft-line-atlas.md) rather than raster masks, so the guide grammar can be evaluated against real world coordinates before vines or other world annotations consume it; the same atlas also defines the longer slope families used to cover full-world line spans, and the live debug surface now renders visible `GuideState` linework through the same helper
-- the debug info panel now uses a small tab row beneath the top scrollbar band to keep mixed-purpose facts separated as a family: `runtime` for live session/control state, `hero` for camera/hero placement, `companions` for clock/weather/date projection facts, and `vines` for guide/vine inspection
+- the debug info panel now uses a small tab row beneath the top scrollbar band to keep mixed-purpose facts separated as a family: `runtime` for live session/control state plus camera/pointer facts, `hero` for hero-specific animation and placement facts, `companions` for clock/weather/date projection facts, and `vines` for guide/vine inspection plus the soft-band spatial probe readout
 - `Tab` / `Shift+Tab` switch those debug-panel tabs only when the settings modal is not active, so the panel stays keyboard-light and does not compete with the settings popup's list behavior
 - the debug/info surface should stay compact and centered on the live control facts that matter during resize and entity-edit checks: camera mode, move mode/target, pointer probe state/absolute position, camera position, and the projected/visible companion facts being actively worked on; secondary diagnostics should be treated as optional overflow rather than default panel inventory
-- the dev-mode footer stays compact and uses `[?]` to open the modal help popup, where camera centering, the pointer probe, the palette popup, the weather popup, and other developer controls are described
+- the footer stays compact and split by role instead of trying to be a full legend: the left side stays on the stable quit/dev anchor, while the right side pairs the global help affordance with the version/build stamp so the footer reads like a small left command anchor plus a right status/help catling
 - `?` and `Esc` should behave as global modal-control keys across the current surface family: `?` is available from the main scene even before `dev_mode` is enabled, while `Esc` closes or backs out of the top-most transient surface without requiring surface-specific memorization
 - `[C]` stores the current camera position as the dev-mode camera home, and `[c]` recalls that stored home without switching into follow-hero mode
 - `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
-- the help popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current controls without adding footer clutter; outside `dev_mode` it should stay context-aware and explain which actions require entering dev mode first
+- the help popup is a modal overlay at `z_index = 390`, between passive debug and move/settings, and it uses the shared modal shell to list the current controls without adding footer clutter; outside `dev_mode` it should stay context-aware and explain which actions require entering dev mode first, while inside `dev_mode` it should focus on the dev-only vocabulary instead of repeating the obvious “open help” affordance
 - the move surface is a modal overlay at `z_index = 395`, between hotkeys and settings, and it now uses a compact lower-band strip so scene elements remain visible while `Tab` / `Shift+Tab` cycle the live target strip and arrow keys move the active target
 - the settings popup is a modal overlay at `z_index = 400`, and it uses the same shared modal shell with tabbed sections for positions, ui, features, gif, and theme values
 - the quit-confirm popup is a modal overlay at `z_index = 405`; it is only opened when persisted tweak state is dirty and an exit is requested, and it keeps save/discard/cancel explicit instead of silently redefining the accepted baseline
 - the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, help/move/settings/palette/weather/quit-confirm are coordinated dev-facing surfaces, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
-- the dev-mode footer also uses `[m]ove` to open the modal move strip, where `Tab` / `Shift+Tab` select the active entity target and arrow keys move that target while the strip is open
+- the move strip is still opened with `[m]`, but that denser dev-only vocabulary now belongs in the help popup rather than the always-on footer
 - persisted composition state is now intentionally two-phase: live dev edits mutate the current runtime view immediately, but values such as camera/home, hero and companion offsets, selected persisted UI/features toggles, and similar saved controls only become the canonical persisted baseline when explicitly saved
 - quit behavior follows that ownership split: `q` quits immediately when no persisted tweak state is dirty, while dirty exits route through the quit-confirm modal so the user can `save and quit`, `discard and quit`, or `Esc` cancel
 

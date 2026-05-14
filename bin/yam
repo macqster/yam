@@ -4,8 +4,23 @@ set -euo pipefail
 
 ROOT="${YAM_ROOT:-$HOME/_git/yam}"
 GHOSTTY_OPEN=(open -na Ghostty --args)
-REPO_CMD="cd \"$ROOT\" && cargo run --release --quiet -- --clean-launch"
 INSTALLED_CMD="\"${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}\" --clean-launch"
+UPDATE_CMD="cd \"$ROOT\" && bash scripts/update.sh"
+INSTALLED_BIN="${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}"
+
+ensure_diagnostics_session() {
+  if [[ "${YAM_DIAGNOSTICS:-}" == "" || "${YAM_DIAGNOSTICS:l}" == "0" || "${YAM_DIAGNOSTICS:l}" == "false" || "${YAM_DIAGNOSTICS:l}" == "off" ]]; then
+    return 0
+  fi
+  if [[ -z "${YAM_DIAGNOSTICS_SESSION:-}" ]]; then
+    export YAM_DIAGNOSTICS_SESSION="$(python3 - <<'PY'
+from datetime import datetime
+import os
+print(f"{datetime.now().astimezone().isoformat(timespec='milliseconds')}-{os.getpid()}")
+PY
+)"
+  fi
+}
 
 quote_args() {
   local out=()
@@ -16,18 +31,61 @@ quote_args() {
   printf '%s' "${(j: :)out}"
 }
 
+repo_inputs_are_newer_than_installed() {
+  local path
+  local dir
+
+  for path in \
+    "$ROOT/Cargo.toml" \
+    "$ROOT/Cargo.lock" \
+    "$ROOT/build.rs" \
+    "$ROOT/rust-toolchain.toml" \
+    "$ROOT/scene_config.json"; do
+    [[ -e "$path" && "$path" -nt "$INSTALLED_BIN" ]] && return 0
+  done
+
+  for dir in "$ROOT/src" "$ROOT/assets" "$ROOT/bin" "$ROOT/scripts"; do
+    [[ -d "$dir" ]] || continue
+    [[ -n "$(find "$dir" -type f -newer "$INSTALLED_BIN" -print -quit 2>/dev/null)" ]] && return 0
+  done
+
+  return 1
+}
+
+ensure_installed_runtime_is_current() {
+  [[ -f "$ROOT/Cargo.toml" ]] || return 0
+  [[ "${YAM_USE_REPO_RUN:-0}" == "1" ]] && return 0
+
+  if [[ ! -x "$INSTALLED_BIN" ]]; then
+    echo "[yam] installed runtime missing; refreshing..."
+    /bin/zsh -lc "$UPDATE_CMD"
+    return 0
+  fi
+
+  if repo_inputs_are_newer_than_installed; then
+    echo "[yam] repo inputs are newer than the installed runtime; refreshing..."
+    /bin/zsh -lc "$UPDATE_CMD"
+  fi
+}
+
 launch_in_new_window() {
   local cmd="$1"
+  if [[ "${YAM_WRAPPER_DRY_RUN:-0}" == "1" ]]; then
+    echo "$cmd"
+    return 0
+  fi
   if [[ "$OSTYPE" == darwin* ]] && open -Ra Ghostty >/dev/null 2>&1; then
-    exec "${GHOSTTY_OPEN[@]}" /bin/zsh -lc "$cmd"
+    exec "${GHOSTTY_OPEN[@]}" -e /bin/zsh -lc "$cmd"
   fi
   exec /bin/zsh -lc "$cmd"
 }
 
 ARGS="$(quote_args "$@")"
 
-if [[ -f "$ROOT/Cargo.toml" ]]; then
-  launch_in_new_window "$REPO_CMD${ARGS:+ $ARGS}"
+if [[ "${YAM_USE_REPO_RUN:-0}" == "1" && -f "$ROOT/Cargo.toml" ]]; then
+  launch_in_new_window "cd \"$ROOT\" && cargo run --release --quiet -- --clean-launch${ARGS:+ $ARGS}"
 else
+  ensure_diagnostics_session
+  ensure_installed_runtime_is_current
   launch_in_new_window "$INSTALLED_CMD${ARGS:+ $ARGS}"
 fi

@@ -27,7 +27,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
-use tachyonfx::{fx, CellFilter, Effect, Interpolation};
+use tachyonfx::{fx, CellFilter, Effect, Interpolation, SimpleRng};
 
 fn build_loading_effect(phase: crate::ui::state::BootLoadingPhase) -> Effect {
     let mut effect = match phase {
@@ -43,6 +43,12 @@ fn build_loading_effect(phase: crate::ui::state::BootLoadingPhase) -> Effect {
     };
     effect.filter(CellFilter::Text);
     effect
+}
+
+fn build_quit_effect() -> Effect {
+    fx::dissolve((1000, Interpolation::Linear))
+        .with_filter(CellFilter::Text)
+        .with_rng(SimpleRng::new(0x59414d))
 }
 
 pub fn run(
@@ -80,6 +86,8 @@ pub fn run(
     let mut loading_effect_phase = None;
     let mut loading_effect: Option<Effect> = None;
     let mut loading_effect_last_tick = Instant::now();
+    let mut quit_effect: Option<Effect> = None;
+    let mut quit_effect_last_tick = Instant::now();
     let mut last_boot_phase = ui_state.loading.boot_phase();
     let mut logged_world_ready = false;
 
@@ -98,26 +106,29 @@ pub fn run(
 
     'run: loop {
         let frame_start = Instant::now();
-        ui_state.update_loading();
-        let boot_phase = ui_state.loading.boot_phase();
-        if boot_phase != last_boot_phase {
-            if let Some(phase) = boot_phase {
-                append_event("boot_phase", &[("phase", json!(format!("{phase:?}")))]);
-            } else if last_boot_phase.is_some() {
-                append_event(
-                    "world_ready",
-                    &[
-                        ("boot_ms", json!(runtime_start.elapsed().as_millis() as u64)),
-                        ("world", json!(ui_state.active_world_kind().title())),
-                    ],
-                );
-                logged_world_ready = true;
+        let quitting = quit_effect.is_some();
+        if !quitting {
+            ui_state.update_loading();
+            let boot_phase = ui_state.loading.boot_phase();
+            if boot_phase != last_boot_phase {
+                if let Some(phase) = boot_phase {
+                    append_event("boot_phase", &[("phase", json!(format!("{phase:?}")))]);
+                } else if last_boot_phase.is_some() {
+                    append_event(
+                        "world_ready",
+                        &[
+                            ("boot_ms", json!(runtime_start.elapsed().as_millis() as u64)),
+                            ("world", json!(ui_state.active_world_kind().title())),
+                        ],
+                    );
+                    logged_world_ready = true;
+                }
+                last_boot_phase = boot_phase;
             }
-            last_boot_phase = boot_phase;
+            ui_state.refresh_weather_if_due();
         }
-        ui_state.refresh_weather_if_due();
 
-        while event::poll(Duration::from_millis(0))? {
+        while !quitting && event::poll(Duration::from_millis(0))? {
             if let Event::Key(KeyEvent {
                 code, modifiers, ..
             }) = event::read()?
@@ -139,15 +150,30 @@ pub fn run(
                         if ui_state.quit_confirm_active()
                             && ui_state.confirm_quit_without_saving() =>
                     {
-                        break 'run;
+                        quit_effect = Some(build_quit_effect());
+                        quit_effect_last_tick = frame_start;
+                        append_event(
+                            "quit_dissolve_start",
+                            &[("world", json!(ui_state.active_world_kind().title()))],
+                        );
                     }
                     KeyCode::Char('s')
                         if ui_state.quit_confirm_active() && ui_state.confirm_save_and_quit() =>
                     {
-                        break 'run;
+                        quit_effect = Some(build_quit_effect());
+                        quit_effect_last_tick = frame_start;
+                        append_event(
+                            "quit_dissolve_start",
+                            &[("world", json!(ui_state.active_world_kind().title()))],
+                        );
                     }
                     KeyCode::Char('q') if ui_state.begin_quit() => {
-                        break 'run;
+                        quit_effect = Some(build_quit_effect());
+                        quit_effect_last_tick = frame_start;
+                        append_event(
+                            "quit_dissolve_start",
+                            &[("world", json!(ui_state.active_world_kind().title()))],
+                        );
                     }
                     KeyCode::Char('d') => ui_state.toggle_dev_mode(),
                     KeyCode::Esc if ui_state.handle_global_escape() => {}
@@ -290,19 +316,19 @@ pub fn run(
             }
         }
 
-        if frame_start.duration_since(last_world_tick) >= world_tick {
+        if !quitting && frame_start.duration_since(last_world_tick) >= world_tick {
             tick(&mut world);
             last_world_tick = frame_start;
         }
 
         let hero_frame_time =
             Duration::from_secs_f64(1.0 / ui_state.offsets.hero_fps.max(0.5) as f64);
-        if frame_start.duration_since(last_hero_tick) >= hero_frame_time {
+        if !quitting && frame_start.duration_since(last_hero_tick) >= hero_frame_time {
             ui_state.hero.tick();
             last_hero_tick = frame_start;
         }
 
-        if ui_state.should_blink_pointer_probe() {
+        if !quitting && ui_state.should_blink_pointer_probe() {
             if frame_start.duration_since(last_pointer_blink) >= pointer_blink {
                 ui_state.pointer_blink_on = !ui_state.pointer_blink_on;
                 last_pointer_blink = frame_start;
@@ -327,13 +353,13 @@ pub fn run(
             }
             last_terminal_size = size;
         }
-        if ui_state.camera.follow_hero {
+        if !quitting && ui_state.camera.follow_hero {
             ui_state.sync_camera_to_viewport_center(size.width as i32, size.height as i32);
-        } else {
+        } else if !quitting {
             ui_state.clamp_camera(size.width as i32, size.height as i32);
         }
         terminal.draw(|frame| {
-            let render_world = if ui_state.loading.active {
+            let render_world = if !quitting && ui_state.loading.active {
                 &boot_world
             } else {
                 &world
@@ -346,7 +372,12 @@ pub fn run(
                 &fonts,
                 &mut final_grid,
             );
-            if let Some(phase) = ui_state.loading.effect_phase() {
+            if let Some(effect) = quit_effect.as_mut() {
+                let elapsed = frame_start.saturating_duration_since(quit_effect_last_tick);
+                let area = frame.area();
+                let _ = effect.process(elapsed, frame.buffer_mut(), area);
+                quit_effect_last_tick = frame_start;
+            } else if let Some(phase) = ui_state.loading.effect_phase() {
                 if loading_effect_phase != Some(phase) {
                     loading_effect_phase = Some(phase);
                     loading_effect = Some(build_loading_effect(phase));
@@ -365,6 +396,10 @@ pub fn run(
             }
         })?;
 
+        if quit_effect.as_ref().is_some_and(Effect::done) {
+            break 'run;
+        }
+
         let elapsed = frame_start.elapsed();
         if elapsed < frame_time {
             std::thread::sleep(frame_time - elapsed);
@@ -378,21 +413,41 @@ pub fn run(
         };
     }
 
-    if !logged_world_ready {
-        append_event(
-            "runtime_exit",
-            &[
-                ("boot_completed", json!(!ui_state.loading.active)),
-                (
-                    "runtime_ms",
-                    json!(runtime_start.elapsed().as_millis() as u64),
-                ),
-            ],
-        );
-    }
+    append_event(
+        "runtime_exit",
+        &[
+            ("boot_completed", json!(logged_world_ready)),
+            ("quit_dissolve", json!(true)),
+            (
+                "runtime_ms",
+                json!(runtime_start.elapsed().as_millis() as u64),
+            ),
+        ],
+    );
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::build_quit_effect;
+
+    #[test]
+    fn quit_dissolve_uses_one_second_timer() {
+        let effect = build_quit_effect();
+        let timer = effect.timer().expect("quit dissolve should be timed");
+        assert_eq!(timer.duration().as_millis(), 1000);
+    }
+
+    #[test]
+    fn quit_dissolve_uses_linear_progress() {
+        let mut effect = build_quit_effect();
+        let timer = effect.timer_mut().expect("quit dissolve should be timed");
+        let overflow = timer.process(std::time::Duration::from_millis(500).into());
+        assert!(overflow.is_none());
+        assert!((timer.alpha() - 0.5).abs() < 0.001);
+    }
 }

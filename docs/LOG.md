@@ -13,6 +13,11 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-05-15
+
+- `00:33` bumped the crate and front-door release marker from `0.3.8` to `0.3.9` after the quit-transition cleanup pass: this release carries the live-scene linear dissolve on accepted quits and the launcher handoff polish that returns to an in-terminal fastfetch refresh instead of a separate window or a stale shell trace.
+- `00:16` turned clean live quits into a real runtime transition instead of an immediate alternate-screen snap: when `[q]` is accepted in the live scene, YAM now runs a seeded `tachyonfx` dissolve for `1s` with linear interpolation before yielding back to the shell, and the same dissolve now also follows the dirty-state `save and quit` / `discard and quit` confirmation paths.
+
 ## 2026-05-14
 
 - `19:41` tightened the post-exit fastfetch refresh to mirror the real Ghostty startup framing more closely: after the wrapper clears the screen, it now surrounds `fastfetch-chafa` (or the config-based fallback) with the same blank-line spacing the shell startup hook uses, which should reduce the last visible top-of-window mismatch between a true fresh terminal and the YAM-quit refresh path.

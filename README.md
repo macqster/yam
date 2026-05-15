@@ -6,7 +6,7 @@ Rust terminal scene engine for YAM.
 
 This repository contains the active Rust runtime tree for YAM.
 
-Current release: `0.3.8`
+Current release: `0.3.9`
 
 ## What YAM Is
 

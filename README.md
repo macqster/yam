@@ -1,12 +1,6 @@
-# yam
-
-Rust terminal scene engine for YAM.
-
 ## What This Repo Is
 
 This repository contains the active Rust runtime tree for YAM.
-
-Current release: `0.3.9`
 
 ## What YAM Is
 
@@ -17,13 +11,14 @@ YAM is a datum-first terminal scene engine built around:
 - a future greenhouse/lab direction
 - explicit world-space projection and debug-friendly spatial tooling
 
-The current Ghostty baseline uses a hidden titlebar with a `120x31` window config, which opens to about `124x32` usable cells on the current macOS setup.
+The current Ghostty baseline uses a hidden titlebar with a `120x31` window
+config, which opens to about `124x32` usable cells on the current macOS setup.
 
 Shared terminology lives in [docs/glossary.md](docs/glossary.md).
 
-## Current Runtime Surface
+## Runtime Surface
 
-Implemented now:
+### Implemented Now
 
 - boot/loading world
 - main scene world
@@ -31,30 +26,40 @@ Implemented now:
 - hero GIF with tree-stump scaffold
 - world-attached clock, weather, and one-line Polish date companions
 - procedural vines framing the main-scene composition
-- compact dev surface family for help, move, settings, palette, weather, and quit-confirm flows
+- compact dev surface family for help, move, settings, palette, weather, and
+  quit-confirm flows
 
-Reserved or future-facing:
+### Reserved or Future-Facing
 
 - `calendar` companion seam remains reserved
 - greenhouse/lab spaces remain future work
-- flora expansion beyond the current scaffold and vine prototype remains future work
+- flora expansion beyond the current scaffold and vine prototype remains future
+  work
 
 ## Runtime Commands
 
-- `yam` is the canonical launcher command
-- `yam-sandbox` launches the sparse sandbox world
-- `yam-rust` is the current direct runtime binary for debugging or manual execution
-- `yam-install` rebuilds and reinstalls the fallback binary and launcher wrappers through the current offline-first update path
-- `yam-diagnostics` summarizes the recent local diagnostics sessions or tails the raw NDJSON events
-- `q` exits
+| Command | Purpose |
+| --- | --- |
+| `yam` | Canonical launcher command. |
+| `yam-sandbox` | Launches the sparse sandbox world. |
+| `yam-rust` | Current direct runtime binary for debugging or manual execution. |
+| `yam-install` | Rebuilds and reinstalls the fallback binary and launcher wrappers through the current offline-first update path. |
+| `yam-diagnostics` | Summarizes recent local diagnostics sessions or tails the raw NDJSON events. |
+| `q` | Exits the runtime. |
 
-Launcher behavior:
+### Launcher Behavior
 
 - `yam` and `yam-sandbox` now prefer the installed runtime binary
-- if the repo checkout exists and the installed binary is missing or older than repo runtime inputs, the launcher refreshes through the current `yam-install` path before launch
-- set `YAM_USE_REPO_RUN=1` only when you intentionally want the older direct `cargo run --release` development path
-- set `YAM_DIAGNOSTICS=1` to write a small local NDJSON diagnostics log for install/runtime timing under `~/.local/state/yam/diagnostics.ndjson` (or `$XDG_STATE_HOME/yam/diagnostics.ndjson`)
-- use `yam-diagnostics` to read the most recent local diagnostics sessions; add `--tail` to print raw events or `--session <id>` to focus on one run
+- if the repo checkout exists and the installed binary is missing or older than
+  repo runtime inputs, the launcher refreshes through the current `yam-install`
+  path before launch
+- set `YAM_USE_REPO_RUN=1` only when you intentionally want the older direct
+  `cargo run --release` development path
+- set `YAM_DIAGNOSTICS=1` to write a small local NDJSON diagnostics log for
+  install/runtime timing under `~/.local/state/yam/diagnostics.ndjson` or
+  `$XDG_STATE_HOME/yam/diagnostics.ndjson`
+- use `yam-diagnostics` to read the most recent local diagnostics sessions; add
+  `--tail` to print raw events or `--session <id>` to focus on one run
 
 ## Current Priorities
 
@@ -63,29 +68,34 @@ Current project priority is:
 1. stability
 2. efficiency
 3. UI/docs contract cleanup
-4. only then broader new surface work
+4. broader new surface work
 
-Hero aesthetics are intentionally held steady while runtime and contract seams are cleaned up.
+Hero aesthetics are intentionally held steady while runtime and contract seams
+are cleaned up.
 
-## Document Roles
+## Documentation Map
 
-Use the docs by role:
+### Document Roles
 
-- [docs/README.md](docs/README.md) - documentation map
-- [TODO.md](TODO.md) - active execution backlog
-- [known_issues.md](known_issues.md) - active unresolved issues only
-- [docs/audit.md](docs/audit.md) - current risk and drift snapshot
-- [docs/LOG.md](docs/LOG.md) - append-only history
+| Document | Role |
+| --- | --- |
+| [docs/README.md](docs/README.md) | Documentation map. |
+| [TODO.md](TODO.md) | Active execution backlog. |
+| [known_issues.md](known_issues.md) | Active unresolved issues only. |
+| [docs/audit.md](docs/audit.md) | Current risk and drift snapshot. |
+| [docs/LOG.md](docs/LOG.md) | Append-only history. |
 
-## Key Links
+### Key Links
 
-- [docs/architecture.md](docs/architecture.md) - architecture contract
-- [docs/rendering.md](docs/rendering.md) - render/layer contract
-- [docs/scene-model.md](docs/scene-model.md) - deterministic scene model
-- [docs/weather-widget.md](docs/weather-widget.md) - weather-widget contract
-- [docs/vines.md](docs/vines.md) - vine ownership contract
-- [docs/resource-map.md](docs/resource-map.md) - research/reference map
-- [docs/archive/README.md](docs/archive/README.md) - historical archive index
+| Document | Role |
+| --- | --- |
+| [docs/architecture.md](docs/architecture.md) | Architecture contract. |
+| [docs/rendering.md](docs/rendering.md) | Render/layer contract. |
+| [docs/scene-model.md](docs/scene-model.md) | Deterministic scene model. |
+| [docs/weather-widget.md](docs/weather-widget.md) | Weather-widget contract. |
+| [docs/vines.md](docs/vines.md) | Vine ownership contract. |
+| [docs/resource-map.md](docs/resource-map.md) | Research/reference map. |
+| [docs/archive/README.md](docs/archive/README.md) | Historical archive index. |
 
 ## Working Rules
 
@@ -99,12 +109,17 @@ Use the docs by role:
 
 ## Maintenance
 
+| Gate | Purpose |
+| --- | --- |
+| `scripts/verify.sh` | Full maintenance/release gate. |
+| `scripts/check.sh` | Smaller Rust-only gate. |
+| `scripts/check-docs.sh` | Active-doc hygiene batches. |
+| `cargo clippy -- -D warnings` | Must pass without warnings. |
+
+Additional maintenance notes:
+
 - the repo is pinned to stable Rust through `rust-toolchain.toml`
-- run `scripts/verify.sh` for the full maintenance/release gate
-- run `scripts/check.sh` for the smaller Rust-only gate
-- run `scripts/check-docs.sh` for active-doc hygiene batches
-- `cargo clippy -- -D warnings` must pass without warnings
-- use `docs/README.md` when you need the docs map
+- use [docs/README.md](docs/README.md) when you need the docs map
 
 ## Environment Assumptions
 

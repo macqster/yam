@@ -1,65 +1,183 @@
+# YAM
+
+> A Rust/Ratatui terminal scene engine: animated hero rendering, world-space
+> projection, compact companion widgets, BTAS-inspired UI styling, and a
+> maintenance-first path toward richer procedural scene life.
+
+Current release: `0.3.9`
+
+---
+
 ## What This Repo Is
 
-This repository contains the active Rust runtime tree for YAM.
+This repository contains the active Rust runtime for YAM.
 
-## What YAM Is
+YAM is not a generic dashboard framework. It is a curated terminal scene engine
+with a small set of deliberate runtime surfaces, strict world/viewport semantics,
+and a documentation model that treats architecture, rendering, config, and
+surface contracts as first-class project artifacts.
 
-YAM is a datum-first terminal scene engine built around:
+## What YAM Does Today
 
-- a main visualiser scene
-- a sandbox world
-- a future greenhouse/lab direction
-- explicit world-space projection and debug-friendly spatial tooling
+YAM currently provides:
 
-The current Ghostty baseline uses a hidden titlebar with a `120x31` window
-config, which opens to about `124x32` usable cells on the current macOS setup.
-
-Shared terminology lives in [docs/glossary.md](docs/glossary.md).
-
-## Runtime Surface
-
-### Implemented Now
-
-- boot/loading world
-- main scene world
-- sandbox world
-- hero GIF with tree-stump scaffold
+- a boot/loading world with staged visual transitions
+- a main scene world
+- a sparse sandbox world
+- a Chafa-backed animated hero layer
+- a tree-stump scaffold and procedural vine framing layer
 - world-attached clock, weather, and one-line Polish date companions
-- procedural vines framing the main-scene composition
-- compact dev surface family for help, move, settings, palette, weather, and
-  quit-confirm flows
+- a compact weather widget with plain-text weather sprites and localized facts
+- dev surfaces for help, move mode, settings, palette inspection, weather review,
+  and quit confirmation
+- a local diagnostics path for install/runtime timing
+- maintenance scripts for docs, formatting, linting, checking, and tests
 
-### Reserved or Future-Facing
+Reserved or future-facing surfaces:
 
-- `calendar` companion seam remains reserved
-- greenhouse/lab spaces remain future work
-- flora expansion beyond the current scaffold and vine prototype remains future
-  work
+- `calendar` companion seam
+- greenhouse/lab spaces
+- flora expansion beyond the current scaffold and vine prototype
+- deeper terminal-art asset compilation and inspection workflows
+
+## Design Identity
+
+YAM aims for a restrained dark-deco terminal aesthetic:
+
+- graphite backgrounds
+- muted blue and green accents
+- warm companion text
+- compact HUD/footer information
+- composed scene layout over generic widget density
+
+The project should feel like a coherent terminal diorama rather than a pile of
+panels.
 
 ## Runtime Commands
 
 | Command | Purpose |
 | --- | --- |
-| `yam` | Canonical launcher command. |
-| `yam-sandbox` | Launches the sparse sandbox world. |
-| `yam-rust` | Current direct runtime binary for debugging or manual execution. |
-| `yam-install` | Rebuilds and reinstalls the fallback binary and launcher wrappers through the current offline-first update path. |
-| `yam-diagnostics` | Summarizes recent local diagnostics sessions or tails the raw NDJSON events. |
+| `yam` | Canonical launcher command after wrapper installation. |
+| `yam-sandbox` | Launches the sparse sandbox world after wrapper installation. |
+| `yam-rust` | Direct Rust runtime binary. Useful for debugging and manual execution. |
+| `yam-install` | Rebuilds/reinstalls the runtime and launcher wrappers through the current update path. |
+| `yam-diagnostics` | Summarizes recent local diagnostics sessions or tails raw NDJSON events. |
 | `q` | Exits the runtime. |
 
-### Launcher Behavior
+### Direct Development Run
 
-- `yam` and `yam-sandbox` now prefer the installed runtime binary
-- if the repo checkout exists and the installed binary is missing or older than
-  repo runtime inputs, the launcher refreshes through the current `yam-install`
-  path before launch
-- set `YAM_USE_REPO_RUN=1` only when you intentionally want the older direct
+```bash
+cargo run --release
+```
+
+Sandbox run:
+
+```bash
+cargo run --release -- --sandbox
+```
+
+Runtime identity check:
+
+```bash
+cargo run --release -- --identity
+```
+
+### Installed Wrapper Path
+
+The wrapper path is intended for the normal local workstation flow:
+
+```bash
+bash scripts/update.sh
+```
+
+After that, use:
+
+```bash
+yam
+```
+
+or:
+
+```bash
+yam-sandbox
+```
+
+Launcher behavior:
+
+- `yam` and `yam-sandbox` prefer the installed `yam-rust` binary
+- if the repo checkout exists and repo runtime inputs are newer than the
+  installed binary, the launcher refreshes through `scripts/update.sh`
+- set `YAM_USE_REPO_RUN=1` only when intentionally using the older direct
   `cargo run --release` development path
-- set `YAM_DIAGNOSTICS=1` to write a small local NDJSON diagnostics log for
-  install/runtime timing under `~/.local/state/yam/diagnostics.ndjson` or
+- set `YAM_DIAGNOSTICS=1` to write local NDJSON diagnostics to
+  `~/.local/state/yam/diagnostics.ndjson` or
   `$XDG_STATE_HOME/yam/diagnostics.ndjson`
-- use `yam-diagnostics` to read the most recent local diagnostics sessions; add
-  `--tail` to print raw events or `--session <id>` to focus on one run
+- use `yam-diagnostics` to read recent diagnostics sessions; add `--tail` to
+  print raw events or `--session <id>` to focus on one run
+
+## Repository Shape
+
+| Path | Role |
+| --- | --- |
+| `src/core/` | Core world, grid, spatial, guide, entity, and flora primitives. |
+| `src/render/` | Rendering/compositor path, Chafa integration, hero cache, fonts, masks, and draw helpers. |
+| `src/scene/` | Scene orchestration, camera/viewport logic, and render layers. |
+| `src/scene/layers/` | Runtime layers for hero, loading, clock, date, weather, vines, debug, modal, status, and related surfaces. |
+| `src/ui/` | UI state, anchors, scene-layer assembly, and reusable widgets. |
+| `src/weather/` | Weather model, provider, wttr normalization, layout, text, render path, and sprite atlas. |
+| `src/theme/` | BTAS palette, glyphs, style, and semantic render helpers. |
+| `src/systems/` | Early simulation/system seams for growth, aging, density, fields, constraints, and ticks. |
+| `assets/` | Runtime visual/font assets. |
+| `bin/` | Local launcher wrappers. |
+| `scripts/` | Maintenance, check, verify, and update scripts. |
+| `tools/` | Experiments and archived legacy Python prototype material. |
+| `docs/` | Active contracts, design notes, release model, palette references, and archive entry points. |
+
+## Documentation Map
+
+### Start Here
+
+| Document | Role |
+| --- | --- |
+| [docs/README.md](docs/README.md) | Documentation index and routing map. |
+| [TODO.md](TODO.md) | Active execution backlog. |
+| [known_issues.md](known_issues.md) | Active unresolved issues only. |
+| [docs/audit.md](docs/audit.md) | Current risk and drift snapshot. |
+| [docs/LOG.md](docs/LOG.md) | Append-only project history. |
+
+### Core Contracts
+
+| Document | Role |
+| --- | --- |
+| [docs/glossary.md](docs/glossary.md) | Shared terminology source of truth. |
+| [docs/architecture.md](docs/architecture.md) | Ownership and implementation architecture. |
+| [docs/scene-model.md](docs/scene-model.md) | Deterministic scene/world model. |
+| [docs/rendering.md](docs/rendering.md) | Render order, layering, and UI/render contracts. |
+| [docs/config.md](docs/config.md) | Configuration authority and runtime scope. |
+| [docs/hygiene.md](docs/hygiene.md) | Repo hygiene and drift-prevention rules. |
+
+### Active Surface Contracts
+
+| Document | Role |
+| --- | --- |
+| [docs/loading-screen.md](docs/loading-screen.md) | Boot/loading-screen contract. |
+| [docs/weather-widget.md](docs/weather-widget.md) | Weather-widget contract. |
+| [docs/vines.md](docs/vines.md) | Vine ownership/readiness contract. |
+| [docs/hero-cache.md](docs/hero-cache.md) | Hero-frame cache design and runtime path. |
+| [docs/theme.md](docs/theme.md) | Reusable BTAS theme contract. |
+| [docs/release-model.md](docs/release-model.md) | Branch and release policy. |
+| [docs/resource-map.md](docs/resource-map.md) | Research/reference map. |
+
+## Maintenance Gates
+
+| Gate | Purpose |
+| --- | --- |
+| `bash scripts/check-docs.sh` | Active-doc existence, version sync, issue-link hygiene, and optional markdown/spell checks. |
+| `bash scripts/check.sh` | Rust formatting, clippy, and cargo check. |
+| `cargo test --quiet` | Test suite. |
+| `bash scripts/verify.sh` | Full maintenance/release gate. |
+
+The repo is pinned to stable Rust through [`rust-toolchain.toml`](rust-toolchain.toml).
 
 ## Current Priorities
 
@@ -70,32 +188,16 @@ Current project priority is:
 3. UI/docs contract cleanup
 4. broader new surface work
 
-Hero aesthetics are intentionally held steady while runtime and contract seams
-are cleaned up.
+Near-term pressure points tracked in the repo include:
 
-## Documentation Map
+- spatial relation cleanup
+- hero startup/cache efficiency
+- continued theme/surface convergence
+- keeping visual changes synchronized with runtime identity checks
+- keeping flora expansion behind stable scene and render contracts
 
-### Document Roles
-
-| Document | Role |
-| --- | --- |
-| [docs/README.md](docs/README.md) | Documentation map. |
-| [TODO.md](TODO.md) | Active execution backlog. |
-| [known_issues.md](known_issues.md) | Active unresolved issues only. |
-| [docs/audit.md](docs/audit.md) | Current risk and drift snapshot. |
-| [docs/LOG.md](docs/LOG.md) | Append-only history. |
-
-### Key Links
-
-| Document | Role |
-| --- | --- |
-| [docs/architecture.md](docs/architecture.md) | Architecture contract. |
-| [docs/rendering.md](docs/rendering.md) | Render/layer contract. |
-| [docs/scene-model.md](docs/scene-model.md) | Deterministic scene model. |
-| [docs/weather-widget.md](docs/weather-widget.md) | Weather-widget contract. |
-| [docs/vines.md](docs/vines.md) | Vine ownership contract. |
-| [docs/resource-map.md](docs/resource-map.md) | Research/reference map. |
-| [docs/archive/README.md](docs/archive/README.md) | Historical archive index. |
+Hero aesthetics are intentionally held steady while runtime and contract seams are
+cleaned up.
 
 ## Working Rules
 
@@ -106,23 +208,14 @@ are cleaned up.
 - keep `docs/audit.md` risk-focused
 - keep `docs/LOG.md` append-only
 - keep build output and runtime cache artifacts out of the repo
-
-## Maintenance
-
-| Gate | Purpose |
-| --- | --- |
-| `scripts/verify.sh` | Full maintenance/release gate. |
-| `scripts/check.sh` | Smaller Rust-only gate. |
-| `scripts/check-docs.sh` | Active-doc hygiene batches. |
-| `cargo clippy -- -D warnings` | Must pass without warnings. |
-
-Additional maintenance notes:
-
-- the repo is pinned to stable Rust through `rust-toolchain.toml`
-- use [docs/README.md](docs/README.md) when you need the docs map
+- update README claims only when the repo structure or runtime behavior supports
+  them
 
 ## Environment Assumptions
 
 - UTF-8 braille support is required for hero rendering
 - full-color terminal output is recommended
 - the app is tested primarily in Kitty-family and Ghostty-like terminals
+- the current local Ghostty baseline uses a hidden titlebar with a `120x31`
+  window config, opening to about `124x32` usable cells on the current macOS
+  setup

@@ -6,7 +6,55 @@
 
 Current release: `0.3.9`
 
+<p align="center">
+  <img src="docs/assets/yam-preview.png" alt="YAM terminal scene preview placeholder" width="860">
+</p>
+
+<p align="center">
+  <img src="docs/assets/yam-demo.gif" alt="YAM terminal scene demo GIF placeholder" width="860">
+</p>
+
+> Preview placeholders are reserved for the canonical screenshot and short demo
+> GIF. Replace them only with repo-committed assets under `docs/assets/`.
+
 ---
+
+## Status
+
+YAM is in active development on the Rust/Ratatui runtime path.
+
+Current posture:
+
+- runtime-first
+- maintenance-first
+- visual polish after contract stability
+- no claim of being a general-purpose dashboard framework
+
+## Quick Start
+
+```bash
+git clone https://github.com/macqster/yam.git
+cd yam
+cargo run --release
+```
+
+Sandbox:
+
+```bash
+cargo run --release -- --sandbox
+```
+
+Runtime identity check:
+
+```bash
+cargo run --release -- --identity
+```
+
+Run the full maintenance gate:
+
+```bash
+bash scripts/verify.sh
+```
 
 ## What This Repo Is
 
@@ -53,7 +101,7 @@ YAM aims for a restrained dark-deco terminal aesthetic:
 The project should feel like a coherent terminal diorama rather than a pile of
 panels.
 
-## Runtime Commands
+## Launcher Commands
 
 | Command | Purpose |
 | --- | --- |
@@ -62,7 +110,12 @@ panels.
 | `yam-rust` | Direct Rust runtime binary. Useful for debugging and manual execution. |
 | `yam-install` | Rebuilds/reinstalls the runtime and launcher wrappers through the current update path. |
 | `yam-diagnostics` | Summarizes recent local diagnostics sessions or tails raw NDJSON events. |
-| `q` | Exits the runtime. |
+
+## Runtime Controls
+
+| Key | Action |
+| --- | --- |
+| `q` | Exit the runtime. |
 
 ### Direct Development Run
 
@@ -114,6 +167,28 @@ Launcher behavior:
   `$XDG_STATE_HOME/yam/diagnostics.ndjson`
 - use `yam-diagnostics` to read recent diagnostics sessions; add `--tail` to
   print raw events or `--session <id>` to focus on one run
+
+## Architecture at a Glance
+
+```text
+runtime state / config
+        ↓
+scene model + entity placement
+        ↓
+world → viewport projection
+        ↓
+layer assembly
+        ↓
+Ratatui frame output
+```
+
+Core boundaries:
+
+- world-space entities are not HUD elements
+- viewport changes affect framing, not scene scale
+- debug surfaces are development aids, not canonical scene content
+- visual changes should remain synchronized with runtime identity and docs
+  contracts
 
 ## Repository Shape
 
@@ -198,6 +273,24 @@ Near-term pressure points tracked in the repo include:
 
 Hero aesthetics are intentionally held steady while runtime and contract seams are
 cleaned up.
+
+## Non-goals
+
+YAM is not currently trying to be:
+
+- a general-purpose terminal dashboard framework
+- a generic widget library
+- a full simulation engine
+- a configurable end-user product
+- a replacement for the project’s deeper contract docs
+
+## Versioning and History
+
+Current release: `0.3.9`
+
+- release policy: [docs/release-model.md](docs/release-model.md)
+- project history: [docs/LOG.md](docs/LOG.md)
+- active issues: [known_issues.md](known_issues.md)
 
 ## Working Rules
 

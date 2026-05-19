@@ -1,13 +1,14 @@
 # Vines Contract
 
-This document is the pre-runtime ownership contract for future YAM vine work.
-It is intentionally not an implementation plan for a full flora runtime yet.
+This document is the ownership contract and implementation record for YAM vine work.
+It is intentionally not an implementation plan for the full multi-species flora runtime yet.
 
 ## Current Status
 
-- Vines are deferred until the stability, spatial, guide, and documentation contracts remain green together.
+- Vine phases 1 through 7 are live in the runtime: storage, deterministic seed, guide lookup, static axis derivation, read-only rendering, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are implemented.
+- Vine phases 8 and 9 remain deferred until the pre-expansion architecture batch prepares shared organism identity, species registry vocabulary, world switching, and spatial consolidation.
 - Hero GIF aesthetics are frozen for now; vine work must not require changing the active hero appearance.
-- The scaffold, guides, and pointer probe can prepare vine placement, but they do not yet imply active vine growth.
+- The scaffold, guides, and pointer probe can prepare future vine placement, branching, boundary, and organ work, but they should not bypass the world-owned flora state.
 - Vines are one flora family, not a special-case renderer.
 
 ## Ownership Contract

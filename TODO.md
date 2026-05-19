@@ -15,199 +15,107 @@ Coordination contract:
 Issue link rule:
 
 - use explicit `known_issues.md` ids such as `KI-###` when an execution item is directly tied to an active unresolved issue
+- do not create a `known_issues.md` entry for broad architecture debt; use this file and `docs/audit.md` until there is a small active user-visible or developer-visible issue
 
-## Immediate Maintenance Batch
+## Current Pre-Expansion Batch
 
-- `inspect` record and preserve the current runtime/code efficiency priority order before any hot-path refactors start: hero-frame startup caching first, persistent `Scene`/layer reuse second, reusable frame buffers third, then smaller UI-write/runtime-branch cleanup.
-- `inspect` define the startup-performance plan around the hero pipeline explicitly: move GIF decode + temp-frame + `chafa` work toward an offline compiler / cached `HeroFrameSet` path instead of paying that cost inside `Hero::new()`.
-- `verify` validate the first cache-first hero startup path against real install/update flows under the installed wrapper path, including first-run cache generation timing and whether shipping a prebuilt cache should become part of release hygiene.
-- `inspect` continue the render-loop efficiency pass after the current scratch-grid adoption batch by evaluating whether any remaining hot draw paths deserve cheaper specialized helpers instead of more general `Grid`/text work.
-- `inspect` decide whether the new fast ASCII-only compositor path should spread any further than the current footer/debug/world-label chrome, or whether profiling says the remaining general text writes are already cheap enough.
-- `inspect` do not start another speculative startup optimization pass until one interactive/profile-driven measurement points at a real remaining hot path; the direct cached binary startup path is now already cheap enough that Cargo wrapper time is a bigger source of confusion than YAM initialization.
-- `inspect` if another profiling pass is needed, sample inside the live loop or through a boot-bypass harness; raw wall-clock boot timing is currently dominated by the intentional loading sequence and is not a trustworthy render benchmark by itself.
-- `inspect` decide whether repeated layer-test `RenderState` fixtures now warrant one tiny shared helper for future drift prevention.
-- `inspect` run one small dev-mode UI cleanup batch focused on role tightening only: keep `calendar (reserved)` demoted outside the lightweight move/help surfaces, and keep hotkeys/move/footer vocabulary cleanly separated.
-- `verify` keep dev-UI docs aligned with the live code path: `ui` tab naming, dev-only debug gating, `Tab`/arrow move grammar, and the frozen manual boot seed `(-60, -15)`.
-- `verify` keep `cargo fmt && bash scripts/check.sh` and full `cargo test` green together while maintenance continues.
+- `verify` keep the repo in soft feature freeze mode while this batch is active: polish, stability, bug fixes, contract repairs, and architecture preparation are in scope; large new entities, mechanics, and worlds are not.
+- `docs` keep `TODO.md`, `docs/audit.md`, `docs/vines.md`, `docs/scene-model.md`, `docs/architecture.md`, `docs/rendering.md`, and `docs/hygiene.md` aligned before any main-scene enrichment or greenhouse work starts.
+- `verify` keep `known_issues.md` empty unless a concrete active issue appears; broad pre-expansion risks belong in the audit and this backlog.
+- `verify` keep `scripts/verify.sh` green for every maintenance handoff.
+- `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
+- `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
 
-## 1. Scene Model and Presentation Contract
+## 1. Spatial Relation Layer
 
-- `verify` `docs/scene-model.md` and `docs/architecture.md` remain the source of truth for world, HUD, and overlay behavior.
-- `verify` projection remains defined in one place only.
-- `verify` the deterministic frame pipeline remains:
-  - update state
-  - generate primitives
-  - apply masks
-  - project world to screen
-  - sort into layers
-  - compose frame buffer
-  - render through ratatouille
-- `verify` world-space, screen-space, and anchor-space remain distinct in code.
-- `verify` HUD stays attached to the terminal frame and overlays stay modal/top-z-index.
-- `verify` the terminal is treated as a framebuffer, not a panel dashboard.
+- `refactor` make `core::spatial` the canonical resolver for projection, attachments, guide lookup, and future organism guidance.
+- `refactor` reduce `scene::coords` toward a compatibility facade rather than a second conceptual owner of projection semantics.
+- `verify` world-space, screen-space, and anchor-space remain distinct in type names, helper names, tests, and docs.
+- `verify` projection remains singular and uses the same signed world-to-screen transform for hero, companions, guides, vines, and future plant geometry.
+- `inspect` remove or narrow helpers that return screen positions as `WorldPos` once callers can tolerate stricter screen-position types.
+- `verify` resize, camera movement, anchor resolution, and rounding/jitter coverage stays tight before adding new world-attached renderables.
+- `verify` guides remain semantic world-space linework and are not reinterpreted from rendered pixels.
 
-## 2. Greenhouse / World Modes
+## 2. Flora Runtime And Organism Model
 
-- `verify` greenhouse remains a separate world mode, not panel chrome.
-- `verify` room selection stays internal to the world model.
-- `verify` side-by-side tab UI is not the primary greenhouse architecture.
-- `verify` current `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera and input stays defined, and future greenhouse/lab worlds should reuse the same world-switching contract.
+- `refactor` split vine-specific types and helpers out of the broad `core::flora` surface once a second organism family is close enough to need shared vocabulary.
+- `inspect` define the minimum shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, axes/metamers/organs, and growth tips/meristems.
+- `inspect` define the first species-registry payload as data before adding a second active plant: display name, habit/form, anatomy defaults, branching pattern, internode range, growth cadence, allowed organs, lifecycle tuning, tropism rules, and debug labels.
+- `verify` do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store.
+- `refactor` move the current border-vine growth rule away from one hard-coded seed branch before adding another plant growth rule.
+- `verify` render layers stay read-only and visualize geometry derived from world/flora/spatial state.
+- `verify` organism journals remain per-instance event logs; species registries must not store runtime life history.
+- `inspect` keep botanical terminology grounded through `docs/glossary.md`; reserve `node` for plant morphology/anatomy unless the spatial terminology contract changes.
 
-## 3. Footer, HUD, and Debug
+## 3. World Modes And Greenhouse Prep
 
-- `verify` footer layout remains deterministic as a compact left hint plus right-aligned status stamp on the bottom row, with no wrapping.
-- `verify` debug stays separate from footer and modal action surfaces, with factual readouts living outside the footer and dense controls staying inside explicit overlays.
-- `verify` scrollbars stay viewport indicators, not widget chrome.
-- `verify` hotkey visibility and hotkey behavior stay separate concerns.
-- `verify` modal inspection stays in overlay, and the current dev-only debug layer does not drift into a second command footer.
+- `refactor` replace binary main-scene/sandbox UI cycling with an explicit world-selection contract before adding `Greenhouse` or lab worlds.
+- `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, and persistence stays defined while the world-switching contract is generalized.
+- `inspect` define what each future world owns before implementation: initialization, available overlays, camera defaults, flora population, guide sets, and debug surfaces.
+- `verify` greenhouse remains a separate simulation world, not panel chrome layered on top of the main scene.
+- `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.
+- `inspect` decide whether greenhouse inspection needs a dedicated registry/journal mode or lightweight per-organism popups before building either surface.
 
-## 4. Hero GIF Rendering
+## 4. Main Scene Enrichment Prep
 
-- `verify` hero rendering stays stable and renderer-owned.
-- `verify` precomputed or cached frame grids stay preferred over streamed ANSI output.
-- `verify` color instability caused by per-frame quantization stays minimized.
-- `verify` geometry drift from per-frame glyph remapping stays minimized.
-- `verify` the renderer keeps a distinct “hero frame representation” concept.
-- `verify` cached-frame or internal grid migration is revisited only if the chafa-backed baseline fails stabilization checkpoints again.
-- `inspect` define the future `HeroFrameSet` cache contract before replacing or bypassing the active chafa-backed path.
+- `verify` main-scene enrichment must preserve hero aesthetics, footer placement, modal geometry, and companion projection semantics.
+- `verify` the main scene remains the live visualiser/screensaver composition; enrichment should add world-attached content, not a dashboard layout.
+- `inspect` stage vine Phase 8 in slices only after the shared flora vocabulary is ready: lateral axes, small leaves, larger decorative leaves after clipping/z-order tests, then flowers, fruit, or particles.
+- `inspect` stage vine Phase 9 border behavior through world bounds, boundary guides, or exclusion outlines before any mask-like behavior.
+- `verify` any new scaffold, leaf, particle, or plant surface gets a world/HUD/overlay assignment before implementation.
+- `verify` add negative tests for any enrichment that could blur world/HUD boundaries, mutate world state from render code, or disturb the footer row.
+
+## 5. Rendering And Hero Pipeline
+
+- `verify` hero rendering stays renderer-owned and cache-first on the common path.
+- `verify` the live Chafa compiler path degrades to placeholder frames instead of panicking when the GIF, temp directory, temp image write, or `chafa` command fails.
+- `inspect` define the future `HeroFrameSet` offline compiler contract before replacing or bypassing the active Chafa-backed path.
 - `inspect` define the intermediate `CellGrid` correction format with glyph, foreground color, optional background color, and mask/style metadata before building manual editor tooling.
 - `inspect` prototype `.xp` export/import only after `CellGrid` exists, with explicit braille font/tile mapping and round-trip validation for glyph/color fidelity.
-- `inspect` evaluate custom hero rendering as an offline compiler path with separate monochrome braille shape and color-assignment passes, not as live scene rendering.
-- `verify` any custom braille renderer encodes actual `2x4` dot occupancy before color assignment; density-ramp glyph mapping is not sufficient for Chafa-like hero fidelity.
+- `verify` cached frames, Chafa output, and any future manual corrections preserve fixed hero frame geometry across resize and scene stabilization checks.
+- `inspect` continue render-loop optimization only when live-loop profiling points at a real remaining hot path; do not restart broad startup optimization from wall-clock boot timing alone.
 
-### 4.1 Hero GIF Checklist
+## 6. UI, Dev Surfaces, And Workflow
 
-- `verify` hero frames stay fixed-size before render.
-- `verify` hero frame ownership stays inside the renderer, not in ad hoc terminal output.
-- `verify` the full-canvas / flattened-frame geometry contract holds for partial GIF frames.
-- `verify` color mapping does not change per frame unless a stable cache is used.
-- `verify` hero rendering stays deterministic across resize and scene stabilization checkpoints.
-- `verify` `scene_config.json` stays aligned with the active hero asset and footprint defaults that the runtime currently expects.
-- `verify` hero rendering uses the chafa-backed baseline unless a measured regression justifies cached-frame migration.
-- `inspect` preserve room for curated pre-generated frame corrections, including targeted lifts, region-specific color policy, and cell/frame stabilization when they improve the fixed hero asset.
-- `inspect` treat third-party ANSI editors as references or interchange helpers unless they prove Unicode braille, truecolor, animation, and lossless per-cell round-tripping.
-- `inspect` treat REXPaint/CrossOver as an optional manual editing experiment, not the canonical source of edited hero frames.
-- `verify` Ansizalizer/ansipx-style custom glyph ramps stay documented as rejected for final hero quality unless a future experiment proves face/silhouette fidelity comparable to Chafa.
-
-## 5. Implementation Order
-
-- `verify` the implementation order remains explicit:
-  1. ui
-  2. main scene stabilization
-  3. hero gif
-  4. main scene stabilization
-  5. main scene vines
-  6. main scene stabilization
-- `verify` each stabilization step remains a hard checkpoint before moving on.
-- `verify` passes stop when the scene is not clean, flicker-free, and layout-stable.
-- `verify` each stabilization checkpoint ends with the scene matching the current presentation contract before the next phase starts.
-
-### 5.1 UI Phase Checklist
-
-- `verify` `ui/` remains runtime UI state and screen-space presentation only.
-- `verify` world-state mutation stays out of UI presentation helpers.
-- `verify` camera/viewport ownership stays in the projection path, not in UI presentation helpers.
-- `verify` footer, HUD, and overlay responsibilities stay explicit before changing scene code.
-- `verify` the UI phase does not reintroduce panel-style layout as the primary model.
-
-### 5.2 Main Scene Stabilization Checklist
-
-- `verify` projection stays singular and lives in one path only.
-- `verify` world-ui remains world-pinned and hud-ui remains screen-attached.
-- `verify` resize, camera, anchor, and rounding invariance coverage stays tight.
-- `verify` `RenderState` remains the shared per-frame contract for world and HUD facts.
-- `verify` the footer row, debug overlay, and border probe obey the presentation contract.
-- `verify` hero gif work does not advance until the scene is stable and deterministic under resize.
-
-### 5.3 Main Scene Stabilization Exit Criteria
-
-- `verify` resize does not change world attachment semantics.
-- `verify` camera changes do not produce multiple projection meanings.
-- `verify` footer stays on the bottom HUD row with deterministic truncation.
-- `verify` debug telemetry matches visible placement.
-- `verify` border probe remains a world-border indicator, not a second UI system.
-- `verify` `RenderState` remains read-only and shared by the layers that need it.
-
-### 5.4 Main Scene Vines Checklist
-
-- `verify` vines are added only after the scene is stable under resize.
-- `verify` vines remain world-attached scene content and reuse the single projection path.
-- `verify` vines keep the hero/footer contracts stable and stop if they introduce layout drift.
-- `verify` add negative tests for any vine interaction that could blur world/HUD boundaries.
-- `verify` keep `scene::coords` signed projection, anchor identity, and screen-attached invariance tests green before adding vine rendering or growth state.
-- `inspect` keep the minimal vine ownership contract in [`docs/vines.md`](docs/vines.md) current before implementation: vine state belongs to world/flora state, guide lookup belongs to the spatial layer, and render layers only visualize resolved geometry.
-- `verify` do not make vines depend on raster masks, filled sprites, or empty-cell masking until the mask contract is promoted beyond explicit linework/outline guides.
-- `verify` world-space guide primitives live in `GuideState` as linework-only vectors/streams/curves and stay separate from raster masks or filled sprites; debug visualization should project them rather than reinterpreting them as pixels, and the project-wide guide/mask generator should keep a Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](docs/soft-line-atlas.md) for the 10x1..10x5 and longer world-span direction families.
-- `inspect` follow the dedicated vine roadmap in [`docs/vines.md`](docs/vines.md): storage-only flora, deterministic seed, guide lookup, static axis derivation, render layer, debug inspection, deterministic growth, branching/organs, then border awareness.
-- `verify` keep each vine slice reviewable and stop if a step requires hero aesthetic changes, raster masks, render-owned growth state, or HUD/footer layout changes.
-- `verify` run targeted spatial/core/layer tests during each vine slice, `scripts/check.sh` before handoff, and the full `cargo test` suite at milestone boundaries.
-
-## 6. Secondary Checks
-
-- `verify` layout vs `SceneLayout` mapping remains evaluated.
-- `verify` event/focus patterns from ratatouille ecosystem crates are reviewed only when they solve a concrete problem.
-- `verify` `Canvas`, popup, tabs, scrollbar, and widget research stays tied to actual scene needs.
-- `verify` research preserves the world/HUD/overlay split and single projection contract.
-
-## 7. Contract Debt To Avoid Reintroducing
-
-- `verify` mixed camera semantics are not reintroduced.
-- `verify` projection is not split across multiple code paths.
-- `verify` HUD content does not inherit world motion.
-- `verify` world content does not become screen-fixed by accident.
-- `verify` masking is not treated as “empty pixels”.
-- `verify` rendering does not happen inside logic systems.
-
-## 8. Execution Checks
-
-- `verify` the repo remains in soft feature freeze mode: only polish, stability, bug fixes, and contract repairs move forward unless a stronger justification is documented.
-- `verify` before any new feature work starts, the pre-new-feature gate is green: modal/UI state is clean, camera behavior is explicit, hero rendering is stable, docs/logs match the contract, and the relevant regression tests pass.
-- `verify` add or tighten tests for:
-  - resize invariance
-  - camera projection consistency
-  - anchor integrity
-  - rounding / jitter stability
-- `verify` frame-level render snapshots keep the footer/dev hint and other visible mode labels pinned to their current contract.
-- `verify` dev-mode footer stays compact while the `[?] help` popup carries the longer developer control list.
-- `verify` the dev-only pointer probe stays discoverable through the help popup and remains a blinking world-space marker with absolute-position reporting in the debug panel.
-- `verify` the debug info panel stays grouped by lightweight tabs instead of drifting back toward one long mixed-purpose fact dump.
-- `verify` move mode keeps entity movement behind the `[m]ove` strip, with `Tab` / `Shift+Tab` selecting targets and arrow keys moving only the active target.
-- `verify` the settings popup remains modal, tabbed, and subordinate to `dev_mode`, with positions/ui/features/gif/theme tabs staying presentation-oriented.
-- `verify` persisted camera/composition tweaks stay explicit: live dev edits may mark saved state dirty, but quitting without dirty changes remains immediate while dirty quits route through the `save and quit` / `discard and quit` / `Esc cancel` confirmation surface.
-- `inspect` introduce a dedicated FIGlet/font subsystem for YAM text-art surfaces instead of continuing to hand-maintain one-off ASCII literals; use the `sigye` study in `docs/reference-sigye.md` as the starter reference.
-- `inspect` add a reusable styled hotkey-hint formatter so overlays can present compact cues like `↑↓ nav  ←→ change` with explicit token/description contrast.
+- `refactor` extract small helper/state seams from `UiState` only where a concrete workflow gets simpler: world switching, companion offsets, weather refresh, settings editing, or dev overlay toggles.
+- `verify` `calendar (reserved)` stays demoted outside lightweight move/help surfaces until a live calendar surface exists.
+- `verify` hotkeys, move strip, footer, settings, help, palette, weather inspection, pointer probe, and quit-confirm keep separate roles and one shared modal-shell vocabulary where applicable.
+- `inspect` introduce a dedicated FIGlet/font subsystem for YAM text-art surfaces instead of continuing one-off ASCII literals; use `docs/reference-sigye.md` as the starter reference.
+- `inspect` add a reusable styled hotkey-hint formatter so overlays can present compact cues like `up/down nav` and `left/right change` with explicit token/description contrast.
 - `verify` help, move, settings, and quit-confirm continue to share one centered modal shell so popup styling and geometry do not drift apart.
-- `verify` the clock remains a world-attached hero entity; debug info must report its projected screen position without implying a screen-attached UI clock.
-- `inspect` revisit future manual weather-sprite authoring through MoebiusXBIN or similar XBIN tooling only as an offline art workflow; keep runtime assets plain-text plus semantic role mapping unless a later experiment proves a cleaner import path.
-- `inspect` stage the first manual weather-sprite batch around the current seed grammar: keep `clear`, `partly_cloudy`, `cloudy`, and `unknown` as anchors; likely reclassify the current dense `mist` asset toward `fog`; and add `clear_night`, `very_cloudy`, `overcast`, lighter true `mist`, plus the first stronger overlay variants such as `light_showers`, `heavy_rain`, `heavy_snow`, and `light_sleet`.
-- `inspect` audit the current projection path for any remaining split responsibilities.
-- `verify` use the bug taxonomy as a checklist for missing regression coverage.
-- `verify` the active backlog stays aligned with `docs/scene-model.md` and `docs/architecture.md` whenever the work-order sequence changes.
+- `verify` settings remain modal, tabbed, dev-gated, and presentation-oriented; UI widgets must not mutate world simulation state.
 
-## 9. Contract Pointers
+## 7. Docs, Tooling, And Release Hygiene
+
+- `verify` `scripts/check-docs.sh` covers the live root/front-door docs and first-level `docs/*.md` contract surface, not only the oldest core contract subset.
+- `verify` active markdown docs stay clean under repo-configured `markdownlint`, `markdownlint-cli2`, and `cspell`.
+- `verify` README local asset references must point to committed files.
+- `verify` `README.md` current release stays synchronized with `Cargo.toml`.
+- `verify` `TODO.md` issue references must point to active `known_issues.md` ids.
+- `verify` append each completed maintenance batch to `docs/LOG.md` using local `Europe/Warsaw` time.
+- `verify` keep `docs/audit.md` risk-focused and `docs/LOG.md` historical; avoid re-accumulating completed work in the active backlog.
+
+## 8. Contract Pointers
 
 - `verify` projection details stay in `docs/scene-model.md` and `docs/rendering.md`.
-- `verify` layering and `RenderState` ownership details stay in `docs/architecture.md` and `docs/rendering.md`.
-- `verify` invariants and determinism checks stay referenced from `docs/scene-model.md`.
-- `verify` greenhouse integration rules stay in `docs/scene-model.md`.
-- `verify` render-time validation goals stay in the active backlog here without duplicating contract text.
-- `verify` vine-specific design notes should stay in the owning docs; keep this backlog to execution and regression checks.
+- `verify` ownership and coupling rules stay in `docs/architecture.md`.
+- `verify` vine-specific status and design notes stay in `docs/vines.md`.
+- `verify` weather-widget provider/model/render ownership stays in `docs/weather-widget.md`.
+- `verify` theme/palette contracts stay in `docs/theme.md` and the palette reference docs.
+- `verify` release and branch policy stay in `docs/release-model.md`.
+- `verify` research/resource scouting stays in `docs/resource-map.md`, not in this backlog.
+- `verify` render-time validation goals stay here only as execution checks, not duplicated contract prose.
 
-## 10. Maintenance Rules
+## 9. Maintenance Rules
 
 - `verify` add new backlog items as execution steps, inspections, or regression checks; keep contract wording in the owning docs.
 - `verify` prefer one narrowly scoped item per line so TODO stays easy to prune.
 - `verify` if a TODO item survives multiple passes without changing shape, either promote it to the owning contract doc or remove it.
 - `verify` any behavior change keeps its test, log entry, and owning doc update in the same change.
 - `verify` new work that introduces a concept already named in an active doc must reference the canonical doc instead of restating the rule.
-- `verify` all scene rendering continues through `render_scene` and `Scene::render`; no side-path should write to the terminal buffer.
-- `verify` new world-attached renderables reuse the explicit `scene::entity::HeroClockAttachment` path or its smaller pose helpers instead of adding bespoke anchor math.
-- `verify` `UiState` remains the runtime source of truth for hero, clock, and camera attachment inputs until a deliberate ownership change lands.
-- `verify` prefer negative tests for forbidden behavior when adding new render, layer, attachment, or mask rules.
-- `verify` isolate temp files and other shared runtime artifacts by run when tests or helpers need them.
+- `verify` all scene rendering continues through `render_scene` and `Scene::render`; no side path should write to the terminal buffer.
+- `verify` new world-attached renderables reuse shared spatial/entity pose helpers instead of adding bespoke anchor math.
 - `verify` boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.
 - `verify` metamechanics remains a subordinate control/observation seam inside `ui/`; `dev_mode` may toggle presentation flags, but it does not own world state, projection, or render order.
 - `verify` follow-hero camera mode stays centered on the world datum across terminal resizes, while manual pan mode remains clamped to world overscan.
 - `verify` the screenshot-aligned manual boot seed `(-60, -15)` remains distinct from the centered `follow-hero` runtime path, so boot composition and resize behavior stay separately owned.
-- `verify` docs-only and wording-only changes use `cargo fmt --check`, while compositor/camera/overlay changes use the full test suite before commit.
-- `verify` the UI / metamechanics working set remains summarized in `docs/architecture.md` and `docs/rendering.md`, so future UI work can resume from a compact handoff instead of rereading the changelog; keep the `C`/`c` camera-home contract documented there as the current boot/home split.

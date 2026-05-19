@@ -38,6 +38,14 @@
 - `ui widgets -> world mutation`
 - `metamechanics -> world mutation outside the explicit UI state seam`
 
+## Pre-Expansion Gate
+
+- Main-scene enrichment and greenhouse ecosystem work should start from infrastructure, not from another visible object bolted onto the current scene.
+- Before a second plant family or greenhouse population lands, the flora layer needs a small shared organism vocabulary: organism id, species id, journal id, lifecycle state, stats, axes/metamers/organs, and growth tips/meristems.
+- Before a greenhouse or lab world lands, world selection needs to become an explicit multi-world contract rather than the current main-scene/sandbox toggle shape.
+- Before denser organism rendering lands, spatial projection and guide relation logic should keep moving toward `core::spatial` as the canonical resolver, with `scene::coords` treated as compatibility surface.
+- Conceptual work for those future features is in scope during stabilization when it tightens contracts, tests, data shape, or tooling; large runtime mechanics should wait for those gates to be deliberate.
+
 ## Rendering Pipeline
 
 - runtime draw closure calls `render_scene`

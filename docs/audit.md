@@ -9,37 +9,45 @@ Last reviewed: 2026-05-19
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
+- The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora identity, world-switching, and docs/tooling readiness are prepared deliberately.
 
 ## Weakest Areas
 
 1. Spatial relation layer: still the most fragile seam because the canonical resolver exists, but compatibility bridging and type boundaries remain only partly consolidated.
 2. Hero-rendering pipeline: Chafa is stable, but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
-3. Flora runtime: species, journals, and morphology are coherent in contract form, but the actual multi-species simulation machinery is still mostly ahead of implementation.
+3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, but the broader organism/species/journal machinery is still mostly ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
 5. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
 ## Current Work Priority
 
 1. Prioritize overall stability and efficiency before adding new features.
-2. Keep hero GIF aesthetics held steady and flora deferred until the system is prepared for it; focus only on code-side stability and efficiency improvements.
-3. Defer flora runtime development until the species/morphology stack is prepared systematically.
+2. Keep hero GIF aesthetics held steady and defer large flora/world expansions until the system is prepared for them; conceptual prep is fine when it tightens the contracts.
+3. Prepare flora runtime development systematically around organism identity, species registry payloads, per-instance journals, and shared spatial guidance instead of adding another ad hoc plant family.
 4. Improve coherence and consistency across UI, theming, and docs.
 5. Keep `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite green together now that the broader stabilization pass is restored.
 
 ## Active Readiness Gates
 
-- The ownership contract lives in [`docs/vines.md`](vines.md) and should remain current before runtime vine work begins.
-- Do not start vine feature work until the signed projection, anchor identity, and screen-attached invariance tests stay green together.
+- The ownership contract lives in [`docs/vines.md`](vines.md) and should remain current before additional vine phases or new plant families begin.
+- Do not start broader flora feature work until the signed projection, anchor identity, and screen-attached invariance tests stay green together.
 - Keep vines as world-attached organisms that query guide/spatial state; render layers should visualize resolved vine geometry rather than own vine state.
 - Keep vines independent of raster masks, filled sprites, or empty-cell masking until the mask contract is explicitly promoted.
 - Keep the current hero GIF aesthetics and footer contract stable while testing vine placement around them.
 - Clean terminology drift before implementation: spatial capture uses points, anchors, guides, lines, and polylines; `node` remains reserved for plant morphology/anatomy.
 - Readiness validation on 2026-05-05: targeted Phase 0 checks are green for spatial projection, guide-set lookup, anchor identity, footer/HUD invariance, and resize round-trip behavior; the remaining risk is architectural consolidation, not an active regression.
+- The active backlog now treats vine phases 1 through 7 as landed and keeps only branching/organs, border awareness, and broader flora/greenhouse preparation as future execution work.
 
 ## Active Risk Notes
 
 - `low` The runtime loop is now less likely to strand the user's terminal in raw-mode / alternate-screen state if a later size, input, or draw step returns early: `runtime.rs` now keeps terminal teardown in a small drop guard instead of relying only on the happy-path exit tail.
   - evidence: `src/runtime.rs`
+- `low` The live hero compiler path is less likely to turn asset/cache failure into a hard runtime crash or poisoned cache: missing or corrupt GIF decode, temp-directory creation, temp image writes, non-UTF-8 temp paths, and missing `chafa` now return placeholder hero frames instead of panicking, and placeholder frames are not saved as trusted hero caches.
+  - evidence: `src/render/chafa.rs`
+- `low` Docs hygiene now covers the first-level active docs surface instead of only the oldest core subset, so current contracts such as vines, hero cache, weather widget, theme, resource map, and soft-line atlas participate in the same markdown/spell gate as the front-door docs.
+  - evidence: `scripts/check-docs.sh`, `docs/hygiene.md`
+- `low` The direct terminal dependency is now aligned with the version already pulled through Ratatui, removing the previous duplicate `crossterm`/`mio` stack from this crate's dependency graph.
+  - evidence: `Cargo.toml`, `Cargo.lock`
 - `low` The repo front door is less likely to drift into broken preview/media references again: the missing `docs/assets/...` README placeholders were removed, and `scripts/check-docs.sh` now fails if `README.md` references a local asset path that does not exist.
   - evidence: `README.md`, `scripts/check-docs.sh`, `docs/hygiene.md`
 - `low` The common direct-binary startup path is no longer an obvious performance problem after the hero-cache work: a small local audit on 2026-05-14 showed `./target/debug/yam-rust --version` effectively instant for a single run and about `1.21s` total over 200 repeated launches (roughly `6ms` per launch), while the much slower `cargo run -- --version` path was dominated by Cargo wrapper overhead rather than YAM runtime initialization.
@@ -64,6 +72,10 @@ Last reviewed: 2026-05-19
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
 - `medium` The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.
   - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
+- `medium` Flora state remains vine-shaped in the implementation even though the contracts now describe a broader organism model; the next implementation step should create a small shared organism/species/journal vocabulary before another plant family or greenhouse population lands.
+  - evidence: `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
+- `medium` World selection is still effectively a main-scene/sandbox UI toggle even though `WorldKind` already has an explicit boot/main/sandbox core model; greenhouse should wait for a generalized world-selection contract rather than being attached to the binary toggle.
+  - evidence: `src/core/world.rs`, `src/ui/state.rs`
 - `low` `resolve_position(...)` is still the legacy world-shaped bridge even though `ScreenPos` is now active again in the compatibility helpers; that keeps the signed projection semantics correct, but the final migration away from world-shaped screen results is not finished yet.
   - evidence: `src/scene/coords.rs`, `src/core/spatial.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

@@ -35,6 +35,17 @@ Scene state must flow through this pipeline:
 
 No system should render itself outside that path.
 
+## Pre-Expansion Readiness
+
+The next large feature families are main-scene enrichment and the greenhouse ecosystem.
+Both should be prepared through shared contracts before they become visible runtime content:
+
+- new world-attached objects must enter through the world/spatial/layer pipeline
+- new plant organisms must reuse the flora organism vocabulary rather than inventing a one-family data path
+- greenhouse rooms must be worlds or rooms inside the world model, not dashboard panels
+- debug, inspect, and authoring tools may expose the prep work, but they must not become hidden owners of simulation state
+- conceptual prep work is useful when it clarifies data ownership, spatial relations, lifecycle vocabulary, tests, or docs before implementation
+
 ## Scene Systems
 
 The scene is composed of these systems:

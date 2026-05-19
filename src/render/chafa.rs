@@ -63,13 +63,20 @@ fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Ou
 }
 
 pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
-    let frames = decode_gif_frames(HERO_GIF_PATH);
-    let temp_dir = TempFrameDir::new();
+    let frames = match decode_gif_frames(HERO_GIF_PATH) {
+        Ok(frames) => frames,
+        Err(err) => return vec![vec![format!("hero gif unavailable: {err}").into()]],
+    };
+    let temp_dir = match TempFrameDir::new() {
+        Ok(temp_dir) => temp_dir,
+        Err(err) => return vec![vec![format!("hero temp dir unavailable: {err}").into()]],
+    };
     frames
         .into_iter()
         .enumerate()
         .map(|(frame_index, frame)| {
             render_image_frame(temp_dir.path(), frame_index, &frame, width, height)
+                .unwrap_or_else(|err| vec![format!("hero frame render failed: {err}").into()])
         })
         .collect()
 }
@@ -81,8 +88,10 @@ pub fn hero_frames_cached(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
     }
 
     let frames = hero_frames(width, height);
-    let frame_set = HeroFrameSet::from_lines(width, height, &frames);
-    let _ = save_hero_frame_set(&cache_path, &frame_set);
+    if hero_frames_are_cacheable(&frames) {
+        let frame_set = HeroFrameSet::from_lines(width, height, &frames);
+        let _ = save_hero_frame_set(&cache_path, &frame_set);
+    }
     frames
 }
 
@@ -93,6 +102,7 @@ mod tests {
         tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
     };
     use image::Rgba;
+    use ratatui::text::Line;
     use std::{fs, thread, time::Duration};
 
     #[test]
@@ -103,7 +113,7 @@ mod tests {
 
     #[test]
     fn decoded_hero_frames_keep_full_canvas_geometry() {
-        let frames = decode_gif_frames(super::HERO_GIF_PATH);
+        let frames = decode_gif_frames(super::HERO_GIF_PATH).expect("decode hero gif");
         assert_eq!(frames.len(), 64);
         for frame_index in [0, 1, 15, 19, 30, 63] {
             assert_eq!(
@@ -157,7 +167,7 @@ mod tests {
     #[test]
     fn temp_frame_dir_is_removed_on_drop() {
         let path = {
-            let temp_dir = super::TempFrameDir::new();
+            let temp_dir = super::TempFrameDir::new().expect("temp frame dir");
             let path = temp_dir.path().to_path_buf();
             assert!(
                 path.exists(),
@@ -170,6 +180,21 @@ mod tests {
             !path.exists(),
             "temp frame dir should be removed when the render batch ends"
         );
+    }
+
+    #[test]
+    fn missing_hero_gif_returns_decode_error_instead_of_panicking() {
+        let err = decode_gif_frames("__yam_missing_hero.gif").expect_err("missing gif should fail");
+        assert!(err.contains("failed to open gif"));
+    }
+
+    #[test]
+    fn placeholder_hero_frames_are_not_cacheable() {
+        let frames = vec![vec![Line::from("chafa unavailable: missing")]];
+        assert!(!super::hero_frames_are_cacheable(&frames));
+
+        let frames = vec![vec![Line::from("hero gif unavailable: missing")]];
+        assert!(!super::hero_frames_are_cacheable(&frames));
     }
 
     #[test]
@@ -212,21 +237,20 @@ mod tests {
     }
 }
 
-fn decode_gif_frames(path: &str) -> Vec<DynamicImage> {
-    let file =
-        fs::File::open(path).unwrap_or_else(|err| panic!("failed to open gif {path}: {err}"));
+fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
+    let file = fs::File::open(path).map_err(|err| format!("failed to open gif {path}: {err}"))?;
     let reader = std::io::BufReader::new(file);
     let decoder =
-        GifDecoder::new(reader).unwrap_or_else(|err| panic!("failed to decode gif {path}: {err}"));
+        GifDecoder::new(reader).map_err(|err| format!("failed to decode gif {path}: {err}"))?;
     let canvas = decoder.dimensions();
     let frames = decoder
         .into_frames()
         .collect_frames()
-        .unwrap_or_else(|err| panic!("failed to collect gif frames from {path}: {err}"));
-    frames
+        .map_err(|err| format!("failed to collect gif frames from {path}: {err}"))?;
+    Ok(frames
         .into_iter()
         .map(|frame| DynamicImage::ImageRgba8(frame_to_canvas(frame, canvas)))
-        .collect()
+        .collect())
 }
 
 fn load_cached_hero_frames(path: &Path, width: u16, height: u16) -> Option<HeroFrameSet> {
@@ -242,6 +266,27 @@ fn load_cached_hero_frames(path: &Path, width: u16, height: u16) -> Option<HeroF
         return None;
     }
     Some(frame_set)
+}
+
+fn hero_frames_are_cacheable(frames: &[Vec<Line<'static>>]) -> bool {
+    !frames.is_empty() && !frames.iter().any(|frame| is_placeholder_frame(frame))
+}
+
+fn is_placeholder_frame(frame: &[Line<'static>]) -> bool {
+    if frame.len() != 1 {
+        return false;
+    }
+
+    let text = frame[0]
+        .spans
+        .iter()
+        .map(|span| span.content.as_ref())
+        .collect::<String>();
+    text.starts_with("chafa unavailable:")
+        || text.starts_with("chafa exited with status")
+        || text.starts_with("hero gif unavailable:")
+        || text.starts_with("hero temp dir unavailable:")
+        || text.starts_with("hero frame render failed:")
 }
 
 fn hero_cache_is_fresh(path: &Path) -> bool {
@@ -380,16 +425,15 @@ fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
     red_hue && saturation >= 0.45 && value <= 0.42
 }
 
-fn prepare_temp_frame_dir() -> PathBuf {
+fn prepare_temp_frame_dir() -> std::io::Result<PathBuf> {
     let unique = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
     let temp_dir =
         std::env::temp_dir().join(format!("yam_rust_frames_{}_{}", std::process::id(), unique));
-    fs::create_dir_all(&temp_dir)
-        .unwrap_or_else(|err| panic!("failed to create temp frame dir {temp_dir:?}: {err}"));
-    temp_dir
+    fs::create_dir_all(&temp_dir)?;
+    Ok(temp_dir)
 }
 
 struct TempFrameDir {
@@ -397,10 +441,8 @@ struct TempFrameDir {
 }
 
 impl TempFrameDir {
-    fn new() -> Self {
-        Self {
-            path: prepare_temp_frame_dir(),
-        }
+    fn new() -> std::io::Result<Self> {
+        prepare_temp_frame_dir().map(|path| Self { path })
     }
 
     fn path(&self) -> &Path {
@@ -420,17 +462,14 @@ fn render_image_frame(
     image: &DynamicImage,
     width: u16,
     height: u16,
-) -> Vec<Line<'static>> {
+) -> Result<Vec<Line<'static>>, String> {
     let temp_path = temp_dir.join(format!("yam_frame_{frame_index:04}.png"));
     image
         .save_with_format(&temp_path, ImageFormat::Png)
-        .unwrap_or_else(|err| panic!("failed to write temp image {temp_path:?}: {err}"));
-    let rendered = render_frame(
-        temp_path
-            .to_str()
-            .unwrap_or_else(|| panic!("temp path not utf-8: {temp_path:?}")),
-        width,
-        height,
-    );
-    rendered
+        .map_err(|err| format!("failed to write temp image {temp_path:?}: {err}"))?;
+    let temp_path = temp_path
+        .to_str()
+        .ok_or_else(|| format!("temp path not utf-8: {temp_path:?}"))?;
+    let rendered = render_frame(temp_path, width, height);
+    Ok(rendered)
 }

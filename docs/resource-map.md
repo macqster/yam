@@ -28,56 +28,67 @@ It is a research/reference surface, not an active backlog.
 ### Ratatui Ecosystem
 
 Current YAM baseline:
+
 - Ratatui is the live UI/render substrate
 - YAM already owns its own world/HUD/layer model
 - `tachyonfx` is already used for presentation effects
 
 Recommended posture:
+
 - `Adopt` Ratatui itself and small ecosystem helpers only when they reduce code without weakening YAM's scene contract
 - `Emulate` popup, inspector, keyboard-dispatch, and settings-panel patterns from mature Ratatui apps
 - `Reference` `tui-widgets`, `tui-scrollview`, and `ratatui-image` for future inspector growth or protocol experiments
 - `Reject` generic dashboard-shell architecture as a replacement for YAM's world-space scene model
 
 Implementation gate:
+
 - only pull in more Ratatui ecosystem crates when a concrete YAM surface has outgrown the current custom implementation
 
 ### Chafa And Terminal Image Rendering
 
 Current YAM baseline:
+
 - Chafa-backed hero rendering is the active baseline
 - runtime rendering already avoids treating raw ANSI output as the final scene authority
 
 Recommended posture:
+
 - `Adopt` Chafa as the current hero renderer/compiler baseline
 - `Emulate` useful frame-shape, color, and animation lessons in future YAM-owned frame caches
 - `Reference` Chafa output as a seed for offline frame compilation, debugging, or manual correction workflows
 - `Reject` raw ANSI stream embedding as the main Ratatui runtime path
 
 Implementation gate:
+
 - if hero rendering evolves beyond the current baseline, define a YAM-owned `CellGrid` / `HeroFrameSet` contract before introducing editor or cache tooling
 
 ### Weather Providers And Terminal Weather References
 
 Current YAM baseline:
+
 - `wttr.in` JSON is the live provider path
 - YAM already owns normalized weather state, localized text, sprite atlas, layout, and Ratatui rendering
 
 Recommended posture:
+
 - `Adopt` `wttr.in` JSON as the current practical provider
 - `Emulate` compact weather grammar, condition-family distinctions, and terminal-friendly fact ordering from weather TUIs
 - `Reference` future provider options such as `Open-Meteo` only when provider expansion becomes real work
 - `Reject` raw full-provider terminal output as runtime layout authority
 
 Implementation gate:
+
 - provider expansion should preserve a provider-neutral `WeatherSnapshot` seam and keep provider code out of scene/growth systems
 
 ### ANSI And ASCII Art Authoring Tools
 
 Current YAM baseline:
+
 - runtime weather sprites are plain-text assets
 - source-art notes already live separately from runtime assets
 
 Recommended posture:
+
 - `Reference` Moebius / MoebiusXBIN as strong source-art environments for colored ANSI/XBIN exploration
 - `Reference` REXPaint as a grid-discipline and interchange tool for text-mode composition experiments
 - `Reference` `perkins` as a braille-oriented offline doctoring experiment for selected Chafa-derived hero frames
@@ -85,57 +96,68 @@ Recommended posture:
 - `Reject` XBIN, `.ans`, or `.xp` files as direct runtime sprite atlas sources
 
 Specific note on `perkins`:
+
 - treat it as an experiment for manual cleanup of a few important Chafa-derived hero frames, especially when silhouette or braille-cell readability needs hand correction
 - do not treat it as a replacement for Chafa, an animation-aware frame pipeline, or a runtime source-of-truth format
 - if `perkins` ever becomes part of a real workflow, define a YAM-owned `CellGrid` / frame-cache contract first and treat `perkins` edits as offline source material only
 
 Implementation gate:
+
 - if an offline art workflow is promoted, each asset family should keep the `runtime/` vs `source-art/` split already used in `src/weather/assets/`
 
 ### Terminal Effects
 
 Current YAM baseline:
+
 - `tachyonfx` is already part of the runtime for presentation-only transitions/effects
 
 Recommended posture:
+
 - `Adopt` `tachyonfx` for loading transitions and small presentation-only polish
 - `Emulate` restrained terminal animation patterns that do not obscure state truth
 - `Reject` effects that own simulation state, projection semantics, or debug truth
 
 Implementation gate:
+
 - any new effect should degrade cleanly when disabled and stay documented as presentation-only
 
 ### Procedural Flora And Growth References
 
 Current YAM baseline:
+
 - vines are the first live flora prototype
 - growth, density, constraints, aging, and tick systems already exist
 
 Recommended posture:
+
 - `Reference` L-systems, space-colonization, cellular-automata, and agent-based growth literature as idea banks
 - `Emulate` deterministic, art-directable, terminal-cell-friendly growth rules rather than biological simulation dogma
 - `Reject` overbuilt realism or random ASCII painting that bypasses YAM's explicit world-space/growth contracts
 
 Implementation gate:
+
 - future flora work should extend the existing systems vocabulary instead of bypassing it with one-off species logic
 
 ### Theme And Palette References
 
 Current YAM baseline:
+
 - BTAS/TNBA semantic theme helpers already own color roles in code and docs
 
 Recommended posture:
+
 - `Reference` terminal palette conventions, ANSI fallback roles, and cel-animation palette studies
 - `Emulate` useful contrast and semantic-token discipline
 - `Reject` raw literal-color sprawl or editor-driven palette authority inside runtime code
 
 Implementation gate:
+
 - any future theme cleanup should preserve semantic naming first and keep raw-color literals limited to low-level render/test exceptions
 
 ## Adopt / Emulate / Reference / Reject Summary
 
 | Resource | Category | YAM role |
-|---|---|---|
+| --- | --- | --- |
 | Ratatui | Adopt | core UI/render substrate |
 | `tachyonfx` | Adopt | presentation-only loading/effect polish |
 | Chafa | Adopt | current hero rendering/compiler baseline |

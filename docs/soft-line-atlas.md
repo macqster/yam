@@ -3,6 +3,7 @@
 This atlas captures the current linework reference for project-wide guide strokes and future mask/annotation tooling.
 
 Scope:
+
 - linework only
 - no fills
 - no sprites
@@ -120,7 +121,7 @@ The current sample set suggests the following first-pass bucket interpretation:
 | Family | Representative cadence | Notes |
 | --- | --- | --- |
 | `10x1` / horizontal | `-` only, or minimal edge softness | Axis-aligned and stable |
-| `1x5` / vertical | `|` only | Axis-aligned and stable |
+| `1x5` / vertical | vertical bar only | Axis-aligned and stable |
 | `10x5` / long shallow | `--''`-style lead-in, then punctuation/body, then lighter exit glyphs | Strong entry/core/exit segmentation |
 | `9x5` / shallow-mid | `` ` `` + `.` lead-in, `\` or `/` core, punctuation exit | Direction-mirrored but bucket-stable |
 | `8x3` / shallow | punctuation lead-in, short structural core, punctuation exit | Less ramp, more core glyph |

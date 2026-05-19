@@ -10,14 +10,7 @@ active_docs=(
   "README.md"
   "TODO.md"
   "known_issues.md"
-  "docs/README.md"
-  "docs/LOG.md"
-  "docs/audit.md"
-  "docs/architecture.md"
-  "docs/glossary.md"
-  "docs/hygiene.md"
-  "docs/rendering.md"
-  "docs/scene-model.md"
+  docs/*.md
 )
 
 for path in "${active_docs[@]}"; do

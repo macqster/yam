@@ -10,14 +10,16 @@ mod ui;
 mod weather;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    fn run(cmd: &str, args: &[&str]) {
-        std::process::Command::new(cmd)
-            .args(args)
-            .status()
-            .expect("failed to run command");
+    fn run(cmd: &str, args: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
+        let status = std::process::Command::new(cmd).args(args).status()?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("{cmd} {} exited with status {status}", args.join(" ")).into())
+        }
     }
 
-    fn print_runtime_identity() {
+    fn print_runtime_identity() -> Result<(), Box<dyn std::error::Error>> {
         println!("==============================");
         println!("YAM RUNTIME IDENTITY");
         println!("SOURCE: {}", env!("CARGO_MANIFEST_DIR"));
@@ -27,8 +29,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             build_info::BUILD_TIME,
             build_info::build_hash()
         );
-        println!("BIN PATH: {:?}", std::env::current_exe().unwrap());
+        println!("BIN PATH: {:?}", std::env::current_exe()?);
         println!("==============================");
+        Ok(())
     }
 
     let args: Vec<String> = std::env::args().collect();
@@ -37,16 +40,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
     if args.iter().any(|a| a == "--identity") {
-        print_runtime_identity();
+        print_runtime_identity()?;
         return Ok(());
     }
     if args.iter().any(|a| a == "--check-updates") {
-        run("cargo", &["outdated"]);
-        return Ok(());
+        return run("cargo", &["outdated"]);
     }
     if args.iter().any(|a| a == "--update") {
-        run("bash", &["scripts/update.sh"]);
-        return Ok(());
+        return run("bash", &["scripts/update.sh"]);
     }
     let initial_world_kind = if args.iter().any(|a| a == "--sandbox") {
         crate::core::world::WorldKind::Sandbox

@@ -44,6 +44,14 @@ if [[ "$crate_version" != "$readme_version" ]]; then
   exit 1
 fi
 
+while IFS= read -r asset_path; do
+  [[ -z "$asset_path" ]] && continue
+  if [[ ! -e "$asset_path" ]]; then
+    echo "README.md references missing local asset: $asset_path" >&2
+    exit 1
+  fi
+done < <(sed -n 's/.*src="\([^"]*\)".*/\1/p' README.md)
+
 todo_issue_ids="$(rg -o 'KI-[0-9]+' TODO.md | sort -u || true)"
 known_issue_ids="$(rg -o '^### KI-[0-9]+' known_issues.md | awk '{print $2}' | sort -u || true)"
 

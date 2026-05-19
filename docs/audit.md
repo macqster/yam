@@ -1,7 +1,7 @@
 # Repo Audit
 
 Date: 2026-04-27
-Last reviewed: 2026-05-14
+Last reviewed: 2026-05-19
 
 ## Unresolved Risks
 
@@ -38,6 +38,10 @@ Last reviewed: 2026-05-14
 
 ## Active Risk Notes
 
+- `low` The runtime loop is now less likely to strand the user's terminal in raw-mode / alternate-screen state if a later size, input, or draw step returns early: `runtime.rs` now keeps terminal teardown in a small drop guard instead of relying only on the happy-path exit tail.
+  - evidence: `src/runtime.rs`
+- `low` The repo front door is less likely to drift into broken preview/media references again: the missing `docs/assets/...` README placeholders were removed, and `scripts/check-docs.sh` now fails if `README.md` references a local asset path that does not exist.
+  - evidence: `README.md`, `scripts/check-docs.sh`, `docs/hygiene.md`
 - `low` The common direct-binary startup path is no longer an obvious performance problem after the hero-cache work: a small local audit on 2026-05-14 showed `./target/debug/yam-rust --version` effectively instant for a single run and about `1.21s` total over 200 repeated launches (roughly `6ms` per launch), while the much slower `cargo run -- --version` path was dominated by Cargo wrapper overhead rather than YAM runtime initialization.
   - evidence: local timing audit on 2026-05-14; `src/render/chafa.rs`, `src/render/hero.rs`
 - `low` Recent `yam-install && yam` wall-clock variance is currently better explained by Cargo/install-path work than by YAM runtime startup: the pasted terminal history ranged from about `1.64s` to `21.78s` for the install step, including one near-no-op reinstall with no visible compile work. That output shape looked like an older direct Cargo install path rather than the newer offline-first wrapper; the repo now ships an explicit `bin/yam-install` wrapper that routes through `scripts/update.sh` so future timing reads are easier to interpret. Treat those numbers as build/install variance unless a timed direct-binary launch sample says otherwise.

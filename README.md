@@ -6,16 +6,9 @@
 
 Current release: `0.3.9`
 
-<p align="center">
-  <img src="docs/assets/yam-preview.png" alt="YAM terminal scene preview placeholder" width="860">
-</p>
-
-<p align="center">
-  <img src="docs/assets/yam-demo.gif" alt="YAM terminal scene demo GIF placeholder" width="860">
-</p>
-
-> Preview placeholders are reserved for the canonical screenshot and short demo
-> GIF. Replace them only with repo-committed assets under `docs/assets/`.
+> Preview note: the front door currently ships without committed screenshot/demo
+> assets. Add preview media only when the files are checked into the repo and the
+> README paths are live.
 
 ---
 

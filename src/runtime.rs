@@ -29,6 +29,15 @@ use crossterm::{
 use ratatui::{backend::CrosstermBackend, Terminal};
 use tachyonfx::{fx, CellFilter, Effect, Interpolation, SimpleRng};
 
+struct TerminalCleanupGuard;
+
+impl Drop for TerminalCleanupGuard {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+    }
+}
+
 fn build_loading_effect(phase: crate::ui::state::BootLoadingPhase) -> Effect {
     let mut effect = match phase {
         crate::ui::state::BootLoadingPhase::Coalesce => {
@@ -59,6 +68,7 @@ pub fn run(
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
+    let cleanup_guard = TerminalCleanupGuard;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -425,9 +435,9 @@ pub fn run(
         ],
     );
 
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
+    drop(terminal);
+    drop(cleanup_guard);
     Ok(())
 }
 

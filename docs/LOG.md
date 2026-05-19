@@ -13,6 +13,12 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-05-19
+
+- `06:56` activated the full docs-hygiene toolchain on this workstation by installing `markdownlint-cli`, `markdownlint-cli2`, and `cspell` through the tracked dotfiles/Homebrew path, then tightened YAM's shared cspell dictionary for the stable current vocabulary and legacy hotkey-label fragments that the now-live spellcheck pass surfaced in active docs.
+- `06:19` hardened runtime/process hygiene in one maintenance pass: `main.rs` now propagates command failures for helper paths like `--update` and `--check-updates` instead of silently treating non-zero exits as success, and `runtime.rs` now keeps alternate-screen/raw-mode teardown in a small drop guard so later event-loop errors are less likely to leave the terminal in a broken state.
+- `06:19` tightened front-door/docs hygiene to catch a real drift case instead of only fixing the visible symptom: removed the broken README preview placeholders that pointed at missing `docs/assets/...` files, taught `scripts/check-docs.sh` to fail on missing local asset references from `README.md`, updated `docs/hygiene.md` to make that rule explicit, and refreshed the audit snapshot to record the reduced risk.
+
 ## 2026-05-15
 
 - `00:33` bumped the crate and front-door release marker from `0.3.8` to `0.3.9` after the quit-transition cleanup pass: this release carries the live-scene linear dissolve on accepted quits and the launcher handoff polish that returns to an in-terminal fastfetch refresh instead of a separate window or a stale shell trace.

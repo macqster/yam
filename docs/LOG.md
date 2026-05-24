@@ -13,6 +13,11 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-05-24
+
+- `12:23` recorded the Apple Music companion feasibility assessment in `docs/apple-music-companion.md` and linked it from the docs map/resource map: the future-friendly path is a separate Rust/Ratatui `yam-music` companion that delegates playback to macOS Music.app first, while Chrome/CDP/MusicKit playback and pure Rust Apple Music streaming stay explicitly risky or rejected first paths.
+- `12:38` refreshed the Cargo lockfile to the latest semver-compatible dependency set and removed the stale direct `portable-pty` dependency after confirming no runtime, script, docs, or wrapper path referenced it anymore; this pruned the old PTY/serial transitive graph while keeping YAM on the stable Rust toolchain.
+
 ## 2026-05-19
 
 - `06:56` activated the full docs-hygiene toolchain on this workstation by installing `markdownlint-cli`, `markdownlint-cli2`, and `cspell` through the tracked dotfiles/Homebrew path, then tightened YAM's shared cspell dictionary for the stable current vocabulary and legacy hotkey-label fragments that the now-live spellcheck pass surfaced in active docs.

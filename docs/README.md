@@ -30,6 +30,7 @@ The repo front door is [../README.md](../README.md).
 
 ## Research And Policy
 
+- [apple-music-companion.md](apple-music-companion.md) - Apple Music companion feasibility and architecture note
 - [reference-sigye.md](reference-sigye.md) - reference study of `sigye`
 - [release-model.md](release-model.md) - branch and release policy
 - [resource-map.md](resource-map.md) - research/reference map

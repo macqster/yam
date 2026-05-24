@@ -154,6 +154,31 @@ Implementation gate:
 
 - any future theme cleanup should preserve semantic naming first and keep raw-color literals limited to low-level render/test exceptions
 
+### Apple Music Companion
+
+Current YAM baseline:
+
+- no music companion is implemented
+- the May 2026 feasibility note lives in
+  [`apple-music-companion.md`](apple-music-companion.md)
+
+Recommended posture:
+
+- `Reference` Apple MusicKit and MusicKit JS docs for platform capability and
+  queue/playback semantics
+- `Emulate` simple music-client list, queue, and now-playing ergonomics in a
+  YAM-owned Ratatui companion
+- `Adopt` macOS Music.app automation first if this becomes a real personal
+  companion, because Music.app already owns account login, DRM, and playback
+- `Reject` pure Rust Apple Music streaming as a practical target
+- `Reject` Chrome/CDP/MusicKit playback as the first implementation path unless
+  the goal is explicitly a playback-backend research project
+
+Implementation gate:
+
+- prove a small Music.app control backend before adding a full UI or any Apple
+  Music API token flow
+
 ## Adopt / Emulate / Reference / Reject Summary
 
 | Resource | Category | YAM role |
@@ -170,6 +195,10 @@ Implementation gate:
 | `perkins` | Reference | offline Chafa-frame doctoring experiment for selected braille-heavy hero frames |
 | `tui-widgets` / `tui-scrollview` | Reference | future inspector growth options |
 | `ratatui-image` | Reference | future image-protocol experiments only |
+| Apple MusicKit / MusicKit JS | Reference | capability and playback-semantics reference for possible music companion |
+| macOS Music.app automation | Adopt candidate | safest first playback backend for possible `yam-music` |
+| Chrome/CDP/MusicKit playback | Reject first path | too fragile for the first YAM music companion slice |
+| pure Rust Apple Music streaming | Reject | not a practical playback target |
 | raw ANSI / XBIN / `.xp` runtime authority | Reject | not a runtime asset source by default |
 | generic dashboard app shells | Reject | not a replacement for YAM's world-space scene model |
 

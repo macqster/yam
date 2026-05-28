@@ -54,7 +54,7 @@ impl Layer for DebugLayer {
         let border = border_probe_bounds();
 
         let hero = &ui.hero;
-        let main_scene = world.kind == crate::core::world::WorldKind::MainScene;
+        let main_scene = world.kind.has_main_scene_composition();
         let hero_world = ctx.world.hero_world;
         let hero_screen = world_to_screen(
             ctx.world.hero_visual_anchor,

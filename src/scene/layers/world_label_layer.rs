@@ -1,4 +1,4 @@
-use crate::core::world::{WorldKind, WorldState};
+use crate::core::world::WorldState;
 use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::{Layer, RenderState};
@@ -24,14 +24,14 @@ impl Layer for WorldLabelLayer {
             return None;
         }
 
-        let label = match world.kind {
-            WorldKind::Boot => return None,
-            WorldKind::MainScene => "MAIN SCENE",
-            WorldKind::Sandbox => "SANDBOX",
-        };
+        let profile = world.kind.profile();
+        if !profile.selectable {
+            return None;
+        }
+        let label = profile.title.replace('-', " ").to_ascii_uppercase();
         let label_width = label.chars().count() as u16;
         let x = grid.width.saturating_sub(label_width) / 2;
-        write_ascii_string(grid, x, 0, label, theme_style::debug_text());
+        write_ascii_string(grid, x, 0, &label, theme_style::debug_text());
 
         None
     }

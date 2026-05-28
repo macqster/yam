@@ -1,4 +1,4 @@
-use crate::core::world::{WorldKind, WorldState};
+use crate::core::world::WorldState;
 use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
@@ -22,7 +22,7 @@ impl Layer for ClockLayer {
         fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
-        if world.kind != WorldKind::MainScene {
+        if !world.kind.has_main_scene_composition() {
             return None;
         }
         let lines = clock_lines(ui, fonts);

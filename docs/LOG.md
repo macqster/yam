@@ -17,6 +17,7 @@ Logging rule:
 
 - `06:01` continued the pre-expansion architecture batch by adding `core::organism` as the first shared flora identity vocabulary: organism ids, species ids, journal ids, lifecycle state, generic stats, identity grouping, organism family, and a species-profile payload shape now exist before any second plant family or greenhouse population is introduced. The current border vine now uses those shared id/stat/lifecycle types and exposes a border-vine species profile while keeping visible runtime behavior unchanged.
 - `06:23` continued the general architecture pass by moving switchable-world ordering and transition labels into `WorldKind`: `WorldKind::SELECTABLE` now owns the current main-scene/sandbox cycle, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world contract instead of carrying a binary world toggle as hidden UI policy. The docs now keep greenhouse/lab worlds pointed at that seam without introducing them yet.
+- `12:44` continued preparatory world architecture by adding `WorldKind::profile()` and coarse `WorldComposition` metadata for the current boot, main-scene, and sandbox worlds. Main-scene-only companion/render behavior now branches through the shared composition predicate instead of repeating direct world-kind checks, leaving future greenhouse/lab worlds pointed at an explicit profile seam before any population/storage mechanics are introduced.
 
 ## 2026-05-24
 

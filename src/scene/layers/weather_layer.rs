@@ -1,4 +1,4 @@
-use crate::core::world::{WorldKind, WorldState};
+use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::coords::WorldPos;
@@ -21,22 +21,20 @@ impl Layer for WeatherLayer {
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
-        match world.kind {
-            WorldKind::MainScene => {
-                let snapshot = ui.weather_snapshot.as_ref()?;
-                let lines = compact_widget_lines(snapshot, ui.weather_locale, ui.weather_layout);
-                let screen_pos = ctx.weather_screen();
-                if is_visible(screen_pos, grid.width, grid.height, &lines) {
-                    write_lines(
-                        grid,
-                        screen_pos.x.max(0) as u16,
-                        screen_pos.y.max(0) as u16,
-                        &lines,
-                    );
-                }
-            }
-            WorldKind::Sandbox => {}
-            WorldKind::Boot => {}
+        if !world.kind.has_main_scene_composition() {
+            return None;
+        }
+
+        let snapshot = ui.weather_snapshot.as_ref()?;
+        let lines = compact_widget_lines(snapshot, ui.weather_locale, ui.weather_layout);
+        let screen_pos = ctx.weather_screen();
+        if is_visible(screen_pos, grid.width, grid.height, &lines) {
+            write_lines(
+                grid,
+                screen_pos.x.max(0) as u16,
+                screen_pos.y.max(0) as u16,
+                &lines,
+            );
         }
 
         None

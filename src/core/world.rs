@@ -45,27 +45,61 @@ pub enum WorldKind {
     Sandbox,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WorldComposition {
+    EmptyBoot,
+    MainScene,
+    SparseSandbox,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct WorldProfile {
+    pub title: &'static str,
+    pub loading_label: &'static str,
+    pub selectable: bool,
+    pub composition: WorldComposition,
+}
+
 impl WorldKind {
     pub const SELECTABLE: [Self; 2] = [Self::MainScene, Self::Sandbox];
 
-    pub fn title(self) -> &'static str {
+    pub fn profile(self) -> WorldProfile {
         match self {
-            WorldKind::Boot => "boot",
-            WorldKind::MainScene => "main-scene",
-            WorldKind::Sandbox => "sandbox",
+            WorldKind::Boot => WorldProfile {
+                title: "boot",
+                loading_label: "loading...",
+                selectable: false,
+                composition: WorldComposition::EmptyBoot,
+            },
+            WorldKind::MainScene => WorldProfile {
+                title: "main-scene",
+                loading_label: "loading main scene...",
+                selectable: true,
+                composition: WorldComposition::MainScene,
+            },
+            WorldKind::Sandbox => WorldProfile {
+                title: "sandbox",
+                loading_label: "loading sandbox...",
+                selectable: true,
+                composition: WorldComposition::SparseSandbox,
+            },
         }
+    }
+
+    pub fn title(self) -> &'static str {
+        self.profile().title
     }
 
     pub fn loading_label(self) -> &'static str {
-        match self {
-            WorldKind::Boot => "loading...",
-            WorldKind::MainScene => "loading main scene...",
-            WorldKind::Sandbox => "loading sandbox...",
-        }
+        self.profile().loading_label
     }
 
     pub fn is_selectable(self) -> bool {
-        Self::SELECTABLE.contains(&self)
+        self.profile().selectable
+    }
+
+    pub fn has_main_scene_composition(self) -> bool {
+        self.profile().composition == WorldComposition::MainScene
     }
 
     pub fn selectable_or_default(self) -> Self {
@@ -158,7 +192,7 @@ impl WorldState {
 
 #[cfg(test)]
 mod tests {
-    use super::{WorldKind, WorldState};
+    use super::{WorldComposition, WorldKind, WorldState};
     use crate::core::flora::{
         BORDER_VINE_GUIDE_SET_LABEL, BORDER_VINE_ROOT, BORDER_VINE_SEED_AXIS_ID,
         BORDER_VINE_SEED_ID,
@@ -225,7 +259,9 @@ mod tests {
             WorldKind::SELECTABLE,
             [WorldKind::MainScene, WorldKind::Sandbox]
         );
-        assert!(!WorldKind::Boot.is_selectable());
+        for kind in [WorldKind::Boot, WorldKind::MainScene, WorldKind::Sandbox] {
+            assert_eq!(kind.is_selectable(), WorldKind::SELECTABLE.contains(&kind));
+        }
         assert_eq!(
             WorldKind::Boot.selectable_or_default(),
             WorldKind::MainScene
@@ -242,5 +278,24 @@ mod tests {
             "loading main scene..."
         );
         assert_eq!(WorldKind::Sandbox.loading_label(), "loading sandbox...");
+    }
+
+    #[test]
+    fn world_profiles_describe_current_compositions() {
+        assert_eq!(
+            WorldKind::Boot.profile().composition,
+            WorldComposition::EmptyBoot
+        );
+        assert_eq!(
+            WorldKind::MainScene.profile().composition,
+            WorldComposition::MainScene
+        );
+        assert_eq!(
+            WorldKind::Sandbox.profile().composition,
+            WorldComposition::SparseSandbox
+        );
+        assert!(!WorldKind::Boot.has_main_scene_composition());
+        assert!(WorldKind::MainScene.has_main_scene_composition());
+        assert!(!WorldKind::Sandbox.has_main_scene_composition());
     }
 }

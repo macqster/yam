@@ -26,7 +26,7 @@ Issue link rule:
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
 - `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
 - `verify` treat `core::organism` as the first shared flora identity vocabulary; keep it small until another plant family or greenhouse population proves the next field is needed.
-- `verify` treat `WorldKind::SELECTABLE` plus `WorldKind::loading_label()` as the current world-selection contract; keep `Boot` non-selectable and route future greenhouse/lab worlds through this seam.
+- `verify` treat `WorldKind::profile()`, `WorldKind::SELECTABLE`, and `WorldKind::loading_label()` as the current world-selection/profile contract; keep `Boot` non-selectable and route future greenhouse/lab worlds through this seam.
 
 ## 1. Spatial Relation Layer
 
@@ -51,9 +51,9 @@ Issue link rule:
 
 ## 3. World Modes And Greenhouse Prep
 
-- `verify` preserve the explicit world-selection contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, transition labels live on `WorldKind`, and UI persistence snapshots convert through that core contract.
-- `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, and persistence stays defined while the world-switching contract remains generalized.
-- `inspect` define what each future world owns before implementation: initialization, available overlays, camera defaults, flora population, guide sets, and debug surfaces.
+- `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, and coarse composition live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
+- `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
+- `inspect` define what each future world owns before implementation beyond the current coarse `WorldComposition`: initialization, available overlays, camera defaults, flora population, guide sets, and debug surfaces.
 - `verify` greenhouse remains a separate simulation world, not panel chrome layered on top of the main scene.
 - `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.
 - `inspect` decide whether greenhouse inspection needs a dedicated registry/journal mode or lightweight per-organism popups before building either surface.
@@ -94,7 +94,7 @@ Issue link rule:
 - `verify` README local asset references must point to committed files.
 - `verify` `README.md` current release stays synchronized with `Cargo.toml`.
 - `verify` `TODO.md` issue references must point to active `known_issues.md` ids.
-- `verify` append each completed maintenance batch to `docs/LOG.md` using local `Europe/Warsaw` time.
+- `verify` append each completed maintenance batch to `docs/LOG.md` using the local system time noted in the log's current logging rule.
 - `verify` keep `docs/audit.md` risk-focused and `docs/LOG.md` historical; avoid re-accumulating completed work in the active backlog.
 
 ## 8. Contract Pointers

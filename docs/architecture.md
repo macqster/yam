@@ -14,7 +14,7 @@
 - `core/` - data only, no UI, no terminal, no rendering
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
 - `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers and the guide index abstraction that now feeds the render/debug guide path, and will absorb more relation logic over time
-- `core/world.rs` - owns world bootstrapping by explicit world kind; main-scene, sandbox, and future greenhouse/lab worlds should be selected intentionally rather than hidden behind one implicit `WorldState::new()` payload
+- `core/world.rs` - owns world bootstrapping by explicit world kind and profile; main-scene, sandbox, and future greenhouse/lab worlds should be selected and described intentionally rather than hidden behind one implicit `WorldState::new()` payload
 - `systems/` - mutate `WorldState` only, no rendering
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, shared drawing-engine primitives, and final text conversion
 - `render/drawing.rs` - reusable path stroke, glyph stamping, and occupancy tracking for features that need deterministic generative cell drawing without re-owning raster logic in a single layer
@@ -42,7 +42,7 @@
 
 - Main-scene enrichment and greenhouse ecosystem work should start from infrastructure, not from another visible object bolted onto the current scene.
 - Before a second plant family or greenhouse population lands, the flora layer needs a small shared organism vocabulary. The first cut now lives in `core::organism` for organism id, species id, journal id, lifecycle state, generic stats, identity grouping, organism family, and species-profile payload shape; future axes/metamers/organs and growth tips/meristems should build from that vocabulary rather than reintroducing vine-only identifiers.
-- Before a greenhouse or lab world lands, world selection should extend the explicit `WorldKind::SELECTABLE` contract rather than reintroducing a UI-local toggle. `Boot` stays non-selectable, transition labels live on `WorldKind`, and persisted UI snapshots convert through that core contract.
+- Before a greenhouse or lab world lands, world selection should extend the explicit `WorldKind::SELECTABLE` and `WorldKind::profile()` contracts rather than reintroducing a UI-local toggle. `Boot` stays non-selectable, transition labels and coarse `WorldComposition` live on `WorldKind`, and persisted UI snapshots convert through that core contract.
 - Before denser organism rendering lands, spatial projection and guide relation logic should keep moving toward `core::spatial` as the canonical resolver, with `scene::coords` treated as compatibility surface.
 - Conceptual work for those future features is in scope during stabilization when it tightens contracts, tests, data shape, or tooling; large runtime mechanics should wait for those gates to be deliberate.
 

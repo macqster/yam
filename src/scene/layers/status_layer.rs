@@ -1,4 +1,3 @@
-use crate::core::world::WorldKind;
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
@@ -20,7 +19,7 @@ fn footer_hint(ui: &UiState) -> &'static str {
 fn footer_stamp(world: &WorldState, ui: &UiState) -> String {
     if ui.loading.active {
         String::new()
-    } else if world.kind == WorldKind::MainScene {
+    } else if world.kind.has_main_scene_composition() {
         build_status_label()
     } else {
         format!("[?] help  •  {}", build_status_label())

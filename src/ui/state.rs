@@ -986,7 +986,7 @@ impl UiState {
             self.meta.active_world_kind().loading_label(),
             Duration::from_millis(900),
         );
-        if self.meta.active_world_kind() != WorldKind::Sandbox {
+        if self.meta.active_world_kind().has_main_scene_composition() {
             self.pointer_blink_on = true;
         }
         self.clamp_settings_cursor_to_world();
@@ -1283,14 +1283,16 @@ impl UiState {
     }
 
     pub fn world_has_scene_companions(&self) -> bool {
-        self.meta.active_world_kind() == WorldKind::MainScene
+        self.meta.active_world_kind().has_main_scene_composition()
     }
 
     pub fn settings_item_count(&self, tab: SettingsTab) -> usize {
-        match (self.meta.active_world_kind(), tab) {
-            (WorldKind::Sandbox, SettingsTab::Positions) => 1,
-            (WorldKind::Sandbox, SettingsTab::Gif) => 1,
-            _ => tab.item_count(),
+        if !self.meta.active_world_kind().has_main_scene_composition()
+            && matches!(tab, SettingsTab::Positions | SettingsTab::Gif)
+        {
+            1
+        } else {
+            tab.item_count()
         }
     }
 

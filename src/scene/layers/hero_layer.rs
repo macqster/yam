@@ -1,4 +1,4 @@
-use crate::core::world::{WorldKind, WorldState};
+use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
@@ -22,7 +22,7 @@ impl Layer for HeroLayer {
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<Mask> {
-        if world.kind != WorldKind::MainScene {
+        if !world.kind.has_main_scene_composition() {
             return None;
         }
         let hero = &ui.hero;

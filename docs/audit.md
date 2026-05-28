@@ -1,7 +1,7 @@
 # Repo Audit
 
 Date: 2026-04-27
-Last reviewed: 2026-05-19
+Last reviewed: 2026-05-28
 
 ## Unresolved Risks
 
@@ -9,7 +9,7 @@ Last reviewed: 2026-05-19
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
-- The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora identity, world population/storage, and docs/tooling readiness are prepared deliberately.
+- The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora identity, world profile/population/storage, and docs/tooling readiness are prepared deliberately.
 
 ## Weakest Areas
 
@@ -50,7 +50,7 @@ Last reviewed: 2026-05-19
   - evidence: `Cargo.toml`, `Cargo.lock`
 - `low` Flora prep now has a small shared identity vocabulary before a second plant family exists: organism id, species id, journal id, lifecycle state, generic stats, organism identity, organism family, and the first border-vine species profile live in `core::organism` / `core::flora` without changing visible runtime behavior.
   - evidence: `src/core/organism.rs`, `src/core/flora.rs`
-- `low` World switching is no longer only a binary UI-local toggle: selectable worlds and transition labels now live on `WorldKind`, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world-selection contract.
+- `low` World switching is no longer only a binary UI-local toggle: selectable worlds, transition labels, titles, and coarse composition profiles now live on `WorldKind`, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world-selection/profile contract.
   - evidence: `src/core/world.rs`, `src/ui/state.rs`
 - `low` The repo front door is less likely to drift into broken preview/media references again: the missing `docs/assets/...` README placeholders were removed, and `scripts/check-docs.sh` now fails if `README.md` references a local asset path that does not exist.
   - evidence: `README.md`, `scripts/check-docs.sh`, `docs/hygiene.md`
@@ -78,8 +78,8 @@ Last reviewed: 2026-05-19
   - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
 - `medium` Flora state remains vine-shaped in storage and growth dispatch even though the shared identity vocabulary now exists; the next implementation step should decide whether multi-family storage is an organism registry, an enum-backed family store, or a different small structure before another plant family or greenhouse population lands.
   - evidence: `src/core/organism.rs`, `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
-- `low` World selection now has an explicit core contract for the current selectable worlds, but greenhouse should still wait for a world-population contract covering initialization, overlays, camera defaults, flora population, guide sets, and debug surfaces.
-  - evidence: `src/core/world.rs`, `src/ui/state.rs`
+- `low` World selection now has an explicit core contract for the current selectable worlds plus their coarse composition profiles, and main-scene-only render/UI branches use that profile instead of matching every current world by hand. Greenhouse should still wait for a fuller world-population/storage contract covering initialization, overlays, camera defaults, flora population, guide sets, and debug surfaces.
+  - evidence: `src/core/world.rs`, `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/weather_layer.rs`
 - `low` `resolve_position(...)` is still the legacy world-shaped bridge even though `ScreenPos` is now active again in the compatibility helpers; that keeps the signed projection semantics correct, but the final migration away from world-shaped screen results is not finished yet.
   - evidence: `src/scene/coords.rs`, `src/core/spatial.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

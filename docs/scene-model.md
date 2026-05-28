@@ -42,7 +42,7 @@ Both should be prepared through shared contracts before they become visible runt
 
 - new world-attached objects must enter through the world/spatial/layer pipeline
 - new plant organisms must reuse the `core::organism` identity and species-profile vocabulary rather than inventing a one-family data path
-- greenhouse rooms must be worlds or rooms inside the world model, selected through the core `WorldKind` contract rather than dashboard panels
+- greenhouse rooms must be worlds or rooms inside the world model, selected and described through the core `WorldKind::profile()` contract rather than dashboard panels
 - debug, inspect, and authoring tools may expose the prep work, but they must not become hidden owners of simulation state
 - conceptual prep work is useful when it clarifies data ownership, spatial relations, lifecycle vocabulary, tests, or docs before implementation
 
@@ -133,7 +133,7 @@ Rules:
   - monstera-like plant: `species_id = yam.floral.monstera_like_v1`, `display_name = fenestrated multi-stem flora`, `habit/form = aroid-like climber or self-supporting multi-stem`, `support strategy = multiple stems from one growth area`, `stem/axis plan = several axes from a base`, `growth-tip behavior = active and species-specific`, `branching pattern = sparse to moderate`, `leaf shape/distribution = large fenestrated leaves`, `organ outputs = leaf, flower, fruit possible`, `life-state defaults = active growth`, `registry tags = monstera-like, fenestrated, multi-stem, aroid-inspired`, `inspection notes = leaf size, perforation, stem count, lifecycle pacing`
 - the main scene is the live visualiser space: hero GIF, clock plus weather widget, and procedurally generated flora under the same world-datum contract
 - the greenhouse is a separate simulation space for rooms, labs, and multiple flora species, with each organism allowed its own anatomy, morphology, and growth behavior
-- a lightweight sandbox world is the first concrete secondary simulation space: it should stay sparse, share the same projection/render pipeline as the main scene, and serve as the dry-trial surface for drawing, guides, masks, and pointer-authored point-to-point experiments before those features are promoted into the main scene or future greenhouse rooms
+- a lightweight sandbox world is the first concrete secondary simulation space: its current profile marks it as a sparse composition, it should share the same projection/render pipeline as the main scene, and it should serve as the dry-trial surface for drawing, guides, masks, and pointer-authored point-to-point experiments before those features are promoted into the main scene or future greenhouse rooms
 - sandbox should be treated like the first switchable alternate room inside YAM rather than a launcher-specific fork: `yam-sandbox` may remain a convenience preset, but the architectural truth is world switching inside one app, the same way future greenhouse rooms should be reached
 - vines are one flora family, not a singular architectural exception, and the system must make room for other procedurally growing plant organisms with different shapes and lifecycle rules
 - vine ownership and readiness details live in [`docs/vines.md`](vines.md); the scene model should keep vines world-attached and should not let render layers own vine lifecycle state

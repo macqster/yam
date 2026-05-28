@@ -1,7 +1,7 @@
 use chrono::{Datelike, Local, NaiveDate, Weekday};
 use unicode_width::UnicodeWidthStr;
 
-use crate::core::world::{WorldKind, WorldState};
+use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::coords::WorldPos;
@@ -25,7 +25,7 @@ impl Layer for DateLayer {
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
-        if world.kind != WorldKind::MainScene {
+        if !world.kind.has_main_scene_composition() {
             return None;
         }
 

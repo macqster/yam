@@ -107,9 +107,10 @@ impl Layer for DebugLayer {
         let vine_count = world.flora.vines.len();
         let first_vine = world.flora.vines.first();
         let vine_line = if let Some(vine) = first_vine {
+            let identity = vine.identity();
             format!(
                 "Vines: {} (id {}, {})",
-                vine_count, vine.id, vine.species_id
+                vine_count, identity.id, identity.species_id
             )
         } else {
             "Vines: 0".to_string()

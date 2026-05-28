@@ -41,7 +41,7 @@ The next large feature families are main-scene enrichment and the greenhouse eco
 Both should be prepared through shared contracts before they become visible runtime content:
 
 - new world-attached objects must enter through the world/spatial/layer pipeline
-- new plant organisms must reuse the flora organism vocabulary rather than inventing a one-family data path
+- new plant organisms must reuse the `core::organism` identity and species-profile vocabulary rather than inventing a one-family data path
 - greenhouse rooms must be worlds or rooms inside the world model, not dashboard panels
 - debug, inspect, and authoring tools may expose the prep work, but they must not become hidden owners of simulation state
 - conceptual prep work is useful when it clarifies data ownership, spatial relations, lifecycle vocabulary, tests, or docs before implementation

@@ -25,6 +25,7 @@ Issue link rule:
 - `verify` keep `scripts/verify.sh` green for every maintenance handoff.
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
 - `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
+- `verify` treat `core::organism` as the first shared flora identity vocabulary; keep it small until another plant family or greenhouse population proves the next field is needed.
 
 ## 1. Spatial Relation Layer
 
@@ -39,8 +40,8 @@ Issue link rule:
 ## 2. Flora Runtime And Organism Model
 
 - `refactor` split vine-specific types and helpers out of the broad `core::flora` surface once a second organism family is close enough to need shared vocabulary.
-- `inspect` define the minimum shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, axes/metamers/organs, and growth tips/meristems.
-- `inspect` define the first species-registry payload as data before adding a second active plant: display name, habit/form, anatomy defaults, branching pattern, internode range, growth cadence, allowed organs, lifecycle tuning, tropism rules, and debug labels.
+- `verify` preserve the shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, and the first species-profile shape.
+- `inspect` decide where species profiles should live once there is more than the border-vine profile: static Rust fixtures, structured data files, or a small registry loader.
 - `verify` do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store.
 - `refactor` move the current border-vine growth rule away from one hard-coded seed branch before adding another plant growth rule.
 - `verify` render layers stay read-only and visualize geometry derived from world/flora/spatial state.

@@ -12,5 +12,6 @@ pub mod flora;
 pub mod grid;
 pub mod guide;
 pub mod guide_line;
+pub mod organism;
 pub mod spatial;
 pub mod world;

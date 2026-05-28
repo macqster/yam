@@ -13,6 +13,10 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-05-28
+
+- `06:01` continued the pre-expansion architecture batch by adding `core::organism` as the first shared flora identity vocabulary: organism ids, species ids, journal ids, lifecycle state, generic stats, identity grouping, organism family, and a species-profile payload shape now exist before any second plant family or greenhouse population is introduced. The current border vine now uses those shared id/stat/lifecycle types and exposes a border-vine species profile while keeping visible runtime behavior unchanged.
+
 ## 2026-05-24
 
 - `12:23` recorded the Apple Music companion feasibility assessment in `docs/apple-music-companion.md` and linked it from the docs map/resource map: the future-friendly path is a separate Rust/Ratatui `yam-music` companion that delegates playback to macOS Music.app first, while Chrome/CDP/MusicKit playback and pure Rust Apple Music streaming stay explicitly risky or rejected first paths.

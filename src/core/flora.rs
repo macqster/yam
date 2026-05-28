@@ -1,18 +1,14 @@
 use crate::core::guide::{
     Guide, GuideKind, GuidePoint, GuideSet, GuideShape, GuideState, GuideStyle,
 };
+use crate::core::organism::{
+    JournalId, OrganismFamily, OrganismId, OrganismIdentity, OrganismLifeState, OrganismStats,
+    SpeciesId, SpeciesProfile,
+};
 use crate::core::spatial::SpatialGuideIndex;
 use crate::scene::coords::WorldPos;
 
-#[allow(dead_code)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum VineLifeState {
-    Dormant,
-    Growing,
-    Mature,
-    Senescent,
-    Dead,
-}
+pub type VineLifeState = OrganismLifeState;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,12 +44,7 @@ pub enum VineOrganKind {
     ParticleSource,
 }
 
-#[allow(dead_code)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct VineStats {
-    pub age_ticks: u64,
-    pub vigor: u16,
-}
+pub type VineStats = OrganismStats;
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -103,15 +94,21 @@ pub struct VineRootAttachment {
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VineInstance {
-    pub id: u32,
-    pub species_id: String,
-    pub journal_id: String,
+    pub id: OrganismId,
+    pub species_id: SpeciesId,
+    pub journal_id: JournalId,
     pub life_state: VineLifeState,
     pub stats: VineStats,
     pub root: VineRootAttachment,
     pub axes: Vec<VineAxis>,
     pub organs: Vec<VineOrgan>,
     pub growth_tips: Vec<VineGrowthTip>,
+}
+
+impl VineInstance {
+    pub fn identity(&self) -> OrganismIdentity {
+        OrganismIdentity::new(self.id, self.species_id.clone(), self.journal_id.clone())
+    }
 }
 
 #[allow(dead_code)]
@@ -128,6 +125,7 @@ pub struct FloraState {
 }
 
 pub const BORDER_VINE_SEED_ID: u32 = 1;
+pub const BORDER_VINE_ORGANISM_ID: OrganismId = OrganismId::new(BORDER_VINE_SEED_ID);
 pub const BORDER_VINE_SEED_AXIS_ID: u32 = 1;
 pub const BORDER_VINE_SPECIES_ID: &str = "yam.vine.border_v1";
 pub const BORDER_VINE_JOURNAL_ID: &str = "journal.vine.border_v1.seed";
@@ -141,9 +139,9 @@ pub const BORDER_VINE_LEAF_MATURITY_TICKS: u64 = 6;
 #[allow(dead_code)]
 pub fn border_vine_seed() -> VineInstance {
     VineInstance {
-        id: BORDER_VINE_SEED_ID,
-        species_id: BORDER_VINE_SPECIES_ID.to_string(),
-        journal_id: BORDER_VINE_JOURNAL_ID.to_string(),
+        id: BORDER_VINE_ORGANISM_ID,
+        species_id: SpeciesId::new(BORDER_VINE_SPECIES_ID),
+        journal_id: JournalId::new(BORDER_VINE_JOURNAL_ID),
         life_state: VineLifeState::Dormant,
         stats: VineStats {
             age_ticks: 0,
@@ -161,6 +159,26 @@ pub fn border_vine_seed() -> VineInstance {
             remaining_growth_steps: BORDER_VINE_TIP_GROWTH_BUDGET,
             state: VineGrowthTipState::Dormant,
         }],
+    }
+}
+
+#[allow(dead_code)]
+pub fn border_vine_species_profile() -> SpeciesProfile {
+    SpeciesProfile {
+        species_id: SpeciesId::new(BORDER_VINE_SPECIES_ID),
+        display_name: "border-aware vine family".to_string(),
+        family: OrganismFamily::Vine,
+        habit: "climbing/sprawling guided vine".to_string(),
+        anatomy_defaults: "long main axis, optional laterals, repeat leaves".to_string(),
+        growth_rule: "deterministic guide-following cadence".to_string(),
+        lifecycle_tuning: "seeded dormant, growing, mature after tip budget".to_string(),
+        allowed_organs: vec![
+            "leaf".to_string(),
+            "flower".to_string(),
+            "fruit".to_string(),
+            "particle_source".to_string(),
+        ],
+        debug_label: "border vine".to_string(),
     }
 }
 
@@ -395,9 +413,9 @@ mod tests {
     #[test]
     fn vine_instance_shape_is_small_and_inspectable() {
         let vine = VineInstance {
-            id: 7,
-            species_id: "yam.vine.border_v1".to_string(),
-            journal_id: "journal.vine.7".to_string(),
+            id: OrganismId::new(7),
+            species_id: SpeciesId::new("yam.vine.border_v1"),
+            journal_id: JournalId::new("journal.vine.7"),
             life_state: VineLifeState::Dormant,
             stats: VineStats {
                 age_ticks: 0,
@@ -436,6 +454,14 @@ mod tests {
 
         assert_eq!(vine.id, 7);
         assert_eq!(vine.species_id, "yam.vine.border_v1");
+        assert_eq!(
+            vine.identity(),
+            OrganismIdentity::new(
+                OrganismId::new(7),
+                SpeciesId::new("yam.vine.border_v1"),
+                JournalId::new("journal.vine.7")
+            )
+        );
         assert_eq!(vine.root.world, WorldPos { x: -12, y: 8 });
         assert_eq!(vine.axes.len(), 1);
         assert_eq!(vine.axes[0].segments.len(), 1);
@@ -463,6 +489,17 @@ mod tests {
             BORDER_VINE_TIP_GROWTH_BUDGET
         );
         assert_eq!(vine.growth_tips[0].state, VineGrowthTipState::Dormant);
+    }
+
+    #[test]
+    fn border_vine_species_profile_is_registry_shaped() {
+        let profile = border_vine_species_profile();
+
+        assert_eq!(profile.species_id, BORDER_VINE_SPECIES_ID);
+        assert_eq!(profile.family, OrganismFamily::Vine);
+        assert_eq!(profile.display_name, "border-aware vine family");
+        assert!(profile.allowed_organs.iter().any(|organ| organ == "leaf"));
+        assert!(profile.growth_rule.contains("deterministic"));
     }
 
     #[test]
@@ -587,9 +624,9 @@ mod tests {
     #[test]
     fn derive_static_main_axis_starts_from_explicit_vine_root() {
         let vine = VineInstance {
-            id: BORDER_VINE_SEED_ID,
-            species_id: BORDER_VINE_SPECIES_ID.to_string(),
-            journal_id: BORDER_VINE_JOURNAL_ID.to_string(),
+            id: BORDER_VINE_ORGANISM_ID,
+            species_id: SpeciesId::new(BORDER_VINE_SPECIES_ID),
+            journal_id: JournalId::new(BORDER_VINE_JOURNAL_ID),
             life_state: VineLifeState::Dormant,
             stats: VineStats {
                 age_ticks: 0,
@@ -650,9 +687,9 @@ mod tests {
     #[test]
     fn rebuild_leaf_organs_attaches_leaves_to_mature_segments_only() {
         let mut vine = VineInstance {
-            id: BORDER_VINE_SEED_ID,
-            species_id: BORDER_VINE_SPECIES_ID.to_string(),
-            journal_id: BORDER_VINE_JOURNAL_ID.to_string(),
+            id: BORDER_VINE_ORGANISM_ID,
+            species_id: SpeciesId::new(BORDER_VINE_SPECIES_ID),
+            journal_id: JournalId::new(BORDER_VINE_JOURNAL_ID),
             life_state: VineLifeState::Growing,
             stats: VineStats {
                 age_ticks: 0,

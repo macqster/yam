@@ -15,7 +15,7 @@ Last reviewed: 2026-05-19
 
 1. Spatial relation layer: still the most fragile seam because the canonical resolver exists, but compatibility bridging and type boundaries remain only partly consolidated.
 2. Hero-rendering pipeline: Chafa is stable, but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
-3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, but the broader organism/species/journal machinery is still mostly ahead of implementation.
+3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, and `core::organism` now provides the first shared identity/species-profile vocabulary, but the broader registry/journal machinery is still mostly ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
 5. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
@@ -48,6 +48,8 @@ Last reviewed: 2026-05-19
   - evidence: `scripts/check-docs.sh`, `docs/hygiene.md`
 - `low` The direct terminal dependency is now aligned with the version already pulled through Ratatui, removing the previous duplicate `crossterm`/`mio` stack from this crate's dependency graph.
   - evidence: `Cargo.toml`, `Cargo.lock`
+- `low` Flora prep now has a small shared identity vocabulary before a second plant family exists: organism id, species id, journal id, lifecycle state, generic stats, organism identity, organism family, and the first border-vine species profile live in `core::organism` / `core::flora` without changing visible runtime behavior.
+  - evidence: `src/core/organism.rs`, `src/core/flora.rs`
 - `low` The repo front door is less likely to drift into broken preview/media references again: the missing `docs/assets/...` README placeholders were removed, and `scripts/check-docs.sh` now fails if `README.md` references a local asset path that does not exist.
   - evidence: `README.md`, `scripts/check-docs.sh`, `docs/hygiene.md`
 - `low` The common direct-binary startup path is no longer an obvious performance problem after the hero-cache work: a small local audit on 2026-05-14 showed `./target/debug/yam-rust --version` effectively instant for a single run and about `1.21s` total over 200 repeated launches (roughly `6ms` per launch), while the much slower `cargo run -- --version` path was dominated by Cargo wrapper overhead rather than YAM runtime initialization.
@@ -72,8 +74,8 @@ Last reviewed: 2026-05-19
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
 - `medium` The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.
   - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
-- `medium` Flora state remains vine-shaped in the implementation even though the contracts now describe a broader organism model; the next implementation step should create a small shared organism/species/journal vocabulary before another plant family or greenhouse population lands.
-  - evidence: `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
+- `medium` Flora state remains vine-shaped in storage and growth dispatch even though the shared identity vocabulary now exists; the next implementation step should decide whether multi-family storage is an organism registry, an enum-backed family store, or a different small structure before another plant family or greenhouse population lands.
+  - evidence: `src/core/organism.rs`, `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
 - `medium` World selection is still effectively a main-scene/sandbox UI toggle even though `WorldKind` already has an explicit boot/main/sandbox core model; greenhouse should wait for a generalized world-selection contract rather than being attached to the binary toggle.
   - evidence: `src/core/world.rs`, `src/ui/state.rs`
 - `low` `resolve_position(...)` is still the legacy world-shaped bridge even though `ScreenPos` is now active again in the compatibility helpers; that keeps the signed projection semantics correct, but the final migration away from world-shaped screen results is not finished yet.

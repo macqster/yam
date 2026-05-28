@@ -102,19 +102,6 @@ pub fn resolve_element_screen_position(
     }
 }
 
-pub fn world_to_screen(
-    world: WorldPos,
-    camera_x: i32,
-    camera_y: i32,
-    viewport_height: u16,
-) -> WorldPos {
-    let screen = project_world_to_screen(world, camera_x, camera_y, viewport_height);
-    WorldPos {
-        x: screen.x,
-        y: screen.y,
-    }
-}
-
 pub fn project_world_to_screen(
     world: WorldPos,
     camera_x: i32,
@@ -174,13 +161,15 @@ mod tests {
 
         let hero_visual_anchor = anchor_to_world(hero_world, hero_offset);
         let clock_world = anchor_to_world(hero_visual_anchor, clock_offset);
-        let clock_screen = world_to_screen(clock_world, camera.x, camera.y, viewport_height);
-        let hero_screen = world_to_screen(hero_visual_anchor, camera.x, camera.y, viewport_height);
+        let clock_screen =
+            project_world_to_screen(clock_world, camera.x, camera.y, viewport_height);
+        let hero_screen =
+            project_world_to_screen(hero_visual_anchor, camera.x, camera.y, viewport_height);
 
         assert_eq!(hero_visual_anchor, WorldPos { x: 40, y: 6 });
         assert_eq!(clock_world, WorldPos { x: 136, y: 15 });
-        assert_eq!(hero_screen, WorldPos { x: 10, y: 35 });
-        assert_eq!(clock_screen, WorldPos { x: 106, y: 26 });
+        assert_eq!(hero_screen, ScreenPos { x: 10, y: 35 });
+        assert_eq!(clock_screen, ScreenPos { x: 106, y: 26 });
     }
 
     #[test]

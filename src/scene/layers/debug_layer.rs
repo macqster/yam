@@ -8,7 +8,7 @@ use crate::render::compositor::Cell;
 use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::guide::draw_guides;
-use crate::scene::coords::{world_to_screen, ScreenPos, WorldPos};
+use crate::scene::coords::{project_world_to_screen, ScreenPos, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::{DebugPanelTab, UiState};
@@ -56,7 +56,7 @@ impl Layer for DebugLayer {
         let hero = &ui.hero;
         let main_scene = world.kind.has_main_scene_composition();
         let hero_world = ctx.world.hero_world;
-        let hero_screen = world_to_screen(
+        let hero_screen = project_world_to_screen(
             ctx.world.hero_visual_anchor,
             ctx.hud.camera.x,
             ctx.hud.camera.y,
@@ -71,7 +71,7 @@ impl Layer for DebugLayer {
             x: ui.offsets.pointer_x,
             y: ui.offsets.pointer_y,
         };
-        let pointer_screen = world_to_screen(
+        let pointer_screen = project_world_to_screen(
             pointer_world,
             ctx.hud.camera.x,
             ctx.hud.camera.y,
@@ -171,8 +171,8 @@ impl Layer for DebugLayer {
         let soft_band_line = {
             let probe_start = WorldPos { x: -28, y: 22 };
             let probe_end = WorldPos { x: 36, y: 12 };
-            let start = world_to_screen(probe_start, cam_x, cam_y, ctx.hud.camera.height);
-            let end = world_to_screen(probe_end, cam_x, cam_y, ctx.hud.camera.height);
+            let start = project_world_to_screen(probe_start, cam_x, cam_y, ctx.hud.camera.height);
+            let end = project_world_to_screen(probe_end, cam_x, cam_y, ctx.hud.camera.height);
             let key = classify_line(
                 LinePoint {
                     x: start.x,
@@ -350,7 +350,7 @@ struct DebugPanelFacts<'a> {
     camera_dx: i32,
     camera_dy: i32,
     hero_world: WorldPos,
-    hero_screen: WorldPos,
+    hero_screen: ScreenPos,
     hero_visible: bool,
     hero_dx: i32,
     hero_dy: i32,
@@ -648,7 +648,7 @@ fn draw_border_cell(
     screen_w: i32,
     screen_h: i32,
 ) {
-    let screen = world_to_screen(WorldPos { x: wx, y: wy }, cam_x, cam_y, viewport_height);
+    let screen = project_world_to_screen(WorldPos { x: wx, y: wy }, cam_x, cam_y, viewport_height);
     if screen.x < 0 || screen.y < 0 || screen.x >= screen_w || screen.y >= screen_h {
         return;
     }
@@ -658,7 +658,7 @@ fn draw_border_cell(
     }
 }
 
-fn draw_pointer_probe(grid: &mut Grid, pointer_screen: WorldPos, visible: bool) {
+fn draw_pointer_probe(grid: &mut Grid, pointer_screen: ScreenPos, visible: bool) {
     if !visible {
         return;
     }
@@ -677,8 +677,8 @@ fn draw_soft_probe_line(
     start: WorldPos,
     end: WorldPos,
 ) {
-    let start = world_to_screen(start, cam_x, cam_y, viewport_height);
-    let end = world_to_screen(end, cam_x, cam_y, viewport_height);
+    let start = project_world_to_screen(start, cam_x, cam_y, viewport_height);
+    let end = project_world_to_screen(end, cam_x, cam_y, viewport_height);
     let start = LinePoint {
         x: start.x,
         y: start.y,
@@ -842,7 +842,7 @@ mod tests {
     use crate::core::guide_line::{soft_line_glyph, LinePoint};
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::{world_to_screen, WorldPos};
+    use crate::scene::coords::{project_world_to_screen, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
@@ -941,8 +941,8 @@ mod tests {
         let border = border_probe_bounds();
         let mut frame_grid = crate::render::compositor::Grid::new(212, 57);
         draw_world_frame(&mut frame_grid, border, -106, -28, 56, 212, 57);
-        let center = world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
-        let top_center = world_to_screen(
+        let center = project_world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
+        let top_center = project_world_to_screen(
             WorldPos {
                 x: 0,
                 y: border.top,
@@ -962,7 +962,7 @@ mod tests {
 
         let mut axis_grid = crate::render::compositor::Grid::new(212, 57);
         draw_world_axis(&mut axis_grid, border, -106, -28, 56, 212, 57);
-        let top_left = world_to_screen(
+        let top_left = project_world_to_screen(
             WorldPos {
                 x: border.left,
                 y: border.top,
@@ -984,7 +984,7 @@ mod tests {
     #[test]
     fn world_datum_is_independent_from_frame_and_axis() {
         let border = border_probe_bounds();
-        let center = world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
+        let center = project_world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
         let mut datum_grid = crate::render::compositor::Grid::new(212, 57);
         draw_world_datum(&mut datum_grid, border, -106, -28, 56, 212, 57);
 
@@ -993,7 +993,7 @@ mod tests {
             '+'
         );
 
-        let top_center = world_to_screen(
+        let top_center = project_world_to_screen(
             WorldPos {
                 x: 0,
                 y: border.top,
@@ -1226,7 +1226,7 @@ mod tests {
         ui.offsets.pointer_y = 0;
 
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
-        let pointer_screen = world_to_screen(
+        let pointer_screen = project_world_to_screen(
             WorldPos { x: 0, y: 0 },
             ctx.hud.camera.x,
             ctx.hud.camera.y,

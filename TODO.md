@@ -34,7 +34,7 @@ Issue link rule:
 - `refactor` reduce `scene::coords` toward a compatibility facade rather than a second conceptual owner of projection semantics.
 - `verify` world-space, screen-space, and anchor-space remain distinct in type names, helper names, tests, and docs.
 - `verify` projection remains singular and uses the same signed world-to-screen transform for hero, companions, guides, vines, and future plant geometry.
-- `inspect` continue removing or narrowing helpers that return screen positions as `WorldPos`: `RenderState` companion projections plus hero, guide, and vine rendering now use `ScreenPos` through `project_world_to_screen(...)`, while the debug projection bundle and legacy `resolve_position(...)` bridge still use compatibility wrappers.
+- `inspect` continue removing or narrowing helpers that return screen positions as `WorldPos`: active render projections now use signed `ScreenPos` through `project_world_to_screen(...)`; the legacy `resolve_position(...)` bridge remains for older compatibility call sites.
 - `verify` resize, camera movement, anchor resolution, and rounding/jitter coverage stays tight before adding new world-attached renderables.
 - `verify` guides remain semantic world-space linework and are not reinterpreted from rendered pixels.
 

@@ -268,7 +268,7 @@ mod tests {
     use crate::render::compositor::Grid;
     use crate::render::fonts::FontRegistry;
     use crate::render::mask::Mask;
-    use crate::scene::coords::world_to_screen;
+    use crate::scene::coords::project_world_to_screen;
     use crate::ui::state::UiState;
     use ratatui::backend::TestBackend;
     use ratatui::prelude::Rect;
@@ -748,7 +748,7 @@ mod tests {
 
         let windowed = Rect::new(0, 0, 132, 36);
         let state = build_render_state(windowed, &ui);
-        let expected = world_to_screen(
+        let expected = project_world_to_screen(
             state.world.clock_world,
             state.hud.camera.x,
             state.hud.camera.y,
@@ -756,7 +756,10 @@ mod tests {
         );
 
         assert_eq!(state.clock_screen(), expected);
-        assert_ne!(state.clock_screen(), state.world.clock_world);
+        assert_ne!(
+            (state.clock_screen().x, state.clock_screen().y),
+            (state.world.clock_world.x, state.world.clock_world.y)
+        );
     }
 
     #[test]

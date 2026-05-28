@@ -4,7 +4,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::WorldPos;
+use crate::scene::coords::ScreenPos;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -59,7 +59,7 @@ impl Layer for DateLayer {
     }
 }
 
-fn centered_date_screen_pos(text: &str, ui: &UiState, ctx: &RenderState) -> WorldPos {
+fn centered_date_screen_pos(text: &str, ui: &UiState, ctx: &RenderState) -> ScreenPos {
     let weather_width = ui
         .weather_snapshot
         .as_ref()
@@ -76,7 +76,7 @@ fn centered_date_screen_pos(text: &str, ui: &UiState, ctx: &RenderState) -> Worl
     let weather_right = ctx.weather_screen().x + weather_width;
     let companion_center = (clock_left + weather_right) / 2;
 
-    WorldPos {
+    ScreenPos {
         x: companion_center - date_width / 2 - 1,
         y: ctx.date_screen().y,
     }
@@ -121,7 +121,7 @@ fn polish_month_genitive(month: u32) -> &'static str {
     }
 }
 
-fn is_visible(pos: WorldPos, viewport_width: u16, viewport_height: u16, text: &str) -> bool {
+fn is_visible(pos: ScreenPos, viewport_width: u16, viewport_height: u16, text: &str) -> bool {
     let width = text.chars().count() as i32;
     let max_x = viewport_width as i32 - width;
     let max_y = viewport_height as i32 - 1;
@@ -135,7 +135,7 @@ mod tests {
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
+    use crate::scene::coords::{ScreenPos, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;
@@ -183,7 +183,7 @@ mod tests {
         };
 
         assert!(is_visible(render_state.date_screen(), 124, 32, label));
-        assert_eq!(render_state.date_screen(), WorldPos { x: 15, y: 18 });
+        assert_eq!(render_state.date_screen(), ScreenPos { x: 15, y: 18 });
     }
 
     #[test]

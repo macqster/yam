@@ -1,7 +1,7 @@
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::WorldPos;
+use crate::scene::coords::ScreenPos;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use crate::weather::render::{compact_widget_lines, line_width};
@@ -70,7 +70,7 @@ fn write_lines(grid: &mut Grid, x: u16, y: u16, lines: &[ratatui::text::Line<'_>
 }
 
 fn is_visible(
-    pos: WorldPos,
+    pos: ScreenPos,
     viewport_width: u16,
     viewport_height: u16,
     lines: &[ratatui::text::Line<'_>],
@@ -90,7 +90,7 @@ mod tests {
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
+    use crate::scene::coords::{ScreenPos, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;
@@ -134,7 +134,7 @@ mod tests {
         };
 
         assert!(is_visible(render_state.weather_screen(), 124, 32, &lines));
-        assert_eq!(render_state.weather_screen(), WorldPos { x: 25, y: 15 });
+        assert_eq!(render_state.weather_screen(), ScreenPos { x: 25, y: 15 });
     }
 
     #[test]

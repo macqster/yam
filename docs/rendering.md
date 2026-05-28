@@ -105,7 +105,7 @@ Rules:
 - no layer should rely on ratatui layout wrapping for hero/image content
 - viewport selection is now a full-frame pass; the old centered tiered viewport box no longer drives layer placement
 - `RenderState` is split into `world` and `hud` sections to keep world-pinned attachments separate from screen-attached overlays
-- shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement
+- shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement, and companion screen helpers now return signed `ScreenPos` values rather than world-position aliases
 - the clock is a world entity: debug/info panels report its projected screen position, but they do not define it
 - guide primitives live in `WorldState` and may be projected or visualized by debug layers, but for now they are linework-only world-space annotations rather than raster masks or solid fills; sprites and solid masks stay future work
 - the guide / line generator is project-wide, not vines-only: it is now used for guide drawing and should remain suitable for future mask edges, rulers, and other world annotations that need deterministic world-space coverage, and it must remain capable of generating any line in any direction across the full YAM world size
@@ -249,7 +249,7 @@ The active implementation treats camera as a viewport crop helper:
 - world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - the world datum is the shared absolute reference for rulers, guides, masks, and organism guidance; screen space remains a separate terminal projection layer
 - the smallest canonical spatial layer should stay narrow at first: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers are the minimum shared contract before masks and organism guidance become first-class relation types
-- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model, and the debug guide renderer already consumes `SpatialGuideIndex` directly
+- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model; the compatibility layer also exposes signed `ScreenPos` for projections that may be off-screen, and the debug guide renderer already consumes `SpatialGuideIndex` directly
 - the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `WorldState` when an entity is present, so render-side anchor use can rely on entity-backed lookup even while the broader spatial layer stays on shims
 - that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move entity-backed relation logic fully into `core/spatial`
 - the likely module mapping from render’s point of view is:
@@ -265,7 +265,7 @@ The active implementation treats camera as a viewport crop helper:
   5. retire the old helper calls only when the renderer no longer needs to know where the relation math lives
 - fullscreen is a special case of the camera contract: when the viewport matches or exceeds the world extent, the visible crop should be static and centered on the world datum `(0, 0)`, even if debug controls still mutate the stored camera position
 - fullscreen lock is now exercised in `build_render_state(...)`: the stored camera can still move, but the frame uses a datum-centered crop whenever the terminal fully covers the world extent
-- `RenderState::clock_screen()` is the shared projected clock position used by both the clock layer and the debug overlay
+- `RenderState::clock_screen()` is the shared signed projected clock position used by both the clock layer and the debug overlay
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays, including those whose layout rules are derived from world-spacing conventions

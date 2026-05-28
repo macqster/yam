@@ -8,7 +8,7 @@ use crate::render::compositor::Cell;
 use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::guide::draw_guides;
-use crate::scene::coords::{world_to_screen, WorldPos};
+use crate::scene::coords::{world_to_screen, ScreenPos, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::{DebugPanelTab, UiState};
@@ -356,13 +356,13 @@ struct DebugPanelFacts<'a> {
     hero_dy: i32,
     soft_band_line: &'a str,
     clock_world: WorldPos,
-    clock_screen: WorldPos,
+    clock_screen: ScreenPos,
     clock_visible: bool,
     weather_world: WorldPos,
-    weather_screen: WorldPos,
+    weather_screen: ScreenPos,
     weather_visible: bool,
     date_world: WorldPos,
-    date_screen: WorldPos,
+    date_screen: ScreenPos,
     date_visible: bool,
     vine_line: &'a str,
     vine_axis_line: &'a str,

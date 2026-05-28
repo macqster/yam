@@ -2,7 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::WorldPos;
+use crate::scene::coords::ScreenPos;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -56,7 +56,7 @@ impl Layer for ClockLayer {
     }
 }
 
-fn is_visible(pos: WorldPos, viewport_width: u16, viewport_height: u16, lines: &[String]) -> bool {
+fn is_visible(pos: ScreenPos, viewport_width: u16, viewport_height: u16, lines: &[String]) -> bool {
     let clock_width = lines
         .iter()
         .map(|l| l.chars().count() as i32)
@@ -76,7 +76,7 @@ mod tests {
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
+    use crate::scene::coords::{ScreenPos, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::theme::style as theme_style;
@@ -114,7 +114,7 @@ mod tests {
         };
 
         assert!(is_visible(render_state.clock_screen(), 124, 32, &lines));
-        assert_eq!(render_state.clock_screen(), WorldPos { x: 15, y: 16 });
+        assert_eq!(render_state.clock_screen(), ScreenPos { x: 15, y: 16 });
     }
 
     #[test]

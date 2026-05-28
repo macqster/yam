@@ -4,7 +4,7 @@ pub use crate::core::spatial::{
 use crate::core::world::WorldState;
 
 #[allow(dead_code)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct ScreenPos {
     pub x: i32,
     pub y: i32,
@@ -41,7 +41,7 @@ pub fn resolve_world_ui(anchor: WorldPos, offset: WorldPos) -> WorldPos {
 
 /// Hud-ui is screen-attached and must not inherit world motion.
 #[allow(dead_code)]
-pub fn resolve_hud_ui(screen: WorldPos) -> WorldPos {
+pub fn resolve_hud_ui(screen: ScreenPos) -> ScreenPos {
     screen
 }
 
@@ -67,11 +67,7 @@ pub fn resolve_projected_position(
     camera_y: i32,
     viewport_height: u16,
 ) -> ScreenPos {
-    let screen = world_to_screen(position, camera_x, camera_y, viewport_height);
-    ScreenPos {
-        x: screen.x,
-        y: screen.y,
-    }
+    project_world_to_screen(position, camera_x, camera_y, viewport_height)
 }
 
 #[allow(dead_code)]
@@ -112,19 +108,40 @@ pub fn world_to_screen(
     camera_y: i32,
     viewport_height: u16,
 ) -> WorldPos {
-    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
-        .world_to_screen(world)
+    let screen = project_world_to_screen(world, camera_x, camera_y, viewport_height);
+    WorldPos {
+        x: screen.x,
+        y: screen.y,
+    }
+}
+
+pub fn project_world_to_screen(
+    world: WorldPos,
+    camera_x: i32,
+    camera_y: i32,
+    viewport_height: u16,
+) -> ScreenPos {
+    let screen = SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
+        .world_to_screen(world);
+    ScreenPos {
+        x: screen.x,
+        y: screen.y,
+    }
 }
 
 #[allow(dead_code)]
 pub fn screen_to_world(
-    screen: WorldPos,
+    screen: ScreenPos,
     camera_x: i32,
     camera_y: i32,
     viewport_height: u16,
 ) -> WorldPos {
-    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
-        .screen_to_world(screen)
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height)).screen_to_world(
+        WorldPos {
+            x: screen.x,
+            y: screen.y,
+        },
+    )
 }
 
 #[allow(dead_code)]
@@ -164,6 +181,15 @@ mod tests {
         assert_eq!(clock_world, WorldPos { x: 136, y: 15 });
         assert_eq!(hero_screen, WorldPos { x: 10, y: 35 });
         assert_eq!(clock_screen, WorldPos { x: 106, y: 26 });
+    }
+
+    #[test]
+    fn projected_screen_position_has_screen_type() {
+        let world = WorldPos { x: 136, y: 15 };
+        let screen = project_world_to_screen(world, 30, 10, 32);
+
+        assert_eq!(screen, ScreenPos { x: 106, y: 26 });
+        assert_eq!(screen_to_world(screen, 30, 10, 32), world);
     }
 
     #[test]
@@ -219,8 +245,8 @@ mod tests {
 
     #[test]
     fn hud_ui_is_screen_attached() {
-        let hud = WorldPos { x: 8, y: 3 };
-        let second = WorldPos { x: 8, y: 3 };
+        let hud = ScreenPos { x: 8, y: 3 };
+        let second = ScreenPos { x: 8, y: 3 };
         assert_eq!(resolve_hud_ui(hud), hud);
         assert_eq!(resolve_hud_ui(second), hud);
     }
@@ -232,8 +258,8 @@ mod tests {
         let clock_offset = WorldPos { x: 96, y: 9 };
         let camera_a = WorldPos { x: 0, y: 0 };
         let camera_b = WorldPos { x: 30, y: 10 };
-        let hud_a = WorldPos { x: 8, y: 3 };
-        let hud_b = WorldPos { x: 8, y: 3 };
+        let hud_a = ScreenPos { x: 8, y: 3 };
+        let hud_b = ScreenPos { x: 8, y: 3 };
         let world = crate::core::world::WorldState::new();
 
         let hero_visual_anchor = resolve_world_ui(hero_world, hero_offset);

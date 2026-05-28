@@ -54,6 +54,7 @@
 - `RenderState` is split into:
   - `world`: hero and companion attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
+- companion projection helpers on `RenderState` return signed `scene::coords::ScreenPos` values through `project_world_to_screen(...)`; the older `world_to_screen(...) -> WorldPos` wrapper remains only as a compatibility path for raw line/guide/debug call sites that have not moved yet
 - `UiState` owns the runtime attachment offsets that feed the hero-scene attachment object
 - `UiState` also owns the current cached weather snapshot and its refresh cadence, so the weather layer stays render-only instead of performing provider work inline; runtime is responsible for advancing that refresh seam outside the draw path
 - the live runtime loop now keeps one long-lived `Scene` instance instead of rebuilding the boxed layer list every frame, the layer contract allows obviously hidden overlays to be skipped before `render_to_grid()` is called, the runtime reuses the final composed `Grid` across frames, and the scene renderer now has a reusable per-layer scratch-grid seam adopted by simple active layers, the lightweight companion projection layers, the hero layer, the debug overlay, and the vine layer; future render-loop optimization should build from those seams rather than reintroducing per-frame scene construction, empty-grid modal work, or final-frame allocation churn
@@ -264,6 +265,7 @@ The intended model is:
 - the repo now exposes explicit helpers for both sides of that split:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
+- `project_world_to_screen(...)` is the signed screen-position projection helper for new call sites; `world_to_screen(...)` still exists as a legacy world-shaped wrapper until the remaining guide/vine/debug consumers migrate
 - the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
 - the smallest useful canonical spatial relation layer now owns four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
 - the lowest-risk extraction plan is likely:
@@ -275,6 +277,7 @@ The intended model is:
 - the first canonical spatial API surface is now present and should stay small and explicit:
   - `SpatialPoint` for world-space coordinates
   - `SpatialScreenPoint` for explicit screen-space coordinates
+  - `scene::coords::ScreenPos` for signed on-screen or off-screen compatibility projections during the migration
   - `SpatialAnchor` for attachment origins
   - `SpatialAttachment` for anchor-plus-offset resolution
   - `SpatialProjection` for world-to-screen and screen-to-world helpers

@@ -1,5 +1,5 @@
 use crate::scene::camera::Camera;
-use crate::scene::coords::{world_to_screen, WorldPos};
+use crate::scene::coords::{project_world_to_screen, ScreenPos, WorldPos};
 use crate::scene::viewport::Viewport;
 use ratatui::prelude::Rect;
 
@@ -29,8 +29,8 @@ pub struct RenderState {
 }
 
 impl RenderState {
-    pub fn clock_screen(&self) -> WorldPos {
-        world_to_screen(
+    pub fn clock_screen(&self) -> ScreenPos {
+        project_world_to_screen(
             self.world.clock_world,
             self.hud.camera.x,
             self.hud.camera.y,
@@ -38,8 +38,8 @@ impl RenderState {
         )
     }
 
-    pub fn weather_screen(&self) -> WorldPos {
-        world_to_screen(
+    pub fn weather_screen(&self) -> ScreenPos {
+        project_world_to_screen(
             self.world.weather_world,
             self.hud.camera.x,
             self.hud.camera.y,
@@ -48,8 +48,8 @@ impl RenderState {
     }
 
     #[allow(dead_code)]
-    pub fn date_screen(&self) -> WorldPos {
-        world_to_screen(
+    pub fn date_screen(&self) -> ScreenPos {
+        project_world_to_screen(
             self.world.date_world,
             self.hud.camera.x,
             self.hud.camera.y,
@@ -58,8 +58,8 @@ impl RenderState {
     }
 
     #[allow(dead_code)]
-    pub fn calendar_screen(&self) -> WorldPos {
-        world_to_screen(
+    pub fn calendar_screen(&self) -> ScreenPos {
+        project_world_to_screen(
             self.world.calendar_world,
             self.hud.camera.x,
             self.hud.camera.y,
@@ -102,7 +102,7 @@ mod tests {
         };
         let state = RenderState { world, hud };
 
-        let expected = world_to_screen(
+        let expected = project_world_to_screen(
             state.world.clock_world,
             state.hud.camera.x,
             state.hud.camera.y,
@@ -155,7 +155,7 @@ mod tests {
         };
         let state = RenderState { world, hud };
 
-        let expected = world_to_screen(
+        let expected = project_world_to_screen(
             state.world.weather_world,
             state.hud.camera.x,
             state.hud.camera.y,
@@ -224,7 +224,7 @@ mod tests {
         );
         assert_eq!(
             clock_screen,
-            world_to_screen(state.world.clock_world, 30, 10, 32)
+            project_world_to_screen(state.world.clock_world, 30, 10, 32)
         );
     }
 
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(state.hud.camera.world_to_screen(1, 1), None);
         assert_eq!(
             state.clock_screen(),
-            world_to_screen(state.world.clock_world, 0, 0, 0)
+            project_world_to_screen(state.world.clock_world, 0, 0, 0)
         );
         assert_eq!(state.hud.viewport_rect.width, 0);
         assert_eq!(state.hud.viewport_rect.height, 0);

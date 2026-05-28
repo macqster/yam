@@ -26,6 +26,7 @@ Issue link rule:
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
 - `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
 - `verify` treat `core::organism` as the first shared flora identity vocabulary; keep it small until another plant family or greenhouse population proves the next field is needed.
+- `verify` treat `WorldKind::SELECTABLE` plus `WorldKind::loading_label()` as the current world-selection contract; keep `Boot` non-selectable and route future greenhouse/lab worlds through this seam.
 
 ## 1. Spatial Relation Layer
 
@@ -50,8 +51,8 @@ Issue link rule:
 
 ## 3. World Modes And Greenhouse Prep
 
-- `refactor` replace binary main-scene/sandbox UI cycling with an explicit world-selection contract before adding `Greenhouse` or lab worlds.
-- `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, and persistence stays defined while the world-switching contract is generalized.
+- `verify` preserve the explicit world-selection contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, transition labels live on `WorldKind`, and UI persistence snapshots convert through that core contract.
+- `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, and persistence stays defined while the world-switching contract remains generalized.
 - `inspect` define what each future world owns before implementation: initialization, available overlays, camera defaults, flora population, guide sets, and debug surfaces.
 - `verify` greenhouse remains a separate simulation world, not panel chrome layered on top of the main scene.
 - `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.

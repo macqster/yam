@@ -8,7 +8,7 @@ Logging rule:
 - Keep day sections in reverse-chronological order, with the most recent day at the top of the log.
 - Prefer inline timestamps in the form ``HH:MM`` for entries within a day.
 - Within a day section, keep entries in chronological order when the sequence is known.
-- Use the local system time for new entries. On this machine that currently means `Europe/Warsaw`, including summer-time shifts such as `CEST` / `UTC+02:00` when applicable.
+- Use the local system time for new entries. In the current session that means `Europe/Paris`, including summer-time shifts such as `CEST` / `UTC+02:00` when applicable.
 - New entries should use a full date and time stamp whenever practical, especially when the exact sequence within a day matters.
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
@@ -16,6 +16,7 @@ Logging rule:
 ## 2026-05-28
 
 - `06:01` continued the pre-expansion architecture batch by adding `core::organism` as the first shared flora identity vocabulary: organism ids, species ids, journal ids, lifecycle state, generic stats, identity grouping, organism family, and a species-profile payload shape now exist before any second plant family or greenhouse population is introduced. The current border vine now uses those shared id/stat/lifecycle types and exposes a border-vine species profile while keeping visible runtime behavior unchanged.
+- `06:23` continued the general architecture pass by moving switchable-world ordering and transition labels into `WorldKind`: `WorldKind::SELECTABLE` now owns the current main-scene/sandbox cycle, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world contract instead of carrying a binary world toggle as hidden UI policy. The docs now keep greenhouse/lab worlds pointed at that seam without introducing them yet.
 
 ## 2026-05-24
 

@@ -142,17 +142,11 @@ impl MetaState {
     }
 
     pub fn active_world_kind(&self) -> WorldKind {
-        match self.active_world {
-            WorldKindSnapshot::MainScene => WorldKind::MainScene,
-            WorldKindSnapshot::Sandbox => WorldKind::Sandbox,
-        }
+        self.active_world.world_kind()
     }
 
     pub fn cycle_world_kind(&mut self) {
-        self.active_world = match self.active_world {
-            WorldKindSnapshot::MainScene => WorldKindSnapshot::Sandbox,
-            WorldKindSnapshot::Sandbox => WorldKindSnapshot::MainScene,
-        };
+        self.active_world = self.active_world.next();
         if self.active_world == WorldKindSnapshot::MainScene {
             self.pointer_probe_open = false;
         }
@@ -189,6 +183,27 @@ pub enum WorldKindSnapshot {
     #[default]
     MainScene,
     Sandbox,
+}
+
+impl WorldKindSnapshot {
+    pub fn from_world_kind(world_kind: WorldKind) -> Self {
+        match world_kind.selectable_or_default() {
+            WorldKind::Boot => Self::MainScene,
+            WorldKind::MainScene => Self::MainScene,
+            WorldKind::Sandbox => Self::Sandbox,
+        }
+    }
+
+    pub fn world_kind(self) -> WorldKind {
+        match self {
+            Self::MainScene => WorldKind::MainScene,
+            Self::Sandbox => WorldKind::Sandbox,
+        }
+    }
+
+    pub fn next(self) -> Self {
+        Self::from_world_kind(self.world_kind().next_selectable())
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
@@ -644,11 +659,7 @@ impl UiState {
         let debug_info_panel_visible = self.meta.debug_info_panel_visible;
         let offsets = UiOffsets::default();
         self.meta = MetaState::new();
-        self.meta.active_world = match world_kind {
-            WorldKind::Boot => WorldKindSnapshot::MainScene,
-            WorldKind::MainScene => WorldKindSnapshot::MainScene,
-            WorldKind::Sandbox => WorldKindSnapshot::Sandbox,
-        };
+        self.meta.active_world = WorldKindSnapshot::from_world_kind(world_kind);
         self.meta.vines_visibility_mode = vines_visibility_mode;
         self.meta.vines_visible = vines_visibility_mode.resolve(last_vines_visible);
         self.meta.world_frame_visible = world_frame_visible;
@@ -966,21 +977,15 @@ impl UiState {
     }
 
     pub fn force_initial_world_kind(&mut self, world_kind: WorldKind) {
-        self.meta.active_world = match world_kind {
-            WorldKind::Boot => WorldKindSnapshot::MainScene,
-            WorldKind::MainScene => WorldKindSnapshot::MainScene,
-            WorldKind::Sandbox => WorldKindSnapshot::Sandbox,
-        };
+        self.meta.active_world = WorldKindSnapshot::from_world_kind(world_kind);
     }
 
     pub fn cycle_world_kind(&mut self) {
         self.meta.cycle_world_kind();
-        let label = match self.meta.active_world_kind() {
-            WorldKind::Boot => "loading...",
-            WorldKind::MainScene => "loading main scene...",
-            WorldKind::Sandbox => "loading sandbox...",
-        };
-        self.start_loading_transition(label, Duration::from_millis(900));
+        self.start_loading_transition(
+            self.meta.active_world_kind().loading_label(),
+            Duration::from_millis(900),
+        );
         if self.meta.active_world_kind() != WorldKind::Sandbox {
             self.pointer_blink_on = true;
         }
@@ -2536,6 +2541,26 @@ mod tests {
         assert_eq!(ui.active_world_kind(), WorldKind::Sandbox);
         assert!(ui.loading.active);
         assert_eq!(ui.loading.label, "loading sandbox...");
+    }
+
+    #[test]
+    fn cycling_world_kind_uses_the_explicit_selectable_world_order() {
+        let mut ui = UiState::new();
+
+        assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
+        ui.cycle_world_kind();
+        assert_eq!(ui.active_world_kind(), WorldKind::Sandbox);
+        ui.cycle_world_kind();
+        assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
+    }
+
+    #[test]
+    fn boot_initial_world_falls_back_to_first_selectable_world() {
+        let mut ui = UiState::new();
+
+        ui.force_initial_world_kind(WorldKind::Boot);
+
+        assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
     }
 
     #[test]

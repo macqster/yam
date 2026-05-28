@@ -46,12 +46,43 @@ pub enum WorldKind {
 }
 
 impl WorldKind {
+    pub const SELECTABLE: [Self; 2] = [Self::MainScene, Self::Sandbox];
+
     pub fn title(self) -> &'static str {
         match self {
             WorldKind::Boot => "boot",
             WorldKind::MainScene => "main-scene",
             WorldKind::Sandbox => "sandbox",
         }
+    }
+
+    pub fn loading_label(self) -> &'static str {
+        match self {
+            WorldKind::Boot => "loading...",
+            WorldKind::MainScene => "loading main scene...",
+            WorldKind::Sandbox => "loading sandbox...",
+        }
+    }
+
+    pub fn is_selectable(self) -> bool {
+        Self::SELECTABLE.contains(&self)
+    }
+
+    pub fn selectable_or_default(self) -> Self {
+        if self.is_selectable() {
+            self
+        } else {
+            Self::MainScene
+        }
+    }
+
+    pub fn next_selectable(self) -> Self {
+        let current = self.selectable_or_default();
+        let index = Self::SELECTABLE
+            .iter()
+            .position(|kind| *kind == current)
+            .unwrap_or(0);
+        Self::SELECTABLE[(index + 1) % Self::SELECTABLE.len()]
     }
 }
 
@@ -186,5 +217,30 @@ mod tests {
         assert_eq!(world.tick, 0);
         assert_eq!(world.grid.width, 300);
         assert_eq!(world.grid.height, 120);
+    }
+
+    #[test]
+    fn selectable_worlds_exclude_boot_and_cycle_explicitly() {
+        assert_eq!(
+            WorldKind::SELECTABLE,
+            [WorldKind::MainScene, WorldKind::Sandbox]
+        );
+        assert!(!WorldKind::Boot.is_selectable());
+        assert_eq!(
+            WorldKind::Boot.selectable_or_default(),
+            WorldKind::MainScene
+        );
+        assert_eq!(WorldKind::MainScene.next_selectable(), WorldKind::Sandbox);
+        assert_eq!(WorldKind::Sandbox.next_selectable(), WorldKind::MainScene);
+    }
+
+    #[test]
+    fn world_kinds_own_transition_labels() {
+        assert_eq!(WorldKind::Boot.loading_label(), "loading...");
+        assert_eq!(
+            WorldKind::MainScene.loading_label(),
+            "loading main scene..."
+        );
+        assert_eq!(WorldKind::Sandbox.loading_label(), "loading sandbox...");
     }
 }

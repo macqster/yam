@@ -42,7 +42,7 @@
 
 - Main-scene enrichment and greenhouse ecosystem work should start from infrastructure, not from another visible object bolted onto the current scene.
 - Before a second plant family or greenhouse population lands, the flora layer needs a small shared organism vocabulary. The first cut now lives in `core::organism` for organism id, species id, journal id, lifecycle state, generic stats, identity grouping, organism family, and species-profile payload shape; future axes/metamers/organs and growth tips/meristems should build from that vocabulary rather than reintroducing vine-only identifiers.
-- Before a greenhouse or lab world lands, world selection needs to become an explicit multi-world contract rather than the current main-scene/sandbox toggle shape.
+- Before a greenhouse or lab world lands, world selection should extend the explicit `WorldKind::SELECTABLE` contract rather than reintroducing a UI-local toggle. `Boot` stays non-selectable, transition labels live on `WorldKind`, and persisted UI snapshots convert through that core contract.
 - Before denser organism rendering lands, spatial projection and guide relation logic should keep moving toward `core::spatial` as the canonical resolver, with `scene::coords` treated as compatibility surface.
 - Conceptual work for those future features is in scope during stabilization when it tightens contracts, tests, data shape, or tooling; large runtime mechanics should wait for those gates to be deliberate.
 

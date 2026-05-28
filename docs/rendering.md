@@ -43,6 +43,7 @@ Rules:
 - the sandbox world reuses the same render stack and projection helpers as the main scene, but keeps intentionally sparse content so drawing-engine trials can be judged without main-scene composition noise
 - `yam-sandbox` is the direct launch path for that sparse world, so dry-trial drawing and pointer work do not depend on entering the main scene first
 - sandbox is not a separate app shell: it is an internal YAM space that should be reachable by world switching, and the main-scene hero/clock composition should stay out of it so the sandbox can read like a clean room rather than an emptied scene with leftover props
+- switchable runtime worlds are selected through `WorldKind::SELECTABLE`; render layers may branch by active world, but they should not own the world-switching order or transition labels
 - the hud/footer owns screen-attached status, hints, and mode reminders
 - debug and inspect outputs may be visible during normal use, but they must not displace the footer contract
 - modal overlays may cover any zone while active, but they remain explicit and bounded

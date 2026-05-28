@@ -54,7 +54,7 @@
 - `RenderState` is split into:
   - `world`: hero and companion attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
-- companion projection helpers on `RenderState` return signed `scene::coords::ScreenPos` values through `project_world_to_screen(...)`; active hero, guide, vine, and debug projections use that helper too, while the older world-shaped compatibility surface is now concentrated in `resolve_position(...)`
+- companion projection helpers on `RenderState` return signed `scene::coords::ScreenPos` values through `project_world_to_screen(...)`; active hero, guide, vine, debug, and compatibility element projections now keep screen results typed as `ScreenPos`
 - `UiState` owns the runtime attachment offsets that feed the hero-scene attachment object
 - `UiState` also owns the current cached weather snapshot and its refresh cadence, so the weather layer stays render-only instead of performing provider work inline; runtime is responsible for advancing that refresh seam outside the draw path
 - the live runtime loop now keeps one long-lived `Scene` instance instead of rebuilding the boxed layer list every frame, the layer contract allows obviously hidden overlays to be skipped before `render_to_grid()` is called, the runtime reuses the final composed `Grid` across frames, and the scene renderer now has a reusable per-layer scratch-grid seam adopted by simple active layers, the lightweight companion projection layers, the hero layer, the debug overlay, and the vine layer; future render-loop optimization should build from those seams rather than reintroducing per-frame scene construction, empty-grid modal work, or final-frame allocation churn
@@ -265,7 +265,7 @@ The intended model is:
 - the repo now exposes explicit helpers for both sides of that split:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
-- `project_world_to_screen(...)` is the signed screen-position projection helper for active call sites; `resolve_position(...)` remains the legacy world-shaped bridge until older compatibility consumers migrate
+- `project_world_to_screen(...)` is the signed screen-position projection helper for active call sites, while `resolve_element_screen_position(...)` is the screen-typed compatibility resolver for `Space::{World, Anchor, Screen}`
 - the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
 - the smallest useful canonical spatial relation layer now owns four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
 - the lowest-risk extraction plan is likely:

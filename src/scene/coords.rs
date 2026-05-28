@@ -131,22 +131,6 @@ pub fn screen_to_world(
     )
 }
 
-#[allow(dead_code)]
-pub fn resolve_position(
-    element: &Element,
-    world: &WorldState,
-    camera_x: i32,
-    camera_y: i32,
-    viewport_height: u16,
-) -> WorldPos {
-    let screen =
-        resolve_element_screen_position(element, world, camera_x, camera_y, viewport_height);
-    WorldPos {
-        x: screen.x,
-        y: screen.y,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -189,7 +173,7 @@ mod tests {
         let world = crate::core::world::WorldState::new();
 
         assert_eq!(
-            resolve_position(
+            resolve_element_screen_position(
                 &Element {
                     space: Space::Screen,
                     position: panel
@@ -199,10 +183,10 @@ mod tests {
                 camera_a.y,
                 32,
             ),
-            panel
+            ScreenPos { x: 10, y: 5 }
         );
         assert_eq!(
-            resolve_position(
+            resolve_element_screen_position(
                 &Element {
                     space: Space::Screen,
                     position: panel
@@ -212,7 +196,7 @@ mod tests {
                 camera_b.y,
                 32,
             ),
-            panel
+            ScreenPos { x: 10, y: 5 }
         );
     }
 
@@ -257,7 +241,7 @@ mod tests {
         assert_eq!(hero_visual_anchor, WorldPos { x: 40, y: 6 });
         assert_eq!(clock_world, WorldPos { x: 136, y: 15 });
         assert_eq!(
-            resolve_position(
+            resolve_element_screen_position(
                 &Element {
                     space: Space::World,
                     position: hero_visual_anchor
@@ -267,10 +251,10 @@ mod tests {
                 camera_a.y,
                 32,
             ),
-            WorldPos { x: 40, y: 25 }
+            ScreenPos { x: 40, y: 25 }
         );
         assert_eq!(
-            resolve_position(
+            resolve_element_screen_position(
                 &Element {
                     space: Space::World,
                     position: hero_visual_anchor
@@ -280,7 +264,7 @@ mod tests {
                 camera_b.y,
                 32,
             ),
-            WorldPos { x: 10, y: 35 }
+            ScreenPos { x: 10, y: 35 }
         );
         assert_eq!(resolve_hud_ui(hud_a), hud_b);
     }
@@ -295,7 +279,7 @@ mod tests {
             age: 1,
         });
 
-        let resolved = resolve_position(
+        let resolved = resolve_element_screen_position(
             &Element {
                 space: Space::Anchor(EntityId(7)),
                 position: WorldPos { x: -999, y: -999 },
@@ -306,7 +290,7 @@ mod tests {
             32,
         );
 
-        assert_eq!(resolved, WorldPos { x: 120, y: -19 });
+        assert_eq!(resolved, ScreenPos { x: 120, y: -19 });
     }
 
     #[test]

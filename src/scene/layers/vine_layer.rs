@@ -4,7 +4,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::Grid;
 use crate::render::drawing::{stamp_glyph, stroke_path, Brush, GlyphStamp, StrokeWeight};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::{world_to_screen, WorldPos};
+use crate::scene::coords::{project_world_to_screen, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -84,13 +84,13 @@ fn draw_segment(
     shadow: bool,
     projection: VineProjection,
 ) {
-    let start = world_to_screen(
+    let start = project_world_to_screen(
         start,
         projection.camera_x,
         projection.camera_y,
         projection.viewport_height,
     );
-    let end = world_to_screen(
+    let end = project_world_to_screen(
         end,
         projection.camera_x,
         projection.camera_y,
@@ -122,7 +122,7 @@ fn draw_segment(
 }
 
 fn draw_organ(grid: &mut Grid, organ: &VineOrgan, shadow: bool, projection: VineProjection) {
-    let screen = world_to_screen(
+    let screen = project_world_to_screen(
         organ.position,
         projection.camera_x,
         projection.camera_y,

@@ -2,7 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
-use crate::scene::coords::world_to_screen;
+use crate::scene::coords::project_world_to_screen;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use ratatui::text::{Line, Span};
@@ -36,7 +36,7 @@ impl Layer for HeroLayer {
 
         for (row_idx, row) in normalized.into_iter().enumerate() {
             let py = hero_y - row_idx as i32;
-            let screen = world_to_screen(
+            let screen = project_world_to_screen(
                 crate::scene::coords::WorldPos { x: hero_x, y: py },
                 cam_x,
                 cam_y,

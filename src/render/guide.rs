@@ -2,7 +2,7 @@ use crate::core::guide::{Guide, GuidePoint, GuideShape};
 use crate::core::guide_line::{glyph_for_line_step, rasterize_line, LinePoint};
 use crate::core::spatial::SpatialGuideIndex;
 use crate::render::compositor::Grid;
-use crate::scene::coords::{world_to_screen, WorldPos};
+use crate::scene::coords::{project_world_to_screen, WorldPos};
 use crate::theme::style;
 
 #[derive(Copy, Clone)]
@@ -86,7 +86,7 @@ fn draw_guide(grid: &mut Grid, guide: &Guide, projection: GuideProjection) {
         }
         GuideShape::Circle { radius } => {
             let radius = (*radius).max(1);
-            let center = world_to_screen(
+            let center = project_world_to_screen(
                 WorldPos {
                     x: guide.anchor.x,
                     y: guide.anchor.y,
@@ -113,7 +113,7 @@ fn draw_guide(grid: &mut Grid, guide: &Guide, projection: GuideProjection) {
 }
 
 fn draw_point(grid: &mut Grid, point: GuidePoint, glyph: char, projection: GuideProjection) {
-    let screen = world_to_screen(
+    let screen = project_world_to_screen(
         WorldPos {
             x: point.x,
             y: point.y,
@@ -135,7 +135,7 @@ fn draw_segment(
     glyph: char,
     projection: GuideProjection,
 ) {
-    let start = world_to_screen(
+    let start = project_world_to_screen(
         WorldPos {
             x: start.x,
             y: start.y,
@@ -144,7 +144,7 @@ fn draw_segment(
         projection.camera_y,
         projection.viewport_height,
     );
-    let end = world_to_screen(
+    let end = project_world_to_screen(
         WorldPos { x: end.x, y: end.y },
         projection.camera_x,
         projection.camera_y,
@@ -195,5 +195,37 @@ fn draw_polyline(
     }
     if closed && !points.is_empty() {
         draw_segment(grid, last, anchor, glyph, projection);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::draw_guides;
+    use crate::core::guide::{Guide, GuideKind, GuidePoint, GuideShape, GuideState, GuideStyle};
+    use crate::core::spatial::SpatialGuideIndex;
+    use crate::render::compositor::Grid;
+
+    #[test]
+    fn guide_points_project_through_signed_screen_coordinates() {
+        let mut guides = GuideState::new();
+        guides.guides.push(Guide {
+            id: 1,
+            label: "probe".to_string(),
+            group: None,
+            kind: GuideKind::Datum,
+            anchor: GuidePoint { x: 30, y: 10 },
+            shape: GuideShape::Point,
+            style: GuideStyle {
+                glyph: '+',
+                visible: true,
+                accent: true,
+            },
+            enabled: true,
+        });
+        let mut grid = Grid::new(4, 32);
+
+        draw_guides(&mut grid, SpatialGuideIndex::new(&guides), 30, 10, 32);
+
+        assert_eq!(grid.get_mut(0, 31).map(|cell| cell.symbol), Some('+'));
     }
 }

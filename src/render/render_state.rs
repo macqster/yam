@@ -71,7 +71,6 @@ impl RenderState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::scene::coords::world_to_screen;
     use crate::scene::viewport::Viewport;
 
     #[test]
@@ -193,7 +192,7 @@ mod tests {
         };
         let state = RenderState { world, hud };
 
-        let hero_screen = world_to_screen(
+        let hero_screen = project_world_to_screen(
             state.world.hero_visual_anchor,
             state.hud.camera.x,
             state.hud.camera.y,

@@ -25,6 +25,7 @@ The repo front door is [../README.md](../README.md).
 
 ## Active Surface Contracts
 
+- [greenhouse-roadmap.md](greenhouse-roadmap.md) - greenhouse expansion roadmap and implementation gates
 - [loading-screen.md](loading-screen.md) - boot/loading-screen contract
 - [weather-widget.md](weather-widget.md) - weather-widget contract
 - [vines.md](vines.md) - vine ownership/readiness contract
@@ -56,6 +57,7 @@ The repo front door is [../README.md](../README.md).
 - ownership/architecture -> [architecture.md](architecture.md)
 - scene behavior -> [scene-model.md](scene-model.md)
 - rendering/layer/UI contracts -> [rendering.md](rendering.md)
+- greenhouse expansion planning -> [greenhouse-roadmap.md](greenhouse-roadmap.md)
 
 ## Role Rules
 

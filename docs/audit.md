@@ -10,6 +10,7 @@ Last reviewed: 2026-05-30
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
+- Greenhouse planning now has a dedicated roadmap, but implementation gates are still open: room/environment ownership, multi-family flora storage, growth dispatch, and inspection surfaces need explicit decisions before visible greenhouse content starts.
 
 ## Weakest Areas
 
@@ -17,7 +18,8 @@ Last reviewed: 2026-05-30
 2. Hero-rendering pipeline: Chafa is stable, but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
 3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, and `core::organism` now provides the first shared identity/species-registry/journal vocabulary, but broader multi-family storage and growth dispatch are still ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
-5. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
+5. Greenhouse world modeling: the roadmap is now explicit, but there is not yet inert room/environment state or a tested profile shape for a future `Greenhouse` world.
+6. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
 ## Current Work Priority
 
@@ -81,7 +83,9 @@ Last reviewed: 2026-05-30
 - `medium` Flora state remains vine-shaped in storage and growth dispatch even though shared identity, registry, journal, family-count, and organism-identity adapters now exist; the next implementation step should decide whether multi-family storage is an organism registry, an enum-backed family store, or a different small structure before another plant family or greenhouse population lands.
   - evidence: `src/core/organism.rs`, `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
 - `low` World selection now has an explicit core contract for the current selectable worlds plus profile-owned composition, grid, camera defaults, guide plans, population plans, and capabilities. Greenhouse should still wait for room/environment ownership, inspection modes, and richer population/storage rules rather than adding a world enum variant alone.
-  - evidence: `src/core/world.rs`, `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/weather_layer.rs`
+  - evidence: `src/core/world.rs`, `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/weather_layer.rs`, `docs/greenhouse-roadmap.md`
+- `low` The greenhouse expansion path is less likely to drift into scattered chat memory now that `docs/greenhouse-roadmap.md` owns the preliminary roadmap, hard rules, implementation phases, open decisions, and later creative-input brief. This reduces planning drift but does not close the underlying implementation gates.
+  - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`, `docs/README.md`
 - `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
   - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

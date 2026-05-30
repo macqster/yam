@@ -20,7 +20,7 @@ Issue link rule:
 ## Current Pre-Expansion Batch
 
 - `verify` keep the repo in soft feature freeze mode while this batch is active: polish, stability, bug fixes, contract repairs, and architecture preparation are in scope; large new entities, mechanics, and worlds are not.
-- `docs` keep `TODO.md`, `docs/audit.md`, `docs/vines.md`, `docs/scene-model.md`, `docs/architecture.md`, `docs/rendering.md`, and `docs/hygiene.md` aligned before any main-scene enrichment or greenhouse work starts.
+- `docs` keep `TODO.md`, `docs/audit.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/scene-model.md`, `docs/architecture.md`, `docs/rendering.md`, and `docs/hygiene.md` aligned before any main-scene enrichment or greenhouse work starts.
 - `verify` keep `known_issues.md` empty unless a concrete active issue appears; broad pre-expansion risks belong in the audit and this backlog.
 - `verify` keep `scripts/verify.sh` green for every maintenance handoff.
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
@@ -55,12 +55,15 @@ Issue link rule:
 
 ## 3. World Modes And Greenhouse Prep
 
+- `docs` treat `docs/greenhouse-roadmap.md` as the owning greenhouse expansion roadmap; keep detailed greenhouse phase planning there and keep this backlog execution-focused.
 - `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
 - `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
+- `inspect` define greenhouse room, environment, population, and inspection ownership before adding a visible `Greenhouse` world variant.
 - `inspect` define what each future world owns before implementation beyond the current profile fields: room model, environment parameters, organism population rules, inspection modes, and debug surfaces.
 - `verify` greenhouse remains a separate simulation world, not panel chrome layered on top of the main scene.
 - `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.
 - `inspect` decide whether greenhouse inspection needs a dedicated registry/journal mode or lightweight per-organism popups before building either surface.
+- `inspect` keep the first external creative-input request bounded by the roadmap brief so ideas enter as room profiles, species profiles, fixtures, environment presets, or inspection text instead of hidden UI or render-owned behavior.
 
 ## 4. Main Scene Enrichment Prep
 

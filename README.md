@@ -81,6 +81,9 @@ Reserved or future-facing surfaces:
 - flora expansion beyond the current scaffold and vine prototype
 - deeper terminal-art asset compilation and inspection workflows
 
+The greenhouse direction is tracked in
+[docs/greenhouse-roadmap.md](docs/greenhouse-roadmap.md).
+
 ## Design Identity
 
 YAM aims for a restrained dark-deco terminal aesthetic:

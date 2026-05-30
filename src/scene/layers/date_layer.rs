@@ -1,10 +1,10 @@
 use chrono::{Datelike, Local, NaiveDate, Weekday};
 use unicode_width::UnicodeWidthStr;
 
+use crate::core::spatial::SpatialScreenPoint as ScreenPos;
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::ScreenPos;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -131,11 +131,11 @@ fn is_visible(pos: ScreenPos, viewport_width: u16, viewport_height: u16, text: &
 #[cfg(test)]
 mod tests {
     use super::{centered_date_screen_pos, is_visible, polish_date_label};
+    use crate::core::spatial::{SpatialPoint as WorldPos, SpatialScreenPoint as ScreenPos};
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::{ScreenPos, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;

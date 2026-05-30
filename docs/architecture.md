@@ -11,13 +11,13 @@
 
 ## Core Rules
 
-- `core/` - data only, no UI, no terminal, no rendering
+- `core/` - data only, no UI, no terminal, no rendering, and no imports from `scene/`; `scripts/check.sh` guards this boundary
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
-- `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers and the guide index abstraction that now feeds the render/debug guide path, and will absorb more relation logic over time
-- `core/world.rs` - owns world bootstrapping by explicit world kind and profile; main-scene, sandbox, and future greenhouse/lab worlds should be selected and described intentionally rather than hidden behind one implicit `WorldState::new()` payload
-- `systems/` - mutate `WorldState` only, no rendering
+- `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers, indexed anchor lookup trait, and guide index abstraction that now feeds the render/debug guide path, and will absorb more relation logic over time
+- `core/world.rs` - owns world bootstrapping by explicit world kind and profile; profile-owned grid, camera defaults, guide plans, population plans, and capabilities keep main-scene, sandbox, and future greenhouse/lab worlds selected and described intentionally rather than hidden behind one implicit `WorldState::new()` payload
+- `systems/` - mutate `WorldState` only, no rendering, and no imports from scene/render/UI/terminal modules
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, shared drawing-engine primitives, and final text conversion
-- `render/drawing.rs` - reusable path stroke, glyph stamping, and occupancy tracking for features that need deterministic generative cell drawing without re-owning raster logic in a single layer
+- `render/drawing.rs` - reusable path stroke, glyph stamping, checked signed-to-grid writes, and occupancy tracking for features that need deterministic generative cell drawing without re-owning raster logic in a single layer
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
 - `ui/` - runtime UI state, persisted offsets/settings, screen-space presentation helpers, and the temporary scene adapter entrypoint
 - `runtime.rs` - event loop, input, tick, and render orchestration only
@@ -41,9 +41,9 @@
 ## Pre-Expansion Gate
 
 - Main-scene enrichment and greenhouse ecosystem work should start from infrastructure, not from another visible object bolted onto the current scene.
-- Before a second plant family or greenhouse population lands, the flora layer needs a small shared organism vocabulary. The first cut now lives in `core::organism` for organism id, species id, journal id, lifecycle state, generic stats, identity grouping, organism family, and species-profile payload shape; future axes/metamers/organs and growth tips/meristems should build from that vocabulary rather than reintroducing vine-only identifiers.
-- Before a greenhouse or lab world lands, world selection should extend the explicit `WorldKind::SELECTABLE` and `WorldKind::profile()` contracts rather than reintroducing a UI-local toggle. `Boot` stays non-selectable, transition labels and coarse `WorldComposition` live on `WorldKind`, and persisted UI snapshots convert through that core contract.
-- Before denser organism rendering lands, spatial projection and guide relation logic should keep moving toward `core::spatial` as the canonical resolver, with `scene::coords` treated as compatibility surface.
+- Before a second plant family or greenhouse population lands, the flora layer needs a small shared organism vocabulary. The first cut now lives in `core::organism` for organism id, species id, journal id, lifecycle state, generic stats, identity grouping, organism family, species-profile payload shape, an in-memory species registry, and per-instance journal events; future axes/metamers/organs and growth tips/meristems should build from that vocabulary rather than reintroducing vine-only identifiers.
+- Before a greenhouse or lab world lands, world selection should extend the explicit `WorldKind::SELECTABLE` and `WorldKind::profile()` contracts rather than reintroducing a UI-local toggle. `Boot` stays non-selectable, transition labels, coarse `WorldComposition`, grid, camera defaults, guide plans, population plans, and capabilities live on `WorldKind`, and persisted UI snapshots convert through that core contract.
+- Before denser organism rendering lands, spatial projection, entity-backed anchoring, and guide relation logic should keep moving toward `core::spatial` as the canonical resolver, with `scene::coords` treated as compatibility surface.
 - Conceptual work for those future features is in scope during stabilization when it tightens contracts, tests, data shape, or tooling; large runtime mechanics should wait for those gates to be deliberate.
 
 ## Rendering Pipeline
@@ -54,8 +54,8 @@
 - `RenderState` is split into:
   - `world`: hero and companion attachment facts that stay world-pinned
   - `hud`: viewport and camera facts that stay screen/terminal-attached
-- companion projection helpers on `RenderState` return signed `scene::coords::ScreenPos` values through `project_world_to_screen(...)`; active hero, guide, vine, debug, and compatibility element projections now keep screen results typed as `ScreenPos`
-- `UiState` owns the runtime attachment offsets that feed the hero-scene attachment object
+- companion projection helpers on `RenderState` return signed `core::spatial::SpatialScreenPoint` values and project through `core::spatial::SpatialResolver` directly; active clock/date/weather screen consumers and active hero, debug, guide, and vine rendering also use core spatial screen types directly, while compatibility element projection keeps screen results typed as screen-space values inside the isolated scene compatibility module
+- `UiState` owns the runtime attachment offsets that feed the hero-scene attachment object, using `core::spatial::SpatialPoint` for attachment facts rather than scene compatibility aliases
 - `UiState` also owns the current cached weather snapshot and its refresh cadence, so the weather layer stays render-only instead of performing provider work inline; runtime is responsible for advancing that refresh seam outside the draw path
 - the live runtime loop now keeps one long-lived `Scene` instance instead of rebuilding the boxed layer list every frame, the layer contract allows obviously hidden overlays to be skipped before `render_to_grid()` is called, the runtime reuses the final composed `Grid` across frames, and the scene renderer now has a reusable per-layer scratch-grid seam adopted by simple active layers, the lightweight companion projection layers, the hero layer, the debug overlay, and the vine layer; future render-loop optimization should build from those seams rather than reintroducing per-frame scene construction, empty-grid modal work, or final-frame allocation churn
 - the compositor also now exposes a narrow ASCII-only text-write helper for known plain-ASCII chrome, so always-on footer/debug/world-label text does not have to pay the fully general grapheme-aware write path unless the content actually needs it
@@ -125,9 +125,9 @@
 - a minimal lifecycle update loop can stay equally small: `Seed -> Growth -> Mature -> Senescent -> Decay`, with active meristems driving growth steps, species rules choosing new metamers or organs, and geometry being regenerated from state each tick
 - organ state should remain explicit and inspectable: buds, leaves, flowers, and fruit can each progress through `bud -> growing -> mature -> aging -> dead` without requiring the whole plant to collapse into a single global state
 - the greenhouse/lab space should be the place where lifecycle tuning becomes visible, while the main scene can keep the current prototypes comparatively static and readable
-- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; a species registry or database layer should hold species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
+- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; the current in-memory `SpeciesRegistry` is only the first seam for species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
 - the species registry should be read-heavy and simulation-friendly: it can store canonical species metadata, but per-plant runtime state stays with the living organism instance in `WorldState` or its flora subsystem
-- each life-form should also have a dedicated log-journal so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
+- each life-form should also have a dedicated `OrganismJournal` so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
 - a life-form journal should stay compact and event-oriented: lifecycle transitions, growth steps, organ births/removals, environment influences, damage/pruning, and debug annotations are the highest-value entries
 - the journal should be human-readable first and machine-friendly second, so greenhouse inspection can scan it quickly without losing deterministic simulation detail
 - the species registry payload should stay compact and reusable: species id/name, morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels are the highest-value fields
@@ -265,37 +265,38 @@ The intended model is:
 - the repo now exposes explicit helpers for both sides of that split:
 - `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
 - `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
-- `project_world_to_screen(...)` is the signed screen-position projection helper for active call sites, while `resolve_element_screen_position(...)` is the screen-typed compatibility resolver for `Space::{World, Anchor, Screen}`
+- `project_world_to_screen(...)` is the signed screen-position projection helper isolated inside `scene/coords.rs` compatibility code, while `resolve_element_screen_position(...)` is the screen-typed compatibility resolver for `Space::{World, Anchor, Screen}`; `scripts/check.sh` prevents new `crate::scene::coords` imports outside that module
 - the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
 - the smallest useful canonical spatial relation layer now owns four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
 - the lowest-risk extraction plan is likely:
-  - `scene/coords.rs` keeps world/screen coordinate primitives and the basic transform helpers until the new layer is stable
-  - `scene/entity.rs` keeps attachment composition helpers while entity-specific pose math is still simple
+  - `scene/coords.rs` keeps compatibility re-exports and transform helpers until more call sites can depend on `core::spatial` directly
+  - `scene/entity.rs` keeps attachment composition helpers while resolving simple anchor/offset math through `core::spatial`
   - `core/guide.rs` keeps guide data and guide-set lookup as the canonical guide store
-  - `render/guide.rs` stays render-only and consumes the guide store through projection helpers instead of redefining relations
+  - `render/guide.rs` stays render-only and consumes the guide store through `core::spatial` projection helpers instead of redefining relations
   - the new canonical spatial relation layer should eventually absorb only the shared resolver logic, not the render helpers or the raw data structs on day one
 - the first canonical spatial API surface is now present and should stay small and explicit:
   - `SpatialPoint` for world-space coordinates
-  - `SpatialScreenPoint` for explicit screen-space coordinates
-  - `scene::coords::ScreenPos` for signed on-screen or off-screen compatibility projections during the migration
+  - `SpatialScreenPoint` for signed on-screen or off-screen screen-space coordinates
+  - `scene::coords::ScreenPos` as a module-internal compatibility re-export while active call sites use the core name
   - `SpatialAnchor` for attachment origins
   - `SpatialAttachment` for anchor-plus-offset resolution
   - `SpatialProjection` for world-to-screen and screen-to-world helpers
   - `SpatialGuideIndex` for guide and guide-set lookup
+  - `SpatialAnchorLookup` for entity-backed anchor lookup without making the scene compatibility layer own anchor identity
   - `SpatialResolver` for the shared relation glue that ties those pieces together
-- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `WorldState` when an entity is present, so anchor identity is no longer purely nominal in the live path even though the broader spatial layer still needs consolidation
-- that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move the entity-backed relation logic fully into `core/spatial`
+- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `core::spatial::SpatialAnchorLookup` when an entity is present, so anchor identity is no longer owned by scene projection code even though the broader spatial layer still needs consolidation
+- that projected anchor helper is still a compatibility path; the long-term goal remains to move more relation callers fully into `core/spatial`
 - the likely mapping from today’s modules to that surface is:
-  - `scene/coords.rs` -> `SpatialPoint`, `SpatialAnchor`, `SpatialAttachment`, and `SpatialProjection`
+  - `core/spatial` -> `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialAnchorLookup`, and `SpatialResolver`
+  - `scene/coords.rs` -> compatibility re-exports and transition helpers such as `project_world_to_screen(...)`
   - `scene/entity.rs` -> attachment composition helpers that can later collapse into `SpatialAttachment`
   - `core/guide.rs` -> `SpatialGuideIndex` and the raw guide/guide-set data model
-  - `render/guide.rs` -> render-only consumers of `SpatialGuideIndex` and `SpatialProjection`
-  - the future `core/spatial` module -> `SpatialResolver` and any shared relation logic that should not live in render code
+  - `render/guide.rs` -> render-only consumers of `SpatialGuideIndex`, `SpatialProjection`, and `SpatialResolver`
 - the safest migration order is likely:
   1. introduce `core/spatial` with the new shared types and resolver helpers, while keeping the old modules as compatibility shims
   2. move shared projection and attachment math into the new layer without changing the visible contracts
   3. switch guide lookup consumers to the new `SpatialGuideIndex` surface while preserving `GuideState` storage
-  4. redirect render guide drawing through the new projection helpers
+  4. keep render guide drawing on the core spatial projection helpers
   5. only then retire the old helper paths once the tests and docs are all pointing at the new canonical layer
 - each migration step should be guarded by the existing projection, resize, guide-set, and render-determinism tests before the old helper is removed
 - the footer row is intentionally the bottom terminal row of the full terminal frame, while the world itself occupies the `212x56` playfield above it; `footer_row(height)` encodes that contract

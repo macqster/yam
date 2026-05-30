@@ -1,14 +1,18 @@
 use crate::core::guide_line::{classify_line, LineFamily, LinePoint};
 #[cfg(test)]
 use crate::core::guide_line::{rasterize_line, soft_line_glyph};
-use crate::core::spatial::SpatialGuideIndex;
+use crate::core::spatial::{
+    SpatialGuideIndex, SpatialPoint as WorldPos, SpatialProjection, SpatialResolver,
+    SpatialScreenPoint as ScreenPos,
+};
 use crate::core::world::WorldState;
-use crate::core::{flora::BORDER_VINE_GUIDE_SET_LABEL, guide::GuideState};
+use crate::core::{
+    flora::BORDER_VINE_GUIDE_SET_LABEL, guide::GuideState, organism::OrganismFamily,
+};
 use crate::render::compositor::Cell;
 use crate::render::compositor::{write_ascii_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::guide::draw_guides;
-use crate::scene::coords::{project_world_to_screen, ScreenPos, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::{DebugPanelTab, UiState};
@@ -19,6 +23,37 @@ use ratatui::{
 };
 
 pub struct DebugLayer;
+
+#[derive(Copy, Clone)]
+struct DebugProjection {
+    resolver: SpatialResolver,
+}
+
+impl DebugProjection {
+    fn new(camera_x: i32, camera_y: i32, viewport_width: u16, viewport_height: u16) -> Self {
+        Self {
+            resolver: SpatialResolver::new(SpatialProjection::new(
+                camera_x,
+                camera_y,
+                viewport_width,
+                viewport_height,
+            )),
+        }
+    }
+
+    fn from_render_state(ctx: &RenderState) -> Self {
+        Self::new(
+            ctx.hud.camera.x,
+            ctx.hud.camera.y,
+            ctx.hud.camera.width,
+            ctx.hud.camera.height,
+        )
+    }
+
+    fn project(self, world: WorldPos) -> ScreenPos {
+        self.resolver.world_to_screen_point(world)
+    }
+}
 
 impl Layer for DebugLayer {
     fn z_index(&self) -> i32 {
@@ -47,6 +82,7 @@ impl Layer for DebugLayer {
         let panel_y = 2u16;
         let cam_x = ctx.hud.camera.x;
         let cam_y = ctx.hud.camera.y;
+        let projection = DebugProjection::from_render_state(ctx);
         let screen_w = grid.width as i32;
         let screen_h = grid.height as i32;
         // Datum-centered world-border probe:
@@ -56,12 +92,7 @@ impl Layer for DebugLayer {
         let hero = &ui.hero;
         let main_scene = world.kind.has_main_scene_composition();
         let hero_world = ctx.world.hero_world;
-        let hero_screen = project_world_to_screen(
-            ctx.world.hero_visual_anchor,
-            ctx.hud.camera.x,
-            ctx.hud.camera.y,
-            ctx.hud.camera.height,
-        );
+        let hero_screen = projection.project(ctx.world.hero_visual_anchor);
         let hero_visible = main_scene
             && hero_screen.x >= 0
             && hero_screen.y >= 0
@@ -71,12 +102,7 @@ impl Layer for DebugLayer {
             x: ui.offsets.pointer_x,
             y: ui.offsets.pointer_y,
         };
-        let pointer_screen = project_world_to_screen(
-            pointer_world,
-            ctx.hud.camera.x,
-            ctx.hud.camera.y,
-            ctx.hud.camera.height,
-        );
+        let pointer_screen = projection.project(pointer_world);
         let pointer_visible = ui.meta.pointer_probe_open
             && ui.pointer_blink_on
             && pointer_screen.x >= 0
@@ -104,7 +130,7 @@ impl Layer for DebugLayer {
             && date_screen.y >= 0
             && date_screen.x < grid.width as i32
             && date_screen.y < grid.height as i32;
-        let vine_count = world.flora.vines.len();
+        let vine_count = world.flora.family_count(OrganismFamily::Vine);
         let first_vine = world.flora.vines.first();
         let vine_line = if let Some(vine) = first_vine {
             let identity = vine.identity();
@@ -171,8 +197,8 @@ impl Layer for DebugLayer {
         let soft_band_line = {
             let probe_start = WorldPos { x: -28, y: 22 };
             let probe_end = WorldPos { x: 36, y: 12 };
-            let start = project_world_to_screen(probe_start, cam_x, cam_y, ctx.hud.camera.height);
-            let end = project_world_to_screen(probe_end, cam_x, cam_y, ctx.hud.camera.height);
+            let start = projection.project(probe_start);
+            let end = projection.project(probe_end);
             let key = classify_line(
                 LinePoint {
                     x: start.x,
@@ -246,37 +272,13 @@ impl Layer for DebugLayer {
             }
         }
         if ui.meta.world_frame_visible {
-            draw_world_frame(
-                grid,
-                border,
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-                screen_w,
-                screen_h,
-            );
+            draw_world_frame(grid, border, projection, screen_w, screen_h);
         }
         if ui.meta.world_axis_visible {
-            draw_world_axis(
-                grid,
-                border,
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-                screen_w,
-                screen_h,
-            );
+            draw_world_axis(grid, border, projection, screen_w, screen_h);
         }
         if ui.meta.world_datum_visible {
-            draw_world_datum(
-                grid,
-                border,
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-                screen_w,
-                screen_h,
-            );
+            draw_world_datum(grid, border, projection, screen_w, screen_h);
         }
         draw_pointer_probe(grid, pointer_screen, pointer_visible);
         None
@@ -512,9 +514,7 @@ fn debug_panel_lines(
 fn draw_world_frame(
     grid: &mut Grid,
     border: BorderProbeBounds,
-    cam_x: i32,
-    cam_y: i32,
-    viewport_height: u16,
+    projection: DebugProjection,
     screen_w: i32,
     screen_h: i32,
 ) {
@@ -524,102 +524,38 @@ fn draw_world_frame(
         } else {
             '-'
         };
-        draw_border_cell(
-            grid,
-            wx,
-            border.top,
-            ch,
-            cam_x,
-            cam_y,
-            viewport_height,
-            screen_w,
-            screen_h,
-        );
-        draw_border_cell(
-            grid,
-            wx,
-            border.bottom,
-            ch,
-            cam_x,
-            cam_y,
-            viewport_height,
-            screen_w,
-            screen_h,
-        );
+        draw_border_cell(grid, wx, border.top, ch, projection, screen_w, screen_h);
+        draw_border_cell(grid, wx, border.bottom, ch, projection, screen_w, screen_h);
     }
 
     for wy in border.bottom + 1..border.top {
-        draw_border_cell(
-            grid,
-            border.left,
-            wy,
-            '|',
-            cam_x,
-            cam_y,
-            viewport_height,
-            screen_w,
-            screen_h,
-        );
-        draw_border_cell(
-            grid,
-            border.right,
-            wy,
-            '|',
-            cam_x,
-            cam_y,
-            viewport_height,
-            screen_w,
-            screen_h,
-        );
+        draw_border_cell(grid, border.left, wy, '|', projection, screen_w, screen_h);
+        draw_border_cell(grid, border.right, wy, '|', projection, screen_w, screen_h);
     }
 }
 
 fn draw_world_axis(
     grid: &mut Grid,
     border: BorderProbeBounds,
-    cam_x: i32,
-    cam_y: i32,
-    viewport_height: u16,
+    projection: DebugProjection,
     screen_w: i32,
     screen_h: i32,
 ) {
     for wx in border.left..=border.right {
         let ch = if wx == border.mid_x { '+' } else { '-' };
-        draw_border_cell(
-            grid,
-            wx,
-            border.mid_y,
-            ch,
-            cam_x,
-            cam_y,
-            viewport_height,
-            screen_w,
-            screen_h,
-        );
+        draw_border_cell(grid, wx, border.mid_y, ch, projection, screen_w, screen_h);
     }
 
     for wy in border.bottom + 1..border.top {
         let ch = if wy == border.mid_y { '+' } else { '|' };
-        draw_border_cell(
-            grid,
-            border.mid_x,
-            wy,
-            ch,
-            cam_x,
-            cam_y,
-            viewport_height,
-            screen_w,
-            screen_h,
-        );
+        draw_border_cell(grid, border.mid_x, wy, ch, projection, screen_w, screen_h);
     }
 }
 
 fn draw_world_datum(
     grid: &mut Grid,
     border: BorderProbeBounds,
-    cam_x: i32,
-    cam_y: i32,
-    viewport_height: u16,
+    projection: DebugProjection,
     screen_w: i32,
     screen_h: i32,
 ) {
@@ -628,31 +564,26 @@ fn draw_world_datum(
         border.mid_x,
         border.mid_y,
         '+',
-        cam_x,
-        cam_y,
-        viewport_height,
+        projection,
         screen_w,
         screen_h,
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 fn draw_border_cell(
     grid: &mut Grid,
     wx: i32,
     wy: i32,
     ch: char,
-    cam_x: i32,
-    cam_y: i32,
-    viewport_height: u16,
+    projection: DebugProjection,
     screen_w: i32,
     screen_h: i32,
 ) {
-    let screen = project_world_to_screen(WorldPos { x: wx, y: wy }, cam_x, cam_y, viewport_height);
+    let screen = projection.project(WorldPos { x: wx, y: wy });
     if screen.x < 0 || screen.y < 0 || screen.x >= screen_w || screen.y >= screen_h {
         return;
     }
-    if let Some(cell) = grid.cell_mut(screen.x as u16, screen.y as u16) {
+    if let Some(cell) = cell_mut_screen(grid, screen) {
         cell.symbol = ch;
         cell.style = theme_style::guide_trace();
     }
@@ -662,10 +593,16 @@ fn draw_pointer_probe(grid: &mut Grid, pointer_screen: ScreenPos, visible: bool)
     if !visible {
         return;
     }
-    if let Some(cell) = grid.cell_mut(pointer_screen.x as u16, pointer_screen.y as u16) {
+    if let Some(cell) = cell_mut_screen(grid, pointer_screen) {
         cell.symbol = '+';
         cell.style = theme_style::pointer_probe();
     }
+}
+
+fn cell_mut_screen(grid: &mut Grid, screen: ScreenPos) -> Option<&mut Cell> {
+    let x = u16::try_from(screen.x).ok()?;
+    let y = u16::try_from(screen.y).ok()?;
+    grid.cell_mut(x, y)
 }
 
 #[cfg(test)]
@@ -677,8 +614,9 @@ fn draw_soft_probe_line(
     start: WorldPos,
     end: WorldPos,
 ) {
-    let start = project_world_to_screen(start, cam_x, cam_y, viewport_height);
-    let end = project_world_to_screen(end, cam_x, cam_y, viewport_height);
+    let projection = DebugProjection::new(cam_x, cam_y, 0, viewport_height);
+    let start = projection.project(start);
+    let end = projection.project(end);
     let start = LinePoint {
         x: start.x,
         y: start.y,
@@ -690,7 +628,13 @@ fn draw_soft_probe_line(
             continue;
         }
         let glyph = soft_line_glyph(start, end, step.step, step.steps);
-        if let Some(cell) = grid.cell_mut(step.point.x as u16, step.point.y as u16) {
+        if let Some(cell) = cell_mut_screen(
+            grid,
+            ScreenPos {
+                x: step.point.x,
+                y: step.point.y,
+            },
+        ) {
             cell.symbol = glyph;
             cell.style = theme_style::guide_trace();
         }
@@ -837,18 +781,27 @@ fn border_probe_bounds() -> BorderProbeBounds {
 mod tests {
     use super::{
         border_probe_bounds, draw_camera_scrollbars, draw_soft_probe_line, draw_world_axis,
-        draw_world_datum, draw_world_frame, scrollbar_position,
+        draw_world_datum, draw_world_frame, scrollbar_position, DebugProjection,
     };
     use crate::core::guide_line::{soft_line_glyph, LinePoint};
+    use crate::core::spatial::{SpatialPoint as WorldPos, SpatialScreenPoint as ScreenPos};
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::{project_world_to_screen, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};
     use crate::theme::palette;
     use crate::ui::state::DebugPanelTab;
     use ratatui::prelude::Rect;
+
+    fn project_test_world(
+        world: WorldPos,
+        camera_x: i32,
+        camera_y: i32,
+        viewport_height: u16,
+    ) -> ScreenPos {
+        DebugProjection::new(camera_x, camera_y, 0, viewport_height).project(world)
+    }
 
     fn world_frame() -> WorldFrame {
         WorldFrame {
@@ -940,9 +893,10 @@ mod tests {
     fn world_frame_and_axis_are_independent_debug_overlays() {
         let border = border_probe_bounds();
         let mut frame_grid = crate::render::compositor::Grid::new(212, 57);
-        draw_world_frame(&mut frame_grid, border, -106, -28, 56, 212, 57);
-        let center = project_world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
-        let top_center = project_world_to_screen(
+        let projection = DebugProjection::new(-106, -28, 212, 56);
+        draw_world_frame(&mut frame_grid, border, projection, 212, 57);
+        let center = project_test_world(WorldPos { x: 0, y: 0 }, -106, -28, 56);
+        let top_center = project_test_world(
             WorldPos {
                 x: 0,
                 y: border.top,
@@ -961,8 +915,8 @@ mod tests {
         );
 
         let mut axis_grid = crate::render::compositor::Grid::new(212, 57);
-        draw_world_axis(&mut axis_grid, border, -106, -28, 56, 212, 57);
-        let top_left = project_world_to_screen(
+        draw_world_axis(&mut axis_grid, border, projection, 212, 57);
+        let top_left = project_test_world(
             WorldPos {
                 x: border.left,
                 y: border.top,
@@ -984,16 +938,17 @@ mod tests {
     #[test]
     fn world_datum_is_independent_from_frame_and_axis() {
         let border = border_probe_bounds();
-        let center = project_world_to_screen(WorldPos { x: 0, y: 0 }, -106, -28, 56);
+        let center = project_test_world(WorldPos { x: 0, y: 0 }, -106, -28, 56);
         let mut datum_grid = crate::render::compositor::Grid::new(212, 57);
-        draw_world_datum(&mut datum_grid, border, -106, -28, 56, 212, 57);
+        let projection = DebugProjection::new(-106, -28, 212, 56);
+        draw_world_datum(&mut datum_grid, border, projection, 212, 57);
 
         assert_eq!(
             datum_grid.cells[datum_grid.index(center.x as u16, center.y as u16)].symbol,
             '+'
         );
 
-        let top_center = project_world_to_screen(
+        let top_center = project_test_world(
             WorldPos {
                 x: 0,
                 y: border.top,
@@ -1226,7 +1181,7 @@ mod tests {
         ui.offsets.pointer_y = 0;
 
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &ctx);
-        let pointer_screen = project_world_to_screen(
+        let pointer_screen = project_test_world(
             WorldPos { x: 0, y: 0 },
             ctx.hud.camera.x,
             ctx.hud.camera.y,
@@ -1298,8 +1253,8 @@ mod tests {
             -63,
             -17,
             32,
-            crate::scene::coords::WorldPos { x: -28, y: 22 },
-            crate::scene::coords::WorldPos { x: 36, y: 12 },
+            WorldPos { x: -28, y: 22 },
+            WorldPos { x: 36, y: 12 },
         );
 
         let visible = grid.cells.iter().any(|cell| cell.symbol != ' ');
@@ -1314,8 +1269,8 @@ mod tests {
             -63,
             -17,
             32,
-            crate::scene::coords::WorldPos { x: -28, y: 12 },
-            crate::scene::coords::WorldPos { x: 36, y: 22 },
+            WorldPos { x: -28, y: 12 },
+            WorldPos { x: 36, y: 22 },
         );
 
         let visible = grid.cells.iter().any(|cell| cell.symbol != ' ');

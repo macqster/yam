@@ -2,6 +2,7 @@ use crate::core::flora::{
     VineGrowthTipState, VineHealth, VineLifeState, VineSegment, BORDER_VINE_GROWTH_INTERVAL_TICKS,
     BORDER_VINE_MAX_SEGMENTS, BORDER_VINE_SEED_ID,
 };
+use crate::core::spatial::SpatialPoint as WorldPos;
 use crate::core::world::WorldState;
 
 /// Spawn new entities based on fields
@@ -52,7 +53,7 @@ pub fn run_growth(world: &mut WorldState) {
         return;
     }
 
-    let next_end = crate::scene::coords::WorldPos {
+    let next_end = WorldPos {
         x: tip.position.x + dx,
         y: tip.position.y + dy,
     };

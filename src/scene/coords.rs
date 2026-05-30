@@ -1,14 +1,8 @@
 pub use crate::core::spatial::{
     SpatialPoint as WorldPos, SpatialProjection as Projection, SpatialResolver,
+    SpatialScreenPoint as ScreenPos,
 };
 use crate::core::world::WorldState;
-
-#[allow(dead_code)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct ScreenPos {
-    pub x: i32,
-    pub y: i32,
-}
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
@@ -54,9 +48,12 @@ pub fn resolve_anchored_position(
     camera_y: i32,
     viewport_height: u16,
 ) -> ScreenPos {
-    let anchor = world.entity_world(id.0);
-    let resolved =
-        SpatialResolver::resolve_anchor_or_world(anchor, fallback_world, WorldPos { x: 0, y: 0 });
+    let resolved = SpatialResolver::resolve_indexed_anchor(
+        world,
+        id.0,
+        fallback_world,
+        WorldPos { x: 0, y: 0 },
+    );
     resolve_projected_position(resolved, camera_x, camera_y, viewport_height)
 }
 
@@ -108,12 +105,8 @@ pub fn project_world_to_screen(
     camera_y: i32,
     viewport_height: u16,
 ) -> ScreenPos {
-    let screen = SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
-        .world_to_screen(world);
-    ScreenPos {
-        x: screen.x,
-        y: screen.y,
-    }
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
+        .world_to_screen_point(world)
 }
 
 #[allow(dead_code)]
@@ -123,12 +116,8 @@ pub fn screen_to_world(
     camera_y: i32,
     viewport_height: u16,
 ) -> WorldPos {
-    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height)).screen_to_world(
-        WorldPos {
-            x: screen.x,
-            y: screen.y,
-        },
-    )
+    SpatialResolver::new(Projection::new(camera_x, camera_y, 0, viewport_height))
+        .screen_to_world_point(screen)
 }
 
 #[cfg(test)]

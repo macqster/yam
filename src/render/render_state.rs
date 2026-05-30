@@ -1,5 +1,7 @@
+use crate::core::spatial::{
+    SpatialPoint as WorldPos, SpatialProjection, SpatialResolver, SpatialScreenPoint as ScreenPos,
+};
 use crate::scene::camera::Camera;
-use crate::scene::coords::{project_world_to_screen, ScreenPos, WorldPos};
 use crate::scene::viewport::Viewport;
 use ratatui::prelude::Rect;
 
@@ -30,41 +32,34 @@ pub struct RenderState {
 
 impl RenderState {
     pub fn clock_screen(&self) -> ScreenPos {
-        project_world_to_screen(
-            self.world.clock_world,
-            self.hud.camera.x,
-            self.hud.camera.y,
-            self.hud.camera.height,
-        )
+        self.project_world(self.world.clock_world)
     }
 
     pub fn weather_screen(&self) -> ScreenPos {
-        project_world_to_screen(
-            self.world.weather_world,
-            self.hud.camera.x,
-            self.hud.camera.y,
-            self.hud.camera.height,
-        )
+        self.project_world(self.world.weather_world)
     }
 
     #[allow(dead_code)]
     pub fn date_screen(&self) -> ScreenPos {
-        project_world_to_screen(
-            self.world.date_world,
-            self.hud.camera.x,
-            self.hud.camera.y,
-            self.hud.camera.height,
-        )
+        self.project_world(self.world.date_world)
     }
 
     #[allow(dead_code)]
     pub fn calendar_screen(&self) -> ScreenPos {
-        project_world_to_screen(
-            self.world.calendar_world,
+        self.project_world(self.world.calendar_world)
+    }
+
+    fn project_world(&self, world: WorldPos) -> ScreenPos {
+        self.spatial_resolver().world_to_screen_point(world)
+    }
+
+    fn spatial_resolver(&self) -> SpatialResolver {
+        SpatialResolver::new(SpatialProjection::new(
             self.hud.camera.x,
             self.hud.camera.y,
+            self.hud.camera.width,
             self.hud.camera.height,
-        )
+        ))
     }
 }
 
@@ -72,6 +67,16 @@ impl RenderState {
 mod tests {
     use super::*;
     use crate::scene::viewport::Viewport;
+
+    fn expected_screen(world: WorldPos, camera: Camera) -> ScreenPos {
+        SpatialResolver::new(SpatialProjection::new(
+            camera.x,
+            camera.y,
+            camera.width,
+            camera.height,
+        ))
+        .world_to_screen_point(world)
+    }
 
     #[test]
     fn clock_screen_matches_the_shared_projection_helpers() {
@@ -101,12 +106,7 @@ mod tests {
         };
         let state = RenderState { world, hud };
 
-        let expected = project_world_to_screen(
-            state.world.clock_world,
-            state.hud.camera.x,
-            state.hud.camera.y,
-            state.hud.camera.height,
-        );
+        let expected = expected_screen(state.world.clock_world, state.hud.camera);
         let viewport = state
             .hud
             .viewport
@@ -154,12 +154,7 @@ mod tests {
         };
         let state = RenderState { world, hud };
 
-        let expected = project_world_to_screen(
-            state.world.weather_world,
-            state.hud.camera.x,
-            state.hud.camera.y,
-            state.hud.camera.height,
-        );
+        let expected = expected_screen(state.world.weather_world, state.hud.camera);
 
         assert_eq!(state.weather_screen(), expected);
     }
@@ -192,12 +187,7 @@ mod tests {
         };
         let state = RenderState { world, hud };
 
-        let hero_screen = project_world_to_screen(
-            state.world.hero_visual_anchor,
-            state.hud.camera.x,
-            state.hud.camera.y,
-            state.hud.camera.height,
-        );
+        let hero_screen = expected_screen(state.world.hero_visual_anchor, state.hud.camera);
         let clock_screen = state.clock_screen();
         let hero_view = state
             .hud
@@ -223,7 +213,16 @@ mod tests {
         );
         assert_eq!(
             clock_screen,
-            project_world_to_screen(state.world.clock_world, 30, 10, 32)
+            expected_screen(
+                state.world.clock_world,
+                Camera {
+                    x: 30,
+                    y: 10,
+                    width: 124,
+                    height: 32,
+                    follow_hero: false,
+                },
+            )
         );
     }
 
@@ -259,7 +258,7 @@ mod tests {
         assert_eq!(state.hud.camera.world_to_screen(1, 1), None);
         assert_eq!(
             state.clock_screen(),
-            project_world_to_screen(state.world.clock_world, 0, 0, 0)
+            expected_screen(state.world.clock_world, state.hud.camera)
         );
         assert_eq!(state.hud.viewport_rect.width, 0);
         assert_eq!(state.hud.viewport_rect.height, 0);

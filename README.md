@@ -207,6 +207,9 @@ Core boundaries:
 
 | Document | Role |
 | --- | --- |
+| [AGENTS.md](AGENTS.md) | Agent-facing operating guidance. |
+| [skills/yam-maintenance/SKILL.md](skills/yam-maintenance/SKILL.md) | Repo-local maintenance workflow skill. |
+| [skills/yam-architecture-review/SKILL.md](skills/yam-architecture-review/SKILL.md) | Repo-local architecture review workflow skill. |
 | [docs/README.md](docs/README.md) | Documentation index and routing map. |
 | [TODO.md](TODO.md) | Active execution backlog. |
 | [known_issues.md](known_issues.md) | Active unresolved issues only. |

@@ -1,21 +1,21 @@
 # Repo Audit
 
 Date: 2026-04-27
-Last reviewed: 2026-05-28
+Last reviewed: 2026-05-30
 
 ## Unresolved Risks
 
-- Highest-priority weak seam: the spatial relation layer is still the most structurally fragile area because anchor identity, projection typing, and guide relation ownership are still only partly unified.
+- Highest-priority weak seam: the spatial relation layer is still the most structurally fragile area because projection, guide relation ownership, and higher-level organism guidance are still only partly unified, even though entity-backed anchor lookup now routes through a core spatial trait.
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
-- The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora identity, world profile/population/storage, and docs/tooling readiness are prepared deliberately.
+- The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
 
 ## Weakest Areas
 
-1. Spatial relation layer: still the most fragile seam because the canonical resolver exists, but compatibility bridging and type boundaries remain only partly consolidated.
+1. Spatial relation layer: still the most fragile seam because the canonical resolver and anchor lookup trait exist, but compatibility bridging and higher-level relation ownership remain only partly consolidated.
 2. Hero-rendering pipeline: Chafa is stable, but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
-3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, and `core::organism` now provides the first shared identity/species-profile vocabulary, but the broader registry/journal machinery is still mostly ahead of implementation.
+3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, and `core::organism` now provides the first shared identity/species-registry/journal vocabulary, but broader multi-family storage and growth dispatch are still ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
 5. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
@@ -23,14 +23,14 @@ Last reviewed: 2026-05-28
 
 1. Prioritize overall stability and efficiency before adding new features.
 2. Keep hero GIF aesthetics held steady and defer large flora/world expansions until the system is prepared for them; conceptual prep is fine when it tightens the contracts.
-3. Prepare flora runtime development systematically around organism identity, species registry payloads, per-instance journals, and shared spatial guidance instead of adding another ad hoc plant family.
+3. Prepare flora runtime development systematically around organism identity, species registry payloads, per-instance journals, family-aware storage, and shared spatial guidance instead of adding another ad hoc plant family.
 4. Improve coherence and consistency across UI, theming, and docs.
 5. Keep `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite green together now that the broader stabilization pass is restored.
 
 ## Active Readiness Gates
 
 - The ownership contract lives in [`docs/vines.md`](vines.md) and should remain current before additional vine phases or new plant families begin.
-- Do not start broader flora feature work until the signed projection, anchor identity, and screen-attached invariance tests stay green together.
+- Do not start broader flora feature work until the signed projection, core-backed anchor identity, and screen-attached invariance tests stay green together.
 - Keep vines as world-attached organisms that query guide/spatial state; render layers should visualize resolved vine geometry rather than own vine state.
 - Keep vines independent of raster masks, filled sprites, or empty-cell masking until the mask contract is explicitly promoted.
 - Keep the current hero GIF aesthetics and footer contract stable while testing vine placement around them.
@@ -48,9 +48,9 @@ Last reviewed: 2026-05-28
   - evidence: `scripts/check-docs.sh`, `docs/hygiene.md`
 - `low` The direct terminal dependency is now aligned with the version already pulled through Ratatui, removing the previous duplicate `crossterm`/`mio` stack from this crate's dependency graph.
   - evidence: `Cargo.toml`, `Cargo.lock`
-- `low` Flora prep now has a small shared identity vocabulary before a second plant family exists: organism id, species id, journal id, lifecycle state, generic stats, organism identity, organism family, and the first border-vine species profile live in `core::organism` / `core::flora` without changing visible runtime behavior.
+- `low` Flora prep now has a small shared identity, registry, and journal vocabulary before a second plant family exists: organism id, species id, journal id, lifecycle state, generic stats, organism identity, organism family, species registry, per-instance journal events, and the first border-vine species profile live in `core::organism` / `core::flora` without changing visible runtime behavior.
   - evidence: `src/core/organism.rs`, `src/core/flora.rs`
-- `low` World switching is no longer only a binary UI-local toggle: selectable worlds, transition labels, titles, and coarse composition profiles now live on `WorldKind`, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world-selection/profile contract.
+- `low` World switching is no longer only a binary UI-local toggle: selectable worlds, transition labels, titles, coarse composition, grid, camera defaults, guide plans, population plans, and capabilities now live on `WorldKind`, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world-selection/profile contract.
   - evidence: `src/core/world.rs`, `src/ui/state.rs`
 - `low` The repo front door is less likely to drift into broken preview/media references again: the missing `docs/assets/...` README placeholders were removed, and `scripts/check-docs.sh` now fails if `README.md` references a local asset path that does not exist.
   - evidence: `README.md`, `scripts/check-docs.sh`, `docs/hygiene.md`
@@ -76,15 +76,17 @@ Last reviewed: 2026-05-28
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
 - `medium` The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.
   - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
-- `medium` Flora state remains vine-shaped in storage and growth dispatch even though the shared identity vocabulary now exists; the next implementation step should decide whether multi-family storage is an organism registry, an enum-backed family store, or a different small structure before another plant family or greenhouse population lands.
+- `low` The core/systems/spatial-compatibility ownership boundary is less likely to regress during spatial migration: `src/core/flora.rs`, `src/core/world.rs`, `src/render/render_state.rs`, `src/ui/state.rs`, and `src/systems/growth.rs` now use spatial vocabulary from `core::spatial` rather than scene compatibility aliases, and `scripts/check.sh` fails if `src/core` imports `crate::scene::`, if `src/systems` imports scene, render, UI, or terminal modules, or if `crate::scene::coords` is imported outside `src/scene/coords.rs`.
+  - evidence: `src/core/flora.rs`, `src/core/world.rs`, `src/render/render_state.rs`, `src/ui/state.rs`, `src/systems/growth.rs`, `scripts/check.sh`
+- `medium` Flora state remains vine-shaped in storage and growth dispatch even though shared identity, registry, journal, family-count, and organism-identity adapters now exist; the next implementation step should decide whether multi-family storage is an organism registry, an enum-backed family store, or a different small structure before another plant family or greenhouse population lands.
   - evidence: `src/core/organism.rs`, `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
-- `low` World selection now has an explicit core contract for the current selectable worlds plus their coarse composition profiles, and main-scene-only render/UI branches use that profile instead of matching every current world by hand. Greenhouse should still wait for a fuller world-population/storage contract covering initialization, overlays, camera defaults, flora population, guide sets, and debug surfaces.
+- `low` World selection now has an explicit core contract for the current selectable worlds plus profile-owned composition, grid, camera defaults, guide plans, population plans, and capabilities. Greenhouse should still wait for room/environment ownership, inspection modes, and richer population/storage rules rather than adding a world enum variant alone.
   - evidence: `src/core/world.rs`, `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/weather_layer.rs`
-- `low` Active render projections and the compatibility element resolver now return signed `ScreenPos` values through `project_world_to_screen(...)` / `resolve_element_screen_position(...)`, including `RenderState` companion helpers, hero rendering, guide drawing, vine rendering, and the debug projection bundle. The old world-shaped screen wrappers have been removed from `scene::coords`; the remaining spatial prep issue is moving entity-backed anchoring out of the compatibility layer and toward `core::spatial`.
+- `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
   - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.
   - evidence: `src/render/chafa.rs`, `docs/rendering.md`, `docs/architecture.md`, `docs/LOG.md`
-- `low` `Space::Anchor(EntityId)` now has a world-aware resolution path in `scene/coords.rs`, but the broader spatial layer is still on compatibility shims and the rest of the callers have not been migrated to the entity-backed helper yet.
+- `low` `Space::Anchor(EntityId)` now has a core-backed lookup path through `SpatialAnchorLookup`, but the broader spatial layer is still on compatibility shims and the rest of the callers have not been migrated to entity-backed relation helpers yet.
   - evidence: `src/scene/coords.rs`, `src/core/world.rs`, `src/scene/entity.rs`, `src/ui/state.rs`
 - `low` A recent footer visual check exposed a stale-binary risk pattern: `yam-install` can complete while `yam-rust --version` still reports an older build stamp, so screenshot comparisons should verify the installed runtime identity before treating the output as the current source of truth.
   - evidence: `yam-rust --version`, `docs/LOG.md`, `docs/config.md`, `README.md`

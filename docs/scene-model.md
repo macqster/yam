@@ -41,8 +41,8 @@ The next large feature families are main-scene enrichment and the greenhouse eco
 Both should be prepared through shared contracts before they become visible runtime content:
 
 - new world-attached objects must enter through the world/spatial/layer pipeline
-- new plant organisms must reuse the `core::organism` identity and species-profile vocabulary rather than inventing a one-family data path
-- greenhouse rooms must be worlds or rooms inside the world model, selected and described through the core `WorldKind::profile()` contract rather than dashboard panels
+- new plant organisms must reuse the `core::organism` identity, species-registry, and journal vocabulary rather than inventing a one-family data path
+- greenhouse rooms must be worlds or rooms inside the world model, selected and described through the core `WorldKind::profile()` contract and its grid, camera, guide, population, and capability fields rather than dashboard panels
 - debug, inspect, and authoring tools may expose the prep work, but they must not become hidden owners of simulation state
 - conceptual prep work is useful when it clarifies data ownership, spatial relations, lifecycle vocabulary, tests, or docs before implementation
 
@@ -73,21 +73,21 @@ Rules:
 - the pointer probe is the practical authoring aid for linework: it should be usable to record precise coordinates for guides, points, and masks while the guide system remains world-attached and queryable; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
 - the intended end-state is a single spatial relation graph that can express absolute datum guides, relative anchors, masks, and organism guidance paths for growth, movement, and lifecycle state without duplicating attachment math across systems
 - the smallest canonical spatial layer should start with datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers; masks and organism guidance can remain layered concerns until the base relation layer is proven
-- the first canonical spatial API surface stays narrow: `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
-- the compatibility layer in `scene/coords.rs` now exposes signed `ScreenPos`, `project_world_to_screen(...)`, and `resolve_element_screen_position(...)` for active render projection and compatibility element projection, including central companion projection plus hero, guide, vine, and debug rendering
-- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `WorldState` when an entity is present, so anchor identity is partly real in the live path even though the spatial layer still has legacy seams
-- that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move entity-backed relation logic fully into `core/spatial`
+- the first canonical spatial API surface stays narrow: `SpatialPoint`, signed `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, `SpatialAnchorLookup`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
+- the compatibility layer in `scene/coords.rs` now re-exports `SpatialScreenPoint` as signed `ScreenPos` and exposes `project_world_to_screen(...)` plus `resolve_element_screen_position(...)` for remaining compatibility element projection paths; `crate::scene::coords` imports are guarded so new call sites stay inside that module, and central companion, hero, debug, guide, and vine rendering project through `core::spatial` directly
+- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `core::spatial::SpatialAnchorLookup` when an entity is present, so anchor identity no longer belongs to scene projection code even though the spatial layer still has legacy seams
+- that projected anchor lookup is still a compatibility path; the long-term goal remains to move more entity-backed relation callers fully into `core/spatial`
 - the likely module mapping is:
-  - `scene/coords.rs` for point and projection primitives
-  - `scene/entity.rs` for attachment composition
+  - `scene/coords.rs` for compatibility projection helpers and transitional type names
+  - `scene/entity.rs` for simple attachment composition backed by `core::spatial`
   - `core/guide.rs` for the guide index and guide-set storage
-  - `render/guide.rs` for render-only guide visualization
+  - `render/guide.rs` for render-only guide visualization backed by `core::spatial`
   - `core/spatial` for the shared resolver layer that already exists as the first cut
 - the safest migration order is:
   1. add the new shared spatial types without changing visible output
   2. move projection and attachment math behind the new resolver
   3. update guide lookup consumers to the guide index abstraction
-  4. reroute guide rendering through the new projection helpers
+  4. keep guide rendering on the core spatial projection helpers
   5. remove old paths only after the projection, guide, and render tests still pass
 - the spatial model should lean on Cartesian and Euclidean logic where possible, because signed axes, centered datum math, and direct distance reasoning make world authoring and placement easier to reason about
 - the plant-side morphology model should stay graph-based and segment-based: plants are growth programs that emit geometry, built from repeating metamers under meristem-driven rules rather than from one universal vine-shaped template
@@ -101,9 +101,9 @@ Rules:
 - a minimal lifecycle update loop can stay equally small: `Seed -> Growth -> Mature -> Senescent -> Decay`, with active meristems driving growth steps, species rules choosing new metamers or organs, and geometry being regenerated from state each tick
 - organ state should remain explicit and inspectable: buds, leaves, flowers, and fruit can each progress through `bud -> growing -> mature -> aging -> dead` without requiring the whole plant to collapse into a single global state
 - the greenhouse/lab space should be the place where lifecycle tuning becomes visible, while the main scene can keep the current prototypes comparatively static and readable
-- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; a species registry or database layer should hold species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
+- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; the current in-memory `SpeciesRegistry` is only the first seam for species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
 - the species registry should be read-heavy and simulation-friendly: it can store canonical species metadata, but per-plant runtime state stays with the living organism instance in `WorldState` or its flora subsystem
-- each life-form should also have a dedicated log-journal so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
+- each life-form should also have a dedicated `OrganismJournal` so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
 - a life-form journal should stay compact and event-oriented: lifecycle transitions, growth steps, organ births/removals, environment influences, damage/pruning, and debug annotations are the highest-value entries
 - the journal should be human-readable first and machine-friendly second, so greenhouse inspection can scan it quickly without losing deterministic simulation detail
 - the species registry payload should stay compact and reusable: species id/name, morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels are the highest-value fields

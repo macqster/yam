@@ -9,8 +9,8 @@ pub struct SpatialPoint {
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct SpatialScreenPoint {
-    pub x: u16,
-    pub y: u16,
+    pub x: i32,
+    pub y: i32,
 }
 
 #[allow(dead_code)]
@@ -44,6 +44,10 @@ pub struct SpatialResolver {
 #[derive(Clone, Copy, Debug)]
 pub struct SpatialGuideIndex<'a> {
     pub guides: &'a GuideState,
+}
+
+pub trait SpatialAnchorLookup {
+    fn anchor_world(&self, id: u32) -> Option<SpatialPoint>;
 }
 
 #[allow(dead_code)]
@@ -110,6 +114,15 @@ impl SpatialResolver {
             .unwrap_or(fallback_world)
     }
 
+    pub fn resolve_indexed_anchor(
+        lookup: &impl SpatialAnchorLookup,
+        id: u32,
+        fallback_world: SpatialPoint,
+        offset: SpatialPoint,
+    ) -> SpatialPoint {
+        Self::resolve_anchor_or_world(lookup.anchor_world(id), fallback_world, offset)
+    }
+
     pub fn world_to_screen(&self, world: SpatialPoint) -> SpatialPoint {
         let top = self.projection.camera_y + self.projection.height as i32 - 1;
         SpatialPoint {
@@ -121,8 +134,8 @@ impl SpatialResolver {
     pub fn world_to_screen_point(&self, world: SpatialPoint) -> SpatialScreenPoint {
         let screen = self.world_to_screen(world);
         SpatialScreenPoint {
-            x: screen.x as u16,
-            y: screen.y as u16,
+            x: screen.x,
+            y: screen.y,
         }
     }
 
@@ -137,15 +150,15 @@ impl SpatialResolver {
     pub fn screen_to_world_point(&self, screen: SpatialScreenPoint) -> SpatialPoint {
         let top = self.projection.camera_y + self.projection.height as i32 - 1;
         SpatialPoint {
-            x: screen.x as i32 + self.projection.camera_x,
-            y: top - screen.y as i32,
+            x: screen.x + self.projection.camera_x,
+            y: top - screen.y,
         }
     }
 
     pub fn screen_point(&self, screen_x: i32, screen_y: i32) -> SpatialScreenPoint {
         SpatialScreenPoint {
-            x: screen_x.max(0) as u16,
-            y: screen_y.max(0) as u16,
+            x: screen_x,
+            y: screen_y,
         }
     }
 }
@@ -169,6 +182,17 @@ impl<'a> SpatialGuideIndex<'a> {
 mod tests {
     use super::*;
     use crate::core::guide::{Guide, GuideKind, GuidePoint, GuideShape, GuideStyle};
+
+    struct FixtureAnchors {
+        id: u32,
+        point: SpatialPoint,
+    }
+
+    impl SpatialAnchorLookup for FixtureAnchors {
+        fn anchor_world(&self, id: u32) -> Option<SpatialPoint> {
+            (id == self.id).then_some(self.point)
+        }
+    }
 
     #[test]
     fn attachment_resolves_through_shared_resolver() {
@@ -197,6 +221,20 @@ mod tests {
     }
 
     #[test]
+    fn screen_points_preserve_signed_offscreen_projection() {
+        let resolver = SpatialResolver::new(SpatialProjection::new(30, 10, 124, 32));
+        let world = SpatialPoint::new(20, 50);
+        let screen = resolver.world_to_screen_point(world);
+
+        assert_eq!(screen, SpatialScreenPoint { x: -10, y: -9 });
+        assert_eq!(resolver.screen_to_world_point(screen), world);
+        assert_eq!(
+            resolver.screen_point(-4, -2),
+            SpatialScreenPoint { x: -4, y: -2 }
+        );
+    }
+
+    #[test]
     fn guide_index_can_access_named_sets() {
         let mut guides = GuideState::new();
         guides.guides.push(Guide {
@@ -216,5 +254,29 @@ mod tests {
         guides.add_set(GuideSet::new("world-anchors", vec![1]));
         let index = SpatialGuideIndex::new(&guides);
         assert!(index.guide_set("world-anchors").is_some());
+    }
+
+    #[test]
+    fn indexed_anchor_resolution_uses_lookup_before_fallback() {
+        let anchors = FixtureAnchors {
+            id: 7,
+            point: SpatialPoint::new(150, 60),
+        };
+
+        let resolved = SpatialResolver::resolve_indexed_anchor(
+            &anchors,
+            7,
+            SpatialPoint::new(-999, -999),
+            SpatialPoint::new(4, -2),
+        );
+        let fallback = SpatialResolver::resolve_indexed_anchor(
+            &anchors,
+            8,
+            SpatialPoint::new(-10, 5),
+            SpatialPoint::new(4, -2),
+        );
+
+        assert_eq!(resolved, SpatialPoint::new(154, 58));
+        assert_eq!(fallback, SpatialPoint::new(-10, 5));
     }
 }

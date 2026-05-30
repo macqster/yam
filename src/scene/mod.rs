@@ -264,11 +264,11 @@ fn clamp_axis_to_world_overscan(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::spatial::{SpatialProjection, SpatialResolver};
     use crate::core::world::WorldState;
     use crate::render::compositor::Grid;
     use crate::render::fonts::FontRegistry;
     use crate::render::mask::Mask;
-    use crate::scene::coords::project_world_to_screen;
     use crate::ui::state::UiState;
     use ratatui::backend::TestBackend;
     use ratatui::prelude::Rect;
@@ -748,12 +748,13 @@ mod tests {
 
         let windowed = Rect::new(0, 0, 132, 36);
         let state = build_render_state(windowed, &ui);
-        let expected = project_world_to_screen(
-            state.world.clock_world,
+        let expected = SpatialResolver::new(SpatialProjection::new(
             state.hud.camera.x,
             state.hud.camera.y,
+            state.hud.camera.width,
             state.hud.camera.height,
-        );
+        ))
+        .world_to_screen_point(state.world.clock_world);
 
         assert_eq!(state.clock_screen(), expected);
         assert_ne!(

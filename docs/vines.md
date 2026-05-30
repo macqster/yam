@@ -6,8 +6,8 @@ It is intentionally not an implementation plan for the full multi-species flora 
 ## Current Status
 
 - Vine phases 1 through 7 are live in the runtime: storage, deterministic seed, guide lookup, static axis derivation, read-only rendering, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are implemented.
-- Vine phases 8 and 9 remain deferred until the pre-expansion architecture batch prepares shared organism identity, species registry vocabulary, world switching, and spatial consolidation.
-- `core::organism` now owns the first shared organism identity vocabulary, and the current border vine exposes the first species-profile shaped payload without becoming a full registry yet.
+- Vine phases 8 and 9 remain deferred until the pre-expansion architecture batch finishes shared organism identity, species registry/journal vocabulary, world switching, and spatial consolidation.
+- `core::organism` now owns the first shared organism identity vocabulary, an in-memory species registry skeleton, and a per-instance journal skeleton. The current border vine exposes the first species-profile shaped payload through that registry seam without adding a second plant family yet.
 - Hero GIF aesthetics are frozen for now; vine work must not require changing the active hero appearance.
 - The scaffold, guides, and pointer probe can prepare future vine placement, branching, boundary, and organ work, but they should not bypass the world-owned flora state.
 - Vines are one flora family, not a special-case renderer.
@@ -17,7 +17,7 @@ It is intentionally not an implementation plan for the full multi-species flora 
 | Concern | Owner | Rule |
 | --- | --- | --- |
 | Vine instance state | future world/flora state | stores life state, axes, growth progress, and per-organism journal identity |
-| Species defaults | `core::organism::SpeciesProfile` now, future species registry later | stores reusable vine traits, not per-instance history |
+| Species defaults | `core::organism::SpeciesProfile` plus the in-memory `SpeciesRegistry` seam | stores reusable vine traits, not per-instance history |
 | Guide geometry | `core::guide::GuideState` | stores labeled points, lines, polylines, outlines, and guide sets |
 | Spatial resolution | `core::spatial` plus the active compatibility helpers | resolves world points, anchors, guide lookup, and screen projection |
 | Rendering | scene/render layers | visualizes already-resolved vine geometry; does not own vine state |
@@ -55,7 +55,7 @@ This shape is a contract sketch, not a demand to introduce these Rust types imme
 - A future vine render layer may draw stems, branchlets, leaves, flowers, fruit, and particles.
 - That layer must receive resolved geometry from vine/world/spatial state.
 - The render layer must not be the source of truth for growth, attachment, guide following, or lifecycle state.
-- The same projection path used by hero, clock, and guides must be reused for vine world placement.
+- Vine world placement must stay on the shared spatial projection path; the active render layer projects vine stems and organs through `core::spatial::SpatialResolver`.
 
 ## Readiness Tests
 
@@ -398,8 +398,8 @@ Projection note as of 2026-05-05:
   pointer probes, and camera motion
 - vines should remain clients of the shared drawing engine: stem/path raster
   policy now lives in `render/drawing.rs`, so future anatomy work can build on
-  shared stroke, stamp, and occupancy primitives instead of accumulating
-  vines-only cell-writing logic
+  shared stroke, stamp, checked signed-to-grid conversion, and occupancy
+  primitives instead of accumulating vines-only cell-writing logic
 
 ### Phase 8: Branching And Organs
 

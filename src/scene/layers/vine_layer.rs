@@ -1,10 +1,12 @@
 use crate::core::flora::{VineHealth, VineOrgan, VineOrganKind, VineThicknessClass};
 use crate::core::guide_line::LinePoint;
+use crate::core::spatial::{
+    SpatialPoint as WorldPos, SpatialProjection, SpatialResolver, SpatialScreenPoint,
+};
 use crate::core::world::WorldState;
 use crate::render::compositor::Grid;
 use crate::render::drawing::{stamp_glyph, stroke_path, Brush, GlyphStamp, StrokeWeight};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::{project_world_to_screen, WorldPos};
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -13,9 +15,24 @@ pub struct VineLayer;
 
 #[derive(Copy, Clone)]
 struct VineProjection {
-    camera_x: i32,
-    camera_y: i32,
-    viewport_height: u16,
+    resolver: SpatialResolver,
+}
+
+impl VineProjection {
+    fn new(camera_x: i32, camera_y: i32, viewport_height: u16) -> Self {
+        Self {
+            resolver: SpatialResolver::new(SpatialProjection::new(
+                camera_x,
+                camera_y,
+                0,
+                viewport_height,
+            )),
+        }
+    }
+
+    fn project(self, point: WorldPos) -> SpatialScreenPoint {
+        self.resolver.world_to_screen_point(point)
+    }
 }
 
 impl Layer for VineLayer {
@@ -31,14 +48,11 @@ impl Layer for VineLayer {
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
-        if !ui.meta.vines_visible {
+        if !world.kind.has_flora_runtime() || !ui.meta.vines_visible {
             return None;
         }
-        let projection = VineProjection {
-            camera_x: ctx.hud.camera.x,
-            camera_y: ctx.hud.camera.y,
-            viewport_height: ctx.hud.camera.height,
-        };
+        let projection =
+            VineProjection::new(ctx.hud.camera.x, ctx.hud.camera.y, ctx.hud.camera.height);
         for vine in &world.flora.vines {
             for axis in &vine.axes {
                 for segment in &axis.segments {
@@ -84,18 +98,8 @@ fn draw_segment(
     shadow: bool,
     projection: VineProjection,
 ) {
-    let start = project_world_to_screen(
-        start,
-        projection.camera_x,
-        projection.camera_y,
-        projection.viewport_height,
-    );
-    let end = project_world_to_screen(
-        end,
-        projection.camera_x,
-        projection.camera_y,
-        projection.viewport_height,
-    );
+    let start = projection.project(start);
+    let end = projection.project(end);
     stroke_path(
         grid,
         None,
@@ -122,12 +126,7 @@ fn draw_segment(
 }
 
 fn draw_organ(grid: &mut Grid, organ: &VineOrgan, shadow: bool, projection: VineProjection) {
-    let screen = project_world_to_screen(
-        organ.position,
-        projection.camera_x,
-        projection.camera_y,
-        projection.viewport_height,
-    );
+    let screen = projection.project(organ.position);
     stamp_glyph(
         grid,
         None,
@@ -161,11 +160,11 @@ fn draw_organ(grid: &mut Grid, organ: &VineOrgan, shadow: bool, projection: Vine
 
 #[cfg(test)]
 mod tests {
+    use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;

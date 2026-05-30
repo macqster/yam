@@ -1,0 +1,4 @@
+interface:
+  display_name: "YAM Architecture Review"
+  short_description: "Review YAM architecture before expansion"
+  default_prompt: "Use $yam-architecture-review to assess YAM before greenhouse work."

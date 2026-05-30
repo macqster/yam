@@ -1,4 +1,4 @@
-use crate::scene::coords::{anchor_to_world, WorldPos};
+use crate::core::spatial::{SpatialPoint as WorldPos, SpatialResolver};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct EntityPose {
@@ -12,7 +12,7 @@ impl EntityPose {
     }
 
     pub fn anchor_world(&self) -> WorldPos {
-        anchor_to_world(self.world, self.offset)
+        SpatialResolver::resolve_anchor(self.world, self.offset)
     }
 }
 
@@ -32,7 +32,7 @@ impl AttachedEntityPose {
     }
 
     pub fn world(&self) -> WorldPos {
-        anchor_to_world(self.anchor, self.offset)
+        SpatialResolver::resolve_anchor(self.anchor, self.offset)
     }
 }
 

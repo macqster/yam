@@ -3,10 +3,9 @@ use crate::core::guide::{
 };
 use crate::core::organism::{
     JournalId, OrganismFamily, OrganismId, OrganismIdentity, OrganismLifeState, OrganismStats,
-    SpeciesId, SpeciesProfile,
+    SpeciesId, SpeciesProfile, SpeciesRegistry,
 };
-use crate::core::spatial::SpatialGuideIndex;
-use crate::scene::coords::WorldPos;
+use crate::core::spatial::{SpatialGuideIndex, SpatialPoint as WorldPos};
 
 pub type VineLifeState = OrganismLifeState;
 
@@ -124,6 +123,13 @@ pub struct FloraState {
     pub vines: Vec<VineInstance>,
 }
 
+#[allow(dead_code)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FloraFamilySummary {
+    pub family: OrganismFamily,
+    pub count: usize,
+}
+
 pub const BORDER_VINE_SEED_ID: u32 = 1;
 pub const BORDER_VINE_ORGANISM_ID: OrganismId = OrganismId::new(BORDER_VINE_SEED_ID);
 pub const BORDER_VINE_SEED_AXIS_ID: u32 = 1;
@@ -180,6 +186,11 @@ pub fn border_vine_species_profile() -> SpeciesProfile {
         ],
         debug_label: "border vine".to_string(),
     }
+}
+
+#[allow(dead_code)]
+pub fn border_vine_species_registry() -> SpeciesRegistry {
+    SpeciesRegistry::with_profiles(vec![border_vine_species_profile()])
 }
 
 #[allow(dead_code)]
@@ -396,6 +407,31 @@ impl FloraState {
             vines: vec![border_vine_seed()],
         }
     }
+
+    #[allow(dead_code)]
+    pub fn organism_count(&self) -> usize {
+        self.vines.len()
+    }
+
+    #[allow(dead_code)]
+    pub fn family_count(&self, family: OrganismFamily) -> usize {
+        match family {
+            OrganismFamily::Vine => self.vines.len(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn family_summary(&self) -> Vec<FloraFamilySummary> {
+        vec![FloraFamilySummary {
+            family: OrganismFamily::Vine,
+            count: self.vines.len(),
+        }]
+    }
+
+    #[allow(dead_code)]
+    pub fn organism_identities(&self) -> Vec<OrganismIdentity> {
+        self.vines.iter().map(VineInstance::identity).collect()
+    }
 }
 
 #[cfg(test)]
@@ -503,11 +539,43 @@ mod tests {
     }
 
     #[test]
+    fn border_vine_species_registry_exposes_the_seed_profile() {
+        let registry = border_vine_species_registry();
+
+        let profile = registry
+            .profile(&SpeciesId::new(BORDER_VINE_SPECIES_ID))
+            .expect("border vine profile");
+
+        assert_eq!(registry.len(), 1);
+        assert_eq!(profile.family, OrganismFamily::Vine);
+        assert_eq!(profile.debug_label, "border vine");
+    }
+
+    #[test]
     fn seeded_flora_starts_with_exactly_one_border_vine() {
         let flora = FloraState::with_border_vine_seed();
 
         assert_eq!(flora.vines.len(), 1);
         assert_eq!(flora.vines[0], border_vine_seed());
+    }
+
+    #[test]
+    fn flora_state_reports_family_counts_and_organism_identities() {
+        let flora = FloraState::with_border_vine_seed();
+
+        assert_eq!(flora.organism_count(), 1);
+        assert_eq!(flora.family_count(OrganismFamily::Vine), 1);
+        assert_eq!(
+            flora.family_summary(),
+            vec![FloraFamilySummary {
+                family: OrganismFamily::Vine,
+                count: 1,
+            }]
+        );
+        assert_eq!(
+            flora.organism_identities(),
+            vec![border_vine_seed().identity()]
+        );
     }
 
     #[test]

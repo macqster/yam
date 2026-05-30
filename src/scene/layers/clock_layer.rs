@@ -1,8 +1,8 @@
+use crate::core::spatial::SpatialScreenPoint as ScreenPos;
 use crate::core::world::WorldState;
 use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
-use crate::scene::coords::ScreenPos;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
@@ -71,12 +71,12 @@ fn is_visible(pos: ScreenPos, viewport_width: u16, viewport_height: u16, lines: 
 #[cfg(test)]
 mod tests {
     use super::is_visible;
+    use crate::core::spatial::{SpatialPoint as WorldPos, SpatialScreenPoint as ScreenPos};
     use crate::core::world::WorldState;
     use crate::render::compositor::merge_grid;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::{ScreenPos, WorldPos};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::theme::style as theme_style;

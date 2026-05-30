@@ -25,16 +25,20 @@ Issue link rule:
 - `verify` keep `scripts/verify.sh` green for every maintenance handoff.
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
 - `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
-- `verify` treat `core::organism` as the first shared flora identity vocabulary; keep it small until another plant family or greenhouse population proves the next field is needed.
-- `verify` treat `WorldKind::profile()`, `WorldKind::SELECTABLE`, and `WorldKind::loading_label()` as the current world-selection/profile contract; keep `Boot` non-selectable and route future greenhouse/lab worlds through this seam.
+- `verify` treat `core::organism` as the first shared flora identity vocabulary plus the first in-memory `SpeciesRegistry` / `OrganismJournal` skeleton; keep it small until another plant family or greenhouse population proves the next field is needed.
+- `verify` treat `WorldKind::profile()`, `WorldKind::SELECTABLE`, and `WorldKind::loading_label()` as the current world-selection/profile contract; profile-owned grid, camera, guide plan, population plan, and capabilities now route future greenhouse/lab worlds through this seam while `Boot` stays non-selectable.
 
 ## 1. Spatial Relation Layer
 
 - `refactor` make `core::spatial` the canonical resolver for projection, attachments, guide lookup, and future organism guidance.
 - `refactor` reduce `scene::coords` toward a compatibility facade rather than a second conceptual owner of projection semantics.
+- `verify` entity-backed anchor resolution routes through `core::spatial::SpatialAnchorLookup` before the scene compatibility layer projects it.
 - `verify` world-space, screen-space, and anchor-space remain distinct in type names, helper names, tests, and docs.
 - `verify` projection remains singular and uses the same signed world-to-screen transform for hero, companions, guides, vines, and future plant geometry.
-- `verify` keep projected screen positions typed as signed `ScreenPos`: active render projections and the compatibility element resolver now return `ScreenPos` through `project_world_to_screen(...)` / `resolve_element_screen_position(...)`.
+- `verify` keep projected screen positions typed as signed screen-space values: `RenderState` companion helpers, hero rendering, debug rendering, guide rendering, and vine rendering now consume `core::spatial` directly, while compatibility element projection still returns `scene::coords::ScreenPos` through compatibility helpers.
+- `verify` keep `scene::coords` compatibility imports isolated inside `scene/coords.rs`; `scripts/check.sh` guards against new `crate::scene::coords` call sites outside the compatibility module.
+- `verify` guide rendering consumes `core::spatial::SpatialGuideIndex` and `SpatialResolver` directly instead of projecting through the scene compatibility facade.
+- `verify` vine rendering consumes `core::spatial::SpatialResolver` directly and keeps shared drawing writes on checked signed-to-grid conversion.
 - `verify` resize, camera movement, anchor resolution, and rounding/jitter coverage stays tight before adding new world-attached renderables.
 - `verify` guides remain semantic world-space linework and are not reinterpreted from rendered pixels.
 
@@ -42,18 +46,18 @@ Issue link rule:
 
 - `refactor` split vine-specific types and helpers out of the broad `core::flora` surface once a second organism family is close enough to need shared vocabulary.
 - `verify` preserve the shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, and the first species-profile shape.
-- `inspect` decide where species profiles should live once there is more than the border-vine profile: static Rust fixtures, structured data files, or a small registry loader.
-- `verify` do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store.
+- `inspect` decide where species profiles should be loaded from once there is more than the in-memory border-vine `SpeciesRegistry` profile: static Rust fixtures, structured data files, or a small registry loader.
+- `verify` preserve `FloraState` family-count and organism-identity adapters; do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store.
 - `refactor` move the current border-vine growth rule away from one hard-coded seed branch before adding another plant growth rule.
 - `verify` render layers stay read-only and visualize geometry derived from world/flora/spatial state.
-- `verify` organism journals remain per-instance event logs; species registries must not store runtime life history.
+- `verify` `OrganismJournal` remains a per-instance event log; `SpeciesRegistry` must not store runtime life history.
 - `inspect` keep botanical terminology grounded through `docs/glossary.md`; reserve `node` for plant morphology/anatomy unless the spatial terminology contract changes.
 
 ## 3. World Modes And Greenhouse Prep
 
-- `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, and coarse composition live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
+- `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
 - `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
-- `inspect` define what each future world owns before implementation beyond the current coarse `WorldComposition`: initialization, available overlays, camera defaults, flora population, guide sets, and debug surfaces.
+- `inspect` define what each future world owns before implementation beyond the current profile fields: room model, environment parameters, organism population rules, inspection modes, and debug surfaces.
 - `verify` greenhouse remains a separate simulation world, not panel chrome layered on top of the main scene.
 - `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.
 - `inspect` decide whether greenhouse inspection needs a dedicated registry/journal mode or lightweight per-organism popups before building either surface.
@@ -90,6 +94,8 @@ Issue link rule:
 ## 7. Docs, Tooling, And Release Hygiene
 
 - `verify` `scripts/check-docs.sh` covers the live root/front-door docs and first-level `docs/*.md` contract surface, not only the oldest core contract subset.
+- `verify` keep `AGENTS.md` short, procedural, and pointer-heavy; do not let it duplicate architecture contracts or active backlog content.
+- `verify` keep repo-local `skills/*/SKILL.md` files short and procedural with matching `agents/openai.yaml` metadata; their names, frontmatter descriptions, and interface metadata must pass `scripts/check-docs.sh`, and they should promote only repeatable work modes that point back to canonical docs.
 - `verify` active markdown docs stay clean under repo-configured `markdownlint`, `markdownlint-cli2`, and `cspell`.
 - `verify` README local asset references must point to committed files.
 - `verify` `README.md` current release stays synchronized with `Cargo.toml`.
@@ -116,6 +122,7 @@ Issue link rule:
 - `verify` any behavior change keeps its test, log entry, and owning doc update in the same change.
 - `verify` new work that introduces a concept already named in an active doc must reference the canonical doc instead of restating the rule.
 - `verify` all scene rendering continues through `render_scene` and `Scene::render`; no side path should write to the terminal buffer.
+- `verify` `src/core` remains independent from `scene` modules, and `src/systems` remains independent from scene/render/UI/terminal modules; `scripts/check.sh` must keep guarding those boundaries.
 - `verify` new world-attached renderables reuse shared spatial/entity pose helpers instead of adding bespoke anchor math.
 - `verify` boundary changes in render, layer, attachment, or mask code prefer an explicit negative test when practical.
 - `verify` metamechanics remains a subordinate control/observation seam inside `ui/`; `dev_mode` may toggle presentation flags, but it does not own world state, projection, or render order.

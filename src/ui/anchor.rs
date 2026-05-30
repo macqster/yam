@@ -1,4 +1,4 @@
-use crate::scene::coords::ScreenPos;
+use crate::core::spatial::SpatialScreenPoint as ScreenPos;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]

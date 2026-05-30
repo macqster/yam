@@ -153,6 +153,99 @@ pub struct SpeciesProfile {
     pub debug_label: String,
 }
 
+#[allow(dead_code)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SpeciesRegistry {
+    profiles: Vec<SpeciesProfile>,
+}
+
+#[allow(dead_code)]
+impl SpeciesRegistry {
+    pub fn new() -> Self {
+        Self {
+            profiles: Vec::new(),
+        }
+    }
+
+    pub fn with_profiles(profiles: Vec<SpeciesProfile>) -> Self {
+        Self { profiles }
+    }
+
+    pub fn register(&mut self, profile: SpeciesProfile) {
+        self.profiles.push(profile);
+    }
+
+    pub fn profile(&self, species_id: &SpeciesId) -> Option<&SpeciesProfile> {
+        self.profiles
+            .iter()
+            .find(|profile| profile.species_id.as_str() == species_id.as_str())
+    }
+
+    pub fn profiles(&self) -> &[SpeciesProfile] {
+        &self.profiles
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.profiles.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.profiles.len()
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JournalEventKind {
+    Created,
+    LifeStateChanged,
+    GrowthStep,
+    OrganChanged,
+    EnvironmentInfluence,
+    DebugNote,
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JournalEvent {
+    pub tick: u64,
+    pub kind: JournalEventKind,
+    pub message: String,
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OrganismJournal {
+    pub journal_id: JournalId,
+    events: Vec<JournalEvent>,
+}
+
+#[allow(dead_code)]
+impl OrganismJournal {
+    pub fn new(journal_id: JournalId) -> Self {
+        Self {
+            journal_id,
+            events: Vec::new(),
+        }
+    }
+
+    pub fn record(&mut self, tick: u64, kind: JournalEventKind, message: impl Into<String>) {
+        self.events.push(JournalEvent {
+            tick,
+            kind,
+            message: message.into(),
+        });
+    }
+
+    pub fn events(&self) -> &[JournalEvent] {
+        &self.events
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.events.is_empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,5 +261,49 @@ mod tests {
         assert_eq!(identity.id, OrganismId::new(7));
         assert_eq!(identity.species_id, "yam.vine.fixture");
         assert_eq!(identity.journal_id, "journal.vine.fixture.7");
+    }
+
+    fn fixture_profile(id: &str, display_name: &str) -> SpeciesProfile {
+        SpeciesProfile {
+            species_id: SpeciesId::new(id),
+            display_name: display_name.to_string(),
+            family: OrganismFamily::Vine,
+            habit: "fixture habit".to_string(),
+            anatomy_defaults: "fixture anatomy".to_string(),
+            growth_rule: "fixture growth".to_string(),
+            lifecycle_tuning: "fixture lifecycle".to_string(),
+            allowed_organs: vec!["leaf".to_string()],
+            debug_label: display_name.to_string(),
+        }
+    }
+
+    #[test]
+    fn species_registry_stores_reusable_profiles_without_history() {
+        let mut registry = SpeciesRegistry::new();
+        assert!(registry.is_empty());
+
+        registry.register(fixture_profile("yam.vine.fixture", "fixture vine"));
+
+        let profile = registry
+            .profile(&SpeciesId::new("yam.vine.fixture"))
+            .expect("registered profile");
+        assert_eq!(profile.display_name, "fixture vine");
+        assert_eq!(registry.len(), 1);
+        assert_eq!(registry.profiles().len(), 1);
+    }
+
+    #[test]
+    fn organism_journal_records_per_instance_events() {
+        let mut journal = OrganismJournal::new(JournalId::new("journal.vine.fixture.7"));
+        assert!(journal.is_empty());
+
+        journal.record(4, JournalEventKind::Created, "seeded fixture vine");
+        journal.record(8, JournalEventKind::GrowthStep, "extended primary axis");
+
+        assert_eq!(journal.journal_id, "journal.vine.fixture.7");
+        assert_eq!(journal.events().len(), 2);
+        assert_eq!(journal.events()[0].tick, 4);
+        assert_eq!(journal.events()[0].kind, JournalEventKind::Created);
+        assert_eq!(journal.events()[1].message, "extended primary axis");
     }
 }

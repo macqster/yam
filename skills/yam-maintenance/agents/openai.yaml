@@ -1,0 +1,4 @@
+interface:
+  display_name: "YAM Maintenance"
+  short_description: "Maintain YAM with strict repo hygiene"
+  default_prompt: "Use $yam-maintenance to run a careful YAM maintenance pass."

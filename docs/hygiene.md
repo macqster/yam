@@ -10,6 +10,9 @@
 
 - keep changes logged in `docs/LOG.md`
 - keep commits focused
+- keep `AGENTS.md` procedural and pointer-heavy; it should describe how agents work in the repo, while architecture facts stay in the owning docs
+- keep repo-local `skills/*/SKILL.md` files short and workflow-focused; they should trigger repeatable work modes without becoming alternate contract docs, and their names and frontmatter descriptions must pass `scripts/check-docs.sh`
+- keep repo-local skill `agents/openai.yaml` files present, short, generated from the matching skill name when practical, and valid under the interface metadata checks in `scripts/check-docs.sh`
 - keep build output out of version control
 - do not reintroduce old runtime artifacts without a clear reason
 - avoid hidden coupling between engine, render, and UI layers
@@ -25,9 +28,10 @@
 - temp files and shared runtime artifacts used by tests or helpers should be isolated per run when practical
 - boundary changes should add a negative test when practical so forbidden behavior stays explicit
 - use `cargo fmt --check` for docs-only or wording-only changes; run the full test suite for compositor, camera, overlay, or other shared-rendering behavior changes
+- run `scripts/check.sh` for Rust hygiene; it fails if `src/core` imports `scene` modules, if `src/systems` imports scene, render, UI, or terminal modules, or if `crate::scene::coords` compatibility imports leak outside `src/scene/coords.rs`, then runs format, clippy, and cargo check
 - run `scripts/verify.sh` for the full maintenance/release gate; it composes the active docs check, the Rust hygiene gate, and the full `cargo test --quiet` suite in one repo-owned command
 - active markdown docs should stay clean under the repo-configured `cSpell` and `markdownlint` rules; fix real typos and malformed markdown, but prefer adding recurring valid repo vocabulary to shared config rather than repeatedly rewriting good technical terms
-- run `scripts/check-docs.sh` for docs-hygiene batches; it enforces the active root/front-door docs plus the first-level `docs/*.md` contract surface, `TODO.md` -> `known_issues.md` issue-link consistency, the canonical `Cargo.toml` -> `README.md` current-release version match, and README local-asset path validity directly, and it also runs repo-configured `cspell` / `markdownlint` checks when those CLIs are available in the local environment
+- run `scripts/check-docs.sh` for docs-hygiene batches; it enforces the active root/front-door docs, `AGENTS.md`, repo-local `skills/*/SKILL.md` workflow files, required skill frontmatter and `agents/openai.yaml` interface metadata, and first-level `docs/*.md` contract surface, `TODO.md` -> `known_issues.md` issue-link consistency, the canonical `Cargo.toml` -> `README.md` current-release version match, and README local-asset path validity directly, and it also runs repo-configured `cspell` / `markdownlint` checks when those CLIs are available in the local environment
 - opt-in diagnostics logs should stay local-only and out of the repo; the current path is the user state dir (`$XDG_STATE_HOME/yam/diagnostics.ndjson` or `~/.local/state/yam/diagnostics.ndjson`) behind `YAM_DIAGNOSTICS=1`
 - when diagnostics are enabled, prefer the installed `yam-diagnostics` helper for quick local inspection instead of ad hoc repo scripts; keep the format simple enough that raw NDJSON stays readable too
 - prefer repo-level spell/lint configuration for recurring terminology; use file-local `cspell:ignore` comments only for narrow local exceptions that would add noise to the shared dictionary

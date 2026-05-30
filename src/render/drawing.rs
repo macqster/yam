@@ -89,11 +89,9 @@ pub fn stroke_path(
 }
 
 pub fn stamp_glyph(grid: &mut Grid, occupancy: Option<&mut OccupancyMask>, stamp: GlyphStamp) {
-    if stamp.point.x < 0 || stamp.point.y < 0 {
+    let Some((x, y)) = checked_grid_coords(stamp.point) else {
         return;
-    }
-    let x = stamp.point.x as u16;
-    let y = stamp.point.y as u16;
+    };
     if let Some(cell) = grid.cell_mut(x, y) {
         *cell = Cell {
             symbol: stamp.glyph,
@@ -115,9 +113,9 @@ pub fn stroke_segment(
     let steps = rasterize_line(start, end);
     let mut occupancy = occupancy;
     for (idx, step) in steps.iter().enumerate() {
-        if step.point.x < 0 || step.point.y < 0 {
+        let Some((x, y)) = checked_grid_coords(step.point) else {
             continue;
-        }
+        };
 
         let previous = idx
             .checked_sub(1)
@@ -126,8 +124,6 @@ pub fn stroke_segment(
         let next = steps.get(idx + 1).map(|candidate| candidate.point);
         let glyph = glyph_for_weight(brush.weight, start, end, step, previous, next);
 
-        let x = step.point.x as u16;
-        let y = step.point.y as u16;
         if let Some(cell) = grid.cell_mut(x, y) {
             *cell = Cell {
                 symbol: glyph,
@@ -138,6 +134,10 @@ pub fn stroke_segment(
             }
         }
     }
+}
+
+fn checked_grid_coords(point: LinePoint) -> Option<(u16, u16)> {
+    Some((u16::try_from(point.x).ok()?, u16::try_from(point.y).ok()?))
 }
 
 fn glyph_for_weight(
@@ -265,5 +265,34 @@ mod tests {
 
         assert_eq!(grid.get_mut(2, 1).map(|cell| cell.symbol), Some('*'));
         assert_eq!(occupancy.coverage(2, 1), 1);
+    }
+
+    #[test]
+    fn drawing_points_outside_grid_coordinate_range_do_not_wrap() {
+        let mut grid = Grid::new(4, 4);
+        let far_x = u16::MAX as i32 + 1;
+        stamp_glyph(
+            &mut grid,
+            None,
+            GlyphStamp {
+                point: LinePoint { x: far_x, y: 0 },
+                glyph: '*',
+                style: Style::default().fg(Color::Yellow),
+            },
+        );
+        stroke_path(
+            &mut grid,
+            None,
+            &[
+                LinePoint { x: far_x, y: 1 },
+                LinePoint { x: far_x + 1, y: 1 },
+            ],
+            Brush {
+                style: Style::default().fg(Color::Green),
+                weight: StrokeWeight::Stem,
+            },
+        );
+
+        assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
     }
 }

@@ -156,11 +156,11 @@ fn write_clipped_help_line(grid: &mut Grid, x: u16, y: u16, width: u16, line: &H
 #[cfg(test)]
 mod tests {
     use super::HotkeysLayer;
+    use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;

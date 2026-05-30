@@ -5,6 +5,9 @@ The repo front door is [../README.md](../README.md).
 
 ## Start Here
 
+- [../AGENTS.md](../AGENTS.md) - agent-facing operating guidance
+- [../skills/yam-maintenance/SKILL.md](../skills/yam-maintenance/SKILL.md) - repo-local maintenance workflow skill
+- [../skills/yam-architecture-review/SKILL.md](../skills/yam-architecture-review/SKILL.md) - repo-local architecture review workflow skill
 - [../README.md](../README.md) - repo/runtime overview
 - [../TODO.md](../TODO.md) - active execution backlog
 - [../known_issues.md](../known_issues.md) - active unresolved issues only
@@ -43,6 +46,8 @@ The repo front door is [../README.md](../README.md).
 ## Where To Change Things
 
 - repo/runtime overview -> [../README.md](../README.md)
+- agent-facing work guidance -> [../AGENTS.md](../AGENTS.md)
+- agent-facing workflow skills -> [../skills/](../skills/)
 - work order and execution checks -> [../TODO.md](../TODO.md)
 - active unresolved issues -> [../known_issues.md](../known_issues.md)
 - risk, drift, and next cleanup seams -> [audit.md](audit.md)
@@ -55,6 +60,8 @@ The repo front door is [../README.md](../README.md).
 ## Role Rules
 
 - `README.md` is the front door, not the full contract set
+- `AGENTS.md` is the agent work guide, not an architecture contract
+- `skills/*/SKILL.md` files are procedural workflow helpers, not contract docs
 - `docs/README.md` is the map, not the backlog
 - `TODO.md` stays execution-focused
 - `known_issues.md` stays issue-focused and timestamped

@@ -78,12 +78,12 @@ fn footer_row(height: u16) -> u16 {
 #[cfg(test)]
 mod tests {
     use super::{build_status_label, footer_hint, footer_row, footer_stamp, StatusLayer};
+    use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldKind;
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;

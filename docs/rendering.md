@@ -43,7 +43,7 @@ Rules:
 - the sandbox world reuses the same render stack and projection helpers as the main scene, but keeps intentionally sparse content so drawing-engine trials can be judged without main-scene composition noise
 - `yam-sandbox` is the direct launch path for that sparse world, so dry-trial drawing and pointer work do not depend on entering the main scene first
 - sandbox is not a separate app shell: it is an internal YAM space that should be reachable by world switching, and the main-scene hero/clock composition should stay out of it so the sandbox can read like a clean room rather than an emptied scene with leftover props
-- switchable runtime worlds are selected and described through `WorldKind::SELECTABLE` and `WorldKind::profile()`; render layers may branch by world profile/composition, but they should not own the world-switching order or transition labels
+- switchable runtime worlds are selected and described through `WorldKind::SELECTABLE` and `WorldKind::profile()`; render layers may branch by world profile/composition/capabilities, but they should not own the world-switching order, transition labels, grid, camera, guide, or population policy
 - the hud/footer owns screen-attached status, hints, and mode reminders
 - debug and inspect outputs may be visible during normal use, but they must not displace the footer contract
 - modal overlays may cover any zone while active, but they remain explicit and bounded
@@ -105,11 +105,11 @@ Rules:
 - no layer should rely on ratatui layout wrapping for hero/image content
 - viewport selection is now a full-frame pass; the old centered tiered viewport box no longer drives layer placement
 - `RenderState` is split into `world` and `hud` sections to keep world-pinned attachments separate from screen-attached overlays
-- shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement, and companion screen helpers now return signed `ScreenPos` values rather than world-position aliases
+- shared projection helpers on `RenderState` are the source of truth for telemetry values that must match visible layer placement, and companion screen helpers now project through `core::spatial::SpatialResolver` and return signed core spatial screen values rather than world-position aliases
 - the clock is a world entity: debug/info panels report its projected screen position, but they do not define it
 - guide primitives live in `WorldState` and may be projected or visualized by debug layers, but for now they are linework-only world-space annotations rather than raster masks or solid fills; sprites and solid masks stay future work
 - the guide / line generator is project-wide, not vines-only: it is now used for guide drawing and should remain suitable for future mask edges, rulers, and other world annotations that need deterministic world-space coverage, and it must remain capable of generating any line in any direction across the full YAM world size
-- the drawing engine sits one layer above raw line grammar: `render/drawing.rs` owns reusable path-stroke, glyph-stamp, and occupancy-mask primitives so flora, mask edges, guide authoring, and lightweight UI accents can share one deterministic cell-writing contract
+- the drawing engine sits one layer above raw line grammar: `render/drawing.rs` owns reusable path-stroke, glyph-stamp, checked signed-to-grid conversion, and occupancy-mask primitives so flora, mask edges, guide authoring, and lightweight UI accents can share one deterministic cell-writing contract
 - linework rendering follows [`docs/soft-line-atlas.md`](soft-line-atlas.md), with a Bresenham-style geometry layer and a glyph-appearance layer, using a small slope-aware glyph grammar with `|` / `:` for vertical emphasis so rulers, vectors, and curves read as directional strokes instead of block fills; the engine target is universal line coverage across the full YAM world size, using the grammar key `LineFamily -> LengthBucket -> Direction -> PhaseRole -> CellBand -> LocalStep`
 - the soft-line renderer is intended to cover every possible line in world space; ad hoc block-fills or special-case line escapes are not the target architecture
 - the pointer probe is a practical guide-authoring tool: it can be used to record exact coordinates for points, guides, and masks, and the line renderer should make those recorded relations legible in world space; the term `nodes` is currently reserved for plant morphology/anatomy systems and should be treated as provisional until the spatial terminology is researched further
@@ -139,9 +139,9 @@ Rules:
 - a minimal lifecycle update loop can stay equally small: `Seed -> Growth -> Mature -> Senescent -> Decay`, with active meristems driving growth steps, species rules choosing new metamers or organs, and geometry being regenerated from state each tick
 - organ state should remain explicit and inspectable: buds, leaves, flowers, and fruit can each progress through `bud -> growing -> mature -> aging -> dead` without requiring the whole plant to collapse into a single global state
 - the greenhouse/lab space should be the place where lifecycle tuning becomes visible, while the main scene can keep the current prototypes comparatively static and readable
-- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; a species registry or database layer should hold species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
+- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; the current in-memory `SpeciesRegistry` is only the first seam for species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
 - the species registry should be read-heavy and simulation-friendly: it can store canonical species metadata, but per-plant runtime state stays with the living organism instance in `WorldState` or its flora subsystem
-- each life-form should also have a dedicated log-journal so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
+- each life-form should also have a dedicated `OrganismJournal` so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
 - a life-form journal should stay compact and event-oriented: lifecycle transitions, growth steps, organ births/removals, environment influences, damage/pruning, and debug annotations are the highest-value entries
 - the journal should be human-readable first and machine-friendly second, so greenhouse inspection can scan it quickly without losing deterministic simulation detail
 - the species registry payload should stay compact and reusable: species id/name, morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels are the highest-value fields
@@ -249,23 +249,23 @@ The active implementation treats camera as a viewport crop helper:
 - world-ui features move only with world attachment/projection, while hud-ui features stay terminal-fixed
 - the world datum is the shared absolute reference for rulers, guides, masks, and organism guidance; screen space remains a separate terminal projection layer
 - the smallest canonical spatial layer should stay narrow at first: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers are the minimum shared contract before masks and organism guidance become first-class relation types
-- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model; the compatibility layer also exposes signed `ScreenPos` for projections that may be off-screen, and the debug guide renderer already consumes `SpatialGuideIndex` directly
-- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `WorldState` when an entity is present, so render-side anchor use can rely on entity-backed lookup even while the broader spatial layer stays on shims
+- the first canonical spatial API surface stays narrow here too: `SpatialPoint`, signed `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, `SpatialAnchorLookup`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model; the compatibility layer re-exports that signed screen type as `ScreenPos` for module-internal compatibility projections that may be off-screen, and the active companion, hero, debug, guide, and vine render paths now consume core spatial types directly
+- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `core::spatial::SpatialAnchorLookup` when an entity is present, so render-side anchor use can rely on entity-backed lookup without making scene projection code own anchor identity
 - that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move entity-backed relation logic fully into `core/spatial`
 - the likely module mapping from render’s point of view is:
-  - `scene/coords.rs` supplies the coordinate/projection primitives
+  - `scene/coords.rs` supplies compatibility projection helpers and transitional type names
   - `core/guide.rs` supplies the queryable guide index and guide sets
-  - `render/guide.rs` stays render-only and consumes those primitives
+  - `render/guide.rs` stays render-only and consumes those primitives through `core::spatial`
   - `core/spatial` already owns the shared resolver first cut so render does not need to know relation details
 - the safest migration order from the renderer’s point of view is:
   1. keep the current render output unchanged while the shared spatial layer appears
   2. move only relation math into the new resolver, not the grid composition logic
-  3. switch guide drawing to consume the new guide index/projection API
+  3. keep guide drawing on the new guide index/projection API
   4. preserve the existing render-determinism and layer-order tests at each step
   5. retire the old helper calls only when the renderer no longer needs to know where the relation math lives
 - fullscreen is a special case of the camera contract: when the viewport matches or exceeds the world extent, the visible crop should be static and centered on the world datum `(0, 0)`, even if debug controls still mutate the stored camera position
 - fullscreen lock is now exercised in `build_render_state(...)`: the stored camera can still move, but the frame uses a datum-centered crop whenever the terminal fully covers the world extent
-- `RenderState::clock_screen()` is the shared signed projected clock position used by both the clock layer and the debug overlay
+- `RenderState::clock_screen()` is the shared core-spatial signed projected clock position used by both the clock layer and the debug overlay
 - `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays
 - `resolve_hud_ui(...)` is the helper for screen-attached overlays, including those whose layout rules are derived from world-spacing conventions

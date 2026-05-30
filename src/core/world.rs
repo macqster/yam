@@ -3,9 +3,8 @@ use crate::core::{
     flora::{main_scene_vine_guides, realize_border_vine_axis, FloraState},
     grid::Grid,
     guide::GuideState,
-    spatial::SpatialGuideIndex,
+    spatial::{SpatialAnchorLookup, SpatialGuideIndex, SpatialPoint as WorldPos},
 };
-use crate::scene::coords::WorldPos;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -53,11 +52,57 @@ pub enum WorldComposition {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WorldGuidePlan {
+    Empty,
+    MainSceneVineFrame,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WorldPopulationPlan {
+    Empty,
+    MainSceneBorderVine,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct WorldGridSpec {
+    pub width: u16,
+    pub height: u16,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct WorldCameraDefaults {
+    pub x: i32,
+    pub y: i32,
+    pub follow_hero: bool,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct WorldDebugSurfaces {
+    pub guides: bool,
+    pub flora: bool,
+    pub companions: bool,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct WorldCapabilities {
+    pub scene_companions: bool,
+    pub flora_runtime: bool,
+    pub guide_authoring: bool,
+    pub pointer_probe: bool,
+    pub debug_surfaces: WorldDebugSurfaces,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct WorldProfile {
     pub title: &'static str,
     pub loading_label: &'static str,
     pub selectable: bool,
     pub composition: WorldComposition,
+    pub grid: WorldGridSpec,
+    pub camera: WorldCameraDefaults,
+    pub guide_plan: WorldGuidePlan,
+    pub population_plan: WorldPopulationPlan,
+    pub capabilities: WorldCapabilities,
 }
 
 impl WorldKind {
@@ -70,18 +115,53 @@ impl WorldKind {
                 loading_label: "loading...",
                 selectable: false,
                 composition: WorldComposition::EmptyBoot,
+                grid: DEFAULT_WORLD_GRID,
+                camera: DEFAULT_WORLD_CAMERA,
+                guide_plan: WorldGuidePlan::Empty,
+                population_plan: WorldPopulationPlan::Empty,
+                capabilities: WorldCapabilities::empty(),
             },
             WorldKind::MainScene => WorldProfile {
                 title: "main-scene",
                 loading_label: "loading main scene...",
                 selectable: true,
                 composition: WorldComposition::MainScene,
+                grid: DEFAULT_WORLD_GRID,
+                camera: DEFAULT_WORLD_CAMERA,
+                guide_plan: WorldGuidePlan::MainSceneVineFrame,
+                population_plan: WorldPopulationPlan::MainSceneBorderVine,
+                capabilities: WorldCapabilities {
+                    scene_companions: true,
+                    flora_runtime: true,
+                    guide_authoring: true,
+                    pointer_probe: true,
+                    debug_surfaces: WorldDebugSurfaces {
+                        guides: true,
+                        flora: true,
+                        companions: true,
+                    },
+                },
             },
             WorldKind::Sandbox => WorldProfile {
                 title: "sandbox",
                 loading_label: "loading sandbox...",
                 selectable: true,
                 composition: WorldComposition::SparseSandbox,
+                grid: DEFAULT_WORLD_GRID,
+                camera: DEFAULT_WORLD_CAMERA,
+                guide_plan: WorldGuidePlan::Empty,
+                population_plan: WorldPopulationPlan::Empty,
+                capabilities: WorldCapabilities {
+                    scene_companions: false,
+                    flora_runtime: false,
+                    guide_authoring: true,
+                    pointer_probe: true,
+                    debug_surfaces: WorldDebugSurfaces {
+                        guides: true,
+                        flora: false,
+                        companions: false,
+                    },
+                },
             },
         }
     }
@@ -102,6 +182,14 @@ impl WorldKind {
         self.profile().composition == WorldComposition::MainScene
     }
 
+    pub fn has_scene_companions(self) -> bool {
+        self.profile().capabilities.scene_companions
+    }
+
+    pub fn has_flora_runtime(self) -> bool {
+        self.profile().capabilities.flora_runtime
+    }
+
     pub fn selectable_or_default(self) -> Self {
         if self.is_selectable() {
             self
@@ -120,6 +208,33 @@ impl WorldKind {
     }
 }
 
+pub const DEFAULT_WORLD_GRID: WorldGridSpec = WorldGridSpec {
+    width: 300,
+    height: 120,
+};
+
+pub const DEFAULT_WORLD_CAMERA: WorldCameraDefaults = WorldCameraDefaults {
+    x: -60,
+    y: -15,
+    follow_hero: false,
+};
+
+impl WorldCapabilities {
+    pub const fn empty() -> Self {
+        Self {
+            scene_companions: false,
+            flora_runtime: false,
+            guide_authoring: false,
+            pointer_probe: false,
+            debug_surfaces: WorldDebugSurfaces {
+                guides: false,
+                flora: false,
+                companions: false,
+            },
+        }
+    }
+}
+
 #[allow(dead_code)]
 impl WorldState {
     pub fn new() -> Self {
@@ -127,56 +242,34 @@ impl WorldState {
     }
 
     pub fn for_kind(kind: WorldKind) -> Self {
-        match kind {
-            WorldKind::Boot => Self::for_boot(),
-            WorldKind::MainScene => Self::for_main_scene(),
-            WorldKind::Sandbox => Self::for_sandbox(),
+        let profile = kind.profile();
+        let guides = guides_for_plan(profile.guide_plan);
+        let mut flora = flora_for_plan(profile.population_plan);
+        if profile.population_plan == WorldPopulationPlan::MainSceneBorderVine {
+            realize_border_vine_axis(&mut flora, SpatialGuideIndex::new(&guides));
         }
-    }
 
-    pub fn for_boot() -> Self {
-        let width = 300;
-        let height = 120;
         Self {
-            kind: WorldKind::Boot,
-            grid: Grid::new(width, height),
+            kind,
+            grid: Grid::new(profile.grid.width, profile.grid.height),
             entities: Vec::new(),
-            fields: Fields::new(width, height),
-            flora: FloraState::new(),
-            guides: GuideState::new(),
-            tick: 0,
-        }
-    }
-
-    pub fn for_main_scene() -> Self {
-        let width = 300;
-        let height = 120;
-        let guides = main_scene_vine_guides();
-        let mut flora = FloraState::with_border_vine_seed();
-        realize_border_vine_axis(&mut flora, SpatialGuideIndex::new(&guides));
-        Self {
-            kind: WorldKind::MainScene,
-            grid: Grid::new(width, height),
-            entities: Vec::new(),
-            fields: Fields::new(width, height),
+            fields: Fields::new(profile.grid.width, profile.grid.height),
             flora,
             guides,
             tick: 0,
         }
     }
 
+    pub fn for_boot() -> Self {
+        Self::for_kind(WorldKind::Boot)
+    }
+
+    pub fn for_main_scene() -> Self {
+        Self::for_kind(WorldKind::MainScene)
+    }
+
     pub fn for_sandbox() -> Self {
-        let width = 300;
-        let height = 120;
-        Self {
-            kind: WorldKind::Sandbox,
-            grid: Grid::new(width, height),
-            entities: Vec::new(),
-            fields: Fields::new(width, height),
-            flora: FloraState::new(),
-            guides: GuideState::new(),
-            tick: 0,
-        }
+        Self::for_kind(WorldKind::Sandbox)
     }
 
     pub fn entity_world(&self, id: u32) -> Option<WorldPos> {
@@ -190,9 +283,32 @@ impl WorldState {
     }
 }
 
+impl SpatialAnchorLookup for WorldState {
+    fn anchor_world(&self, id: u32) -> Option<WorldPos> {
+        self.entity_world(id)
+    }
+}
+
+fn guides_for_plan(plan: WorldGuidePlan) -> GuideState {
+    match plan {
+        WorldGuidePlan::Empty => GuideState::new(),
+        WorldGuidePlan::MainSceneVineFrame => main_scene_vine_guides(),
+    }
+}
+
+fn flora_for_plan(plan: WorldPopulationPlan) -> FloraState {
+    match plan {
+        WorldPopulationPlan::Empty => FloraState::new(),
+        WorldPopulationPlan::MainSceneBorderVine => FloraState::with_border_vine_seed(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{WorldComposition, WorldKind, WorldState};
+    use super::{
+        WorldComposition, WorldGuidePlan, WorldKind, WorldPopulationPlan, WorldState,
+        DEFAULT_WORLD_CAMERA, DEFAULT_WORLD_GRID,
+    };
     use crate::core::flora::{
         BORDER_VINE_GUIDE_SET_LABEL, BORDER_VINE_ROOT, BORDER_VINE_SEED_AXIS_ID,
         BORDER_VINE_SEED_ID,
@@ -297,5 +413,41 @@ mod tests {
         assert!(!WorldKind::Boot.has_main_scene_composition());
         assert!(WorldKind::MainScene.has_main_scene_composition());
         assert!(!WorldKind::Sandbox.has_main_scene_composition());
+    }
+
+    #[test]
+    fn world_profiles_own_population_guides_camera_and_capabilities() {
+        let boot = WorldKind::Boot.profile();
+        assert_eq!(boot.grid, DEFAULT_WORLD_GRID);
+        assert_eq!(boot.camera, DEFAULT_WORLD_CAMERA);
+        assert_eq!(boot.guide_plan, WorldGuidePlan::Empty);
+        assert_eq!(boot.population_plan, WorldPopulationPlan::Empty);
+        assert!(!boot.capabilities.scene_companions);
+        assert!(!boot.capabilities.pointer_probe);
+
+        let main = WorldKind::MainScene.profile();
+        assert_eq!(main.grid, DEFAULT_WORLD_GRID);
+        assert_eq!(main.camera, DEFAULT_WORLD_CAMERA);
+        assert_eq!(main.guide_plan, WorldGuidePlan::MainSceneVineFrame);
+        assert_eq!(
+            main.population_plan,
+            WorldPopulationPlan::MainSceneBorderVine
+        );
+        assert!(main.capabilities.scene_companions);
+        assert!(main.capabilities.flora_runtime);
+        assert!(main.capabilities.debug_surfaces.flora);
+        assert!(WorldKind::MainScene.has_scene_companions());
+        assert!(WorldKind::MainScene.has_flora_runtime());
+
+        let sandbox = WorldKind::Sandbox.profile();
+        assert_eq!(sandbox.grid, DEFAULT_WORLD_GRID);
+        assert_eq!(sandbox.camera, DEFAULT_WORLD_CAMERA);
+        assert_eq!(sandbox.guide_plan, WorldGuidePlan::Empty);
+        assert_eq!(sandbox.population_plan, WorldPopulationPlan::Empty);
+        assert!(!sandbox.capabilities.scene_companions);
+        assert!(sandbox.capabilities.guide_authoring);
+        assert!(sandbox.capabilities.pointer_probe);
+        assert!(!WorldKind::Sandbox.has_scene_companions());
+        assert!(!WorldKind::Sandbox.has_flora_runtime());
     }
 }

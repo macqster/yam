@@ -101,11 +101,11 @@ fn draw_target_tabs(grid: &mut Grid, frame: ModalFrame, y: u16, ui: &UiState) {
 #[cfg(test)]
 mod tests {
     use super::MoveLayer;
+    use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
     use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
-    use crate::scene::coords::WorldPos;
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;

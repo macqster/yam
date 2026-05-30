@@ -1,13 +1,37 @@
+use crate::core::spatial::{
+    SpatialPoint as WorldPos, SpatialProjection, SpatialResolver, SpatialScreenPoint,
+};
 use crate::core::world::WorldState;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
-use crate::scene::coords::project_world_to_screen;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::ui::state::UiState;
 use ratatui::text::{Line, Span};
 
 pub struct HeroLayer;
+
+#[derive(Copy, Clone)]
+struct HeroProjection {
+    resolver: SpatialResolver,
+}
+
+impl HeroProjection {
+    fn new(camera_x: i32, camera_y: i32, viewport_width: u16, viewport_height: u16) -> Self {
+        Self {
+            resolver: SpatialResolver::new(SpatialProjection::new(
+                camera_x,
+                camera_y,
+                viewport_width,
+                viewport_height,
+            )),
+        }
+    }
+
+    fn project(self, point: WorldPos) -> SpatialScreenPoint {
+        self.resolver.world_to_screen_point(point)
+    }
+}
 
 impl Layer for HeroLayer {
     fn z_index(&self) -> i32 {
@@ -30,27 +54,23 @@ impl Layer for HeroLayer {
         let hero_y = ctx.world.hero_visual_anchor.y;
         let cam_x = ctx.hud.camera.x;
         let cam_y = ctx.hud.camera.y;
+        let projection =
+            HeroProjection::new(cam_x, cam_y, ctx.hud.camera.width, ctx.hud.camera.height);
         let normalized = normalize_lines(hero.frame().clone(), hero.width, hero.height);
         debug_assert_eq!(normalized.len() as u16, hero.height);
         let mut mask = Mask::new(grid.width as usize, grid.height as usize);
 
         for (row_idx, row) in normalized.into_iter().enumerate() {
             let py = hero_y - row_idx as i32;
-            let screen = project_world_to_screen(
-                crate::scene::coords::WorldPos { x: hero_x, y: py },
-                cam_x,
-                cam_y,
-                ctx.hud.camera.height,
-            );
-            if screen.y < 0 {
-                continue;
-            }
+            let screen = projection.project(WorldPos { x: hero_x, y: py });
             if screen.y >= grid.height as i32 {
                 break;
             }
-            let clip_cols = screen.x.clamp(i32::MIN, 0).unsigned_abs() as usize;
-            let draw_x = screen.x.max(0) as u16;
-            let draw_y = screen.y as u16;
+            let Some((draw_x, draw_y, clip_cols)) =
+                hero_row_grid_position(screen, grid.width, grid.height)
+            else {
+                continue;
+            };
             let clipped_row = clip_line(&row, clip_cols);
             let mut cursor_x = draw_x;
             for span in clipped_row.spans {
@@ -140,6 +160,54 @@ fn normalize_line(line: Line<'static>, width: u16) -> Line<'static> {
     }
 
     Line::from(spans)
+}
+
+fn hero_row_grid_position(
+    screen: SpatialScreenPoint,
+    grid_width: u16,
+    grid_height: u16,
+) -> Option<(u16, u16, usize)> {
+    let draw_y = u16::try_from(screen.y).ok()?;
+    if draw_y >= grid_height {
+        return None;
+    }
+
+    let clip_cols = if screen.x < 0 {
+        screen.x.unsigned_abs() as usize
+    } else {
+        0
+    };
+    let draw_x = if screen.x < 0 {
+        0
+    } else {
+        u16::try_from(screen.x).ok()?
+    };
+    if draw_x >= grid_width {
+        return None;
+    }
+
+    Some((draw_x, draw_y, clip_cols))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hero_row_position_clips_negative_x_to_grid_origin() {
+        assert_eq!(
+            hero_row_grid_position(SpatialScreenPoint { x: -3, y: 2 }, 10, 5),
+            Some((0, 2, 3))
+        );
+    }
+
+    #[test]
+    fn hero_row_position_skips_oversized_positive_x_without_wrapping() {
+        assert_eq!(
+            hero_row_grid_position(SpatialScreenPoint { x: 70_000, y: 2 }, 80, 24),
+            None
+        );
+    }
 }
 
 fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {

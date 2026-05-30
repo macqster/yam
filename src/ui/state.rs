@@ -7,6 +7,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::core::spatial::SpatialPoint as WorldPos;
 use crate::core::world::WorldKind;
 use crate::render::fonts::ClockFont;
 use crate::render::hero::Hero;
@@ -986,7 +987,7 @@ impl UiState {
             self.meta.active_world_kind().loading_label(),
             Duration::from_millis(900),
         );
-        if self.meta.active_world_kind().has_main_scene_composition() {
+        if self.meta.active_world_kind().has_scene_companions() {
             self.pointer_blink_on = true;
         }
         self.clamp_settings_cursor_to_world();
@@ -1283,11 +1284,11 @@ impl UiState {
     }
 
     pub fn world_has_scene_companions(&self) -> bool {
-        self.meta.active_world_kind().has_main_scene_composition()
+        self.meta.active_world_kind().has_scene_companions()
     }
 
     pub fn settings_item_count(&self, tab: SettingsTab) -> usize {
-        if !self.meta.active_world_kind().has_main_scene_composition()
+        if !self.meta.active_world_kind().has_scene_companions()
             && matches!(tab, SettingsTab::Positions | SettingsTab::Gif)
         {
             1
@@ -1312,27 +1313,27 @@ impl UiState {
 
     pub fn hero_scene_attachment(&self) -> crate::scene::entity::HeroSceneAttachment {
         hero_scene_poses(
-            crate::scene::coords::WorldPos {
+            WorldPos {
                 x: self.hero.x,
                 y: self.hero.y,
             },
-            crate::scene::coords::WorldPos {
+            WorldPos {
                 x: self.offsets.hero_dx,
                 y: self.offsets.hero_dy,
             },
-            crate::scene::coords::WorldPos {
+            WorldPos {
                 x: self.offsets.clock_dx as i32,
                 y: self.offsets.clock_dy as i32,
             },
-            crate::scene::coords::WorldPos {
+            WorldPos {
                 x: self.offsets.weather_dx as i32,
                 y: self.offsets.weather_dy as i32,
             },
-            crate::scene::coords::WorldPos {
+            WorldPos {
                 x: self.offsets.date_dx as i32,
                 y: self.offsets.date_dy as i32,
             },
-            crate::scene::coords::WorldPos {
+            WorldPos {
                 x: self.offsets.calendar_dx as i32,
                 y: self.offsets.calendar_dy as i32,
             },
@@ -1608,8 +1609,8 @@ mod tests {
         MetaState, MoveTarget, SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState,
         UiStateSnapshot, WorldKindSnapshot,
     };
+    use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldKind;
-    use crate::scene::coords::WorldPos;
     use crate::weather::provider::WeatherError;
     use std::time::{Duration, Instant};
 

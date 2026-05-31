@@ -1,7 +1,7 @@
 # Repo Audit
 
 Date: 2026-04-27
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
 
 ## Unresolved Risks
 
@@ -91,6 +91,8 @@ Last reviewed: 2026-05-30
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`
 - `low` Greenhouse execution detail is now consolidated into the roadmap so phase tasks, gates, immediate next steps, and stop conditions do not split across a second active greenhouse TODO.
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`, `docs/README.md`
+- `low` Architecture, scene-model, and rendering docs now carry shorter flora/greenhouse contracts instead of duplicating candidate species, fixture, and environment prose; the remaining detail points to the greenhouse roadmap, vines contract, and glossary.
+  - evidence: `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/glossary.md`
 - `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
   - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

@@ -116,61 +116,26 @@ Rules:
 - the pointer probe remains a dev-only world-space capture instrument across both current worlds: it supports point-to-point drawing, guide authoring, and future mask outlines without becoming a permanent always-on main-scene overlay feature
 - the renderer should prefer Cartesian and Euclidean reasoning for world-space line work because signed axes and direct distance logic make precise authoring easier to validate
 
-## Flora Model Contract
+## Flora Render Contract
 
-The first flora implementation should stay small, inspectable, and graph-based:
-
-- tree-stump scaffold: a simple Y-shaped support structure beneath the hero, with a small number of thick structural segments and minimal or dead growth tips
-- vine family: a guide-following growth program with one or more axes, expected to use captured world-space guides as growth paths
-- monstera-like plant: a thicker axis with large leaf organs and sparse branching
+Flora rendering is a visualization client of world/flora state, not a lifecycle
+or species owner.
 
 Rules:
 
-- flora are growth programs that emit geometry
-- each species may vary in branching pattern, internode length, leaf distribution, growth rate, and tropism rules
-- the initial model should favor metamers, meristems, and axes over one-off geometry hacks
-- the project's plant-structure thinking has historical inspiration from `cbonsai`, and that lineage should remain visible as a useful constraint even as YAM grows beyond a single bonsai-style plant into a broader greenhouse and multi-species model
-- inspiration lineage for the current plant/UI thinking can stay short and explicit:
-  - `cbonsai` for compact plant growth, branching, and readable terminal botany
-  - `Dwarf Fortress` for ASCII-era muscle memory, dense inspectable state, and strong world-model thinking
-  - `Cataclysm: DDA` for keyboard-first survival UI, modal discipline, and practical terminal ergonomics
-- species-specific morphology should remain inspectable in debug/inspect surfaces
-- a minimal Rust-shaped plant model can stay small and explicit: `Plant` owns species and lifecycle state, `Axis` owns a growth branch and ordered metamers, `Metamer` carries one internode and organ attachments, `Meristem` represents an active growth point, and `Organ` covers leaf/flower/fruit/branch outputs; geometry should be derived from this state rather than owning it
-- a minimal lifecycle update loop can stay equally small: `Seed -> Growth -> Mature -> Senescent -> Decay`, with active meristems driving growth steps, species rules choosing new metamers or organs, and geometry being regenerated from state each tick
-- organ state should remain explicit and inspectable: buds, leaves, flowers, and fruit can each progress through `bud -> growing -> mature -> aging -> dead` without requiring the whole plant to collapse into a single global state
-- the greenhouse/lab space should be the place where lifecycle tuning becomes visible, while the main scene can keep the current prototypes comparatively static and readable
-- each plant organism should be treated as an independent life-form with its own life state, stats, and variables; the current in-memory `SpeciesRegistry` is only the first seam for species definitions, morphology traits, growth rules, and other reusable data that drive in-YAM generation and emulation
-- the species registry should be read-heavy and simulation-friendly: it can store canonical species metadata, but per-plant runtime state stays with the living organism instance in `WorldState` or its flora subsystem
-- each life-form should also have a dedicated `OrganismJournal` so lifecycle events, growth changes, and debugging notes can be tracked per organism without flattening everything into a single global log
-- a life-form journal should stay compact and event-oriented: lifecycle transitions, growth steps, organ births/removals, environment influences, damage/pruning, and debug annotations are the highest-value entries
-- the journal should be human-readable first and machine-friendly second, so greenhouse inspection can scan it quickly without losing deterministic simulation detail
-- the species registry payload should stay compact and reusable: species id/name, morphology defaults, branching pattern, internode length, leaf distribution, growth rate, tropism rules, lifecycle tuning, allowed organs, and debug labels are the highest-value fields
-- the registry should not store per-instance life history; that belongs in the individual plant journal and runtime state
-- the state/stat/journal/registry layer may deserve its own dedicated render mode in the future, distinct from the main scene and greenhouse, if the inspection burden grows enough to justify a specialized view
-- an alternative UI strategy is a per-life-form popup window that shows the organism’s relevant data and allows limited tweaks such as growth rate or lifecycle length, while keeping the underlying state registry-backed and the journal per-instance
-- comparison rule of thumb: a dedicated mode fits large-scale registry browsing and greenhouse administration; per-life-form popups fit quick inspection or light tuning; lightweight debug overlays fit routine day-to-day checks when the organism count is still manageable
-- Lua scripting could be used as a bounded optional layer for species authoring or debug/dev plugins, but it should stay Rust-hosted and should not own the canonical world state, lifecycle authority, or render path
-- the registry taxonomy can be kept explicit by grouping fields into anatomy defaults, growth rules, visual phenotype ranges, lifecycle tuning, and debug labels; this makes the same registry useful for generation, emulation, and inspection without overloading one field bucket
-- botanical basics should remain a reference point for species design: if a morphology term, growth rule, or anatomy field is unclear, the registry should be informed by real plant structure before the term is committed to YAM
-- terminology authority should be explicit:
-  - `strict` terms are botanically grounded and should match standard plant meaning as closely as practical
-  - `inferred` terms are YAM-specific design interpretations built from real plant structure and terminal constraints
-  - `provisional` terms are placeholders that may change once the plant model or spatial terminology is researched further
-- plant-language references live in [`docs/glossary.md`](glossary.md); this contract only needs the YAM-specific rule that `node` stays reserved for plant morphology/anatomy and the spatial side should continue to use points, anchors, guides, lines, and polylines
-- vine-specific ownership and readiness details live in [`docs/vines.md`](vines.md); rendering may visualize vine geometry, but it must not own vine lifecycle or guide-following state
-- a concrete species-entry checklist can help keep the registry consistent: `species_id`, `display_name`, `habit/form`, `anatomy defaults`, `morphology notes`, `branching pattern`, `internode length`, `leaf distribution`, `growth rate`, `tropism rules`, `lifecycle tuning`, `allowed organs`, `debug labels`, and `journal hints`
-- example species entry: the Y-shaped tree-stump scaffold can be modeled as a woody support habit with a short trunk, one early fork below the hero, thick bark-textured segments, dead or minimal meristems, and a structural role rather than active canopy growth; this is an inference inspired by woody stem/meristem basics, not a claim that the scaffold is a real species
-- the scaffold should be treated as a pre-rendered hero-support remnant in the main scene: a dead or senescent trunk-like form with one stable fork under the hero GIF, minimal lifecycle behavior, and only very light moss growth over the bark while vines can later attach and partially overgrow it
-- the scaffold should not behave like a normal active plant: its lifecycle can be fixed or nearly fixed, with the primary requirement being structural stability, bark texture, and readable Y-shaped support geometry
-- example species entry: the vine family can be modeled as a climbing or sprawling habit with an active apical meristem, long internodes, optional lateral meristems, border-awareness, and the ability to produce leaves, flowers, and possibly fruit along the main stem; this is an inference inspired by climbing plant and node/internode basics
-- example species entry: the monstera-like plant can be modeled as an aroid-style climbing or self-supporting form with multiple stems from one growth area, large fenestrated leaves, aerial/climbing tendencies, and a lifecycle that can produce flowers and fruit later in development; this is an inference inspired by Monstera morphology rather than a direct species copy
-- the current prototype targets should be treated as concrete morphological briefs: the tree-stump scaffold is a 3-5 cell-thick bark-textured support with a fork just below the hero, the vine family is a border-aware sprawling growth form with a thick main stem and smaller branches, and the monstera-like plant is a multi-stem growth area with big fenestrated leaves and species-specific lifecycle behavior
-- a species-entry template can stay consistent by filling these fields for each prototype: `species_id`, `display_name`, `habit/form`, `support strategy`, `stem/axis plan`, `growth-tip behavior`, `branching pattern`, `internode range`, `leaf shape/distribution`, `organ outputs`, `life-state defaults`, `registry tags`, `journal hints`, and `inspection notes`
-- a botanical species-template should keep a few fields separate from general registry data: `taxonomic inspiration`, `support habit`, `growth mode`, `leaf architecture`, `reproductive strategy`, `life cycle notes`, and `ecology cues`; this helps keep the registry grounded while still remaining a YAM-specific abstraction
-- compact species template examples:
-  - tree-stump scaffold: `species_id = yam.scaffold.stump_v1`, `display_name = bifurcated stump scaffold`, `habit/form = woody support`, `support strategy = fixed hero anchor`, `stem/axis plan = short trunk with one fork`, `growth-tip behavior = minimal/dead`, `branching pattern = one early Y-fork`, `leaf shape/distribution = none or negligible`, `organ outputs = structural only`, `life-state defaults = dead-or-senescent`, `registry tags = scaffold, support, hero-anchor, bark`, `inspection notes = pre-rendered, stable fork, moss-only lifecycle, vine attachment zones`
-  - vine family: `species_id = yam.vine.border_v1`, `display_name = border-aware vine family`, `habit/form = climbing/sprawling`, `support strategy = border-aware guide-following`, `stem/axis plan = long main stem plus optional laterals`, `growth-tip behavior = active apical meristem`, `branching pattern = opportunistic side branches`, `leaf shape/distribution = repeat along stem`, `organ outputs = leaf, flower, fruit optional`, `life-state defaults = dynamic`, `registry tags = vine, climbing, border-aware, guided`, `inspection notes = gravity response, wall avoidance, mask interaction, thick main stem`
-  - monstera-like plant: `species_id = yam.floral.monstera_like_v1`, `display_name = fenestrated multi-stem flora`, `habit/form = aroid-like climber or self-supporting multi-stem`, `support strategy = multiple stems from one growth area`, `stem/axis plan = several axes from a base`, `growth-tip behavior = active and species-specific`, `branching pattern = sparse to moderate`, `leaf shape/distribution = large fenestrated leaves`, `organ outputs = leaf, flower, fruit possible`, `life-state defaults = active growth`, `registry tags = monstera-like, fenestrated, multi-stem, aroid-inspired`, `inspection notes = leaf size, perforation, stem count, lifecycle pacing`
+- render layers may visualize derived flora geometry, projected guides, labels,
+  and read-only inspection facts
+- render layers must not own organism identity, lifecycle mutation,
+  species-registry defaults, greenhouse room selection, or guide-following state
+- flora geometry should be projected through the shared spatial resolver and
+  drawn through reusable drawing primitives instead of family-specific cell
+  write loops
+- species-specific morphology should remain inspectable, but the detailed
+  registry templates and candidate species prose belong in the owning docs
+- vine-specific readiness lives in [`vines.md`](vines.md); greenhouse rooms,
+  candidate organisms, fixtures, environments, labels, and creative prompts
+  live in [`greenhouse-roadmap.md`](greenhouse-roadmap.md); terminology lives in
+  [`glossary.md`](glossary.md)
 
 ## Guide Capture Workflow
 

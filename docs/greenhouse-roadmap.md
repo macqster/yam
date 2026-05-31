@@ -83,6 +83,32 @@ The current repo already has the first seams that greenhouse work should use:
 - Scene and render layers are read-only visualizers of world/flora/spatial
   state.
 
+## 0.4 Readiness Snapshot
+
+Last checked: 2026-05-31.
+
+Current status:
+
+- baseline verification is green: `bash scripts/verify.sh` passed with docs
+  checks, ownership checks, clippy, cargo check, and `245` tests
+- `known_issues.md` has no active tracked issues
+- dependency inventory is clean: `cargo tree -d` reports nothing to print
+- world profile/selectability tests cover `Boot`, `MainScene`, and `Sandbox`,
+  including `Boot` staying non-selectable
+- `scripts/check.sh` guards `core::spatial` ownership by keeping
+  `project_world_to_screen(...)` and `crate::scene::coords` imports isolated in
+  `src/scene/coords.rs`
+- `FloraState` still stores only vines, but family-count and organism-identity
+  adapters are tested and remain the current bridge toward a future enum-backed
+  family store decision
+- Chafa/cache fallback tests cover missing GIF decode, unavailable Chafa,
+  placeholder non-cacheability, and cache freshness
+
+No new guard or test was added during this readiness pass because the inspected
+0.4 gates already have matching coverage or an explicit open decision recorded
+below. The next implementation-prep work should resolve contract shape, not
+start visible greenhouse behavior.
+
 ## North Star
 
 YAM should grow into two connected simulation spaces:

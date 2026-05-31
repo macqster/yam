@@ -32,6 +32,11 @@ Last reviewed: 2026-05-31
 
 ## Active Readiness Gates
 
+- 0.4 readiness check on 2026-05-31: full verification passed, `known_issues.md`
+  stayed empty, `cargo tree -d` reported no duplicated dependency graph, and
+  targeted world-profile, flora-adapter, and Chafa fallback tests passed. No
+  new guard/test was added because the inspected seams already have executable
+  coverage or an explicit open decision.
 - The ownership contract lives in [`docs/vines.md`](vines.md) and should remain current before additional vine phases or new plant families begin.
 - Do not start broader flora feature work until the signed projection, core-backed anchor identity, and screen-attached invariance tests stay green together.
 - Keep vines as world-attached organisms that query guide/spatial state; render layers should visualize resolved vine geometry rather than own vine state.
@@ -99,6 +104,13 @@ Last reviewed: 2026-05-31
   - evidence: `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/glossary.md`
 - `low` The ChatGPT preflight and brainstorming notes have been ingested without promoting runtime work: the roadmap now records 0.4 readiness gates, the functional-space-first greenhouse ordering, bounded `cbonsai` / HighGrow / Viridi / terminal-ecosystem references, deferred plant-growth software lineage, and the current enum-backed flora-store bias.
   - evidence: `docs/greenhouse-roadmap.md`, `docs/resource-map.md`, `TODO.md`
+- `low` The 0.4 expansion readiness pass found no immediate verification,
+  dependency, known-issue, or executable-guard blocker: full verification is
+  green, `cargo tree -d` is clean, `known_issues.md` is empty, world profiles,
+  flora adapters, and Chafa fallback paths have targeted passing tests, and the
+  remaining greenhouse/flora work is contract decision work rather than an
+  active regression.
+  - evidence: `scripts/verify.sh`, `cargo tree -d`, `known_issues.md`, `src/core/world.rs`, `src/core/flora.rs`, `src/render/chafa.rs`, `docs/greenhouse-roadmap.md`
 - `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
   - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

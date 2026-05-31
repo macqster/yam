@@ -13,6 +13,10 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-05-31
+
+- `11:14 CEST` consolidated greenhouse planning back into a single authoritative `docs/greenhouse-roadmap.md` surface: the non-redundant operation stages, immediate next tasks, stop conditions, and handoff checklist from the temporary greenhouse TODO draft were folded into the roadmap, while `docs/README.md`, `TODO.md`, and `docs/audit.md` were updated to remove the second active greenhouse TODO pointer.
+
 ## 2026-05-30
 
 - `08:01 CEST` extended the ownership-boundary guard from core into systems during the spatial migration: `src/systems/growth.rs` now uses `core::spatial::SpatialPoint` directly instead of the `scene::coords::WorldPos` compatibility alias, and `scripts/check.sh` now fails if systems import scene, render, UI, or terminal modules. `AGENTS.md`, architecture, hygiene, audit, and backlog docs were updated so the executable check matches the documented systems contract.
@@ -26,6 +30,7 @@ Logging rule:
 - `18:29 CEST` finished isolating the `scene::coords` compatibility facade from the rest of `src`: remaining layer test fixtures now import `core::spatial::SpatialPoint` directly, and `scripts/check.sh` fails if `crate::scene::coords` appears outside `src/scene/coords.rs`. The spatial backlog, hygiene, architecture, rendering, scene-model, and audit docs were updated to record the stronger guard.
 - `18:40 CEST` added the preliminary greenhouse expansion roadmap as a dedicated planning contract before creative input or runtime greenhouse work starts. `docs/greenhouse-roadmap.md` now owns the north star, hard rules, domain model, phased gates, first implementation sequence, open decisions, and a bounded external creative-input brief; README, docs index, backlog, and audit notes were updated to point at that owner instead of scattering greenhouse planning across chat memory.
 - `19:02 CEST` cleaned up `docs/greenhouse-roadmap.md` as a direct ChatGPT brainstorming reference by adding a self-contained reference section, idea-shape constraints, small-catalog prompt patterns, and follow-up prompts for room, species, fixture, lifecycle, and sequencing passes.
+- `19:38 CEST` ingested the first greenhouse brainstorming session as candidate planning material only: the roadmap now records the nursery/propagation-room starting bias, first organism candidates, static room sketch, zone/fixture vocabulary, label and interaction sketches, symbolic environment model, curation/progression language, transfer gates, and candidate fixture states while TODO and audit notes keep those ideas gated from runtime implementation.
 
 ## 2026-05-29
 

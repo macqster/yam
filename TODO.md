@@ -64,6 +64,9 @@ Issue link rule:
 - `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.
 - `inspect` decide whether greenhouse inspection needs a dedicated registry/journal mode or lightweight per-organism popups before building either surface.
 - `inspect` keep the first external creative-input request bounded by the roadmap brief so ideas enter as room profiles, species profiles, fixtures, environment presets, or inspection text instead of hidden UI or render-owned behavior.
+- `inspect` use the first brainstorming ingest as candidate material only: nursery / propagation room first, `seedling_tray` and `cutting_jar` as first organism candidates, symbolic environment, optional labels, and curation vocabulary are not implementation contracts until promoted.
+- `inspect` decide whether the first visual review artifact should be a docs sketch, plain-text asset, dev-only sandbox route, or deterministic render fixture before rendering `greenhouse_nursery_static_v0`.
+- `verify` greenhouse progression remains curation-oriented rather than game-like: no chores, currency, unlock grind, daily obligations, or automatic main-scene mutation from transfer status.
 
 ## 4. Main Scene Enrichment Prep
 

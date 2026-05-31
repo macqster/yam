@@ -129,207 +129,380 @@ The first greenhouse model should stay small and inspectable:
 - `Inspection`: a mode or popup that reads registry, journal, state, and derived
   geometry without becoming the owner of those facts.
 
-## Roadmap
+## Brainstorming Session 1 Ingest
 
-### Phase 0: Planning Gate
+The first external brainstorming source has been ingested as candidate material,
+not as an implementation contract. It should inform future prompts, planning
+docs, and small TODO promotions, but no runtime behavior should be implemented
+from the source note directly.
 
-Goal: make the expansion understandable before adding runtime behavior.
+Stable takeaways:
 
-Work:
+- The first greenhouse identity should bias toward a nursery / propagation room
+  wrapped in botanical-lab discipline, with a later path toward a fuller
+  conservatory atmosphere.
+- The first prototype name can stay `greenhouse_nursery` while planning, with
+  `greenhouse_nursery_static_v0` as the first visual staging target.
+- The first visible room should be sparse: a glass or roof hint, a propagation
+  bench, one seedling tray, one cutting jar, optional training frame, and enough
+  empty air that the room reads as a place rather than a panel.
+- The safest first organism concepts are `seedling_tray` and `cutting_jar`;
+  `weather_lichen` and `training_vine` are later candidates after environment
+  and transfer rules are better defined.
+- Greenhouse zones should be world-space concepts such as `propagation_bench`,
+  `glass_frame`, `inspection_marker`, `training_frame`, `substrate_bed`,
+  `specimen_shelf`, and `lamp_zone`.
+- Labels should be derived presentation. They can be hidden, compact, selected,
+  inspector-level, or dev/debug-level, but they must not create records or own
+  organism truth.
+- The first environment model should remain symbolic: filtered or artificial
+  light, balanced or damp humidity, mild temperature, tray/water/bark/scaffold
+  substrate, and no outside-weather coupling by default.
+- Greenhouse progression should be curation, not gameplay: register, observe,
+  stabilize, review, promote, retain, retire, and document are useful verbs;
+  chores, currency, unlocks, daily obligations, and yield optimization are not.
+- Transfer into the main scene needs explicit gates for identity, visual
+  stability, bounds, readability, architecture, tests, and curation status.
 
-- keep this roadmap current as the greenhouse owner document
-- keep the active backlog execution-shaped
-- keep `docs/audit.md` risk-focused
-- keep `known_issues.md` empty unless a concrete active issue appears
+Candidate vocabulary to preserve:
 
-Acceptance gate:
+- `lifecycle_status`: `registered`, `propagating`, `established`, `observed`,
+  `retired`
+- `stability_class`: `experimental`, `visual_stable`, `behavior_stable`,
+  `deprecated`
+- `transfer_status`: `greenhouse_only`, `candidate`, `approved`, `blocked`
+- `transfer_block_reason`: `visual_noise`, `hero_obstruction`,
+  `companion_obstruction`, `unstable_bounds`, `palette_conflict`,
+  `unclear_identity`, `too_dashboard_like`
 
-- docs checks pass
-- no runtime greenhouse behavior is added
-- future implementation slices can point to this roadmap instead of scattered
-  chat memory
+Candidate fixture states for future tests and visual review:
 
-### Phase 1: World Contract Slice
+```text
+organism_id: gh-0001
+species_id: seedling_tray
+lifecycle_status: propagating
+stability_class: experimental
+transfer_status: greenhouse_only
+zone_anchor: propagation_bench:left_tray
+growth_stage: two_leaf_sprouts
+```
 
-Goal: prove the greenhouse can be named by the world profile contract before it
-has visible content.
+```text
+organism_id: gh-0002
+species_id: cutting_jar
+lifecycle_status: established
+stability_class: visual_stable
+transfer_status: candidate
+zone_anchor: propagation_bench:center_slot
+growth_stage: root_fan
+```
 
-Work:
+```text
+organism_id: gh-0003
+species_id: training_vine
+lifecycle_status: observed
+stability_class: experimental
+transfer_status: blocked
+transfer_block_reason: hero_obstruction
+zone_anchor: training_frame:upper_left
+growth_stage: overreaching_vine
+```
 
-- decide the first world vocabulary, probably `WorldKind::Greenhouse` with
-  internal rooms rather than separate top-level worlds for every room
-- define candidate profile fields for room plan, environment plan, population
-  plan, and inspection capabilities
-- add tests that the new profile is selectable, has no main-scene companions,
-  owns its loading label, and declares only capabilities it can actually support
+Candidate room sketch:
 
-Acceptance gate:
+```text
+[glass / roof hint]
+[lamp line, optional]
+[training frame or specimen shelf]
+[propagation bench with tray + cutting jar]
+[floor/substrate strip]
+```
 
-- the world contract can describe greenhouse intent without UI-local toggles
-- render layers can branch by profile/composition/capability
-- no greenhouse world variant is added before room and environment ownership are
-  named
+Candidate interaction grammar, for later promotion only:
 
-### Phase 2: Room And Environment Storage
+- `Tab` / `Shift+Tab`: move between inspectable organisms
+- `Enter`: open selected organism inspector
+- `Esc`: close inspector or return to greenhouse
+- `l`: toggle compact labels
+- `d`: toggle dev overlay
+- `Space`: pause or resume growth ticks, if growth exists
 
-Goal: add inert greenhouse state with no visible output.
+None of these bindings are accepted runtime contracts yet. They are a compact
+vocabulary for later UI planning.
 
-Work:
+## Operation Plan
 
-- introduce a small room/environment model, likely in `core::greenhouse` once
-  code starts
-- define `GreenhouseState`, `GreenhouseRoom`, `EnvironmentProfile`, and
-  `PlantingSite` or equivalent names
-- keep room selection inside greenhouse/world state
-- start with coarse per-room environment values before any cell-level simulation
-- add deterministic fixtures only as data, not as a new render shortcut
+The greenhouse expansion should proceed as one staged operation. The root
+[TODO.md](../TODO.md) should only carry active execution pointers; the detailed
+greenhouse stage order lives here.
 
-Acceptance gate:
+Status tags for future work:
 
-- greenhouse state can be constructed, inspected, and tested without rendering
-- environment values are typed enough for future growth dispatch
-- no room data is stored in UI state
+- `docs` - docs-only promotion, alignment, or cleanup
+- `inspect` - research or decision work before implementation
+- `model` - pure data vocabulary or state shape
+- `test` - deterministic test or fixture work
+- `render` - visual review or runtime visualization
+- `ui` - inspection, selection, labels, or dev surface work
+- `gate` - stop/check condition before moving to the next stage
+- `defer` - intentionally later work
 
-### Phase 3: Flora Storage Generalization
+### Phase 0: Intake And Framing
 
-Goal: make room for multiple plant families before a second family lands.
+Goal: keep the idea space documented and bounded.
 
-Recommended direction:
+Tasks:
 
-- move from a vine-only top-level store toward a small enum-backed organism
-  store when the second family is ready
-- preserve typed accessors for vine tests and existing render code during the
-  transition
-- keep organism identity, species id, lifecycle state, stats, and journal id on
-  every instance
-- keep the species registry read-heavy and reusable; do not store per-instance
-  history in it
+- keep this roadmap as the strategic and operational greenhouse source
+- keep root `TODO.md` limited to active greenhouse execution pointers
+- ingest future brainstorming as distilled candidate material, not transcripts
+- keep `docs/audit.md` focused on risks and open gates
 
-Acceptance gate:
+Gate:
 
-- family counts and organism identities still work across all stored families
-- growth and render code can query the right family without downcasting through
-  UI or render state
-- adding the first greenhouse plant does not create another ad hoc vector beside
-  the current vine storage without an explicit store decision
+- roadmap, root TODO, audit, and log agree on greenhouse posture
+- no runtime greenhouse behavior is added from brainstorming alone
 
-### Phase 4: Growth Dispatch And Lifecycle
+### Phase 1: Greenhouse Contract Decision
 
-Goal: make organism updates species-aware and environment-aware.
+Goal: decide the first contract shape before adding a world variant or visible
+room.
 
-Work:
+Tasks:
 
-- keep `systems/growth` as the mutation owner for flora tick behavior
-- dispatch growth by organism family and species profile
-- feed growth from room/environment state when the organism lives in the
-  greenhouse
-- record lifecycle and growth events into the organism journal
-- keep deterministic seeds and explicit tick pacing
+- decide whether the first implementation contract stays here or graduates into
+  a future `docs/greenhouse.md`
+- decide whether the first runtime boundary is a hidden/dev-only room, sparse
+  sandbox route, or named `WorldKind::Greenhouse`
+- define what `Greenhouse` owns beyond `WorldKind::profile()`: room,
+  environment, fixture, population, inspection, and curation capability
+- plan profile tests before adding a world variant
 
-Acceptance gate:
+Gate:
 
-- same input state and tick sequence produce the same growth state
-- render layers still receive derived geometry only
-- tests cover lifecycle transitions, journal events, and no-op behavior for
-  unsupported species or missing environments
+- no selectable greenhouse world exists before room and environment ownership
+  are named
+- no UI-local world toggle is needed
 
-### Phase 5: First Greenhouse Room Render
+### Phase 2: Room, Zone, And Fixture Vocabulary
 
-Goal: visualize one room after storage and simulation contracts exist.
+Goal: define greenhouse as world space, not panel chrome.
 
-Work:
+Tasks:
 
-- render a sparse greenhouse room through the existing scene pipeline
-- start with fixtures, planting sites, guide linework, and organism silhouettes
-- keep room rendering world-attached and camera-aware
-- keep HUD/footer and modal vocabulary unchanged
-- use sandbox to test dense linework or fixture shapes before promotion
+- define candidate room vocabulary such as `GreenhouseState`,
+  `GreenhouseRoom`, `GreenhouseZone`, `EnvironmentProfile`, `Fixture`, and
+  `PlantingSite`
+- preserve first zones: `propagation_bench`, `glass_frame`,
+  `inspection_marker`, `training_frame`, `substrate_bed`, `specimen_shelf`,
+  and `lamp_zone`
+- decide whether fixtures own rectangles, anchors, or both
+- keep fixtures separate from organism lifecycle state
 
-Acceptance gate:
+Gate:
 
-- room content renders only when the active world profile asks for it
-- main-scene hero and companion composition remains untouched
-- footer, debug, and modal invariance tests stay green under greenhouse camera
-  movement
+- room/zone/fixture ownership is pure data
+- room selection stays inside greenhouse/world state, not UI tabs
 
-### Phase 6: Inspection And Authoring
+### Phase 3: Symbolic Environment Model
 
-Goal: expose greenhouse state without turning UI into simulation ownership.
+Goal: keep environment state small and useful for later growth dispatch.
 
-Recommended order:
+Tasks:
 
-- start with per-organism inspect popups for quick reading
-- add room/environment debug readouts only after state exists
-- reserve a dedicated registry or journal mode for later, when organism count
-  makes popups too small
-- keep mutation behind explicit dev tooling
+- define symbolic light, humidity, temperature, substrate, and outside-weather
+  influence fields
+- prefer room-level environment first; planting-site modifiers can come later
+- keep outside weather disabled by default
+- avoid numeric simulation until a species rule needs it
 
-Acceptance gate:
+Gate:
 
-- inspection reads registry, organism state, journal, room, and environment facts
-- routine inspection works without crowding the footer
-- dev edits are explicit and persist only through the existing save/dirty-state
-  discipline
+- environment can be read by future systems without reaching into UI or weather
+  widget rendering
 
-### Phase 7: Main Scene Bridge
+### Phase 4: Flora And Species Prep
 
-Goal: let greenhouse work enrich the main scene only after the system is proven.
+Goal: prepare organism storage before adding a second plant family.
 
-Work:
+Tasks:
 
-- promote selected flora concepts from greenhouse prototypes into the main scene
-- keep the scaffold stable and nearly fixed
-- add richer vines, monstera-like leaves, or other plant families only through
-  shared organism, flora, spatial, and render contracts
-- keep main-scene enrichment curated and comparatively static
+- decide how `FloraState` grows beyond `vines`: enum-backed family store,
+  organism registry, or another small explicit structure
+- keep organism identity, species id, journal id, lifecycle state, stats, and
+  family vocabulary on every organism
+- decide whether first greenhouse species profiles are Rust fixtures or
+  structured data
+- keep `seedling_tray` and `cutting_jar` as first candidate profiles
 
-Acceptance gate:
+Gate:
 
-- main scene remains a composed visualizer, not a management surface
-- new visible organisms have world/HUD/overlay ownership assigned before render
-- no greenhouse implementation detail leaks into main-scene-only shortcuts
+- no ad hoc top-level organism vector is added beside `FloraState::vines`
+  without a storage decision
 
-### Phase 8: Creative Expansion
+### Phase 5: Static Fixtures And Visual Review
 
-Goal: ask for creative input after constraints are clear.
+Goal: review greenhouse composition before runtime mechanics.
 
-Work:
+Tasks:
 
-- gather room mood, species concept, fixture, naming, and ritual ideas
-- translate usable ideas into species profiles, room profiles, environment
-  presets, visual briefs, and inspection text
-- reject ideas that require render-owned simulation, hidden UI state, or broad
-  mechanics before the storage and growth contracts exist
+- decide the first visual review artifact: docs sketch, plain-text asset,
+  dev-only sandbox route, or deterministic render fixture
+- keep `greenhouse_nursery_static_v0` sparse: glass/roof hint, optional lamp
+  line, training frame or specimen shelf, propagation bench with tray and
+  cutting jar, and substrate strip
+- keep glyph palettes small and material-specific
+- treat color roles semantically, not as core organism state
 
-Acceptance gate:
+Gate:
 
-- creative additions become data or bounded implementation slices
-- new ideas are traced back to this roadmap, a contract doc, or a backlog item
-- the greenhouse grows as an environment with rules, not as a pile of one-off
-  decorations
+- visual review is not the canonical simulation source
+- no opaque ANSI blob becomes canonical source material
 
-## First Implementation Sequence
+### Phase 6: Inert Greenhouse State
 
-When implementation starts, the rational order is:
+Goal: add state that can be constructed and tested without visible behavior.
 
-1. Add or refine contract docs and tests for greenhouse world profile fields.
-2. Add inert room/environment data.
-3. Decide and implement multi-family flora storage.
-4. Add one inert non-vine organism profile and instance shape.
-5. Add deterministic growth dispatch for that organism with environment input.
-6. Render the first sparse room.
-7. Add per-organism inspection.
-8. Then invite broader creative expansion.
+Tasks:
 
-Stop if a slice requires render-owned growth, UI-owned room state, a second
-projection system, raster masks without a promoted mask contract, or main-scene
-visual changes before the greenhouse contracts are ready.
+- add greenhouse state only after phases 1-4 identify owners
+- include room, environment, zones, fixtures, organisms, inspectable refs,
+  label visibility, and growth pause only if each field has an owner
+- prove inspectable refs resolve to organisms, clusters, or zones
+- keep presentation selection in UI state, not room data
+
+Gate:
+
+- inert greenhouse state is deterministic
+- no render path changes are required
+
+### Phase 7: Growth Dispatch Probe
+
+Goal: introduce the smallest deterministic greenhouse growth behavior.
+
+Tasks:
+
+- define lifecycle, stability, and transfer status separately before mutation
+  code uses them
+- start with fixture-based or static stages before tick-based mutation
+- keep growth deterministic and pausable when it begins
+- record growth and lifecycle events in organism journals
+
+Gate:
+
+- growth systems mutate world/flora state only
+- unsupported species or missing environments produce no-op behavior
+
+### Phase 8: First Runtime Room Render
+
+Goal: render the first sparse greenhouse room after data ownership is proven.
+
+Tasks:
+
+- draw room fixtures through the existing scene pipeline
+- keep room content world-attached and camera-aware
+- branch by world profile/composition/capability, not UI-local toggles
+- preserve main-scene hero, companion, footer, modal, and debug invariance
+
+Gate:
+
+- greenhouse rendering is visible only when the active world profile asks for it
+- no greenhouse renderer owns growth, room selection, or inspectable truth
+
+### Phase 9: Inspection, Labels, And Dev Surface
+
+Goal: expose greenhouse state without creating a dashboard.
+
+Tasks:
+
+- start with read-only per-organism inspection
+- keep labels derived from state: hidden, compact, selected, inspector, or debug
+- keep selection state presentation-oriented and separate from organism truth
+- decide whether compact labels are world-adjacent or screen-stabilized
+
+Gate:
+
+- label toggles do not mutate organism state
+- mutation controls wait until read-only inspection is stable
+
+### Phase 10: Curation And Transfer Gates
+
+Goal: bridge greenhouse experiments toward the main scene without coupling them.
+
+Tasks:
+
+- preserve separate lifecycle, stability, and transfer status vocabulary if
+  implemented
+- preserve blocked reasons such as `visual_noise`, `hero_obstruction`,
+  `companion_obstruction`, `unstable_bounds`, `palette_conflict`,
+  `unclear_identity`, and `too_dashboard_like`
+- treat `approved` as eligible for later work, not automatic placement
+- keep retirement/deprecation docs-only until persistence exists
+
+Gate:
+
+- greenhouse status cannot mutate the main scene directly
+- transfer review is explicit and inspectable
+
+### Phase 11: Creative Expansion Loop
+
+Goal: invite more creative input once the operational gates are legible.
+
+Tasks:
+
+- ask for small catalogs of room, species, fixture, environment, journal, and
+  lifecycle ideas
+- sort ideas into `now`, `after storage`, `after growth dispatch`, and
+  `later atmosphere`
+- promote only bounded ideas into root TODO or an owning contract
+- reject or park ideas that require hidden UI state, render-owned simulation,
+  broad mechanics, or main-scene mutation
+
+Gate:
+
+- creative output becomes data, contract text, fixtures, or small tasks
+- the greenhouse remains a place with rules, not a pile of decorations
+
+Immediate next tasks:
+
+- keep the first brainstorming ingest candidate-only
+- decide whether `docs/greenhouse.md` is needed before inert state work begins
+- decide the first visual review artifact for `greenhouse_nursery_static_v0`
+- decide the first flora storage generalization direction
+- identify first pure data tests for room, zone, fixture, species, and
+  inspectable refs
+
+Stop conditions:
+
+- render-owned simulation truth
+- UI-owned room, environment, or organism state
+- a second projection system
+- a selectable greenhouse world without room/environment ownership
+- another plant-family store beside `FloraState::vines` without a storage
+  decision
+- screenshot/golden art locks before the visual vocabulary stabilizes
+- main-scene visual changes before transfer gates exist
+- gameplay loops such as chores, currency, unlock grinding, daily obligations,
+  or yield optimization
+
+Handoff checklist:
+
+- root `TODO.md` updated only for active execution pointers
+- this roadmap updated for strategy, accepted takeaways, operation stages, and
+  creative-input reference
+- `docs/audit.md` updated only for current risks or open gates
+- `docs/LOG.md` appended with a historical note
+- docs checks passing, and full verification when the batch touches code or
+  cross-contract behavior
 
 ## Open Decisions
 
 - Should the first visible greenhouse be a single `Greenhouse` world with
   internal rooms, or should `Lab` become a separate world later? Current bias:
   one greenhouse world first, lab as a later room or mode if it proves distinct.
+- Should the first greenhouse identity be lab, conservatory, or nursery? Current
+  bias: nursery / propagation room first, with botanical-lab discipline and
+  later conservatory atmosphere.
 - Should greenhouse environments start per room or per planting site? Current
   bias: per room first, planting-site modifiers later.
 - Should inspection begin as popups or a dedicated registry mode? Current bias:
@@ -337,6 +510,8 @@ visual changes before the greenhouse contracts are ready.
 - Should species definitions remain static Rust fixtures or move to structured
   files? Current bias: static fixtures for the first two families, structured
   data once the schema stabilizes.
+- Should greenhouse progression have game-like mechanics? Current bias: no;
+  use curation, inspection, review, and promotion vocabulary instead.
 - Should Lua or another script layer enter species authoring? Current bias:
   no runtime scripting until Rust-owned species and growth contracts are proven.
 
@@ -363,6 +538,8 @@ simulation, or large mechanics before the architecture is ready.
 
 Useful follow-up prompts:
 
+- Use the Brainstorming Session 1 ingest as source context, but keep all
+  suggestions non-binding until promoted into roadmap, TODO, or a contract doc.
 - Turn the strongest room ideas into compact `RoomProfile` sketches with role,
   environment, fixtures, planting sites, and inspection notes.
 - Turn the strongest plant ideas into compact `SpeciesProfile` sketches with

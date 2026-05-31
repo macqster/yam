@@ -123,6 +123,13 @@ Last reviewed: 2026-05-31
   records before attaching state to `WorldState` or adding a visible
   `Greenhouse` world.
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`
+- `low` The archived greenhouse ecosystem design notes and roadmap review are
+  now ingested into the roadmap as bounded architectural source material: they
+  strengthen the lab/frame vocabulary, shell/support/light/sensor/actuator
+  families, identity hierarchy, and journal-target ordering, while preserving
+  the current first-pass constraint of one inert nursery room before any
+  greenhouse-global chrome or multi-lab runtime structure.
+  - evidence: `docs/greenhouse-roadmap.md`, `docs/archive/greenhouse-brainstorming/`
 - `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
   - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

@@ -14,6 +14,7 @@ active_docs=(
   "TODO.md"
   "known_issues.md"
   docs/*.md
+  docs/chatgpt-0.4-source-pack/*.md
   skills/*/SKILL.md
 )
 skill_dirs=(skills/*)

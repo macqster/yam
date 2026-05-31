@@ -380,6 +380,96 @@ Deferred plant vocabulary to preserve for later:
 - environment hook
 - inspection view
 
+## Ecosystem Design Notes Ingest
+
+The ecosystem design note series (`01` through `12`) is now accepted as
+candidate architectural source material. It should shape the greenhouse
+contract, naming, and staging rules, but it still does not authorize runtime
+greenhouse implementation by itself.
+
+Stable takeaways:
+
+- The broader greenhouse can eventually be modeled as a stable greenhouse frame
+  containing switchable internal labs, but the first implementation pass should
+  still start smaller: one inert room container under `greenhouse_nursery`
+  before any tab-strip, multi-lab navigation, or greenhouse-global chrome is
+  promoted into runtime code.
+- `AccessPath` is now more concrete: it should represent readable movement and
+  work space between supports, benches, trays, and infrastructure, not player
+  movement logic or generic panel spacing.
+- The first room should read as a controlled container, not a loose decorative
+  box. Useful first-pass shell vocabulary is roofline, rails, back wall, side
+  wall, floor plane, glazing/panels, and mounting points.
+- Plant-support vocabulary is now clearer: the first room should prefer a small
+  support family such as nursery tray, bench surface, humidity dome, specimen
+  jar slot, and optional training support before larger hydro, hanging, or
+  archive-heavy structures appear.
+- Lighting should be modeled as attached infrastructure with stable relation to
+  supports: lamp, shelf light, panel, chain/rail attachment, and optional
+  light-cone vocabulary are all valid, but floating glow or detached lighting
+  props are not.
+- Sensor and gauge ideas are useful, but the first pass should keep them as
+  bounded inspection and room-language references. Prefer attached local tags,
+  panel readouts, or one greenhouse-level summary later rather than filling the
+  first room with exact numeric readouts.
+- Climate actuators and water infrastructure are valid later element families,
+  but the first room should only preserve their attachment logic and vocabulary
+  for future use. Dense fans, ducts, pipes, valves, pumps, and dosing lines
+  belong to later labs or later room revisions, not the first sparse nursery.
+- Maintenance props are best treated as sparse coherence markers and later
+  interaction hooks. Favor one or two purposeful objects, such as labels,
+  notebook/clipboard hints, or a tool rack, rather than clutter.
+- Identity hierarchy is now clearer and should be preserved as a contract:
+  greenhouse identity, lab/room identity, bay or planting-site identity,
+  support identity, organism identity, warning identity, and journal-link
+  identity are separate layers.
+- The current roadmap bias still holds: support identity must stay separate
+  from organism identity, and future journal markers should signal records
+  without becoming the records themselves.
+- Future journaling work should stay attached to stable targets in this order:
+  organism, support, planting site/bay, room/lab, then greenhouse. The first
+  runtime preparation remains a read-only inspection target model, not a full
+  timeline UI.
+
+First-pass implications for YAM:
+
+- treat the note series as a vocabulary bank for room, support, lighting,
+  identity, and later journal concepts
+- keep the first runtime greenhouse slice constrained to a single inert nursery
+  room with tiny capacity and symbolic environment
+- delay greenhouse-frame chrome, multi-lab switching, dense gauges, dense
+  infrastructure, and broad journaling UI until the core room/state contract
+  proves itself
+
+Useful preserved greenhouse/lab vocabulary:
+
+- frame/lab candidates: `Propagation Lab`, `Climate Lab`, `Grow Bay Lab`,
+  `Vines Lab`, `Utility Lab`, `Archive / Specimen Lab`
+- room-shell cues: `back_wall`, `side_wall`, `floor_plane`, `roofline`,
+  `ceiling_rail`, `glazing_panel`, `partition_panel`
+- support cues: `nursery_tray`, `humidity_dome`, `bench_planter`,
+  `specimen_jar`, `shelf_rack`, `trellis_grid`
+- identity cues: `lab_plaque`, `bay_tag`, `support_tag`, `organism_tag`,
+  `warning_badge`, `journal_link`
+
+## Roadmap Review Ingest
+
+The roadmap review note reinforces the current planning direction and is now
+accepted as a validation source rather than a second roadmap.
+
+Stable takeaways:
+
+- The current ordering is still the right one:
+  `docs/readiness -> functional-space contract -> room/access/zone/fixture vocabulary -> symbolic environment -> flora storage decision -> inert state -> growth probe -> render -> inspection -> transfer`.
+- The first greenhouse pass should remain a pure data contract for a
+  functional room container, not a render contract, species contract, or
+  growth contract.
+- Reference ingests remain bounded. `HighGrow`, `Viridi`, `cbonsai`,
+  `asciiquarium`, and plant-modeling lineage justify future attachment points,
+  not first-pass runtime scope.
+- The Ratatui boundary remains correct: render layers visualize state; they do
+  not own greenhouse truth.
+
 ## Prior Brainstorming Ingest
 
 The earlier local greenhouse brainstorming source has been ingested as

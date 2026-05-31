@@ -17,6 +17,26 @@ This folder holds older reports and update notes that are kept for historical co
 - [`notes/flattening-plan.md`](notes/flattening-plan.md)
 - [`notes/version-map.md`](notes/version-map.md)
 
+## Greenhouse Brainstorming
+
+- [`greenhouse-brainstorming/`](greenhouse-brainstorming/) - archived local greenhouse planning corpus copied from the desktop brainstorming workspace
+- [`greenhouse-brainstorming/greenhouse_brainstorming_1.md`](greenhouse-brainstorming/greenhouse_brainstorming_1.md)
+- [`greenhouse-brainstorming/greenhouse_chatgpt_preflight_check.md`](greenhouse-brainstorming/greenhouse_chatgpt_preflight_check.md)
+- [`greenhouse-brainstorming/greenhouse_chatgpt_brainstorming_1.md`](greenhouse-brainstorming/greenhouse_chatgpt_brainstorming_1.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_01.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_01.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_02.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_02.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_03.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_03.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_04.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_04.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_05.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_05.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_06.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_06.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_07.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_07.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_08.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_08.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_09.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_09.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_10.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_10.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_11.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_11.md)
+- [`greenhouse-brainstorming/greenhouse_ecosystem_design_notes_12.md`](greenhouse-brainstorming/greenhouse_ecosystem_design_notes_12.md)
+- [`greenhouse-brainstorming/greenhouse_roadmap_review.md`](greenhouse-brainstorming/greenhouse_roadmap_review.md)
+
 ## Rule
 
 - Keep active contracts in `docs/scene-model.md`, `docs/architecture.md`, and `docs/rendering.md`.

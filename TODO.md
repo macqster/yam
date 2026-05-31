@@ -69,6 +69,8 @@ Issue link rule:
   persistence.
 - `inspect` when implementation is explicitly authorized, start with pure `core::greenhouse` data and tests for `GreenhouseState`, room, access path, zone, fixture, planting site, symbolic environment, and read-only inspection records before attaching state to `WorldState`.
 - `verify` greenhouse remains a separate simulation world or world-internal room model, not panel chrome layered on top of the main scene; room selection stays internal to world state.
+- `inspect` preserve the newly ingested greenhouse identity hierarchy before UI work: greenhouse/lab, planting site or bay, support, organism, warning, and journal-link identities must stay distinct.
+- `inspect` if greenhouse grows into a frame-plus-labs structure later, promote it in order: single inert nursery room first, then room-to-lab naming, then greenhouse frame/navigation chrome only after room ownership is proven.
 - `inspect` decide whether greenhouse inspection starts as lightweight per-organism popups or a dedicated registry/journal mode before building either surface.
 - `inspect` keep the first external creative-input request bounded by the roadmap brief so ideas enter as room profiles, species profiles, fixtures, environment presets, or inspection text instead of hidden UI or render-owned behavior.
 - `verify` greenhouse progression remains curation-oriented rather than game-like: no chores, currency, unlock grind, daily obligations, or automatic main-scene mutation from transfer status.

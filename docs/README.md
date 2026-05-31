@@ -25,6 +25,7 @@ The repo front door is [../README.md](../README.md).
 
 ## Active Surface Contracts
 
+- [chatgpt-0.4-source-pack/README.md](chatgpt-0.4-source-pack/README.md) - compact upload pack for the external YAM 0.4 ChatGPT project
 - [greenhouse-roadmap.md](greenhouse-roadmap.md) - greenhouse expansion roadmap and implementation gates
 - [loading-screen.md](loading-screen.md) - boot/loading-screen contract
 - [weather-widget.md](weather-widget.md) - weather-widget contract
@@ -59,6 +60,8 @@ The repo front door is [../README.md](../README.md).
 | Ownership and architecture boundaries | [architecture.md](architecture.md) |
 | Scene/world behavior | [scene-model.md](scene-model.md) |
 | Rendering, layers, and UI/render contracts | [rendering.md](rendering.md) |
+| External ChatGPT 0.4 upload context | [chatgpt-0.4-source-pack/README.md](chatgpt-0.4-source-pack/README.md) |
+| External ChatGPT 0.4 provenance and workflow cues | [chatgpt-0.4-source-pack/source-pack-manifest.md](chatgpt-0.4-source-pack/source-pack-manifest.md) |
 | Greenhouse strategy and operation plan | [greenhouse-roadmap.md](greenhouse-roadmap.md) |
 | Vine ownership and staged readiness | [vines.md](vines.md) |
 | Weather widget ownership | [weather-widget.md](weather-widget.md) |

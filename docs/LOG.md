@@ -18,6 +18,7 @@ Logging rule:
 - `11:14 CEST` consolidated greenhouse planning back into a single authoritative `docs/greenhouse-roadmap.md` surface: the non-redundant operation stages, immediate next tasks, stop conditions, and handoff checklist from the temporary greenhouse TODO draft were folded into the roadmap, while `docs/README.md`, `TODO.md`, and `docs/audit.md` were updated to remove the second active greenhouse TODO pointer.
 - `11:26 CEST` trimmed the root backlog's greenhouse section back to execution gates and a single roadmap pointer: detailed candidate identity, organism, fixture, visual-review, and phase-task material now lives only in `docs/greenhouse-roadmap.md`.
 - `11:29 CEST` distilled duplicated flora and greenhouse prose out of the architecture, scene-model, and rendering contracts: architecture now keeps ownership boundaries, scene-model keeps behavior vocabulary, rendering keeps visualization rules, and detailed candidate species / fixture / environment planning points back to `docs/greenhouse-roadmap.md`, `docs/vines.md`, and `docs/glossary.md`.
+- `11:34 CEST` clarified the documentation map by replacing the duplicated change-target list in `docs/README.md` with a compact role table for active owners, including greenhouse, vines, weather, hero cache, and config surfaces.
 
 ## 2026-05-30
 

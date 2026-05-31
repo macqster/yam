@@ -44,20 +44,26 @@ The repo front door is [../README.md](../README.md).
 - [archive/README.md](archive/README.md) - archive index
 - [REFERENCE_ARCHIVE.md](REFERENCE_ARCHIVE.md) - imported historical reference dump
 
-## Where To Change Things
+## Doc Role Table
 
-- repo/runtime overview -> [../README.md](../README.md)
-- agent-facing work guidance -> [../AGENTS.md](../AGENTS.md)
-- agent-facing workflow skills -> [../skills/](../skills/)
-- work order and execution checks -> [../TODO.md](../TODO.md)
-- active unresolved issues -> [../known_issues.md](../known_issues.md)
-- risk, drift, and next cleanup seams -> [audit.md](audit.md)
-- historical record -> [LOG.md](LOG.md)
-- terminology -> [glossary.md](glossary.md)
-- ownership/architecture -> [architecture.md](architecture.md)
-- scene behavior -> [scene-model.md](scene-model.md)
-- rendering/layer/UI contracts -> [rendering.md](rendering.md)
-- greenhouse expansion planning -> [greenhouse-roadmap.md](greenhouse-roadmap.md)
+| Need | Owning Surface |
+| --- | --- |
+| Repo/runtime overview | [../README.md](../README.md) |
+| Agent-facing work guidance | [../AGENTS.md](../AGENTS.md) |
+| Agent-facing workflow procedures | [../skills/](../skills/) |
+| Active execution order and checks | [../TODO.md](../TODO.md) |
+| Concrete unresolved issues | [../known_issues.md](../known_issues.md) |
+| Current risks, drift, and cleanup seams | [audit.md](audit.md) |
+| Historical record | [LOG.md](LOG.md) |
+| Shared terminology | [glossary.md](glossary.md) |
+| Ownership and architecture boundaries | [architecture.md](architecture.md) |
+| Scene/world behavior | [scene-model.md](scene-model.md) |
+| Rendering, layers, and UI/render contracts | [rendering.md](rendering.md) |
+| Greenhouse strategy and operation plan | [greenhouse-roadmap.md](greenhouse-roadmap.md) |
+| Vine ownership and staged readiness | [vines.md](vines.md) |
+| Weather widget ownership | [weather-widget.md](weather-widget.md) |
+| Hero cache design/runtime path | [hero-cache.md](hero-cache.md) |
+| Config ownership and boot-frame note | [config.md](config.md) |
 
 ## Role Rules
 

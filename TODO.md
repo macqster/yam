@@ -62,11 +62,12 @@ Issue link rule:
 - `docs` treat `docs/greenhouse-roadmap.md` as the single owning greenhouse roadmap and operation plan; keep greenhouse strategy, phase tasks, candidate organisms, stop conditions, and creative-input briefs there instead of in this backlog.
 - `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
 - `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
+- `verify` preserve the roadmap's 0.4 gate checklist and locked first-pass greenhouse decisions before implementation: docs aligned, verification green, spatial ownership stable, enum-backed flora store bias, functional-space contract first, and hero/render fallback hardened.
 - `inspect` keep the first greenhouse pass functional-space-first: room,
   access paths, zones, fixtures, planting sites, symbolic environment, and
   read-only inspection before new plant families, lifecycle systems, or
   persistence.
-- `inspect` define greenhouse room, environment, population, inspection, and curation ownership before adding a visible `Greenhouse` world variant.
+- `inspect` when implementation is explicitly authorized, start with pure `core::greenhouse` data and tests for `GreenhouseState`, room, access path, zone, fixture, planting site, symbolic environment, and read-only inspection records before attaching state to `WorldState`.
 - `verify` greenhouse remains a separate simulation world or world-internal room model, not panel chrome layered on top of the main scene; room selection stays internal to world state.
 - `inspect` decide whether greenhouse inspection starts as lightweight per-organism popups or a dedicated registry/journal mode before building either surface.
 - `inspect` keep the first external creative-input request bounded by the roadmap brief so ideas enter as room profiles, species profiles, fixtures, environment presets, or inspection text instead of hidden UI or render-owned behavior.

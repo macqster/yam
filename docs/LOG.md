@@ -21,6 +21,7 @@ Logging rule:
 - `11:34 CEST` clarified the documentation map by replacing the duplicated change-target list in `docs/README.md` with a compact role table for active owners, including greenhouse, vines, weather, hero cache, and config surfaces.
 - `16:23 CEST` ingested the ChatGPT greenhouse preflight and first brainstorming notes into the active planning docs without promoting runtime work: `docs/greenhouse-roadmap.md` now records the 0.4 readiness gates, functional-space-first room ordering, bounded reference lanes, and current enum-backed flora-store bias, while `TODO.md`, `docs/audit.md`, and `docs/resource-map.md` were aligned around those constraints.
 - `16:38 CEST` completed a non-feature 0.4 expansion readiness review: the baseline `scripts/verify.sh` run passed, `known_issues.md` remained empty, `cargo tree -d` reported no duplicated dependency graph, targeted world-profile / flora-adapter / Chafa fallback tests passed, and the roadmap plus audit now record that no new guard/test was needed because remaining 0.4 work is contract-decision work rather than an active regression.
+- `16:43 CEST` completed a docs-only greenhouse functional-space contract pass: `docs/greenhouse-roadmap.md` now has a 0.4 gate checklist, locked first-pass decisions, and a pure data contract for future `core::greenhouse` state, rooms, access paths, zones, fixtures, planting sites, symbolic environment profiles, and read-only inspection records; `TODO.md` and `docs/audit.md` were aligned without adding runtime behavior.
 
 ## 2026-05-30
 

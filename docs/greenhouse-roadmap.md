@@ -109,6 +109,44 @@ No new guard or test was added during this readiness pass because the inspected
 below. The next implementation-prep work should resolve contract shape, not
 start visible greenhouse behavior.
 
+## 0.4 Gate Checklist
+
+| Gate | Status | Evidence | Remaining Work |
+| --- | --- | --- | --- |
+| Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
+| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `245` tests | Re-run before each implementation batch |
+| Spatial ownership stable | Prep-ready | `scripts/check.sh` isolates `project_world_to_screen(...)` and `crate::scene::coords`; active render paths consume `core::spatial` | Continue relation consolidation before masks or organism guidance become first-class |
+| Flora storage decision | Decision-biased | `FloraState` adapters are tested; enum-backed family store is the current first-pass bias | Lock the enum-backed shape before a second plant family lands |
+| Greenhouse/world contract | Contract-ready, not runtime-ready | Functional-space contract lives below; `WorldKind::profile()` is the future world seam | Add pure data tests before any visible `WorldKind::Greenhouse` variant |
+| Hero/render fallback hardened | Prep-ready | Chafa fallback/cache tests cover missing GIF, unavailable Chafa, placeholder cache rejection, and cache freshness | Keep offline `CellGrid` / editor work deferred |
+
+## Locked First-Pass Decisions
+
+- Keep the greenhouse contract in this roadmap for now; create
+  `docs/greenhouse.md` only after inert state exists or this roadmap becomes too
+  crowded to remain readable.
+- The first code-bearing greenhouse slice, when explicitly requested, should be
+  a pure `core::greenhouse` data module with construction and invariant tests.
+  It should not render, tick growth, mutate flora, or add a selectable world.
+- The first visible greenhouse should eventually be a named
+  `WorldKind::Greenhouse`; the sandbox may support visual review, but it should
+  not become the hidden owner of greenhouse state.
+- The first room identity stays `greenhouse_nursery`: a nursery / propagation
+  room with botanical-lab discipline and later conservatory atmosphere.
+- The first visual artifact stays a docs/plain-text room sketch until pure data
+  ownership is tested; no screenshot or golden art lock should lead the design.
+- The first environment model is symbolic and room-level: light, humidity,
+  temperature, water, airflow, substrate, and outside-weather influence, with
+  outside weather disabled by default.
+- First inspection is read-only and closer-look oriented. Mutation controls,
+  care loops, and edit surfaces wait until read-only inspection is stable.
+- First room capacity stays tiny: one to three planting sites per room.
+- First species/profile data, when plant work is promoted later, starts as
+  static Rust fixtures. Structured files wait until the schema stabilizes.
+- First flora-storage generalization remains biased toward an enum-backed family
+  store. A generic registry or broader store must beat that bias with a concrete
+  simplification.
+
 ## North Star
 
 YAM should grow into two connected simulation spaces:
@@ -170,6 +208,67 @@ The first greenhouse model should stay small and inspectable:
   environment, growth tips, and elapsed ticks.
 - `Inspection`: a mode or popup that reads registry, journal, state, and derived
   geometry without becoming the owner of those facts.
+
+## Functional-Space Contract
+
+This contract is the first implementation target once greenhouse code is
+explicitly authorized. It is a pure data contract for a functional room
+container. It is not a render contract, species contract, or growth contract.
+
+Implementation placement:
+
+- create `src/core/greenhouse.rs` only when code work starts
+- expose it through `core/mod.rs` only after the pure data tests exist
+- attach it to `WorldState` only after construction and invariant tests pass
+- keep render, UI, systems, weather, and terminal modules out of the first data
+  slice
+
+Identifier policy:
+
+- use stable string-like ids for room, access path, zone, fixture, planting
+  site, environment profile, and inspection records
+- use human-readable planning ids such as `greenhouse_nursery`,
+  `propagation_bench`, `left_tray`, and `inspection_marker`
+- do not reuse `OrganismId` for rooms, fixtures, or planting sites
+
+Minimum data owners:
+
+| Owner | Owns | Must Not Own |
+| --- | --- | --- |
+| `GreenhouseState` | rooms, active room id, greenhouse-level capability flags | UI tabs, render layers, organism lifecycle, persistence policy |
+| `GreenhouseRoom` | room id, display name, role, bounds, access paths, zones, fixtures, planting sites, environment profile, inspection records | growth ticks, species registry, render ordering |
+| `AccessPath` | readable attention/movement space inside a room | pathfinding, player movement, layout panels |
+| `GreenhouseZone` | named functional sub-area and its anchor/bounds | organism lifecycle state |
+| `Fixture` | stable world-attached support geometry and material/inspection hints | growth mutation, species identity |
+| `PlantingSite` | bounded or anchored occupancy site and capacity | plant state, care loop, yield logic |
+| `EnvironmentProfile` | symbolic room-level light, humidity, temperature, water, airflow, substrate, outside-weather influence | weather widget state, numeric simulation |
+| `InspectionRef` | read-only target reference, label, and short inspection text | mutation controls, journal ownership |
+
+First nursery fixture vocabulary:
+
+- `glass_frame`
+- `propagation_bench`
+- `left_tray`
+- `cutting_jar_slot`
+- `inspection_marker`
+- `training_frame`
+- `specimen_shelf`
+- `substrate_strip`
+- `lamp_zone`
+
+First invariant tests, when code starts:
+
+- a nursery state can be constructed with one active room
+- room ids are stable and unique inside the greenhouse state
+- zones, fixtures, planting sites, and inspection records resolve to the active
+  room
+- a room has one to three planting sites
+- environment profile values are symbolic and outside-weather influence is off
+  by default
+- inspection records are read-only and target rooms, zones, fixtures, planting
+  sites, or later organisms without owning those targets
+- no greenhouse type imports render, UI, terminal, weather-provider, or systems
+  modules
 
 ## ChatGPT Preflight Check Ingest
 

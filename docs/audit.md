@@ -11,7 +11,7 @@ Last reviewed: 2026-05-31
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
 - Greenhouse planning now has a single dedicated roadmap, but implementation gates are still open: room/environment ownership, multi-family flora storage, growth dispatch, and inspection surfaces need explicit decisions before visible greenhouse content starts.
-- The first greenhouse brainstorming source has been distilled into the roadmap as candidate material only; the useful current bias is nursery/propagation-room first, seedling tray and cutting jar as first organism candidates, symbolic environment, optional labels, and curation-style progression rather than gameplay.
+- The greenhouse brainstorming sources have been distilled into the roadmap as candidate material only; the useful current bias is functional-space-first nursery/propagation-room work, symbolic per-room environment, read-only inspection, tiny planting-site capacity, and curation-style progression rather than gameplay.
 
 ## Weakest Areas
 
@@ -40,6 +40,10 @@ Last reviewed: 2026-05-31
 - Clean terminology drift before implementation: spatial capture uses points, anchors, guides, lines, and polylines; `node` remains reserved for plant morphology/anatomy.
 - Readiness validation on 2026-05-05: targeted Phase 0 checks are green for spatial projection, guide-set lookup, anchor identity, footer/HUD invariance, and resize round-trip behavior; the remaining risk is architectural consolidation, not an active regression.
 - The active backlog now treats vine phases 1 through 7 as landed and keeps only branching/organs, border awareness, and broader flora/greenhouse preparation as future execution work.
+- Greenhouse implementation should start with the functional room contract:
+  room, access paths, zones, fixtures, planting sites, symbolic environment, and
+  read-only inspection before new plant families, lifecycle systems, or
+  persistence.
 
 ## Active Risk Notes
 
@@ -93,6 +97,8 @@ Last reviewed: 2026-05-31
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`, `docs/README.md`
 - `low` Architecture, scene-model, and rendering docs now carry shorter flora/greenhouse contracts instead of duplicating candidate species, fixture, and environment prose; the remaining detail points to the greenhouse roadmap, vines contract, and glossary.
   - evidence: `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/glossary.md`
+- `low` The ChatGPT preflight and brainstorming notes have been ingested without promoting runtime work: the roadmap now records 0.4 readiness gates, the functional-space-first greenhouse ordering, bounded `cbonsai` / HighGrow / Viridi / terminal-ecosystem references, deferred plant-growth software lineage, and the current enum-backed flora-store bias.
+  - evidence: `docs/greenhouse-roadmap.md`, `docs/resource-map.md`, `TODO.md`
 - `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
   - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.

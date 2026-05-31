@@ -130,13 +130,33 @@ Current YAM baseline:
 
 Recommended posture:
 
+- `Reference` `cbonsai` / `rbonsai` for terminal plant mood, slow emergence,
+  glyph economy, and screensaver-like presence
+- `Reference` `asciiquarium` for ambient terminal ecosystem staging and
+  multiple organisms sharing one visual environment
+- `Reference` HighGrow only as compact greenhouse structure: multiple small
+  rooms, one to three planting sites, local fixture/climate affordances, and a
+  magnifying-glass-like inspect precedent
+- `Reference` Viridi for calm small-container mood, gentle check-in cadence,
+  slow-time presence, and possible future personal attachment language
+- `Reference` OpenAlea, L-Py, Arbaro, AmapSim, GreenLab, PowerPlant / pplant,
+  ONETREE, and Algorithmic Botany / L-studio as deferred technical lineage for
+  plant form, morphology, rule grammar, and environment-hook thinking
 - `Reference` L-systems, space-colonization, cellular-automata, and agent-based growth literature as idea banks
 - `Emulate` deterministic, art-directable, terminal-cell-friendly growth rules rather than biological simulation dogma
-- `Reject` overbuilt realism or random ASCII painting that bypasses YAM's explicit world-space/growth contracts
+- `Reject` overbuilt realism, crop simulation, harvest loops, genetics, yield
+  optimization, realistic cultivation instruction, or random ASCII painting
+  that bypasses YAM's explicit world-space/growth contracts
 
 Implementation gate:
 
-- future flora work should extend the existing systems vocabulary instead of bypassing it with one-off species logic
+- first greenhouse work should define functional space first: room, access
+  paths, zones, fixtures, planting sites, symbolic environment, and read-only
+  inspection
+- future flora work should extend the existing systems vocabulary instead of
+  bypassing it with one-off species logic
+- L-systems or scientific plant-modeling references should not become runtime
+  scope until the greenhouse room/site/environment contract is stable
 
 ### Theme And Palette References
 
@@ -197,6 +217,12 @@ Implementation gate:
 | `ratatui-image` | Reference | future image-protocol experiments only |
 | Apple MusicKit / MusicKit JS | Reference | capability and playback-semantics reference for possible music companion |
 | macOS Music.app automation | Adopt candidate | safest first playback backend for possible `yam-music` |
+| `cbonsai` / `rbonsai` | Reference | terminal plant mood and slow emergence lineage |
+| `asciiquarium` | Reference | ambient terminal ecosystem staging |
+| HighGrow | Reference | compact multi-room greenhouse and inspect precedent only |
+| Viridi | Reference | calm small-container check-in mood |
+| OpenAlea / L-Py / Arbaro | Reference | deferred plant morphology and grammar lineage |
+| GreenLab / Algorithmic Botany | Reference | deferred technical plant-modeling lineage |
 | Chrome/CDP/MusicKit playback | Reject first path | too fragile for the first YAM music companion slice |
 | pure Rust Apple Music streaming | Reject | not a practical playback target |
 | raw ANSI / XBIN / `.xp` runtime authority | Reject | not a runtime asset source by default |

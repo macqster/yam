@@ -19,6 +19,7 @@ Logging rule:
 - `11:26 CEST` trimmed the root backlog's greenhouse section back to execution gates and a single roadmap pointer: detailed candidate identity, organism, fixture, visual-review, and phase-task material now lives only in `docs/greenhouse-roadmap.md`.
 - `11:29 CEST` distilled duplicated flora and greenhouse prose out of the architecture, scene-model, and rendering contracts: architecture now keeps ownership boundaries, scene-model keeps behavior vocabulary, rendering keeps visualization rules, and detailed candidate species / fixture / environment planning points back to `docs/greenhouse-roadmap.md`, `docs/vines.md`, and `docs/glossary.md`.
 - `11:34 CEST` clarified the documentation map by replacing the duplicated change-target list in `docs/README.md` with a compact role table for active owners, including greenhouse, vines, weather, hero cache, and config surfaces.
+- `16:23 CEST` ingested the ChatGPT greenhouse preflight and first brainstorming notes into the active planning docs without promoting runtime work: `docs/greenhouse-roadmap.md` now records the 0.4 readiness gates, functional-space-first room ordering, bounded reference lanes, and current enum-backed flora-store bias, while `TODO.md`, `docs/audit.md`, and `docs/resource-map.md` were aligned around those constraints.
 
 ## 2026-05-30
 

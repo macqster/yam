@@ -23,6 +23,10 @@ Issue link rule:
 - `docs` keep `TODO.md`, `docs/audit.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/scene-model.md`, `docs/architecture.md`, `docs/rendering.md`, and `docs/hygiene.md` aligned before any main-scene enrichment or greenhouse work starts.
 - `verify` keep `known_issues.md` empty unless a concrete active issue appears; broad pre-expansion risks belong in the audit and this backlog.
 - `verify` keep `scripts/verify.sh` green for every maintenance handoff.
+- `verify` treat the 0.4 pre-expansion gates as active before broad feature work:
+  docs aligned, verification green, spatial ownership stable, flora storage
+  decision made, greenhouse/world contract decided, and hero/render failure
+  modes hardened.
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
 - `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
 - `verify` treat `core::organism` as the first shared flora identity vocabulary plus the first in-memory `SpeciesRegistry` / `OrganismJournal` skeleton; keep it small until another plant family or greenhouse population proves the next field is needed.
@@ -47,7 +51,7 @@ Issue link rule:
 - `refactor` split vine-specific types and helpers out of the broad `core::flora` surface once a second organism family is close enough to need shared vocabulary.
 - `verify` preserve the shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, and the first species-profile shape.
 - `inspect` decide where species profiles should be loaded from once there is more than the in-memory border-vine `SpeciesRegistry` profile: static Rust fixtures, structured data files, or a small registry loader.
-- `verify` preserve `FloraState` family-count and organism-identity adapters; do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store.
+- `verify` preserve `FloraState` family-count and organism-identity adapters; do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store, with enum-backed family store as the current first-pass bias.
 - `refactor` move the current border-vine growth rule away from one hard-coded seed branch before adding another plant growth rule.
 - `verify` render layers stay read-only and visualize geometry derived from world/flora/spatial state.
 - `verify` `OrganismJournal` remains a per-instance event log; `SpeciesRegistry` must not store runtime life history.
@@ -58,6 +62,10 @@ Issue link rule:
 - `docs` treat `docs/greenhouse-roadmap.md` as the single owning greenhouse roadmap and operation plan; keep greenhouse strategy, phase tasks, candidate organisms, stop conditions, and creative-input briefs there instead of in this backlog.
 - `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
 - `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
+- `inspect` keep the first greenhouse pass functional-space-first: room,
+  access paths, zones, fixtures, planting sites, symbolic environment, and
+  read-only inspection before new plant families, lifecycle systems, or
+  persistence.
 - `inspect` define greenhouse room, environment, population, inspection, and curation ownership before adding a visible `Greenhouse` world variant.
 - `verify` greenhouse remains a separate simulation world or world-internal room model, not panel chrome layered on top of the main scene; room selection stays internal to world state.
 - `inspect` decide whether greenhouse inspection starts as lightweight per-organism popups or a dedicated registry/journal mode before building either surface.

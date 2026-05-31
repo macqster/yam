@@ -30,6 +30,9 @@ The brainstorming prompt should preserve these constraints:
 - The greenhouse is a separate simulation world or world-internal room model.
 - Rooms, plants, fixtures, environment values, journals, and inspection surfaces
   are the natural design units.
+- First-pass ideas should favor functional space: room, access paths, zones,
+  fixtures, planting sites, environment profile, and inspection affordances
+  before plant lifecycle systems.
 - Ideas should be calm, inspectable, botanical, and compatible with terminal
   cells.
 - Ideas should avoid hidden UI state, broad mechanics, render-owned simulation,
@@ -107,6 +110,14 @@ rooms, organisms, and environment state.
   room selection, inspection truth, or environment mutation.
 - Creative content must arrive through room, species, organism, environment, or
   fixture data rather than bespoke render shortcuts.
+- The first greenhouse pass is functional-space-first: room, access paths,
+  zones, fixtures, planting sites, environment profile, and read-only inspection
+  affordances must be stable before plant systems attach to them.
+- Do not add a new plant family, lifecycle loop, species catalog, persistence
+  model, or visible greenhouse runtime before the 0.4 pre-expansion gates are
+  green.
+- Do not weaken `scripts/verify.sh`, `scripts/check.sh`, projection isolation,
+  or existing architecture guardrails to make greenhouse work easier.
 
 ## Domain Model
 
@@ -116,6 +127,11 @@ The first greenhouse model should stay small and inspectable:
   state.
 - `Room`: a named internal space with a role, bounds, environment profile, and
   active planting sites.
+- `Access path`: readable movement/attention space inside a room; it gives
+  fixtures and planting sites breathing room before interaction exists.
+- `Zone`: a named functional sub-area such as propagation bench, glass frame,
+  mist bench, warm shelf, dry rack, utility alcove, specimen shelf, lamp zone,
+  or inspection marker.
 - `Fixture`: stable world-attached support geometry such as benches, pots,
   bowls, trellises, walls, shelves, or lab surfaces.
 - `Environment`: coarse room inputs such as light, moisture, temperature,
@@ -129,12 +145,122 @@ The first greenhouse model should stay small and inspectable:
 - `Inspection`: a mode or popup that reads registry, journal, state, and derived
   geometry without becoming the owner of those facts.
 
-## Brainstorming Session 1 Ingest
+## ChatGPT Preflight Check Ingest
 
-The first external brainstorming source has been ingested as candidate material,
-not as an implementation contract. It should inform future prompts, planning
-docs, and small TODO promotions, but no runtime behavior should be implemented
-from the source note directly.
+The ChatGPT preflight note is accepted as a readiness checkpoint for the 0.4
+transition. It is not a feature request and does not authorize new visible
+greenhouse behavior.
+
+Pre-expansion gates:
+
+- docs aligned
+- verification green
+- spatial ownership stable
+- flora storage decision made
+- greenhouse/world contract decided
+- hero/render pipeline failure modes hardened
+
+Accepted constraints:
+
+- keep the repo in pre-feature readiness mode until the gates above are green
+- fix verification before feature expansion if `bash scripts/verify.sh` fails
+- keep `TODO.md` execution-oriented, `docs/audit.md` risk-focused,
+  `docs/LOG.md` historical, and `known_issues.md` limited to concrete active
+  issues
+- make small, reviewable patches and preserve existing checks
+
+Architecture decision bias from the preflight:
+
+- `core::spatial` stays canonical and `scene::coords` stays compatibility-only
+- before a new plant family lands, prefer an enum-backed family store as the
+  first `FloraState` generalization unless inspection proves another shape is
+  simpler
+- the first greenhouse contract should bias toward a later
+  `WorldKind::Greenhouse`, a `greenhouse_nursery` / propagation-room identity,
+  per-room symbolic environment, read-only popup inspection, and static Rust
+  fixtures for the first profiles
+- missing GIF, temp-write failure, Chafa failure, and cache miss paths must keep
+  known fallbacks before hero/render work is treated as stable for expansion
+
+Suggested tiny enabling tests, when implementation begins:
+
+- world profile and selectability invariants
+- `Boot` remains non-selectable
+- main scene / sandbox profile invariants
+- projection isolation guardrails
+- `FloraState` family identity and count adapters
+- `SpeciesRegistry` and `OrganismJournal` basics
+- greenhouse room, zone, fixture, environment, planting-site, and inspection
+  fixture tests once those data shapes exist
+
+## ChatGPT Brainstorming 1 Ingest
+
+The ChatGPT brainstorming note is accepted as candidate planning material. Its
+strongest contribution is an ordering rule: functional greenhouse space comes
+before plant systems.
+
+Stable takeaways:
+
+- First greenhouse pass order:
+  `room -> zones -> fixtures -> planting sites -> environment profile -> inspection surface`.
+- Plant-system work stays deferred until the functional room contract is stable:
+  organism families, species registry expansion, growth state, lifecycle,
+  persistence, and interactions are later work.
+- Current vision sentence: the greenhouse is a nursery / propagation room, a
+  small inspectable symbolic environment where plant life can later be
+  understood through fixtures, planting sites, room conditions, and read-only
+  inspection before any game-like progression exists.
+- `cbonsai` remains valid as mood, tempo, terminal-organism feel, and glyph
+  economy; it is not a greenhouse architecture reference and does not mandate
+  plant lifecycle implementation.
+- External web/reference exploration should be bounded to three lanes:
+  functional greenhouse space, terminal organism mood, and visual/staging
+  vocabulary. Reject references that push species registries, growth simulation,
+  persistence, inventory, or management loops into the first pass.
+- `HighGrow` is a bounded structural reference for compact room organization:
+  multiple small rooms, one to three planting sites per room, local
+  climate/fixture affordances, and a magnifying-glass-like inspect/closer-look
+  precedent. Do not copy crop simulation, harvesting, genetics, fertilizing,
+  pruning, or optimization loops.
+- `Viridi` is a bounded mood reference for calm small-container care,
+  slow-time presence, gentle check-ins, peaceful companion-window language, and
+  later personal attachment. Do not copy monetized nursery loops, achievement
+  pressure, species-catalog pressure, death/failure pressure, or watering
+  gameplay into the first pass.
+- `asciiquarium` can be treated as a terminal-ecosystem atmosphere reference
+  for shared ambient scene staging, not as plant architecture.
+- OpenAlea, L-Py, Arbaro, AmapSim, GreenLab, PowerPlant / pplant, ONETREE, and
+  Algorithmic Botany / L-studio belong in a deferred technical lineage bucket
+  for future plant form, morphology, rule grammar, and environment-hook work.
+  They do not authorize L-system engines, biomass allocation, organogenesis,
+  species registries, plant lifecycle, persistence, or functional-structural
+  plant models during the first functional-space pass.
+
+Useful room and environment vocabulary:
+
+- possible rooms: Propagation Room, Warm Shelf, Mist Bench, Dry Rack, Glass
+  Corner, Utility Alcove
+- room-local environment fields: light (`low`, `filtered`, `bright`,
+  `artificial`), humidity (`dry`, `balanced`, `misted`, `damp`), temperature
+  (`cool`, `mild`, `warm`), water (`none`, `tray`, `drip`, `mist`), and airflow
+  (`still`, `vented`, `fan-assisted`)
+
+Deferred plant vocabulary to preserve for later:
+
+- plant profile
+- branching grammar
+- growth rule
+- morphology profile
+- organism silhouette
+- environment hook
+- inspection view
+
+## Prior Brainstorming Ingest
+
+The earlier local greenhouse brainstorming source has been ingested as
+candidate material, not as an implementation contract. It should inform future
+prompts, planning docs, and bounded later promotions, but no runtime behavior
+should be implemented from the source note directly.
 
 Stable takeaways:
 
@@ -265,8 +391,8 @@ Gate:
 
 ### Phase 1: Greenhouse Contract Decision
 
-Goal: decide the first contract shape before adding a world variant or visible
-room.
+Goal: decide the first functional-space contract shape before adding a world
+variant, visible room, or plant system.
 
 Tasks:
 
@@ -275,7 +401,10 @@ Tasks:
 - decide whether the first runtime boundary is a hidden/dev-only room, sparse
   sandbox route, or named `WorldKind::Greenhouse`
 - define what `Greenhouse` owns beyond `WorldKind::profile()`: room,
-  environment, fixture, population, inspection, and curation capability
+  access paths, zones, environment, fixture, planting sites, inspection, and
+  later curation capability
+- record that the first pass is a functional room container, not a lifecycle or
+  species implementation pass
 - plan profile tests before adding a world variant
 
 Gate:
@@ -283,8 +412,10 @@ Gate:
 - no selectable greenhouse world exists before room and environment ownership
   are named
 - no UI-local world toggle is needed
+- no plant family, growth lifecycle, or persistence work begins before the
+  room/site/environment/inspection contract is stable
 
-### Phase 2: Room, Zone, And Fixture Vocabulary
+### Phase 2: Room, Access Path, Zone, And Fixture Vocabulary
 
 Goal: define greenhouse as world space, not panel chrome.
 
@@ -293,15 +424,21 @@ Tasks:
 - define candidate room vocabulary such as `GreenhouseState`,
   `GreenhouseRoom`, `GreenhouseZone`, `EnvironmentProfile`, `Fixture`, and
   `PlantingSite`
+- define access paths as readable room-space corridors / attention lanes before
+  interaction exists
 - preserve first zones: `propagation_bench`, `glass_frame`,
   `inspection_marker`, `training_frame`, `substrate_bed`, `specimen_shelf`,
   and `lamp_zone`
+- keep first room capacity intentionally tiny: one to three planting sites per
+  room unless a later contract proves more is needed
+- preserve generic room candidates such as Propagation Room, Warm Shelf, Mist
+  Bench, Dry Rack, Glass Corner, and Utility Alcove
 - decide whether fixtures own rectangles, anchors, or both
 - keep fixtures separate from organism lifecycle state
 
 Gate:
 
-- room/zone/fixture ownership is pure data
+- room/access/zone/fixture ownership is pure data
 - room selection stays inside greenhouse/world state, not UI tabs
 
 ### Phase 3: Symbolic Environment Model
@@ -312,6 +449,8 @@ Tasks:
 
 - define symbolic light, humidity, temperature, substrate, and outside-weather
   influence fields
+- consider room-local water and airflow fields if they clarify fixture/site
+  status without becoming numeric simulation
 - prefer room-level environment first; planting-site modifiers can come later
 - keep outside weather disabled by default
 - avoid numeric simulation until a species rule needs it
@@ -329,16 +468,23 @@ Tasks:
 
 - decide how `FloraState` grows beyond `vines`: enum-backed family store,
   organism registry, or another small explicit structure
+- treat enum-backed family store as the current bias for the first
+  generalization, unless inspection proves an organism registry or explicit
+  multi-family structure is simpler
 - keep organism identity, species id, journal id, lifecycle state, stats, and
   family vocabulary on every organism
 - decide whether first greenhouse species profiles are Rust fixtures or
   structured data
 - keep `seedling_tray` and `cutting_jar` as first candidate profiles
+- do not implement this phase during the first functional-space pass unless a
+  later work order explicitly promotes plant-system work
 
 Gate:
 
 - no ad hoc top-level organism vector is added beside `FloraState::vines`
   without a storage decision
+- no plant-system-first implementation bypasses the room/site/environment
+  contract
 
 ### Phase 5: Static Fixtures And Visual Review
 
@@ -415,7 +561,10 @@ Goal: expose greenhouse state without creating a dashboard.
 
 Tasks:
 
-- start with read-only per-organism inspection
+- start with read-only room, zone, fixture, planting-site, and later
+  per-organism inspection
+- treat the HighGrow-like magnifying glass as a bounded closer-look precedent,
+  not as an editing or care-loop mandate
 - keep labels derived from state: hidden, compact, selected, inspector, or debug
 - keep selection state presentation-oriented and separate from organism truth
 - decide whether compact labels are world-adjacent or screen-stabilized
@@ -450,8 +599,10 @@ Goal: invite more creative input once the operational gates are legible.
 
 Tasks:
 
-- ask for small catalogs of room, species, fixture, environment, journal, and
-  lifecycle ideas
+- ask first for small catalogs of room, access-path, fixture, environment,
+  planting-site, inspection, and visual-vocabulary ideas
+- ask for species, journal, and lifecycle ideas only as deferred candidate
+  material until storage and growth gates are ready
 - sort ideas into `now`, `after storage`, `after growth dispatch`, and
   `later atmosphere`
 - promote only bounded ideas into root TODO or an owning contract
@@ -465,23 +616,31 @@ Gate:
 
 Immediate next tasks:
 
-- keep the first brainstorming ingest candidate-only
+- keep brainstorming ingests candidate-only
+- run the 0.4 pre-expansion verification baseline before implementation work
 - decide whether `docs/greenhouse.md` is needed before inert state work begins
+- decide and document the functional-space-first room/access/zone/fixture/site
+  contract
 - decide the first visual review artifact for `greenhouse_nursery_static_v0`
-- decide the first flora storage generalization direction
-- identify first pure data tests for room, zone, fixture, species, and
-  inspectable refs
+- decide the first flora storage generalization direction, with enum-backed
+  family store as current bias
+- identify first pure data tests for room, access path, zone, fixture,
+  environment, planting site, and inspectable refs
 
 Stop conditions:
 
 - render-owned simulation truth
 - UI-owned room, environment, or organism state
 - a second projection system
+- plant-system-first greenhouse work before the functional-space contract is
+  stable
 - a selectable greenhouse world without room/environment ownership
 - another plant-family store beside `FloraState::vines` without a storage
   decision
 - screenshot/golden art locks before the visual vocabulary stabilizes
 - main-scene visual changes before transfer gates exist
+- crop simulation, harvest loops, genetics, yield optimization, or realistic
+  cultivation instruction imported from references
 - gameplay loops such as chores, currency, unlock grinding, daily obligations,
   or yield optimization
 
@@ -523,28 +682,33 @@ or adapt it for a narrower room, species, fixture, or lifecycle pass.
 ```text
 YAM is a Rust/Ratatui terminal ecosystem with a dark-deco, compact, readable
 scene style. It has a main visualizer scene and is preparing a separate
-greenhouse simulation world. The greenhouse should feel like a real place with
-rooms, benches, pots, bowls, supports, environment profiles, multiple plant
-families, lifecycle history, and quiet inspection tools. It must not become a
-generic dashboard or panel UI.
+greenhouse simulation world. The first greenhouse pass is functional-space
+first: room layout, access paths, zones, benches, pots, bowls, supports,
+planting sites, symbolic environment profiles, and quiet read-only inspection
+affordances before plant lifecycle systems. It must not become a generic
+dashboard or panel UI.
 
 Please propose creative greenhouse directions that can be expressed as room
-profiles, species profiles, fixture ideas, environment presets, inspect text,
-or small visual motifs. Favor ideas that work in terminal cells, support
-inspectable plant lifecycles, and respect a calm botanical/lab atmosphere.
+profiles, access-path ideas, fixture ideas, planting-site sketches, environment
+presets, inspect text, or small visual motifs. Favor ideas that work in terminal
+cells, support later inspectable plant lifecycles, and respect a calm
+botanical/lab atmosphere.
 Avoid ideas that require hidden UI state, freeform dashboard panels, render-owned
-simulation, or large mechanics before the architecture is ready.
+simulation, crop/care gameplay, or large mechanics before the architecture is
+ready.
 ```
 
 Useful follow-up prompts:
 
-- Use the Brainstorming Session 1 ingest as source context, but keep all
+- Use the accepted brainstorming ingests as source context, but keep all
   suggestions non-binding until promoted into roadmap, TODO, or a contract doc.
 - Turn the strongest room ideas into compact `RoomProfile` sketches with role,
-  environment, fixtures, planting sites, and inspection notes.
+  access paths, zones, environment, fixtures, planting sites, and inspection
+  notes.
 - Turn the strongest plant ideas into compact `SpeciesProfile` sketches with
   habit, axes, organs, lifecycle hooks, journal events, and terminal-cell visual
-  constraints.
+  constraints, but treat them as deferred material unless plant-system work has
+  been explicitly promoted.
 - Turn the strongest fixture ideas into world-attached support sketches with
   placement rules, attachment behavior, and visual texture.
 - Sort all ideas into `now`, `after storage`, `after growth dispatch`, and

@@ -16,6 +16,7 @@ Logging rule:
 ## 2026-05-31
 
 - `11:14 CEST` consolidated greenhouse planning back into a single authoritative `docs/greenhouse-roadmap.md` surface: the non-redundant operation stages, immediate next tasks, stop conditions, and handoff checklist from the temporary greenhouse TODO draft were folded into the roadmap, while `docs/README.md`, `TODO.md`, and `docs/audit.md` were updated to remove the second active greenhouse TODO pointer.
+- `11:26 CEST` trimmed the root backlog's greenhouse section back to execution gates and a single roadmap pointer: detailed candidate identity, organism, fixture, visual-review, and phase-task material now lives only in `docs/greenhouse-roadmap.md`.
 
 ## 2026-05-30
 

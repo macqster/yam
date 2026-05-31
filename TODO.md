@@ -55,17 +55,13 @@ Issue link rule:
 
 ## 3. World Modes And Greenhouse Prep
 
-- `docs` treat `docs/greenhouse-roadmap.md` as the owning greenhouse expansion roadmap; keep detailed greenhouse phase planning there and keep this backlog execution-focused.
+- `docs` treat `docs/greenhouse-roadmap.md` as the single owning greenhouse roadmap and operation plan; keep greenhouse strategy, phase tasks, candidate organisms, stop conditions, and creative-input briefs there instead of in this backlog.
 - `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
 - `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
-- `inspect` define greenhouse room, environment, population, and inspection ownership before adding a visible `Greenhouse` world variant.
-- `inspect` define what each future world owns before implementation beyond the current profile fields: room model, environment parameters, organism population rules, inspection modes, and debug surfaces.
-- `verify` greenhouse remains a separate simulation world, not panel chrome layered on top of the main scene.
-- `verify` room selection stays internal to the world model; side-by-side tabs should not become the primary greenhouse architecture.
-- `inspect` decide whether greenhouse inspection needs a dedicated registry/journal mode or lightweight per-organism popups before building either surface.
+- `inspect` define greenhouse room, environment, population, inspection, and curation ownership before adding a visible `Greenhouse` world variant.
+- `verify` greenhouse remains a separate simulation world or world-internal room model, not panel chrome layered on top of the main scene; room selection stays internal to world state.
+- `inspect` decide whether greenhouse inspection starts as lightweight per-organism popups or a dedicated registry/journal mode before building either surface.
 - `inspect` keep the first external creative-input request bounded by the roadmap brief so ideas enter as room profiles, species profiles, fixtures, environment presets, or inspection text instead of hidden UI or render-owned behavior.
-- `inspect` use the first brainstorming ingest as candidate material only: nursery / propagation room first, `seedling_tray` and `cutting_jar` as first organism candidates, symbolic environment, optional labels, and curation vocabulary are not implementation contracts until promoted.
-- `inspect` decide whether the first visual review artifact should be a docs sketch, plain-text asset, dev-only sandbox route, or deterministic render fixture before rendering `greenhouse_nursery_static_v0`.
 - `verify` greenhouse progression remains curation-oriented rather than game-like: no chores, currency, unlock grind, daily obligations, or automatic main-scene mutation from transfer status.
 
 ## 4. Main Scene Enrichment Prep

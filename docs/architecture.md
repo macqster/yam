@@ -13,6 +13,7 @@
 
 - `core/` - data only, no UI, no terminal, no rendering, and no imports from `scene/`; `scripts/check.sh` guards this boundary
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
+- `core/greenhouse.rs` - inert greenhouse room/state vocabulary only; it owns stable ids, nursery-room functional-space data, symbolic environment profiles, and read-only inspection references without attaching greenhouse state to `WorldState`, render layers, or UI yet
 - `core/spatial` - the first canonical spatial relation layer; it currently owns the shared transform/projection/attachment helpers, indexed anchor lookup trait, and guide index abstraction that now feeds the render/debug guide path, and will absorb more relation logic over time
 - `core/world.rs` - owns world bootstrapping by explicit world kind and profile; profile-owned grid, camera defaults, guide plans, population plans, and capabilities keep main-scene, sandbox, and future greenhouse/lab worlds selected and described intentionally rather than hidden behind one implicit `WorldState::new()` payload
 - `systems/` - mutate `WorldState` only, no rendering, and no imports from scene/render/UI/terminal modules

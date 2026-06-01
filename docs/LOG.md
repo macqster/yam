@@ -30,6 +30,10 @@ Logging rule:
 - `18:10 CEST` applied a small external-feedback cleanup to the ChatGPT source pack: normalized the greenhouse first-pass ordering string to include `access paths` and the fuller `environment profile` / `inspection surface` wording, and fixed the manifest's included-files list so it matches the actual uploaded export set.
 - `18:16 CEST` tightened the ChatGPT source pack again after another external review: `readiness-and-gates.md` now says the flora-storage direction is selected while the exact shape remains pending, and `source-pack-manifest.md` now spells out what the pack does not include, how it is exported, what `verification green` refers to, and the optional future checksum path for stronger drift detection.
 
+## 2026-06-01
+
+- `06:36 CEST` began the real `0.4` greenhouse implementation path with the first authorized inert core slice: added `src/core/greenhouse.rs` and exported it through `core/mod.rs`, defining stable string-like ids, one tiny `greenhouse_nursery` room, access paths, zones, fixtures, planting sites, a symbolic room-level environment profile, and read-only inspection references. The module stays pure data with invariant tests only; it is not yet attached to `WorldState`, rendering, UI, systems, or weather code. `TODO.md`, `docs/architecture.md`, `docs/audit.md`, and `docs/greenhouse-roadmap.md` were updated to reflect the landed state.
+
 ## 2026-05-30
 
 - `08:01 CEST` extended the ownership-boundary guard from core into systems during the spatial migration: `src/systems/growth.rs` now uses `core::spatial::SpatialPoint` directly instead of the `scene::coords::WorldPos` compatibility alias, and `scripts/check.sh` now fails if systems import scene, render, UI, or terminal modules. `AGENTS.md`, architecture, hygiene, audit, and backlog docs were updated so the executable check matches the documented systems contract.

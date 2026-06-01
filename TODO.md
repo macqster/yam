@@ -67,7 +67,7 @@ Issue link rule:
   access paths, zones, fixtures, planting sites, symbolic environment, and
   read-only inspection before new plant families, lifecycle systems, or
   persistence.
-- `inspect` when implementation is explicitly authorized, start with pure `core::greenhouse` data and tests for `GreenhouseState`, room, access path, zone, fixture, planting site, symbolic environment, and read-only inspection records before attaching state to `WorldState`.
+- `verify` keep the landed pure `core::greenhouse` slice inert: `GreenhouseState`, room, access path, zone, fixture, planting site, symbolic environment, and read-only inspection records stay data-only until a later batch deliberately attaches them to `WorldState`.
 - `verify` greenhouse remains a separate simulation world or world-internal room model, not panel chrome layered on top of the main scene; room selection stays internal to world state.
 - `inspect` preserve the newly ingested greenhouse identity hierarchy before UI work: greenhouse/lab, planting site or bay, support, organism, warning, and journal-link identities must stay distinct.
 - `inspect` if greenhouse grows into a frame-plus-labs structure later, promote it in order: single inert nursery room first, then room-to-lab naming, then greenhouse frame/navigation chrome only after room ownership is proven.

@@ -125,9 +125,9 @@ start visible greenhouse behavior.
 - Keep the greenhouse contract in this roadmap for now; create
   `docs/greenhouse.md` only after inert state exists or this roadmap becomes too
   crowded to remain readable.
-- The first code-bearing greenhouse slice, when explicitly requested, should be
-  a pure `core::greenhouse` data module with construction and invariant tests.
-  It should not render, tick growth, mutate flora, or add a selectable world.
+- The first code-bearing greenhouse slice has now landed as a pure
+  `core::greenhouse` data module with construction and invariant tests. It does
+  not render, tick growth, mutate flora, or add a selectable world.
 - The first visible greenhouse should eventually be a named
   `WorldKind::Greenhouse`; the sandbox may support visual review, but it should
   not become the hidden owner of greenhouse state.
@@ -217,8 +217,8 @@ container. It is not a render contract, species contract, or growth contract.
 
 Implementation placement:
 
-- create `src/core/greenhouse.rs` only when code work starts
-- expose it through `core/mod.rs` only after the pure data tests exist
+- `src/core/greenhouse.rs` now owns the first pure data slice
+- it is exposed through `core/mod.rs` with invariant tests in place
 - attach it to `WorldState` only after construction and invariant tests pass
 - keep render, UI, systems, weather, and terminal modules out of the first data
   slice
@@ -269,6 +269,17 @@ First invariant tests, when code starts:
   sites, or later organisms without owning those targets
 - no greenhouse type imports render, UI, terminal, weather-provider, or systems
   modules
+
+Current landed shape:
+
+- `GreenhouseState::nursery()` constructs one inert `greenhouse_nursery` room
+- stable string-like ids exist for room, access path, zone, fixture, planting
+  site, environment profile, and inspection reference
+- the nursery carries the first bounded functional-space vocabulary for access
+  paths, zones, fixtures, planting sites, symbolic environment, and read-only
+  inspection references
+- greenhouse state is still not attached to `WorldState` and still has no
+  visible world/render surface
 
 ## ChatGPT Preflight Check Ingest
 

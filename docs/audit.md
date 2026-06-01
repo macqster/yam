@@ -10,7 +10,7 @@ Last reviewed: 2026-05-31
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
-- Greenhouse planning now has a single dedicated roadmap and a functional-space contract, but implementation gates are still open: pure data tests, multi-family flora storage, growth dispatch, and inspection surfaces need explicit work before visible greenhouse content starts.
+- Greenhouse planning now has a single dedicated roadmap and the first inert `core::greenhouse` data slice, but the broader implementation gates are still open: `WorldState` attachment, multi-family flora storage, growth dispatch, and inspection surfaces still need explicit work before visible greenhouse content starts.
 - The greenhouse brainstorming sources have been distilled into the roadmap as candidate material only; the useful current bias is functional-space-first nursery/propagation-room work, symbolic per-room environment, read-only inspection, tiny planting-site capacity, and curation-style progression rather than gameplay.
 
 ## Weakest Areas
@@ -19,7 +19,7 @@ Last reviewed: 2026-05-31
 2. Hero-rendering pipeline: Chafa is stable, but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
 3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, and `core::organism` now provides the first shared identity/species-registry/journal vocabulary, but broader multi-family storage and growth dispatch are still ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
-5. Greenhouse world modeling: the roadmap now has a functional-space contract, but there is not yet inert room/environment state or a tested profile shape for a future `Greenhouse` world.
+5. Greenhouse world modeling: the roadmap now has a functional-space contract and the first inert room/environment state, but there is not yet a `WorldState` attachment or tested world-profile shape for a future `Greenhouse` world.
 6. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
 ## Current Work Priority
@@ -123,6 +123,14 @@ Last reviewed: 2026-05-31
   records before attaching state to `WorldState` or adding a visible
   `Greenhouse` world.
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`
+- `low` The first real `0.4` greenhouse implementation slice is now present as
+  pure `core::greenhouse` data with invariant tests: the repo has stable room,
+  access-path, zone, fixture, planting-site, environment-profile, and
+  inspection-reference ids plus one inert `greenhouse_nursery` room, while
+  greenhouse ownership remains out of `WorldState`, render layers, UI, systems,
+  and weather code.
+  - evidence: `src/core/greenhouse.rs`, `docs/greenhouse-roadmap.md`,
+    `docs/architecture.md`
 - `low` The archived greenhouse ecosystem design notes and roadmap review are
   now ingested into the roadmap as bounded architectural source material: they
   strengthen the lab/frame vocabulary, shell/support/light/sensor/actuator

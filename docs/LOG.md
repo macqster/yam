@@ -765,6 +765,10 @@ Logging rule:
 
 - replaced the README's remote GitHub-hosted preview GIF with the local repo-owned `assets/isthatayam_github.mp4` clip, added a direct file fallback link beneath the centered media block, and updated the intro wording from animated `gif` to animated `clip`
 
+## 2026-06-04 17:03 CEST
+
+- expanded the README-local `cspell` ignore list after the latest browser-side README rewrite so the pushed acknowledgements and restored `twimc` heading stay compatible with the docs gate without weakening broader repo spelling checks
+
 ## 2026-05-13 - Audit cleanup follow-up
 
 - refreshed `docs/audit.md` review freshness after the companion-layout stabilization pass

@@ -14,7 +14,7 @@
   </p>
 </div>
 
-<!-- cspell:ignore Arbaro asciiquarium aseprite Bacall braille cbonsai Chafa Dini DitherArt eco figlets Ghostty GreenLab HighGrow Infantino isthatayam Kanigher likness LinuxPorn Moldoff Moebius Naylor pplant Ratatui Riba Timm TNBA unixart unixporn Wrigh wttr XBIN -->
+<!-- cspell:ignore Arbaro asciiquarium aseprite Bacall braille cbonsai Chafa Dini DitherArt eco figlets Ghostty GreenLab HighGrow Infantino isthatayam Kanigher Krieg likness LinuxPorn Moldoff Moebius Naylor pplant Ratatui Riba Stanwyck Timm TNBA unixart unixporn Wray Wrigh wttr XBIN twimc -->
 
 I was dealing with some dark stuff, so I tried to focus on something gentle enough to let my mind rest a little. Voilà: `yam`, a Rust/Ratatui terminal screensaver-like diorama sandbox engine: a Chafa-driven animated Ivy clip, world-space scene projection, compact companion surfaces, BTAS-inspired UI, and a maintenance-first path toward richer procedural scene life.
 

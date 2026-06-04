@@ -1,5 +1,7 @@
 # Repo Audit
 
+<!-- cspell:ignore twimc -->
+
 Date: 2026-04-27
 Last reviewed: 2026-05-31
 
@@ -16,6 +18,7 @@ Last reviewed: 2026-05-31
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
 - Greenhouse planning now has a single dedicated roadmap and the first inert `core::greenhouse` data slice, but the broader implementation gates are still open: `WorldState` attachment, multi-family flora storage, growth dispatch, and inspection surfaces still need explicit work before visible greenhouse content starts.
 - The greenhouse brainstorming sources have been distilled into the roadmap as candidate material only; the useful current bias is functional-space-first nursery/propagation-room work, symbolic per-room environment, read-only inspection, tiny planting-site capacity, and curation-style progression rather than gameplay.
+- A fresh external README eval confirms the front-door direction is now broadly right for YAM, but there are still a few low-stakes polish seams: mixed inline-code styling in the intro, the `twimc` second-H1 outline quirk, very terse unlabeled command blocks, and the need to keep repo-shape wording honest as core modules evolve.
 
 ## Weakest Areas
 

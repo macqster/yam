@@ -744,6 +744,27 @@ Logging rule:
 
 - backed away from the earlier front-door README repair pass and returned the README closer to its lighter pre-repair posture while keeping the GitHub-hosted preview GIF in place
 
+## 2026-06-04 14:18 CEST
+
+- reshaped the front-door README for tighter Codex readability and better cross-doc coherence: removed the duplicated release marker, centered the preview GIF and badges, kept the short personal intro, and collapsed the rest of the file into a compact repo-orientation sheet with current state, commands, launcher behavior, canonical docs, repo shape, and working rules aligned to the active contracts
+
+## 2026-06-04 14:29 CEST
+
+<!-- cspell:ignore Dini Timm twimc -->
+
+- added a README-local `cspell` ignore for `Dini`, `Timm`, and `twimc` so the restored intro can stay intact without weakening broader docs hygiene
+- added one bounded backlog note for future external eval report ingestion: raw reports stay reference input, active findings get triaged into `TODO.md` or `docs/audit.md`, and each ingestion batch must be recorded in `docs/LOG.md` instead of creating a second authority surface
+
+## 2026-06-04 14:32 CEST
+
+- ingested the first external README eval as reference input rather than a new authority doc: recorded the active actionable residue in `TODO.md` as future bounded README polish and added a matching low-stakes audit note that the front-door direction is correct but still has minor hierarchy, labeling, and claim-precision seams
+
+## 2026-06-04 14:59 CEST
+
+<!-- cspell:ignore isthatayam -->
+
+- replaced the README's remote GitHub-hosted preview GIF with the local repo-owned `assets/isthatayam_github.mp4` clip, added a direct file fallback link beneath the centered media block, and updated the intro wording from animated `gif` to animated `clip`
+
 ## 2026-05-13 - Audit cleanup follow-up
 
 - refreshed `docs/audit.md` review freshness after the companion-layout stabilization pass

@@ -1,5 +1,7 @@
 # Active Backlog
 
+<!-- cspell:ignore twimc -->
+
 This file is the repo-wide work order and stabilization checklist.
 
 Coordination contract:
@@ -21,6 +23,7 @@ Issue link rule:
 
 - `verify` keep the repo in soft feature freeze mode while this batch is active: polish, stability, bug fixes, contract repairs, and architecture preparation are in scope; large new entities, mechanics, and worlds are not.
 - `docs` keep `TODO.md`, `docs/audit.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/scene-model.md`, `docs/architecture.md`, `docs/rendering.md`, and `docs/hygiene.md` aligned before any main-scene enrichment or greenhouse work starts.
+- `docs` prepare the external eval report ingestion path before the first report lands: keep the raw report as reference input, route active findings into `TODO.md` or `docs/audit.md`, record the ingestion batch in `docs/LOG.md`, and avoid creating a second competing authority surface.
 - `verify` keep `known_issues.md` empty unless a concrete active issue appears; broad pre-expansion risks belong in the audit and this backlog.
 - `verify` keep `scripts/verify.sh` green for every maintenance handoff.
 - `verify` treat the 0.4 pre-expansion gates as active before broad feature work:
@@ -113,6 +116,7 @@ Issue link rule:
 - `verify` active markdown docs stay clean under repo-configured `markdownlint`, `markdownlint-cli2`, and `cspell`.
 - `verify` README local asset references must point to committed files.
 - `verify` `README.md` current release stays synchronized with `Cargo.toml`.
+- `inspect` keep future README polish bounded and factual: preserve the restored intro voice, but revisit small front-door nits from the external eval only when touching the README anyway, especially heading hierarchy around `twimc`, terse unlabeled command blocks, and repo-shape claim precision.
 - `verify` `TODO.md` issue references must point to active `known_issues.md` ids.
 - `verify` append each completed maintenance batch to `docs/LOG.md` using the local system time noted in the log's current logging rule.
 - `verify` keep `docs/audit.md` risk-focused and `docs/LOG.md` historical; avoid re-accumulating completed work in the active backlog.

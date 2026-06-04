@@ -18,14 +18,15 @@
 
 I was dealing with some dark stuff, so I tried to focus on something gentle enough to let my mind rest a little. Voilà: `yam`, a Rust/Ratatui terminal screensaver-like diorama sandbox engine: a Chafa-driven animated Ivy clip, world-space scene projection, compact companion surfaces, BTAS-inspired UI, and a maintenance-first path toward richer procedural scene life.
 
-First I just wanted some benign animation on my screen to stare at blankly. But, as I said, I needed distractions, so it became a pet project of mine. At that time I was watching DC animation again, reading stuff by Paul Dini and Bruce Timm, and trying to keep up with the awesome contemporary CLI/TUI scene. Hence `yam`.
+First I just wanted some benign animation on my screen to blankly stare at, but, as I said, I needed some distraction and it became a pet project of mine. At that time I was rewatching DC animations, reading stuff by Paul Dini and Bruce Timm, and trying to keep up with the awesome contemporary CLI/TUI scene – hence `yam`.
 
-Some nostalgic reference ghosts in here, intentional or otherwise: lo-fi girl animation loops, the `cbonsai` generative plant idea, `HighGrow`'s controlled greenhouse environment and plant lifecycle, `wttr.in` weather widget, figlets, ricing culture, terminal art toys, and many, many more. Check the acknowledgements section at the end — I hope nothing was stolen too explicitly. Feel free to yell at me if it was.
+For some nostalgic reference ghosts in here, intentional or otherwise, check the acknowledgements section at the end; I hope nothing was stolen too explicitly. Feel free to yell at me if it was.
 
-Codex is doing the hard work; life is unfortunately consuming too much time and attention, so the headspace to hand-write all this is limited.
+Codex is doing the hard work; life is unfortunately consuming too much time and attention, so my headspace to hand-write all this is limited.
 
-> `yam` is not meant as an end-user product or any kind of dashboard framework; `yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change; <br>
-the real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
+> `yam` is not meant as an end-user product or any kind of dashboard framework <br>
+`yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change <br>
+the only real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
 
 ***
 

@@ -1,3 +1,5 @@
+<img width="640" height="360" alt="isthatayam_github" src="https://github.com/user-attachments/assets/16c637d4-d2c6-4669-a506-597ea0015bb0" />
+
 # YAM
 
 > A Rust/Ratatui terminal scene engine: animated hero rendering, world-space

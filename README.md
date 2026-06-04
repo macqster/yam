@@ -14,7 +14,7 @@
   </p>
 </div>
 
-<!-- cspell:ignore Arbaro asciiquarium aseprite Bacall braille cbonsai Chafa Dini DitherArt eco figlets Ghostty GreenLab HighGrow Infantino isthatayam Kanigher Krieg likness LinuxPorn Moldoff Moebius Naylor pplant Ratatui Riba Stanwyck Timm TNBA unixart unixporn Wray Wrigh wttr XBIN twimc -->
+<!-- cspell:ignore Arbaro asciiquarium aseprite Bacall braille cbonsai Chafa Dini DitherArt eco figlets Ghostty GreenLab HighGrow Infantino isthatayam Kanigher Krieg likness LinuxPorn Moldoff Moebius Naylor pplant Ratatui Riba Stanwyck Timm TNBA unixart unixporn Wray Wrigh wttr XBIN twimc rewatching -->
 
 I was dealing with some dark stuff, so I tried to focus on something gentle enough to let my mind rest a little. Voilà: `yam`, a Rust/Ratatui terminal screensaver-like diorama sandbox engine: a Chafa-driven animated Ivy clip, world-space scene projection, compact companion surfaces, BTAS-inspired UI, and a maintenance-first path toward richer procedural scene life.
 
@@ -24,11 +24,9 @@ For some nostalgic reference ghosts in here, intentional or otherwise, check the
 
 Codex is doing the hard work; life is unfortunately consuming too much time and attention, so my headspace to hand-write all this is limited.
 
-> `yam` is not meant as an end-user product or any kind of dashboard framework <br>
-`yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change <br>
-the only real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
-
-***
+> - `yam` is not meant as an end-user product or any kind of dashboard framework
+> - `yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change
+> - the only real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
 
 ## twimc: some systematized info
 

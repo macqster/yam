@@ -1,0 +1,216 @@
+# Main-Scene Scaffold
+
+<!-- cspell:ignore baubotanik -->
+
+This document is the owning note for YAM's main-scene hero support scaffold.
+It is a composition and ownership brief, not an implementation batch.
+
+The goal is to keep hero-support ideation grounded in the actual current
+main-scene contract: world-attached content, read-only render layers, and
+careful authored composition rather than dashboard chrome or generic background
+decoration.
+
+Related contracts:
+
+- [scene-model.md](scene-model.md) owns world/screen behavior and scene
+  categories
+- [rendering.md](rendering.md) owns visible layer and composition rules
+- [architecture.md](architecture.md) owns ownership boundaries
+- [vines.md](vines.md) owns vine-specific readiness and future phases
+- [../TODO.md](../TODO.md) owns active execution work
+
+## Current Role
+
+The scaffold exists to ground the current hero GIF inside the main scene.
+
+It is not just decorative bark or a generic tree prop. Its first job is to
+replace the support geometry lost when the original source background and
+window frame were removed from the hero asset.
+
+That means the scaffold must explain three pose facts:
+
+- back support
+- seat support
+- raised-leg brace
+
+If those three reads are weak, the hero risks looking suspended rather than
+seated.
+
+## Core Translation Rule
+
+Replace window-frame logic with tree-fork logic.
+
+The useful mapping is:
+
+| Original support logic | Scaffold replacement |
+| --- | --- |
+| lower sill / ledge | thick seat trunk or cradle branch |
+| rear vertical frame | rear branch or back-support sweep |
+| right/top frame angle | upper branch aligned with the raised leg |
+| dark interior occlusion | dense fork shadow or bark mass |
+| foreground frame edge | foreground lip, moss edge, root lip, or small twig mass |
+
+The scaffold should therefore be treated as a functional support silhouette
+first and a botanical object second.
+
+## Current Direction
+
+The strongest current direction is a clean single-trunk cradle rather than a
+busy multi-branch silhouette.
+
+The scaffold should first read as one continuous load-bearing organism:
+
+- ground anchor
+- trunk rise
+- seat cradle
+- back sweep
+- optional leg-side rise
+
+The primary shape should read as an S / hook / cradle curve rather than a set
+of unrelated limbs.
+
+## Main Components
+
+### 1. Ground-Trunk / Seat Cradle
+
+This is the most important element.
+
+Rules:
+
+- it should anchor near the lower-right or lower-center world region
+- it should rise as a thick trunk mass into the seated pose
+- it should bend under the butt, pelvis, and bent right leg
+- it may have a flattened or moss-softened contact surface, but should not
+  read like a literal bench
+- it must survive the hero/scaffold composition as a clear support form
+
+### 2. Rear Back-Brace Sweep
+
+The back support should feel like the same structure continuing upward, not a
+separate prop pasted behind the hero.
+
+Rules:
+
+- emerge from the main support mass near the lower back / hip region
+- run behind the torso and shoulder area
+- stay clear of the face and key silhouette edges
+- prefer a knotted or swollen fork transition over a geometric Y
+
+### 3. Leg-Aligned Rise
+
+This element is secondary. It can reinforce the straight-leg read, but only
+after the seat and back cradle already work.
+
+Rules:
+
+- echo the raised-leg direction
+- stay visually tied to the same trunk system
+- remain lighter than the seat cradle
+- preserve negative space around the leg rather than tracing every edge
+
+### 4. Foreground Lip / Nesting Edge
+
+A small foreground edge can help the hero feel nested inside the support
+instead of pasted onto it.
+
+Allowed forms:
+
+- moss edge
+- bark ridge
+- root lip
+- small twig cluster
+
+This should stay subtle and should not become foreground clutter.
+
+## Perspective Rules
+
+The current safest bias is to preserve the original pose-support perspective
+logic from the source asset while translating it into branch geometry.
+
+Rules:
+
+- the seat trunk should follow the old lower-sill directional logic
+- the rear sweep should replace the lost left/rear frame support
+- the leg-side rise should echo the old right/top angle
+- the scaffold should read as foreground-to-background structure, not a flat
+  backdrop
+- any hero-perspective correction must be coordinated with scaffold fit, not
+  done independently
+
+## Visual Direction
+
+The current best first-pass bias is a tree plus hidden-frame hybrid:
+
+- organic enough to read as a living or once-living greenhouse support
+- fitted enough to preserve the hero pose support logic
+- disciplined enough to avoid decorative branch noise
+
+Useful flavor lanes:
+
+- natural greenhouse fork
+- trained / baubotanik-like living support
+- hybrid organic support that still quietly preserves the old frame geometry
+
+The hybrid path is the current recommended starting point.
+
+## Layering Rules
+
+The scaffold should not live only behind the hero.
+
+Preferred conceptual stack:
+
+1. background greenhouse scene
+2. rear scaffold mass / back-brace sweep
+3. hero render
+4. small foreground lip / moss / twig edge
+5. optional particles later
+
+This keeps the hero visually seated inside the structure rather than floating
+in front of a backdrop.
+
+## Implementation Bias
+
+The first scaffold pass should stay:
+
+- static or pre-rendered
+- tightly fitted to the current hero envelope
+- world-attached
+- composition-led
+- low-noise
+
+It should not yet be:
+
+- fully procedural
+- a broad botanical simulation
+- a substitute for flora ownership
+- cluttered with secondary branches
+
+## Interaction With Vines
+
+The scaffold may prepare future vine placement, but it should not collapse into
+vine ownership.
+
+Rules:
+
+- scaffold support logic and vine growth logic stay distinct
+- vines may later attach to, overgrow, or frame the scaffold
+- the scaffold should remain readable on its own before vine decoration arrives
+- future vine enrichment must preserve the hero-support silhouette instead of
+  hiding it
+
+## Current Non-Goals
+
+Do not use scaffold work to justify:
+
+- hero asset churn for its own sake
+- a second projection or attachment model
+- render-owned support truth
+- dashboard-style control chrome around the hero
+- procedural branch complexity before the pose reads correctly
+
+## Summary Rule
+
+The scaffold is a pose-support cradle first.
+
+If a future scaffold change improves botanical richness but weakens the seated
+read, it is moving in the wrong direction.

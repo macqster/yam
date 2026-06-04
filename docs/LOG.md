@@ -1,5 +1,7 @@
 # YAM Log
 
+<!-- cspell:ignore ntrospect0 -->
+
 This file is append-only and historical only; current rules live in the active docs.
 
 Logging rule:
@@ -33,6 +35,17 @@ Logging rule:
 ## 2026-06-01
 
 - `06:36 CEST` began the real `0.4` greenhouse implementation path with the first authorized inert core slice: added `src/core/greenhouse.rs` and exported it through `core/mod.rs`, defining stable string-like ids, one tiny `greenhouse_nursery` room, access paths, zones, fixtures, planting sites, a symbolic room-level environment profile, and read-only inspection references. The module stays pure data with invariant tests only; it is not yet attached to `WorldState`, rendering, UI, systems, or weather code. `TODO.md`, `docs/architecture.md`, `docs/audit.md`, and `docs/greenhouse-roadmap.md` were updated to reflect the landed state.
+
+## 2026-06-02
+
+- `10:34 CEST` studied `ntrospect0/glint` as a Rust/Ratatui contrast case and promoted the result into the repo-owned docs instead of leaving it in chat memory: `docs/resource-map.md` now records Glint as a dashboard-TUI reference whose useful lessons are infrastructure-only (registry, feature gating, polling/config/theme helpers, setup flow), while `docs/audit.md` now explicitly records dashboard drift as an active caution for future YAM UI and greenhouse work.
+
+## 2026-06-04
+
+- `10:34 CEST` ingested the desktop main-scene scaffold brainstorming note into the active docs: added `docs/main-scene-scaffold.md` as the owning hero-support scaffold direction note, linked it from `docs/README.md`, and aligned `docs/scene-model.md`, `docs/rendering.md`, `docs/vines.md`, and `TODO.md` so future scaffold ideation stays centered on a static world-attached seat/back cradle read before decorative branching or vine overgrowth.
+- `10:52 CEST` cleaned up the front-door README after the direct GitHub edit that added the hero GIF preview: updated the preview note to describe the current GitHub-hosted media honestly, added the new `docs/main-scene-scaffold.md` owner link to the active surface map, and removed the duplicated current-release line from the version/history section.
+- `10:58 CEST` tightened `scripts/check-docs.sh` after the README GIF change exposed an over-strict assumption: the front-door asset check still fails on missing local asset paths, but now skips explicit `http` / `https` media URLs so a deliberate GitHub-hosted preview image does not trip the local-path hygiene guard.
+- `13:53 CEST` repaired the front-door README after a broader rewrite softened too many project guardrails: kept the GitHub-hosted GIF and a short personal note, but restored the stronger scene-engine framing, explicit anti-dashboard posture, launcher-behavior detail, broader docs map, scaffold-owner link, and the more stable contract-first front-door structure.
 
 ## 2026-05-30
 
@@ -726,6 +739,10 @@ Logging rule:
 - preserved ANSI-derived style spans while clipping hero frame text in the renderer
 - introduced a minimal scene + layer compositor and routed the existing render order through it without changing output
 - `2026-05-13 10:12` finished the companion-cluster polish pass: froze the accepted default camera, hero, and clock launch positions; restored clean-launch reseeding so saved offsets cannot override those defaults; kept manual camera centered through terminal resizes; brought the date widget back into the visible companion band and exposed its world/screen/visible facts in the debug panel; nudged the default weather/date positions into the accepted final family; and restored the spaced compact temperature row (` 3C |  11C`) with a slightly wider compact weather contract and matching layout-test updates.
+
+## 2026-06-04 14:03 CEST
+
+- backed away from the earlier front-door README repair pass and returned the README closer to its lighter pre-repair posture while keeping the GitHub-hosted preview GIF in place
 
 ## 2026-05-13 - Audit cleanup follow-up
 

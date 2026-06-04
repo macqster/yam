@@ -1,5 +1,7 @@
 # YAM Resource Map
 
+<!-- cspell:ignore ntrospect0 -->
+
 This doc tracks external tools, libraries, formats, and reference projects that are worth using, studying, emulating, or rejecting during future YAM development.
 
 It is a research/reference surface, not an active backlog.
@@ -43,6 +45,54 @@ Recommended posture:
 Implementation gate:
 
 - only pull in more Ratatui ecosystem crates when a concrete YAM surface has outgrown the current custom implementation
+
+### Dashboard TUI References
+
+Current YAM baseline:
+
+- YAM already uses Ratatui and several modal/dev surfaces, so it carries some
+  natural dashboard gravity even though its product identity is world-space
+  visualizer first
+- the current greenhouse and world contracts explicitly reject panel-chrome
+  ownership and room selection via UI tabs
+
+Recommended posture:
+
+- `Reference` Glint (`ntrospect0/glint`, studied at commit
+  `8c10176787f9537cdc69f896088d7ce862cded8a`) as a mature Rust/Ratatui
+  dashboard example with explicit widget registry, feature-gated widget
+  families, polling/config/theme infrastructure, stack-cell composition,
+  live-reload, and setup-wizard patterns
+- `Emulate` only the infrastructure lessons that preserve YAM ownership:
+  explicit extension descriptors, small extracted platform helpers,
+  redraw/poll discipline, semantic theme roles, and humane setup/config flows
+- `Reject` Glint's product ontology as a runtime template for YAM: pane-grid
+  dashboard layout, widget-first composition, provider-heavy integrations,
+  stack/tab worldview, command-bar-first identity, and "everything is a widget"
+  architecture
+- `Reject` borrowing dashboard chrome to solve greenhouse navigation, room
+  selection, inspection, or world switching; those must stay owned by world
+  state, room/place identity, and read-only inspect surfaces
+
+Specific notes from the Glint study:
+
+- its `Widget` trait, registry, and `docs/widget-sdk.md` are good references
+  for how to document platform capabilities once repetition is real
+- its feature-gated widget families are a good reminder that optional surfaces
+  can stay compile-time explicit instead of leaking into one giant runtime blob
+- its config watcher, wizard resume/finalize flow, and dirty/poll helpers are
+  strong operational patterns for future YAM setup or authoring work
+- its status bar, pane grid, and stack-cell composition are useful primarily as
+  anti-drift examples for YAM's world/HUD/overlay contract
+
+Implementation gate:
+
+- if YAM adopts any lesson from Glint, promote it only as YAM-native
+  infrastructure in service of world-space ownership
+- do not add a generic widget shell, pane grid, stack tabs, or dashboard-style
+  layout manager unless the architecture docs are intentionally changed first
+- if a reusable YAM platform helper emerges from repeated code, document it as
+  a YAM-owned contract rather than importing dashboard vocabulary wholesale
 
 ### Chafa And Terminal Image Rendering
 

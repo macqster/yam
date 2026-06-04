@@ -9,6 +9,10 @@ Last reviewed: 2026-05-31
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
+- YAM still has some natural dashboard gravity because it already has modal/dev
+  surfaces and companion chrome; future UI and greenhouse work should keep
+  studying dashboard TUIs like Glint as infrastructure references only, not as
+  product-shape precedents.
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
 - Greenhouse planning now has a single dedicated roadmap and the first inert `core::greenhouse` data slice, but the broader implementation gates are still open: `WorldState` attachment, multi-family flora storage, growth dispatch, and inspection surfaces still need explicit work before visible greenhouse content starts.
 - The greenhouse brainstorming sources have been distilled into the roadmap as candidate material only; the useful current bias is functional-space-first nursery/propagation-room work, symbolic per-room environment, read-only inspection, tiny planting-site capacity, and curation-style progression rather than gameplay.
@@ -131,6 +135,15 @@ Last reviewed: 2026-05-31
   and weather code.
   - evidence: `src/core/greenhouse.rs`, `docs/greenhouse-roadmap.md`,
     `docs/architecture.md`
+- `low` The Glint study added a useful external contrast case for dashboard
+  drift: it is a strong Rust/Ratatui reference for widget registries,
+  feature-gated optional surfaces, polling/config/theme helpers, and setup
+  flows, but it also reinforces what YAM should not become - a pane-grid,
+  widget-first dashboard shell. Future borrowing should stay infrastructure-only
+  and preserve YAM's world-space place model.
+  - evidence: `docs/resource-map.md`, `/tmp/glint-study/README.md`,
+    `/tmp/glint-study/src/widgets/mod.rs`,
+    `/tmp/glint-study/src/widgets/registry.rs`
 - `low` The archived greenhouse ecosystem design notes and roadmap review are
   now ingested into the roadmap as bounded architectural source material: they
   strengthen the lab/frame vocabulary, shell/support/light/sensor/actuator

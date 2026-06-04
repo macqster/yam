@@ -27,6 +27,7 @@ The repo front door is [../README.md](../README.md).
 
 - [chatgpt-0.4-source-pack/README.md](chatgpt-0.4-source-pack/README.md) - compact upload pack for the external YAM 0.4 ChatGPT project
 - [greenhouse-roadmap.md](greenhouse-roadmap.md) - greenhouse expansion roadmap and implementation gates
+- [main-scene-scaffold.md](main-scene-scaffold.md) - main-scene hero support scaffold direction
 - [loading-screen.md](loading-screen.md) - boot/loading-screen contract
 - [weather-widget.md](weather-widget.md) - weather-widget contract
 - [vines.md](vines.md) - vine ownership/readiness contract
@@ -63,6 +64,7 @@ The repo front door is [../README.md](../README.md).
 | External ChatGPT 0.4 upload context | [chatgpt-0.4-source-pack/README.md](chatgpt-0.4-source-pack/README.md) |
 | External ChatGPT 0.4 provenance and workflow cues | [chatgpt-0.4-source-pack/source-pack-manifest.md](chatgpt-0.4-source-pack/source-pack-manifest.md) |
 | Greenhouse strategy and operation plan | [greenhouse-roadmap.md](greenhouse-roadmap.md) |
+| Main-scene hero support scaffold direction | [main-scene-scaffold.md](main-scene-scaffold.md) |
 | Vine ownership and staged readiness | [vines.md](vines.md) |
 | Weather widget ownership | [weather-widget.md](weather-widget.md) |
 | Hero cache design/runtime path | [hero-cache.md](hero-cache.md) |

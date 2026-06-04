@@ -115,6 +115,9 @@ fi
 
 while IFS= read -r asset_path; do
   [[ -z "$asset_path" ]] && continue
+  if [[ "$asset_path" =~ ^https?:// ]]; then
+    continue
+  fi
   if [[ ! -e "$asset_path" ]]; then
     echo "README.md references missing local asset: $asset_path" >&2
     exit 1

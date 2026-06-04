@@ -10,6 +10,7 @@ It is intentionally not an implementation plan for the full multi-species flora 
 - `core::organism` now owns the first shared organism identity vocabulary, an in-memory species registry skeleton, and a per-instance journal skeleton. The current border vine exposes the first species-profile shaped payload through that registry seam without adding a second plant family yet.
 - Hero GIF aesthetics are frozen for now; vine work must not require changing the active hero appearance.
 - The scaffold, guides, and pointer probe can prepare future vine placement, branching, boundary, and organ work, but they should not bypass the world-owned flora state.
+- Main-scene scaffold direction lives in [`main-scene-scaffold.md`](main-scene-scaffold.md); vine work may later attach to or frame that support, but should not redefine the scaffold's hero-support role.
 - Vines are one flora family, not a special-case renderer.
 
 ## Ownership Contract

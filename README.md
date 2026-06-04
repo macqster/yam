@@ -183,7 +183,7 @@ Active surface docs:
 
 ## acknowledgements
 
-- front gif was lifted from a brief shot in [*Batman and Harley Quinn*](https://www.imdb.com/title/tt6556890/reference/), directed by Sam Liu, written by Jim Krieg and Bruce Timm, with story by Bruce Timm
+- front gif was lifted from a brief shot in [*Batman and Harley Quinn*](https://www.imdb.com/title/tt6556890/reference/), directed by Sam Liu, written by Jim Krieg and Bruce Timm
 - `Chafa`-rendered gif was hand-redrawn from one shot in [*The New Batman Adventures*](https://www.imdb.com/title/tt0118266/reference/) (s01e01 — "Holiday Knights"), written by Paul Dini and directed by Dan Riba
 - for Poison Ivy herself, credit to Robert Kanigher and Carmine Infantino, with Sheldon Moldoff important to her first published appearance
 - with all due respect to Lynne Naylor's Ivy design from ~1991, the absolute best rendition of our beloved eco-terrorist came from Bruce Timm's magic fingers during the broad character redesign between BTAS and TNBA; Timm's talent for capturing the charisma of figures such as Lauren Bacall, Veronica Lake, and/or Rita Hayworth worked here much better than Naylor's attempt to render the likeness of figures such as Barbara Stanwyck, Teresa Wright, and/or Fay Wray

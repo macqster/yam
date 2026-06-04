@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/isthatayam_github.gif" alt="Alt text">
+<img src="assets/isthatayam_github.gif" alt="YAM animated terminal diorama preview">
 
   <h1>yam</h1>
 
@@ -16,20 +16,20 @@
 
 <!-- cspell:ignore Dini Timm twimc isthatayam -->
 
-I was dealing with some dark stuff, so I tried to focus on something gentle enough to let my mind rest a little. Voilà: yam, a Rust/Ratatui terminal screensaver-like diorama sandbox engine: a Chafa-driven animated Ivy clip, world-space scene projection, compact companion surfaces, BTAS-inspired UI, and a maintenance-first path toward richer procedural scene life.
+I was dealing with some dark stuff, so I tried to focus on something gentle enough to let my mind rest a little. Voilà: `yam`, a Rust/Ratatui terminal screensaver-like diorama sandbox engine: a Chafa-driven animated Ivy clip, world-space scene projection, compact companion surfaces, BTAS-inspired UI, and a maintenance-first path toward richer procedural scene life.
 
-First I just wanted some benign animation on my screen to stare at blankly. But, as I said, I needed distractions, so it became a pet project of mine. At that time I was watching DC animation again, reading stuff by Paul Dini and Bruce Timm, and trying to keep up with the awesome contemporary CLI/TUI scene. Hence yam.
+First I just wanted some benign animation on my screen to stare at blankly. But, as I said, I needed distractions, so it became a pet project of mine. At that time I was watching DC animation again, reading stuff by Paul Dini and Bruce Timm, and trying to keep up with the awesome contemporary CLI/TUI scene. Hence `yam`.
 
-Some nostalgic reference ghosts in here, intentional or otherwise: lo-fi girl animation loops, the cbonsai generative plant idea, HighGrow controlled greenhouse environment and plant lifecycle, ricing culture, terminal art toys, and many, many more. I hope nothing was stolen too explicitly. Feel free to yell at me if it was.
+Some nostalgic reference ghosts in here, intentional or otherwise: lo-fi girl animation loops, the `cbonsai` generative plant idea, `HighGrow`'s controlled greenhouse environment and plant lifecycle, `wttr.in` weather widget, figlets, ricing culture, terminal art toys, and many, many more. I hope nothing was stolen too explicitly. Feel free to yell at me if it was.
 
 Codex is doing the hard work; life is unfortunately consuming too much time and attention, so the headspace to hand-write all this is limited.
 
-> `yam` is not meant as an end-user product or any kind of dashboard framework <br>
-The real readers are me, Codex, and you, dear curious person, so keep in mind, that the rest of this README is only a compact orientation sheet.
+> `yam` is not meant as an end-user product or any kind of dashboard framework; `yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change; <br>
+the real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
 
 ***
 
-# twimc: some systematized info
+## twimc: some systematized info
 
 Current release: `0.3.9`
 
@@ -58,19 +58,27 @@ Current release: `0.3.9`
 
 ## commands
 
+Clone and run the default world:
+
 ```bash
 git clone https://github.com/macqster/yam.git
 cd yam
 cargo run --release
 ```
 
+Run the sandbox world:
+
 ```bash
 cargo run --release -- --sandbox
 ```
 
+Check runtime identity:
+
 ```bash
 cargo run --release -- --identity
 ```
+
+Run the full maintenance gate:
 
 ```bash
 bash scripts/verify.sh
@@ -152,7 +160,7 @@ Active surface docs:
 | `src/systems/` | early simulation seams for growth, aging, density, constraints |
 | `assets/` | runtime visual/font assets |
 | `scripts/` | maintenance, verification, update utilities |
-| `docs/` | active contracts, notes, archive entrypoints |
+| `docs/` | active contracts, notes, archive entry points |
 
 ## working rules
 

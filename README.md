@@ -111,32 +111,13 @@ bash scripts/update.sh
 
 <div align="center">
 
-<table>
-  <tr>
-    <th>command</th>
-    <th>role</th>
-  </tr>
-  <tr>
-    <td><code>yam</code></td>
-    <td>canonical local launcher</td>
-  </tr>
-  <tr>
-    <td><code>yam-sandbox</code></td>
-    <td>sparse sandbox launcher</td>
-  </tr>
-  <tr>
-    <td><code>yam-rust</code></td>
-    <td>direct Rust runtime launcher</td>
-  </tr>
-  <tr>
-    <td><code>yam-install</code></td>
-    <td>rebuild/reinstall wrapper flow</td>
-  </tr>
-  <tr>
-    <td><code>yam-diagnostics</code></td>
-    <td>local diagnostics reader/tailer</td>
-  </tr>
-</table>
+| command | role |
+| --- | --- |
+| `yam` | canonical local launcher |
+| `yam-sandbox` | sparse sandbox launcher |
+| `yam-rust` | direct Rust runtime launcher |
+| `yam-install` | rebuild/reinstall wrapper flow |
+| `yam-diagnostics` | local diagnostics reader/tailer |
 
 </div>
 

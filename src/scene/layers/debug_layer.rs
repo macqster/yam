@@ -91,9 +91,11 @@ impl Layer for DebugLayer {
 
         let hero = &ui.hero;
         let main_scene = world.kind.has_main_scene_composition();
+        let hero_surface_visible = ui.hero_visible_in_active_world();
+        let companion_surface_visible = ui.companions_visible_in_active_world();
         let hero_world = ctx.world.hero_world;
         let hero_screen = projection.project(ctx.world.hero_visual_anchor);
-        let hero_visible = main_scene
+        let hero_visible = hero_surface_visible
             && hero_screen.x >= 0
             && hero_screen.y >= 0
             && hero_screen.x < grid.width as i32
@@ -111,21 +113,21 @@ impl Layer for DebugLayer {
             && pointer_screen.y < grid.height as i32;
         let clock_world = ctx.world.clock_world;
         let clock_screen = ctx.clock_screen();
-        let clock_visible = main_scene
+        let clock_visible = companion_surface_visible
             && clock_screen.x >= 0
             && clock_screen.y >= 0
             && clock_screen.x < grid.width as i32
             && clock_screen.y < grid.height as i32;
         let weather_world = ctx.world.weather_world;
         let weather_screen = ctx.weather_screen();
-        let weather_visible = main_scene
+        let weather_visible = companion_surface_visible
             && weather_screen.x >= 0
             && weather_screen.y >= 0
             && weather_screen.x < grid.width as i32
             && weather_screen.y < grid.height as i32;
         let date_world = ctx.world.date_world;
         let date_screen = ctx.date_screen();
-        let date_visible = main_scene
+        let date_visible = companion_surface_visible
             && date_screen.x >= 0
             && date_screen.y >= 0
             && date_screen.x < grid.width as i32

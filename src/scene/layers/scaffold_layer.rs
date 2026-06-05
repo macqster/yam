@@ -45,11 +45,11 @@ impl Layer for ScaffoldLayer {
         &self,
         grid: &mut Grid,
         world: &WorldState,
-        _ui: &UiState,
+        ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
-        if !world.kind.has_main_scene_composition() {
+        if !ui.scaffold_visible_in_active_world() || !ui.supports_scaffold_prototypes() {
             return None;
         }
 
@@ -144,7 +144,7 @@ mod tests {
     use ratatui::prelude::Rect;
 
     #[test]
-    fn scaffold_renders_only_in_main_scene_worlds() {
+    fn scaffold_respects_sandbox_visibility_toggle() {
         let layer = super::ScaffoldLayer;
         let mut world = WorldState::for_kind(WorldKind::Sandbox);
         world.scaffold = ScaffoldState {
@@ -156,7 +156,9 @@ mod tests {
                 layer: ScaffoldPlane::Rear,
             }],
         };
-        let ui = UiState::new();
+        let mut ui = UiState::new();
+        ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
+        ui.meta.sandbox_scaffold_visible = false;
         let fonts = FontRegistry::new();
         let ctx = render_state();
 
@@ -164,6 +166,15 @@ mod tests {
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;
         assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
+
+        ui.meta.sandbox_scaffold_visible = true;
+        let grid = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid;
+        assert!(grid
+            .cells
+            .iter()
+            .any(|cell| matches!(cell.symbol, '#' | '=' | '@')));
     }
 
     #[test]

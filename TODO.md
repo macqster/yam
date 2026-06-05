@@ -83,6 +83,8 @@ Issue link rule:
 - `verify` main-scene enrichment must preserve hero aesthetics, footer placement, modal geometry, and companion projection semantics.
 - `verify` the main scene remains the live visualiser/screensaver composition; enrichment should add world-attached content, not a dashboard layout.
 - `verify` keep the landed first-pass scaffold honest: `core::scaffold` owns a static rear support cradle for the main scene, render layers stay read-only, and optional foreground lip / decorative branching remains deferred until the seated silhouette is proven.
+- `verify` use sandbox as the first scaffold-prototyping room: hero, companions, and scaffold may be toggled there for composition trials, but the toggles remain UI-owned presentation switches over the shared world/render pipeline rather than a second runtime owner.
+- `inspect` treat scaffold masks as a later seam, not the next default: prefer world geometry plus layer order first, then introduce an explicit mask primitive only if a concrete occlusion or nesting read proves it is necessary.
 - `inspect` stage vine Phase 8 in slices only after the shared flora vocabulary is ready: lateral axes, small leaves, larger decorative leaves after clipping/z-order tests, then flowers, fruit, or particles.
 - `inspect` stage vine Phase 9 border behavior through world bounds, boundary guides, or exclusion outlines before any mask-like behavior.
 - `verify` any new scaffold, leaf, particle, or plant surface gets a world/HUD/overlay assignment before implementation.

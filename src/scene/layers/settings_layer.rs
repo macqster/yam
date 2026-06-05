@@ -212,23 +212,59 @@ fn ui_lines(ui: &UiState) -> Vec<String> {
 }
 
 fn gif_lines(ui: &UiState) -> Vec<String> {
-    if ui.world_has_scene_companions() {
+    if ui.supports_hero_prototypes() {
         vec![
             format!("hero fps: {:.1}", ui.offsets.hero_fps),
             format!("clock font: {}", ui.offsets.clock_font),
-            "hero render: chafa-backed".to_string(),
+            format!(
+                "hero render: {}",
+                if ui.hero_visible_in_active_world() {
+                    "chafa-backed"
+                } else {
+                    "hidden in this world"
+                }
+            ),
         ]
     } else {
-        vec!["no hero or clock assets in sandbox".to_string()]
+        vec!["no hero or clock assets in this world".to_string()]
     }
 }
 
 fn feature_lines(ui: &UiState) -> Vec<String> {
-    vec![format!(
-        "main scene vines: {} (current: {})",
-        ui.meta.vines_visibility_mode.label(),
-        if ui.meta.vines_visible { "on" } else { "off" }
-    )]
+    vec![
+        format!(
+            "main scene vines: {} (current: {})",
+            ui.meta.vines_visibility_mode.label(),
+            if ui.meta.vines_visible { "on" } else { "off" }
+        ),
+        format!(
+            "sandbox hero: {} (current: {})",
+            ui.meta.sandbox_hero_visibility_mode.label(),
+            if ui.meta.sandbox_hero_visible {
+                "on"
+            } else {
+                "off"
+            }
+        ),
+        format!(
+            "sandbox companions: {} (current: {})",
+            ui.meta.sandbox_companions_visibility_mode.label(),
+            if ui.meta.sandbox_companions_visible {
+                "on"
+            } else {
+                "off"
+            }
+        ),
+        format!(
+            "sandbox scaffold: {} (current: {})",
+            ui.meta.sandbox_scaffold_visibility_mode.label(),
+            if ui.meta.sandbox_scaffold_visible {
+                "on"
+            } else {
+                "off"
+            }
+        ),
+    ]
 }
 
 fn format_axis_line(label: &str, x: i32, y: i32, ui: &UiState, row: u16) -> String {
@@ -460,6 +496,9 @@ mod tests {
 
         assert!(text.contains("features"));
         assert!(text.contains("main scene vines: last (current: off)"));
+        assert!(text.contains("sandbox hero: on (current: on)"));
+        assert!(text.contains("sandbox companions: off (current: off)"));
+        assert!(text.contains("sandbox scaffold: on (current: on)"));
     }
 
     #[test]
@@ -503,7 +542,7 @@ mod tests {
     }
 
     #[test]
-    fn sandbox_positions_tab_hides_main_scene_only_offsets() {
+    fn sandbox_positions_tab_keeps_scene_offsets_available_for_prototyping() {
         let layer = SettingsLayer;
         let world = WorldState::for_sandbox();
         let fonts = FontRegistry::new();
@@ -518,13 +557,13 @@ mod tests {
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
         assert!(text.contains("camera: [locked in fullscreen]"));
-        assert!(!text.contains("hero offset:"));
-        assert!(!text.contains("clock offset:"));
-        assert!(!text.contains("weather offset:"));
+        assert!(text.contains("hero offset: x ="));
+        assert!(text.contains("clock offset: x ="));
+        assert!(text.contains("weather offset: x ="));
     }
 
     #[test]
-    fn sandbox_gif_tab_reports_missing_scene_assets() {
+    fn sandbox_gif_tab_reports_prototype_asset_controls() {
         let layer = SettingsLayer;
         let world = WorldState::for_sandbox();
         let fonts = FontRegistry::new();
@@ -538,8 +577,8 @@ mod tests {
         let open = layer.render_to_grid(212, 57, &world, &ui, &fonts, &render_state);
         let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
 
-        assert!(text.contains("no hero or clock assets in sandbox"));
-        assert!(!text.contains("hero fps:"));
-        assert!(!text.contains("clock font:"));
+        assert!(text.contains("hero fps:"));
+        assert!(text.contains("clock font:"));
+        assert!(text.contains("hero render: chafa-backed"));
     }
 }

@@ -34,6 +34,27 @@ The first scaffold runtime slice is now present in a deliberately narrow form:
 This is intentional. The current goal is to prove world ownership and support
 readability before adding another layer of composition complexity.
 
+## Prototype Workflow
+
+Scaffold experimentation should default to the sandbox world first.
+
+Current recommendation:
+
+- use sandbox as the visual proving ground for scaffold fits and comparisons
+- keep hero, companions, and scaffold independently toggleable there through
+  UI-owned visibility controls
+- compare scaffold alone, scaffold plus hero, and fuller composition passes
+  before promoting changes into the main scene
+- keep those toggles presentation-only; they must not create a second scaffold
+  data owner or a sandbox-only projection path
+
+Current mask recommendation:
+
+- do not default to masks for scaffold work yet
+- prefer plain world-owned scaffold geometry and ordinary layer ordering first
+- consider a mask only if a specific foreground nesting or occlusion read
+  cannot be expressed cleanly through geometry and layer order alone
+
 ## Current Role
 
 The scaffold exists to ground the current hero GIF inside the main scene.

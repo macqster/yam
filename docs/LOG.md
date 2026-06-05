@@ -18,6 +18,7 @@ Logging rule:
 ## 2026-06-05
 
 - `14:27 CEST` landed the first main-scene scaffold runtime slice after inspecting the repo's actual starting point: added `core::scaffold` as the world-owned home for a static rear hero-support cradle, attached that data to `WorldState` for the main scene only, and rendered it through a dedicated read-only `ScaffoldLayer` beneath the hero using the shared spatial/drawing path. The batch intentionally stops short of a foreground lip, decorative branch spread, or vine-led overgrowth so the support contract stays small and reviewable. `docs/main-scene-scaffold.md`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `TODO.md`, and `docs/audit.md` were updated to match.
+- `14:49 CEST` turned sandbox into the preferred scaffold-prototyping room without creating a second composition pipeline: added persisted sandbox visibility policies for hero, companions, and scaffold in `UiState`, rewired the relevant render-layer guards through UI-owned visibility helpers instead of hardcoded main-scene checks, and widened the settings `features` / `gif` / `positions` tabs so sandbox trials can compare scaffold-only and fuller composition states. The docs now explicitly recommend sandbox-first scaffold review and keep masks deferred until a specific occlusion need appears.
 
 ## 2026-05-31
 

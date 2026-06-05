@@ -16,12 +16,12 @@ impl Layer for WeatherLayer {
     fn render_into_grid(
         &self,
         grid: &mut Grid,
-        world: &WorldState,
+        _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<crate::render::mask::Mask> {
-        if !world.kind.has_main_scene_composition() {
+        if !ui.companions_visible_in_active_world() {
             return None;
         }
 

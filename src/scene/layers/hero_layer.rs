@@ -41,12 +41,12 @@ impl Layer for HeroLayer {
     fn render_into_grid(
         &self,
         grid: &mut Grid,
-        world: &WorldState,
+        _world: &WorldState,
         ui: &UiState,
         _fonts: &FontRegistry,
         ctx: &RenderState,
     ) -> Option<Mask> {
-        if !world.kind.has_main_scene_composition() {
+        if !ui.hero_visible_in_active_world() {
             return None;
         }
         let hero = &ui.hero;

@@ -27,6 +27,12 @@ pub struct MetaState {
     pub active_world: WorldKindSnapshot,
     pub vines_visible: bool,
     pub vines_visibility_mode: FeatureVisibilityMode,
+    pub sandbox_hero_visible: bool,
+    pub sandbox_hero_visibility_mode: FeatureVisibilityMode,
+    pub sandbox_companions_visible: bool,
+    pub sandbox_companions_visibility_mode: FeatureVisibilityMode,
+    pub sandbox_scaffold_visible: bool,
+    pub sandbox_scaffold_visibility_mode: FeatureVisibilityMode,
     pub hotkeys_open: bool,
     pub move_mode_open: bool,
     pub palette_open: bool,
@@ -51,6 +57,12 @@ impl MetaState {
             active_world: WorldKindSnapshot::MainScene,
             vines_visible: false,
             vines_visibility_mode: FeatureVisibilityMode::Off,
+            sandbox_hero_visible: true,
+            sandbox_hero_visibility_mode: FeatureVisibilityMode::On,
+            sandbox_companions_visible: false,
+            sandbox_companions_visibility_mode: FeatureVisibilityMode::Off,
+            sandbox_scaffold_visible: true,
+            sandbox_scaffold_visibility_mode: FeatureVisibilityMode::On,
             hotkeys_open: false,
             move_mode_open: false,
             palette_open: false,
@@ -140,6 +152,27 @@ impl MetaState {
     pub fn cycle_vines_visibility_mode(&mut self) {
         self.vines_visibility_mode = self.vines_visibility_mode.next();
         self.vines_visible = self.vines_visibility_mode.resolve(self.vines_visible);
+    }
+
+    pub fn cycle_sandbox_hero_visibility_mode(&mut self) {
+        self.sandbox_hero_visibility_mode = self.sandbox_hero_visibility_mode.next();
+        self.sandbox_hero_visible = self
+            .sandbox_hero_visibility_mode
+            .resolve(self.sandbox_hero_visible);
+    }
+
+    pub fn cycle_sandbox_companions_visibility_mode(&mut self) {
+        self.sandbox_companions_visibility_mode = self.sandbox_companions_visibility_mode.next();
+        self.sandbox_companions_visible = self
+            .sandbox_companions_visibility_mode
+            .resolve(self.sandbox_companions_visible);
+    }
+
+    pub fn cycle_sandbox_scaffold_visibility_mode(&mut self) {
+        self.sandbox_scaffold_visibility_mode = self.sandbox_scaffold_visibility_mode.next();
+        self.sandbox_scaffold_visible = self
+            .sandbox_scaffold_visibility_mode
+            .resolve(self.sandbox_scaffold_visible);
     }
 
     pub fn active_world_kind(&self) -> WorldKind {
@@ -333,7 +366,7 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => 6,
             SettingsTab::Ui => 5,
-            SettingsTab::Features => 1,
+            SettingsTab::Features => 4,
             SettingsTab::Gif => 3,
             SettingsTab::Theme => 3,
         }
@@ -653,6 +686,12 @@ impl UiState {
     pub fn reset_for_clean_launch(&mut self, world_kind: WorldKind) {
         let vines_visibility_mode = self.meta.vines_visibility_mode;
         let last_vines_visible = self.meta.vines_visible;
+        let sandbox_hero_visibility_mode = self.meta.sandbox_hero_visibility_mode;
+        let last_sandbox_hero_visible = self.meta.sandbox_hero_visible;
+        let sandbox_companions_visibility_mode = self.meta.sandbox_companions_visibility_mode;
+        let last_sandbox_companions_visible = self.meta.sandbox_companions_visible;
+        let sandbox_scaffold_visibility_mode = self.meta.sandbox_scaffold_visibility_mode;
+        let last_sandbox_scaffold_visible = self.meta.sandbox_scaffold_visible;
         let world_frame_visible = self.meta.world_frame_visible;
         let world_axis_visible = self.meta.world_axis_visible;
         let world_datum_visible = self.meta.world_datum_visible;
@@ -663,6 +702,15 @@ impl UiState {
         self.meta.active_world = WorldKindSnapshot::from_world_kind(world_kind);
         self.meta.vines_visibility_mode = vines_visibility_mode;
         self.meta.vines_visible = vines_visibility_mode.resolve(last_vines_visible);
+        self.meta.sandbox_hero_visibility_mode = sandbox_hero_visibility_mode;
+        self.meta.sandbox_hero_visible =
+            sandbox_hero_visibility_mode.resolve(last_sandbox_hero_visible);
+        self.meta.sandbox_companions_visibility_mode = sandbox_companions_visibility_mode;
+        self.meta.sandbox_companions_visible =
+            sandbox_companions_visibility_mode.resolve(last_sandbox_companions_visible);
+        self.meta.sandbox_scaffold_visibility_mode = sandbox_scaffold_visibility_mode;
+        self.meta.sandbox_scaffold_visible =
+            sandbox_scaffold_visibility_mode.resolve(last_sandbox_scaffold_visible);
         self.meta.world_frame_visible = world_frame_visible;
         self.meta.world_axis_visible = world_axis_visible;
         self.meta.world_datum_visible = world_datum_visible;
@@ -987,7 +1035,7 @@ impl UiState {
             self.meta.active_world_kind().loading_label(),
             Duration::from_millis(900),
         );
-        if self.meta.active_world_kind().has_scene_companions() {
+        if self.supports_scene_companion_prototypes() {
             self.pointer_blink_on = true;
         }
         self.clamp_settings_cursor_to_world();
@@ -1107,8 +1155,12 @@ impl UiState {
                 Ok(())
             }
             SettingsTab::Features => {
-                if self.meta.selected_settings_row() == 0 {
-                    self.meta.cycle_vines_visibility_mode();
+                match self.meta.selected_settings_row() {
+                    0 => self.meta.cycle_vines_visibility_mode(),
+                    1 => self.meta.cycle_sandbox_hero_visibility_mode(),
+                    2 => self.meta.cycle_sandbox_companions_visibility_mode(),
+                    3 => self.meta.cycle_sandbox_scaffold_visibility_mode(),
+                    _ => {}
                 }
                 self.mark_persisted_state_dirty();
                 Ok(())
@@ -1284,11 +1336,53 @@ impl UiState {
     }
 
     pub fn world_has_scene_companions(&self) -> bool {
-        self.meta.active_world_kind().has_scene_companions()
+        self.supports_scene_companion_prototypes()
+    }
+
+    pub fn hero_visible_in_active_world(&self) -> bool {
+        match self.meta.active_world_kind() {
+            WorldKind::MainScene => true,
+            WorldKind::Sandbox => self.meta.sandbox_hero_visible,
+            WorldKind::Boot => false,
+        }
+    }
+
+    pub fn companions_visible_in_active_world(&self) -> bool {
+        match self.meta.active_world_kind() {
+            WorldKind::MainScene => true,
+            WorldKind::Sandbox => self.meta.sandbox_companions_visible,
+            WorldKind::Boot => false,
+        }
+    }
+
+    pub fn scaffold_visible_in_active_world(&self) -> bool {
+        match self.meta.active_world_kind() {
+            WorldKind::MainScene => true,
+            WorldKind::Sandbox => self.meta.sandbox_scaffold_visible,
+            WorldKind::Boot => false,
+        }
+    }
+
+    pub fn supports_scene_companion_prototypes(&self) -> bool {
+        matches!(
+            self.meta.active_world_kind(),
+            WorldKind::MainScene | WorldKind::Sandbox
+        )
+    }
+
+    pub fn supports_hero_prototypes(&self) -> bool {
+        self.supports_scene_companion_prototypes()
+    }
+
+    pub fn supports_scaffold_prototypes(&self) -> bool {
+        matches!(
+            self.meta.active_world_kind(),
+            WorldKind::MainScene | WorldKind::Sandbox
+        )
     }
 
     pub fn settings_item_count(&self, tab: SettingsTab) -> usize {
-        if !self.meta.active_world_kind().has_scene_companions()
+        if !self.supports_scene_companion_prototypes()
             && matches!(tab, SettingsTab::Positions | SettingsTab::Gif)
         {
             1
@@ -2132,6 +2226,12 @@ mod tests {
                 active_world: WorldKindSnapshot::Sandbox,
                 vines_visible: false,
                 vines_visibility_mode: FeatureVisibilityMode::Last,
+                sandbox_hero_visible: false,
+                sandbox_hero_visibility_mode: FeatureVisibilityMode::Last,
+                sandbox_companions_visible: true,
+                sandbox_companions_visibility_mode: FeatureVisibilityMode::On,
+                sandbox_scaffold_visible: false,
+                sandbox_scaffold_visibility_mode: FeatureVisibilityMode::Off,
                 hotkeys_open: false,
                 move_mode_open: true,
                 palette_open: false,
@@ -2183,6 +2283,21 @@ mod tests {
         assert_eq!(
             round_trip.meta.vines_visibility_mode,
             FeatureVisibilityMode::Last
+        );
+        assert!(!round_trip.meta.sandbox_hero_visible);
+        assert_eq!(
+            round_trip.meta.sandbox_hero_visibility_mode,
+            FeatureVisibilityMode::Last
+        );
+        assert!(round_trip.meta.sandbox_companions_visible);
+        assert_eq!(
+            round_trip.meta.sandbox_companions_visibility_mode,
+            FeatureVisibilityMode::On
+        );
+        assert!(!round_trip.meta.sandbox_scaffold_visible);
+        assert_eq!(
+            round_trip.meta.sandbox_scaffold_visibility_mode,
+            FeatureVisibilityMode::Off
         );
         assert!(round_trip.meta.settings_open);
         assert!(round_trip.meta.move_mode_open);
@@ -2249,6 +2364,21 @@ mod tests {
         assert_eq!(
             snapshot.meta.vines_visibility_mode,
             FeatureVisibilityMode::Off
+        );
+        assert!(snapshot.meta.sandbox_hero_visible);
+        assert_eq!(
+            snapshot.meta.sandbox_hero_visibility_mode,
+            FeatureVisibilityMode::On
+        );
+        assert!(!snapshot.meta.sandbox_companions_visible);
+        assert_eq!(
+            snapshot.meta.sandbox_companions_visibility_mode,
+            FeatureVisibilityMode::Off
+        );
+        assert!(snapshot.meta.sandbox_scaffold_visible);
+        assert_eq!(
+            snapshot.meta.sandbox_scaffold_visibility_mode,
+            FeatureVisibilityMode::On
         );
         assert_eq!(snapshot.meta.settings_tab, SettingsTab::Positions);
         assert_eq!(snapshot.meta.settings_cursor, SettingsCursor::default());
@@ -2331,6 +2461,42 @@ mod tests {
             .expect("feature toggle should succeed");
         assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Off);
         assert!(!ui.meta.vines_visible);
+    }
+
+    #[test]
+    fn feature_settings_cycle_sandbox_prototype_visibility_policies() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Features;
+
+        ui.meta.settings_cursor.features = 1;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("sandbox hero feature toggle should succeed");
+        assert_eq!(
+            ui.meta.sandbox_hero_visibility_mode,
+            FeatureVisibilityMode::Off
+        );
+        assert!(!ui.meta.sandbox_hero_visible);
+
+        ui.meta.settings_cursor.features = 2;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("sandbox companions feature toggle should succeed");
+        assert_eq!(
+            ui.meta.sandbox_companions_visibility_mode,
+            FeatureVisibilityMode::Last
+        );
+        assert!(!ui.meta.sandbox_companions_visible);
+
+        ui.meta.sandbox_companions_visible = true;
+        assert!(ui.meta.sandbox_companions_visible);
+
+        ui.meta.settings_cursor.features = 3;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("sandbox scaffold feature toggle should succeed");
+        assert_eq!(
+            ui.meta.sandbox_scaffold_visibility_mode,
+            FeatureVisibilityMode::Off
+        );
+        assert!(!ui.meta.sandbox_scaffold_visible);
     }
 
     #[test]
@@ -2445,10 +2611,10 @@ mod tests {
         let mut ui = UiState::new();
         ui.meta.active_world = WorldKindSnapshot::Sandbox;
 
-        assert_eq!(ui.settings_item_count(SettingsTab::Positions), 1);
+        assert_eq!(ui.settings_item_count(SettingsTab::Positions), 6);
         assert_eq!(ui.settings_item_count(SettingsTab::Ui), 5);
-        assert_eq!(ui.settings_item_count(SettingsTab::Features), 1);
-        assert_eq!(ui.settings_item_count(SettingsTab::Gif), 1);
+        assert_eq!(ui.settings_item_count(SettingsTab::Features), 4);
+        assert_eq!(ui.settings_item_count(SettingsTab::Gif), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Theme), 3);
     }
 
@@ -2492,6 +2658,12 @@ mod tests {
         let mut ui = UiState::new();
         ui.meta.vines_visibility_mode = FeatureVisibilityMode::Last;
         ui.meta.vines_visible = false;
+        ui.meta.sandbox_hero_visibility_mode = FeatureVisibilityMode::Last;
+        ui.meta.sandbox_hero_visible = false;
+        ui.meta.sandbox_companions_visibility_mode = FeatureVisibilityMode::On;
+        ui.meta.sandbox_companions_visible = false;
+        ui.meta.sandbox_scaffold_visibility_mode = FeatureVisibilityMode::Off;
+        ui.meta.sandbox_scaffold_visible = true;
         ui.meta.dev_mode = true;
         ui.meta.settings_open = true;
 
@@ -2499,6 +2671,21 @@ mod tests {
 
         assert_eq!(ui.meta.vines_visibility_mode, FeatureVisibilityMode::Last);
         assert!(!ui.meta.vines_visible);
+        assert_eq!(
+            ui.meta.sandbox_hero_visibility_mode,
+            FeatureVisibilityMode::Last
+        );
+        assert!(!ui.meta.sandbox_hero_visible);
+        assert_eq!(
+            ui.meta.sandbox_companions_visibility_mode,
+            FeatureVisibilityMode::On
+        );
+        assert!(ui.meta.sandbox_companions_visible);
+        assert_eq!(
+            ui.meta.sandbox_scaffold_visibility_mode,
+            FeatureVisibilityMode::Off
+        );
+        assert!(!ui.meta.sandbox_scaffold_visible);
         assert!(!ui.meta.dev_mode);
         assert!(!ui.meta.settings_open);
 

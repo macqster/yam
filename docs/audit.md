@@ -162,6 +162,8 @@ Last reviewed: 2026-05-31
   - evidence: `src/scene/coords.rs`, `src/core/world.rs`, `src/scene/entity.rs`, `src/ui/state.rs`
 - `low` The scaffold note is no longer purely aspirational: the main scene now has a small world-owned scaffold runtime slice in `core::scaffold`, and a dedicated read-only layer renders that rear support cradle beneath the hero without making render code the source of truth. The remaining scaffold work is composition refinement, especially whether and how to add a foreground nesting edge without muddying ownership or layering.
   - evidence: `src/core/scaffold.rs`, `src/core/world.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/main-scene-scaffold.md`
+- `low` Sandbox is now a more useful proving ground for scaffold work instead of a composition dead-end: UI-owned prototype visibility policies can expose the hero, companions, and scaffold there without changing world ownership. The next open question is not whether sandbox can host those surfaces, but whether foreground scaffold geometry alone is enough before any explicit mask seam is introduced.
+  - evidence: `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/clock_layer.rs`, `src/scene/layers/weather_layer.rs`, `src/scene/layers/date_layer.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/rendering.md`
 - `low` A recent footer visual check exposed a stale-binary risk pattern: `yam-install` can complete while `yam-rust --version` still reports an older build stamp, so screenshot comparisons should verify the installed runtime identity before treating the output as the current source of truth.
   - evidence: `yam-rust --version`, `docs/LOG.md`, `docs/config.md`, `README.md`
 

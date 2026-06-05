@@ -184,10 +184,6 @@ impl WorldKind {
         self.profile().composition == WorldComposition::MainScene
     }
 
-    pub fn has_scene_companions(self) -> bool {
-        self.profile().capabilities.scene_companions
-    }
-
     pub fn has_flora_runtime(self) -> bool {
         self.profile().capabilities.flora_runtime
     }
@@ -456,7 +452,6 @@ mod tests {
         assert!(main.capabilities.scene_companions);
         assert!(main.capabilities.flora_runtime);
         assert!(main.capabilities.debug_surfaces.flora);
-        assert!(WorldKind::MainScene.has_scene_companions());
         assert!(WorldKind::MainScene.has_flora_runtime());
 
         let sandbox = WorldKind::Sandbox.profile();
@@ -467,7 +462,6 @@ mod tests {
         assert!(!sandbox.capabilities.scene_companions);
         assert!(sandbox.capabilities.guide_authoring);
         assert!(sandbox.capabilities.pointer_probe);
-        assert!(!WorldKind::Sandbox.has_scene_companions());
         assert!(!WorldKind::Sandbox.has_flora_runtime());
     }
 }

@@ -42,6 +42,9 @@ Current recommendation:
 - use sandbox as the visual proving ground for scaffold fits and comparisons
 - keep hero, companions, and scaffold independently toggleable there through
   UI-owned visibility controls
+- keep the sandbox scaffold payload sourced from the same canonical
+  `core::scaffold` support shape rather than inventing a second sandbox-only
+  scaffold truth
 - compare scaffold alone, scaffold plus hero, and fuller composition passes
   before promoting changes into the main scene
 - keep those toggles presentation-only; they must not create a second scaffold

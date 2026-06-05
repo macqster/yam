@@ -303,10 +303,9 @@ fn flora_for_plan(plan: WorldPopulationPlan) -> FloraState {
 }
 
 fn scaffold_for_kind(kind: WorldKind) -> ScaffoldState {
-    if kind.has_main_scene_composition() {
-        ScaffoldState::main_scene_hero_support()
-    } else {
-        ScaffoldState::default()
+    match kind {
+        WorldKind::MainScene | WorldKind::Sandbox => ScaffoldState::main_scene_hero_support(),
+        WorldKind::Boot => ScaffoldState::default(),
     }
 }
 
@@ -368,7 +367,7 @@ mod tests {
 
         assert_eq!(world.kind, WorldKind::Sandbox);
         assert!(world.flora.vines.is_empty());
-        assert!(world.scaffold.segments.is_empty());
+        assert_eq!(world.scaffold.segments.len(), 7);
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
         assert_eq!(world.tick, 0);

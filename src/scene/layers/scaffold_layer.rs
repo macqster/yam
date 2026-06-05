@@ -185,10 +185,6 @@ fn draw_fork_knot(grid: &mut Grid, segment: ScaffoldSegment, projection: Scaffol
 
 #[cfg(test)]
 mod tests {
-    use crate::core::scaffold::{
-        ScaffoldLayer as ScaffoldPlane, ScaffoldRole, ScaffoldSegment, ScaffoldState,
-        ScaffoldThicknessClass,
-    };
     use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::{WorldKind, WorldState};
     use crate::render::fonts::FontRegistry;
@@ -202,16 +198,7 @@ mod tests {
     #[test]
     fn scaffold_respects_sandbox_visibility_toggle() {
         let layer = super::ScaffoldRearLayer;
-        let mut world = WorldState::for_kind(WorldKind::Sandbox);
-        world.scaffold = ScaffoldState {
-            segments: vec![ScaffoldSegment {
-                start: WorldPos { x: 0, y: 0 },
-                end: WorldPos { x: 4, y: 0 },
-                thickness: ScaffoldThicknessClass::Trunk,
-                role: ScaffoldRole::SeatCradle,
-                layer: ScaffoldPlane::Rear,
-            }],
-        };
+        let world = WorldState::for_kind(WorldKind::Sandbox);
         let mut ui = UiState::new();
         ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
         ui.meta.sandbox_scaffold_visible = false;
@@ -224,6 +211,30 @@ mod tests {
         assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
 
         ui.meta.sandbox_scaffold_visible = true;
+        let grid = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid;
+        assert!(grid
+            .cells
+            .iter()
+            .any(|cell| matches!(cell.symbol, '#' | '=' | '@')));
+    }
+
+    #[test]
+    fn scaffold_respects_main_scene_visibility_toggle() {
+        let layer = super::ScaffoldRearLayer;
+        let world = WorldState::new();
+        let mut ui = UiState::new();
+        ui.meta.main_scene_scaffold_visible = false;
+        let fonts = FontRegistry::new();
+        let ctx = render_state();
+
+        let grid = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid;
+        assert!(grid.cells.iter().all(|cell| cell.symbol == ' '));
+
+        ui.meta.main_scene_scaffold_visible = true;
         let grid = layer
             .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
             .grid;

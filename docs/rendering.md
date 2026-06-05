@@ -42,7 +42,7 @@ Rules:
 - the main scene owns the visual composition and all world-tied assets
 - the sandbox world reuses the same render stack and projection helpers as the main scene, but keeps intentionally sparse content so drawing-engine trials can be judged without main-scene composition noise
 - `yam-sandbox` is the direct launch path for that sparse world, so dry-trial drawing and pointer work do not depend on entering the main scene first
-- sandbox is not a separate app shell: it is an internal YAM space that should be reachable by world switching, and the main-scene hero/clock composition should stay out of it so the sandbox can read like a clean room rather than an emptied scene with leftover props
+- sandbox is not a separate app shell: it is an internal YAM space that should be reachable by world switching, and the main-scene hero/clock composition should stay out of it by default so the sandbox can read like a clean room rather than an emptied scene with leftover props
 - scaffold and composition prototyping should now default to the sandbox first: the sandbox may selectively host the hero, companion widgets, and scaffold through UI-owned prototype visibility toggles while still reusing the same world/render/layer pipeline as the main scene
 - switchable runtime worlds are selected and described through `WorldKind::SELECTABLE` and `WorldKind::profile()`; render layers may branch by world profile/composition/capabilities, but they should not own the world-switching order, transition labels, grid, camera, guide, or population policy
 - the hud/footer owns screen-attached status, hints, and mode reminders
@@ -53,7 +53,7 @@ Rules:
 
 - main scene: hero GIF, world-owned scaffold cradle, vines, flora, guides, weather/clock composition, and world-tied diagnostic geometry
 - the live scaffold pass is intentionally narrow: a static rear support cradle/back-brace/leg-brace set plus a small foreground nesting edge, all rendered from world-owned scaffold data through read-only layers around the hero; future enrichment should follow [`main-scene-scaffold.md`](main-scene-scaffold.md), preserve the seated support read first, and keep any foreground lip composition-owned rather than decorative wallpaper
-- the current sandbox prototype toggles are intentionally presentation-only: they can expose hero, companions, and scaffold in the sandbox for review, but they must not create a second world-state owner or a render-owned scaffold truth
+- the current scaffold visibility contract is scene-conscious: the main scene owns its own scaffold visibility policy, while sandbox prototype toggles may expose hero, companions, and scaffold there for comparison without creating a second scaffold owner or a render-owned truth
 - weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
 - sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only

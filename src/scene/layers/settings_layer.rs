@@ -231,40 +231,56 @@ fn gif_lines(ui: &UiState) -> Vec<String> {
 }
 
 fn feature_lines(ui: &UiState) -> Vec<String> {
-    vec![
-        format!(
-            "main scene vines: {} (current: {})",
-            ui.meta.vines_visibility_mode.label(),
-            if ui.meta.vines_visible { "on" } else { "off" }
-        ),
-        format!(
-            "sandbox hero: {} (current: {})",
-            ui.meta.sandbox_hero_visibility_mode.label(),
-            if ui.meta.sandbox_hero_visible {
-                "on"
-            } else {
-                "off"
-            }
-        ),
-        format!(
-            "sandbox companions: {} (current: {})",
-            ui.meta.sandbox_companions_visibility_mode.label(),
-            if ui.meta.sandbox_companions_visible {
-                "on"
-            } else {
-                "off"
-            }
-        ),
-        format!(
-            "sandbox scaffold: {} (current: {})",
-            ui.meta.sandbox_scaffold_visibility_mode.label(),
-            if ui.meta.sandbox_scaffold_visible {
-                "on"
-            } else {
-                "off"
-            }
-        ),
-    ]
+    match ui.active_world_kind() {
+        crate::core::world::WorldKind::MainScene => vec![
+            format!(
+                "main scene vines: {} (current: {})",
+                ui.meta.vines_visibility_mode.label(),
+                if ui.meta.vines_visible { "on" } else { "off" }
+            ),
+            format!(
+                "main scene scaffold: {} (current: {})",
+                ui.meta.main_scene_scaffold_visibility_mode.label(),
+                if ui.meta.main_scene_scaffold_visible {
+                    "on"
+                } else {
+                    "off"
+                }
+            ),
+        ],
+        crate::core::world::WorldKind::Sandbox => vec![
+            format!(
+                "sandbox hero: {} (current: {})",
+                ui.meta.sandbox_hero_visibility_mode.label(),
+                if ui.meta.sandbox_hero_visible {
+                    "on"
+                } else {
+                    "off"
+                }
+            ),
+            format!(
+                "sandbox companions: {} (current: {})",
+                ui.meta.sandbox_companions_visibility_mode.label(),
+                if ui.meta.sandbox_companions_visible {
+                    "on"
+                } else {
+                    "off"
+                }
+            ),
+            format!(
+                "sandbox scaffold: {} (current: {})",
+                ui.meta.sandbox_scaffold_visibility_mode.label(),
+                if ui.meta.sandbox_scaffold_visible {
+                    "on"
+                } else {
+                    "off"
+                }
+            ),
+        ],
+        crate::core::world::WorldKind::Boot => {
+            vec!["no scene feature toggles in this world".to_string()]
+        }
+    }
 }
 
 fn format_axis_line(label: &str, x: i32, y: i32, ui: &UiState, row: u16) -> String {
@@ -496,9 +512,30 @@ mod tests {
 
         assert!(text.contains("features"));
         assert!(text.contains("main scene vines: last (current: off)"));
+        assert!(text.contains("main scene scaffold: on (current: on)"));
+        assert!(!text.contains("sandbox hero:"));
+    }
+
+    #[test]
+    fn sandbox_features_tab_reflects_only_sandbox_prototype_toggles() {
+        let layer = SettingsLayer;
+        let world = WorldState::for_sandbox();
+        let fonts = FontRegistry::new();
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Features;
+        ui.meta.active_world = crate::ui::state::WorldKindSnapshot::Sandbox;
+        ui.meta.sandbox_companions_visible = true;
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
         assert!(text.contains("sandbox hero: on (current: on)"));
-        assert!(text.contains("sandbox companions: off (current: off)"));
+        assert!(text.contains("sandbox companions: off (current: on)"));
         assert!(text.contains("sandbox scaffold: on (current: on)"));
+        assert!(!text.contains("main scene vines:"));
     }
 
     #[test]

@@ -27,6 +27,8 @@ pub struct MetaState {
     pub active_world: WorldKindSnapshot,
     pub vines_visible: bool,
     pub vines_visibility_mode: FeatureVisibilityMode,
+    pub main_scene_scaffold_visible: bool,
+    pub main_scene_scaffold_visibility_mode: FeatureVisibilityMode,
     pub sandbox_hero_visible: bool,
     pub sandbox_hero_visibility_mode: FeatureVisibilityMode,
     pub sandbox_companions_visible: bool,
@@ -57,6 +59,8 @@ impl MetaState {
             active_world: WorldKindSnapshot::MainScene,
             vines_visible: false,
             vines_visibility_mode: FeatureVisibilityMode::Off,
+            main_scene_scaffold_visible: true,
+            main_scene_scaffold_visibility_mode: FeatureVisibilityMode::On,
             sandbox_hero_visible: true,
             sandbox_hero_visibility_mode: FeatureVisibilityMode::On,
             sandbox_companions_visible: false,
@@ -152,6 +156,13 @@ impl MetaState {
     pub fn cycle_vines_visibility_mode(&mut self) {
         self.vines_visibility_mode = self.vines_visibility_mode.next();
         self.vines_visible = self.vines_visibility_mode.resolve(self.vines_visible);
+    }
+
+    pub fn cycle_main_scene_scaffold_visibility_mode(&mut self) {
+        self.main_scene_scaffold_visibility_mode = self.main_scene_scaffold_visibility_mode.next();
+        self.main_scene_scaffold_visible = self
+            .main_scene_scaffold_visibility_mode
+            .resolve(self.main_scene_scaffold_visible);
     }
 
     pub fn cycle_sandbox_hero_visibility_mode(&mut self) {
@@ -686,6 +697,8 @@ impl UiState {
     pub fn reset_for_clean_launch(&mut self, world_kind: WorldKind) {
         let vines_visibility_mode = self.meta.vines_visibility_mode;
         let last_vines_visible = self.meta.vines_visible;
+        let main_scene_scaffold_visibility_mode = self.meta.main_scene_scaffold_visibility_mode;
+        let last_main_scene_scaffold_visible = self.meta.main_scene_scaffold_visible;
         let sandbox_hero_visibility_mode = self.meta.sandbox_hero_visibility_mode;
         let last_sandbox_hero_visible = self.meta.sandbox_hero_visible;
         let sandbox_companions_visibility_mode = self.meta.sandbox_companions_visibility_mode;
@@ -702,6 +715,9 @@ impl UiState {
         self.meta.active_world = WorldKindSnapshot::from_world_kind(world_kind);
         self.meta.vines_visibility_mode = vines_visibility_mode;
         self.meta.vines_visible = vines_visibility_mode.resolve(last_vines_visible);
+        self.meta.main_scene_scaffold_visibility_mode = main_scene_scaffold_visibility_mode;
+        self.meta.main_scene_scaffold_visible =
+            main_scene_scaffold_visibility_mode.resolve(last_main_scene_scaffold_visible);
         self.meta.sandbox_hero_visibility_mode = sandbox_hero_visibility_mode;
         self.meta.sandbox_hero_visible =
             sandbox_hero_visibility_mode.resolve(last_sandbox_hero_visible);
@@ -1161,10 +1177,22 @@ impl UiState {
             }
             SettingsTab::Features => {
                 match self.meta.selected_settings_row() {
-                    0 => self.meta.cycle_vines_visibility_mode(),
-                    1 => self.meta.cycle_sandbox_hero_visibility_mode(),
-                    2 => self.meta.cycle_sandbox_companions_visibility_mode(),
-                    3 => self.meta.cycle_sandbox_scaffold_visibility_mode(),
+                    0 => match self.active_world_kind() {
+                        WorldKind::MainScene => self.meta.cycle_vines_visibility_mode(),
+                        WorldKind::Sandbox => self.meta.cycle_sandbox_hero_visibility_mode(),
+                        WorldKind::Boot => {}
+                    },
+                    1 => match self.active_world_kind() {
+                        WorldKind::MainScene => {
+                            self.meta.cycle_main_scene_scaffold_visibility_mode()
+                        }
+                        WorldKind::Sandbox => self.meta.cycle_sandbox_companions_visibility_mode(),
+                        WorldKind::Boot => {}
+                    },
+                    2 if self.active_world_kind() == WorldKind::Sandbox => {
+                        self.meta.cycle_sandbox_scaffold_visibility_mode();
+                    }
+                    2 => {}
                     _ => {}
                 }
                 self.mark_persisted_state_dirty();
@@ -1362,7 +1390,7 @@ impl UiState {
 
     pub fn scaffold_visible_in_active_world(&self) -> bool {
         match self.meta.active_world_kind() {
-            WorldKind::MainScene => true,
+            WorldKind::MainScene => self.meta.main_scene_scaffold_visible,
             WorldKind::Sandbox => self.meta.sandbox_scaffold_visible,
             WorldKind::Boot => false,
         }
@@ -1386,11 +1414,21 @@ impl UiState {
         )
     }
 
+    pub fn feature_settings_item_count(&self) -> usize {
+        match self.meta.active_world_kind() {
+            WorldKind::MainScene => 2,
+            WorldKind::Sandbox => 3,
+            WorldKind::Boot => 1,
+        }
+    }
+
     pub fn settings_item_count(&self, tab: SettingsTab) -> usize {
         if !self.supports_scene_companion_prototypes()
             && matches!(tab, SettingsTab::Positions | SettingsTab::Gif)
         {
             1
+        } else if matches!(tab, SettingsTab::Features) {
+            self.feature_settings_item_count()
         } else {
             tab.item_count()
         }
@@ -2231,6 +2269,8 @@ mod tests {
                 active_world: WorldKindSnapshot::Sandbox,
                 vines_visible: false,
                 vines_visibility_mode: FeatureVisibilityMode::Last,
+                main_scene_scaffold_visible: true,
+                main_scene_scaffold_visibility_mode: FeatureVisibilityMode::On,
                 sandbox_hero_visible: false,
                 sandbox_hero_visibility_mode: FeatureVisibilityMode::Last,
                 sandbox_companions_visible: true,
@@ -2469,11 +2509,44 @@ mod tests {
     }
 
     #[test]
+    fn feature_settings_cycle_main_scene_scaffold_visibility_policy() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Features;
+        ui.meta.settings_cursor.features = 1;
+
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("main-scene scaffold feature toggle should succeed");
+        assert_eq!(
+            ui.meta.main_scene_scaffold_visibility_mode,
+            FeatureVisibilityMode::Off
+        );
+        assert!(!ui.meta.main_scene_scaffold_visible);
+
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("main-scene scaffold feature toggle should succeed");
+        assert_eq!(
+            ui.meta.main_scene_scaffold_visibility_mode,
+            FeatureVisibilityMode::Last
+        );
+        assert!(!ui.meta.main_scene_scaffold_visible);
+
+        ui.meta.main_scene_scaffold_visible = true;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("main-scene scaffold feature toggle should succeed");
+        assert_eq!(
+            ui.meta.main_scene_scaffold_visibility_mode,
+            FeatureVisibilityMode::On
+        );
+        assert!(ui.meta.main_scene_scaffold_visible);
+    }
+
+    #[test]
     fn feature_settings_cycle_sandbox_prototype_visibility_policies() {
         let mut ui = UiState::new();
         ui.meta.settings_tab = SettingsTab::Features;
+        ui.meta.active_world = WorldKindSnapshot::Sandbox;
 
-        ui.meta.settings_cursor.features = 1;
+        ui.meta.settings_cursor.features = 0;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("sandbox hero feature toggle should succeed");
         assert_eq!(
@@ -2482,7 +2555,7 @@ mod tests {
         );
         assert!(!ui.meta.sandbox_hero_visible);
 
-        ui.meta.settings_cursor.features = 2;
+        ui.meta.settings_cursor.features = 1;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("sandbox companions feature toggle should succeed");
         assert_eq!(
@@ -2494,7 +2567,7 @@ mod tests {
         ui.meta.sandbox_companions_visible = true;
         assert!(ui.meta.sandbox_companions_visible);
 
-        ui.meta.settings_cursor.features = 3;
+        ui.meta.settings_cursor.features = 2;
         ui.activate_selected_setting_with_viewport(124, 32)
             .expect("sandbox scaffold feature toggle should succeed");
         assert_eq!(
@@ -2618,9 +2691,16 @@ mod tests {
 
         assert_eq!(ui.settings_item_count(SettingsTab::Positions), 6);
         assert_eq!(ui.settings_item_count(SettingsTab::Ui), 5);
-        assert_eq!(ui.settings_item_count(SettingsTab::Features), 4);
+        assert_eq!(ui.settings_item_count(SettingsTab::Features), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Gif), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Theme), 3);
+    }
+
+    #[test]
+    fn main_scene_feature_settings_only_show_main_scene_controls() {
+        let ui = UiState::new();
+
+        assert_eq!(ui.settings_item_count(SettingsTab::Features), 2);
     }
 
     #[test]

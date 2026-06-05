@@ -24,9 +24,12 @@ For some nostalgic reference ghosts in here, intentional or otherwise, check the
 
 Codex is doing most of the hard work here; life is unfortunately consuming so much time and attention, my headspace to hand-write all this is limited.
 
+> [!IMPORTANT]
+>
 > - `yam` is not meant as an end-user product or any kind of dashboard framework
 > - `yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change
 > - the only real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
+>
 
 <div align="center">
 

@@ -52,7 +52,7 @@ Rules:
 ## Visible Content Map
 
 - main scene: hero GIF, world-owned scaffold cradle, vines, flora, guides, weather/clock composition, and world-tied diagnostic geometry
-- the live scaffold pass is intentionally narrow: a static rear support cradle/back-brace/leg-brace set rendered beneath the hero from world-owned scaffold data; future enrichment should follow [`main-scene-scaffold.md`](main-scene-scaffold.md), preserve the seated support read first, and treat any later foreground lip as composition-owned geometry rather than decorative wallpaper
+- the live scaffold pass is intentionally narrow: a static rear support cradle/back-brace/leg-brace set plus a small foreground nesting edge, all rendered from world-owned scaffold data through read-only layers around the hero; future enrichment should follow [`main-scene-scaffold.md`](main-scene-scaffold.md), preserve the seated support read first, and keep any foreground lip composition-owned rather than decorative wallpaper
 - the current sandbox prototype toggles are intentionally presentation-only: they can expose hero, companions, and scaffold in the sandbox for review, but they must not create a second world-state owner or a render-owned scaffold truth
 - weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
 - sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
@@ -86,7 +86,7 @@ Rules:
 - debug/inspect surfaces may be informative, but they should not become a second footer
 - the main scene carries visual density; the HUD carries reminders; overlays carry actions
 - any new visible element should be assigned to one of these regions before implementation
-- if a future scaffold or occlusion experiment seems to need masking, prefer proving the shape first with ordinary world geometry and layer ordering; introduce masks only when a specific occlusion or nesting read cannot be expressed cleanly without them
+- if a future scaffold or occlusion experiment seems to need masking, prefer proving the shape first with ordinary world geometry and layer ordering; the current foreground nesting edge follows that rule, and masks should still be introduced only when a specific occlusion or nesting read cannot be expressed cleanly without them
 - the footer may show the current mode and the minimal runtime hint only
 - debug/inspect may show state facts and labels, but not the full action menu
 - in `dev_mode`, the active world should also be announced by a small centered top-row label such as `MAIN SCENE` or `SANDBOX`, so alternate spaces can be identified at a glance without depending on the debug panel text

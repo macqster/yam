@@ -12,7 +12,8 @@ use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
 
-pub struct ScaffoldLayer;
+pub struct ScaffoldRearLayer;
+pub struct ScaffoldForegroundLayer;
 
 #[derive(Copy, Clone)]
 struct ScaffoldProjection {
@@ -36,7 +37,7 @@ impl ScaffoldProjection {
     }
 }
 
-impl Layer for ScaffoldLayer {
+impl Layer for ScaffoldRearLayer {
     fn z_index(&self) -> i32 {
         8
     }
@@ -56,7 +57,12 @@ impl Layer for ScaffoldLayer {
         let projection =
             ScaffoldProjection::new(ctx.hud.camera.x, ctx.hud.camera.y, ctx.hud.camera.height);
         let mut world_grid = Grid::new(grid.width, ctx.hud.viewport_rect.height);
-        draw_scaffold(&mut world_grid, &world.scaffold, projection);
+        draw_scaffold_layer(
+            &mut world_grid,
+            &world.scaffold,
+            projection,
+            ScaffoldPlane::Rear,
+        );
         merge_grid(grid, &world_grid, None);
         None
     }
@@ -76,13 +82,63 @@ impl Layer for ScaffoldLayer {
     }
 }
 
-fn draw_scaffold(grid: &mut Grid, scaffold: &ScaffoldState, projection: ScaffoldProjection) {
+impl Layer for ScaffoldForegroundLayer {
+    fn z_index(&self) -> i32 {
+        15
+    }
+
+    fn render_into_grid(
+        &self,
+        grid: &mut Grid,
+        world: &WorldState,
+        ui: &UiState,
+        _fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> Option<crate::render::mask::Mask> {
+        if !ui.scaffold_visible_in_active_world() || !ui.supports_scaffold_prototypes() {
+            return None;
+        }
+
+        let projection =
+            ScaffoldProjection::new(ctx.hud.camera.x, ctx.hud.camera.y, ctx.hud.camera.height);
+        let mut world_grid = Grid::new(grid.width, ctx.hud.viewport_rect.height);
+        draw_scaffold_layer(
+            &mut world_grid,
+            &world.scaffold,
+            projection,
+            ScaffoldPlane::Foreground,
+        );
+        merge_grid(grid, &world_grid, None);
+        None
+    }
+
+    fn render_to_grid(
+        &self,
+        width: u16,
+        height: u16,
+        world: &WorldState,
+        ui: &UiState,
+        fonts: &FontRegistry,
+        ctx: &RenderState,
+    ) -> LayerOutput {
+        let mut grid = Grid::new(width, height);
+        let mask = self.render_into_grid(&mut grid, world, ui, fonts, ctx);
+        LayerOutput { grid, mask }
+    }
+}
+
+fn draw_scaffold_layer(
+    grid: &mut Grid,
+    scaffold: &ScaffoldState,
+    projection: ScaffoldProjection,
+    layer: ScaffoldPlane,
+) {
     for segment in &scaffold.segments {
-        if segment.layer != ScaffoldPlane::Rear {
+        if segment.layer != layer {
             continue;
         }
         draw_segment(grid, segment, projection);
-        if segment.role == ScaffoldRole::ForkMass {
+        if layer == ScaffoldPlane::Rear && segment.role == ScaffoldRole::ForkMass {
             draw_fork_knot(grid, *segment, projection);
         }
     }
@@ -145,7 +201,7 @@ mod tests {
 
     #[test]
     fn scaffold_respects_sandbox_visibility_toggle() {
-        let layer = super::ScaffoldLayer;
+        let layer = super::ScaffoldRearLayer;
         let mut world = WorldState::for_kind(WorldKind::Sandbox);
         world.scaffold = ScaffoldState {
             segments: vec![ScaffoldSegment {
@@ -178,8 +234,8 @@ mod tests {
     }
 
     #[test]
-    fn scaffold_draws_trunk_support_inside_the_world_stack() {
-        let layer = super::ScaffoldLayer;
+    fn rear_scaffold_draws_support_inside_the_world_stack() {
+        let layer = super::ScaffoldRearLayer;
         let world = WorldState::new();
         let ui = UiState::new();
         let fonts = FontRegistry::new();
@@ -192,6 +248,23 @@ mod tests {
             .cells
             .iter()
             .any(|cell| matches!(cell.symbol, '#' | '=' | '@')));
+    }
+
+    #[test]
+    fn foreground_scaffold_draws_nesting_edge_above_hero() {
+        let layer = super::ScaffoldForegroundLayer;
+        let world = WorldState::new();
+        let ui = UiState::new();
+        let fonts = FontRegistry::new();
+        let ctx = render_state();
+
+        let grid = layer
+            .render_to_grid(124, 32, &world, &ui, &fonts, &ctx)
+            .grid;
+        assert!(grid
+            .cells
+            .iter()
+            .any(|cell| matches!(cell.symbol, '-' | '/' | '\\')));
     }
 
     fn render_state() -> RenderState {

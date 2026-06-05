@@ -24,12 +24,11 @@ Related contracts:
 The first scaffold runtime slice is now present in a deliberately narrow form:
 
 - `core::scaffold` owns a static main-scene support shape
-- the current shape is rear-only and support-first: seat cradle, back brace,
-  leg brace, and a small fork mass
-- the scaffold renders through a dedicated read-only scene layer beneath the
-  hero
-- there is not yet a foreground lip, decorative branch spread, or vine-led
-  overgrowth
+- the current shape is still support-first: rear seat cradle, back brace, leg
+  brace, fork mass, plus a small foreground nesting edge
+- the scaffold renders through dedicated read-only scene layers: rear support
+  beneath the hero and foreground nesting edge above the hero
+- there is still no decorative branch spread or vine-led overgrowth
 
 This is intentional. The current goal is to prove world ownership and support
 readability before adding another layer of composition complexity.
@@ -54,6 +53,11 @@ Current mask recommendation:
 - prefer plain world-owned scaffold geometry and ordinary layer ordering first
 - consider a mask only if a specific foreground nesting or occlusion read
   cannot be expressed cleanly through geometry and layer order alone
+
+That recommendation is still active after the latest batch: the first
+foreground nesting edge now exists as ordinary scaffold geometry above the hero,
+so the next review question is whether that no-mask lip reads clearly enough
+before any explicit mask seam is entertained.
 
 ## Current Role
 
@@ -215,6 +219,10 @@ The first scaffold pass should stay:
 - low-noise
 - rear-support-only if that is the cleanest way to preserve ownership and pose
   readability in the first batch
+
+The current second pass may add only a very small foreground nesting edge when
+it strengthens the seated read without turning the scaffold into busy
+foreground clutter.
 
 It should not yet be:
 

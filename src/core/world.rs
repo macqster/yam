@@ -341,12 +341,17 @@ mod tests {
             Some(BORDER_VINE_GUIDE_SET_LABEL)
         );
         assert!(!world.flora.vines[0].axes[0].segments.is_empty());
-        assert_eq!(world.scaffold.segments.len(), 5);
+        assert_eq!(world.scaffold.segments.len(), 7);
         assert!(world
             .scaffold
             .segments
             .iter()
             .any(|segment| segment.role == ScaffoldRole::SeatCradle));
+        assert!(world
+            .scaffold
+            .segments
+            .iter()
+            .any(|segment| segment.role == ScaffoldRole::NestingEdge));
         assert!(world.entities.is_empty());
         assert!(world
             .guides

@@ -3,6 +3,7 @@ use crate::core::spatial::SpatialPoint as WorldPos;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ScaffoldLayer {
     Rear,
+    Foreground,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -17,6 +18,7 @@ pub enum ScaffoldRole {
     BackBrace,
     LegBrace,
     ForkMass,
+    NestingEdge,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -72,6 +74,20 @@ impl ScaffoldState {
                     role: ScaffoldRole::ForkMass,
                     layer: ScaffoldLayer::Rear,
                 },
+                ScaffoldSegment {
+                    start: WorldPos { x: -58, y: 7 },
+                    end: WorldPos { x: -36, y: 9 },
+                    thickness: ScaffoldThicknessClass::Brace,
+                    role: ScaffoldRole::NestingEdge,
+                    layer: ScaffoldLayer::Foreground,
+                },
+                ScaffoldSegment {
+                    start: WorldPos { x: -48, y: 8 },
+                    end: WorldPos { x: -32, y: 12 },
+                    thickness: ScaffoldThicknessClass::Brace,
+                    role: ScaffoldRole::NestingEdge,
+                    layer: ScaffoldLayer::Foreground,
+                },
             ],
         }
     }
@@ -82,14 +98,19 @@ mod tests {
     use super::{ScaffoldLayer, ScaffoldRole, ScaffoldState, ScaffoldThicknessClass};
 
     #[test]
-    fn main_scene_scaffold_stays_rear_support_first() {
+    fn main_scene_scaffold_keeps_rear_support_and_small_foreground_edge() {
         let scaffold = ScaffoldState::main_scene_hero_support();
 
-        assert_eq!(scaffold.segments.len(), 5);
+        assert_eq!(scaffold.segments.len(), 7);
         assert!(scaffold
             .segments
             .iter()
-            .all(|segment| segment.layer == ScaffoldLayer::Rear));
+            .any(|segment| segment.layer == ScaffoldLayer::Rear));
+        assert!(scaffold
+            .segments
+            .iter()
+            .any(|segment| segment.layer == ScaffoldLayer::Foreground
+                && segment.role == ScaffoldRole::NestingEdge));
         assert!(scaffold
             .segments
             .iter()

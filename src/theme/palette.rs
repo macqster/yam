@@ -47,3 +47,4 @@ pub const VINE_HEALTHY: Color = BTAS.pms_345;
 pub const VINE_AGED: Color = BTAS.pms_465;
 pub const SCAFFOLD_BARK: Color = Color::Rgb(141, 106, 63);
 pub const SCAFFOLD_BARK_LIGHT: Color = Color::Rgb(166, 124, 72);
+pub const SCAFFOLD_MOSS: Color = Color::Rgb(93, 117, 77);

@@ -212,6 +212,7 @@ pub fn scaffold_bark(role: ScaffoldRole) -> Style {
             palette::SCAFFOLD_BARK
         }
         ScaffoldRole::LegBrace => palette::SCAFFOLD_BARK_LIGHT,
+        ScaffoldRole::NestingEdge => palette::SCAFFOLD_MOSS,
     };
     Style::default().fg(color)
 }

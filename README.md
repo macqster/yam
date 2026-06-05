@@ -34,7 +34,7 @@ Codex is doing the hard work; life is unfortunately consuming too much time and 
 
 </div>
 
-Current release: `0.3.9`
+current release: `0.3.9`
 
 <div align="center">
 
@@ -73,7 +73,7 @@ Current release: `0.3.9`
 
 </div>
 
-Clone and run the default world:
+clone and run the default world:
 
 ```bash
 git clone https://github.com/macqster/yam.git
@@ -81,19 +81,19 @@ cd yam
 cargo run --release
 ```
 
-Run the sandbox world:
+run the sandbox world:
 
 ```bash
 cargo run --release -- --sandbox
 ```
 
-Check runtime identity:
+check runtime identity:
 
 ```bash
 cargo run --release -- --identity
 ```
 
-Run the full maintenance gate:
+run the full maintenance gate:
 
 ```bash
 bash scripts/verify.sh
@@ -109,15 +109,38 @@ bash scripts/verify.sh
 bash scripts/update.sh
 ```
 
-| command | role |
-| --- | --- |
-| `yam` | canonical local launcher |
-| `yam-sandbox` | sparse sandbox launcher |
-| `yam-rust` | direct Rust runtime launcher |
-| `yam-install` | rebuild/reinstall wrapper flow |
-| `yam-diagnostics` | local diagnostics reader/tailer |
+<div align="center">
 
-Wrapper behavior that matters:
+<table>
+  <tr>
+    <th>command</th>
+    <th>role</th>
+  </tr>
+  <tr>
+    <td><code>yam</code></td>
+    <td>canonical local launcher</td>
+  </tr>
+  <tr>
+    <td><code>yam-sandbox</code></td>
+    <td>sparse sandbox launcher</td>
+  </tr>
+  <tr>
+    <td><code>yam-rust</code></td>
+    <td>direct Rust runtime launcher</td>
+  </tr>
+  <tr>
+    <td><code>yam-install</code></td>
+    <td>rebuild/reinstall wrapper flow</td>
+  </tr>
+  <tr>
+    <td><code>yam-diagnostics</code></td>
+    <td>local diagnostics reader/tailer</td>
+  </tr>
+</table>
+
+</div>
+
+wrapper behavior that matters:
 
 - `yam` and `yam-sandbox` prefer the installed `yam-rust` binary
 - if repo runtime inputs are newer, wrappers refresh through `scripts/update.sh`
@@ -135,7 +158,7 @@ Wrapper behavior that matters:
 3. `runtime/docs contract cleanup`
 4. `new surface work only behind stable seams`
 
-Pressure points:
+pressure points:
 
 - `core::spatial` consolidation
 - hero startup and cache efficiency
@@ -149,7 +172,7 @@ Pressure points:
 
 </div>
 
-Read these first:
+read these first:
 
 - [AGENTS.md](AGENTS.md) - repo-local agent contract
 - [docs/README.md](docs/README.md) - docs routing map
@@ -158,7 +181,7 @@ Read these first:
 - [docs/audit.md](docs/audit.md) - current risk and drift snapshot
 - [docs/LOG.md](docs/LOG.md) - append-only project history
 
-Core contracts:
+core contracts:
 
 - [docs/architecture.md](docs/architecture.md) - ownership and coupling rules
 - [docs/scene-model.md](docs/scene-model.md) - scene/world behavior
@@ -166,7 +189,7 @@ Core contracts:
 - [docs/glossary.md](docs/glossary.md) - shared terminology
 - [docs/hygiene.md](docs/hygiene.md) - repo hygiene rules
 
-Active surface docs:
+active surface docs:
 
 - [docs/greenhouse-roadmap.md](docs/greenhouse-roadmap.md) - greenhouse 0.4 plan
 - [docs/main-scene-scaffold.md](docs/main-scene-scaffold.md) - hero support scaffold direction
@@ -180,6 +203,8 @@ Active surface docs:
 
 </div>
 
+<div align="center">
+
 | path | role |
 | --- | --- |
 | `src/core/` | world, spatial, guide, organism, greenhouse, flora primitives |
@@ -192,6 +217,8 @@ Active surface docs:
 | `assets/` | runtime visual/font assets |
 | `scripts/` | maintenance, verification, update utilities |
 | `docs/` | active contracts, notes, archive entry points |
+
+</div>
 
 <div align="center">
 

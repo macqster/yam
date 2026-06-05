@@ -22,7 +22,7 @@ First I just wanted some benign animation on my screen to blankly stare at, but,
 
 For some nostalgic reference ghosts in here, intentional or otherwise, check the acknowledgements section at the end; I hope nothing was stolen too explicitly. Feel free to yell at me if it was.
 
-Codex is doing the hard work; life is unfortunately consuming too much time and attention, so my headspace to hand-write all this is limited.
+Codex is doing most of the hard work here; life is unfortunately consuming so much time and attention, my headspace to hand-write all this is limited.
 
 > - `yam` is not meant as an end-user product or any kind of dashboard framework
 > - `yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change

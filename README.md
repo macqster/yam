@@ -34,11 +34,7 @@ Codex is doing the hard work; life is unfortunately consuming too much time and 
 
 </div>
 
-<div align="center">
-
 current release: `0.3.9`
-
-</div>
 
 <div align="center">
 

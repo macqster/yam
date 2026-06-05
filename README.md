@@ -36,7 +36,11 @@ Codex is doing the hard work; life is unfortunately consuming too much time and 
 
 Current release: `0.3.9`
 
+<div align="center">
+
 ## snapshot
+
+</div>
 
 - `next_track`: `0.4 greenhouse ecosystem expansion`
 - `repo_mode`: `personal sandbox / controlled stabilization`
@@ -45,7 +49,11 @@ Current release: `0.3.9`
 - `project_type`: `Rust + Ratatui terminal diorama engine`
 - `primary_goal`: `coherent world-space visualizer, not widget pileup`
 
+<div align="center">
+
 ## current state
+
+</div>
 
 - `worlds`: `boot`, `main`, `sandbox`
 - `hero`: `Chafa-backed animated hero`
@@ -59,7 +67,11 @@ Current release: `0.3.9`
   - `broader flora beyond current vine/scaffold prototype`
   - `terminal-art asset compilation and inspection workflows`
 
+<div align="center">
+
 ## commands
+
+</div>
 
 Clone and run the default world:
 
@@ -87,7 +99,11 @@ Run the full maintenance gate:
 bash scripts/verify.sh
 ```
 
+<div align="center">
+
 ## local launchers
+
+</div>
 
 ```bash
 bash scripts/update.sh
@@ -108,7 +124,11 @@ Wrapper behavior that matters:
 - `YAM_USE_REPO_RUN=1` forces the older direct `cargo run --release` path
 - `YAM_DIAGNOSTICS=1` writes local NDJSON diagnostics
 
+<div align="center">
+
 ## current priorities
+
+</div>
 
 1. `stability`
 2. `efficiency`
@@ -123,7 +143,11 @@ Pressure points:
 - runtime identity and docs sync
 - flora and greenhouse work only behind stable scene/render ownership
 
+<div align="center">
+
 ## canonical docs
+
+</div>
 
 Read these first:
 
@@ -150,7 +174,11 @@ Active surface docs:
 - [docs/weather-widget.md](docs/weather-widget.md) - weather ownership contract
 - [docs/hero-cache.md](docs/hero-cache.md) - hero cache/runtime path
 
+<div align="center">
+
 ## repo shape
+
+</div>
 
 | path | role |
 | --- | --- |
@@ -165,7 +193,11 @@ Active surface docs:
 | `scripts/` | maintenance, verification, update utilities |
 | `docs/` | active contracts, notes, archive entry points |
 
+<div align="center">
+
 ## working rules
+
+</div>
 
 - keep terminology aligned with [docs/glossary.md](docs/glossary.md)
 - keep active behavior contracts under `docs/`
@@ -176,7 +208,11 @@ Active surface docs:
 - keep build output and runtime cache artifacts out of the repo
 - update README claims only when runtime behavior and docs support them
 
+<div align="center">
+
 ## environment notes
+
+</div>
 
 - UTF-8 braille support is required for hero rendering
 - full-color terminal output is recommended
@@ -184,7 +220,11 @@ Active surface docs:
 - local reference window: Ghostty `120x31`, roughly `124x32` usable cells on
   the current macOS setup
 
+<div align="center">
+
 ## acknowledgements
+
+</div>
 
 - front gif was lifted from a brief shot in [*Batman and Harley Quinn*](https://www.imdb.com/title/tt6556890/reference/), directed by Sam Liu, written by Jim Krieg and Bruce Timm
 - `Chafa`-rendered gif was hand-redrawn from one shot in [*The New Batman Adventures*](https://www.imdb.com/title/tt0118266/reference/) (s01e01 — "Holiday Knights"), written by Paul Dini and directed by Dan Riba

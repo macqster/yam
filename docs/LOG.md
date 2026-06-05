@@ -769,6 +769,14 @@ Logging rule:
 
 - expanded the README-local `cspell` ignore list after the latest browser-side README rewrite so the pushed acknowledgements and restored `twimc` heading stay compatible with the docs gate without weakening broader repo spelling checks
 
+## 2026-06-05 08:54 CEST
+
+- noted the latest hand-reworked README as the current good-enough creative/front-door state for YAM: the intro, front GIF, compact orientation-sheet structure, and acknowledgements are now considered broadly settled in tone and direction, so future README work should stay light unless a factual or hygiene issue requires intervention
+
+## 2026-06-05 14:13 CEST
+
+- relaxed `scripts/check-docs.sh` so the README version sync check now accepts both `Current release:` and `current release:` forms instead of tripping on the hand-maintained lowercase variant every time; the checker still enforces presence and version parity with `Cargo.toml`
+
 ## 2026-05-13 - Audit cleanup follow-up
 
 - refreshed `docs/audit.md` review freshness after the companion-layout stabilization pass

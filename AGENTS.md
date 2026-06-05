@@ -23,6 +23,7 @@ It describes how to work here, not the full YAM architecture.
 - When changing behavior, update the owning doc and append `docs/LOG.md` in the same batch.
 - Keep `known_issues.md` empty unless there is a concrete unresolved user-visible or developer-visible issue.
 - Prefer contract repairs, tests, docs alignment, and workflow cleanup over speculative abstractions.
+- Treat `README.md` as a mostly-settled creative front door: preserve the intro tone, GIF, and compact orientation-sheet structure, and only make factual, hygiene, or clearly justified front-door changes unless explicitly asked for a broader rewrite.
 
 ## Architecture Guardrails
 

@@ -102,9 +102,9 @@ if [[ -z "$crate_version" ]]; then
   exit 1
 fi
 
-readme_version="$(sed -n 's/^Current release: `\(.*\)`$/\1/p' README.md | head -n 1)"
+readme_version="$(sed -n 's/^[Cc]urrent release: `\(.*\)`$/\1/p' README.md | head -n 1)"
 if [[ -z "$readme_version" ]]; then
-  echo "README.md is missing the canonical Current release line." >&2
+  echo "README.md is missing a canonical current release line." >&2
   exit 1
 fi
 

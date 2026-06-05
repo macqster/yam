@@ -53,6 +53,7 @@ impl Layer for HotkeysLayer {
                     HelpLine::blank(),
                     HelpLine::section("inspect"),
                     HelpLine::item("[s] settings popup"),
+                    HelpLine::item("sandbox: features tab hosts prototype toggles"),
                     HelpLine::item("[P] palette popup"),
                     HelpLine::item("[W] weather popup"),
                     HelpLine::item("[p] pointer probe"),
@@ -61,6 +62,7 @@ impl Layer for HotkeysLayer {
                 ],
                 vec![
                     HelpLine::section("move"),
+                    HelpLine::item("settings > features: hero / companions / scaffold"),
                     HelpLine::item("[m] move strip"),
                     HelpLine::item("[Tab/Shift+Tab] cycle target"),
                     HelpLine::item("[arrow keys] move target"),
@@ -82,6 +84,7 @@ impl Layer for HotkeysLayer {
                     HelpLine::blank(),
                     HelpLine::section("in dev mode"),
                     HelpLine::item("[s] settings popup"),
+                    HelpLine::item("sandbox: features tab hosts prototype toggles"),
                     HelpLine::item("[m] move strip"),
                     HelpLine::item("[P] palette popup"),
                     HelpLine::item("[W] weather popup"),
@@ -89,6 +92,7 @@ impl Layer for HotkeysLayer {
                 ],
                 vec![
                     HelpLine::section("dev mode tools"),
+                    HelpLine::item("settings > features: hero / companions / scaffold"),
                     HelpLine::item("[Tab/Shift+Tab] cycle move target"),
                     HelpLine::item("[arrow keys] move target"),
                     HelpLine::item("[C] store camera home"),

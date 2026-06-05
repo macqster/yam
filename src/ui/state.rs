@@ -862,7 +862,12 @@ impl UiState {
     pub fn toggle_settings(&mut self) {
         self.meta.toggle_settings();
         self.quit_confirm_open = false;
-        if !self.meta.settings_open {
+        if self.meta.settings_open {
+            if self.active_world_kind() == WorldKind::Sandbox {
+                self.meta.settings_tab = SettingsTab::Features;
+                self.clamp_settings_cursor_to_world();
+            }
+        } else {
             self.settings_edit.clear();
         }
     }

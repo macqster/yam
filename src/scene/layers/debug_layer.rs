@@ -447,7 +447,14 @@ fn debug_panel_lines(
                 ]
             } else {
                 vec![
-                    "Hero: main-scene only".to_string(),
+                    format!(
+                        "Hero: sandbox {}",
+                        if facts.hero_visible {
+                            "visible"
+                        } else {
+                            "hidden"
+                        }
+                    ),
                     format!("World: {}", facts.world_title),
                     format!("Pointer visible: {}", facts.pointer_visible),
                 ]
@@ -486,7 +493,14 @@ fn debug_panel_lines(
                 ]
             } else {
                 vec![
-                    "Companions: main-scene only".to_string(),
+                    format!(
+                        "Companions: sandbox {}",
+                        if facts.clock_visible || facts.weather_visible || facts.date_visible {
+                            "visible"
+                        } else {
+                            "hidden"
+                        }
+                    ),
                     format!("World: {}", facts.world_title),
                     format!("Pointer visible: {}", facts.pointer_visible),
                 ]
@@ -1164,7 +1178,7 @@ mod tests {
             .map(|cell| cell.symbol)
             .collect();
         assert!(hero_text.contains("[hero]"));
-        assert!(hero_text.contains("Hero: main-scene only"));
+        assert!(hero_text.contains("Hero: sandbox visible"));
         assert!(hero_text.contains("World: sandbox"));
         assert!(!hero_text.contains("Hero world:"));
     }

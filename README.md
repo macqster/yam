@@ -36,8 +36,6 @@ Codex is doing most of the hard work here; life is unfortunately consuming so mu
 
 current release: `0.3.9`
 
-<div align="center">
-
 ## snapshot
 
 </div>

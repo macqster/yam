@@ -19,6 +19,15 @@ Related contracts:
 - [vines.md](vines.md) owns vine-specific readiness and future phases
 - [../TODO.md](../TODO.md) owns active execution work
 
+Coordinate source note:
+
+- the local brainstorming note at
+  `/Users/mcq/Downloads/yam_tree_scaffold_brainstroming.md` now counts as an
+  active reference for scaffold coordinate anatomy during this thread; its
+  concrete origin/fork/target graph should be distilled here whenever runtime
+  geometry is updated so implementation does not depend on unstated local
+  memory
+
 ## Current Runtime State
 
 The first scaffold runtime slice is now present in a deliberately narrow form:
@@ -111,6 +120,34 @@ The scaffold should first read as one continuous load-bearing organism:
 
 The primary shape should read as an S / hook / cradle curve rather than a set
 of unrelated limbs.
+
+## Coordinate Reference
+
+The current coordinate reference is distilled directly from the local
+brainstorming note at
+`/Users/mcq/Downloads/yam_tree_scaffold_brainstroming.md`.
+
+These coordinates are still authored composition targets, not final procedural
+plant anatomy:
+
+| Support element | Coordinate intent | Read |
+| --- | --- | --- |
+| ground trunk origin | `(-20, -30)` -> `(-20, -24)` | off-world root and primary load path into the fork |
+| fork node | `(-20, -24)` | swollen branch collar / knot mass, not a hinge |
+| back-support branch | `(-20, -24)` -> roughly `(-65, 10)` | rear back brace under the hero lean |
+| seat / butt-ramp anatomical origin | `(-20, -24)` | hidden origin inside the trunk system |
+| seat / butt-ramp visible emergence | around `(20, -24)` -> `(50, -10)` | forward cradle under the butt and bent right leg |
+| raised-leg branch | `(50, -10)` -> `(25, 25)` | secondary perspective echo for the straight leg |
+
+Interpretation rules from that note remain active:
+
+- the seat ramp should not read like a thin line launched from the fork node;
+  trunk thickness and occlusion should let it appear to emerge forward around
+  `(20, -24)`
+- the fork node should be visibly swollen and load-bearing rather than a clean
+  geometric Y
+- the support graph should read as `ground trunk -> fork node -> rear back
+  brace / forward seat ramp -> raised-leg branch`
 
 ## Main Components
 

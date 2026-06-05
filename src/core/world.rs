@@ -340,7 +340,11 @@ mod tests {
             Some(BORDER_VINE_GUIDE_SET_LABEL)
         );
         assert!(!world.flora.vines[0].axes[0].segments.is_empty());
-        assert_eq!(world.scaffold.segments.len(), 7);
+        assert_eq!(world.scaffold.segments.len(), 8);
+        assert!(world.scaffold.segments.iter().any(|segment| {
+            segment.start == crate::core::spatial::SpatialPoint { x: -20, y: -30 }
+                && segment.end == crate::core::spatial::SpatialPoint { x: -20, y: -24 }
+        }));
         assert!(world
             .scaffold
             .segments
@@ -367,7 +371,7 @@ mod tests {
 
         assert_eq!(world.kind, WorldKind::Sandbox);
         assert!(world.flora.vines.is_empty());
-        assert_eq!(world.scaffold.segments.len(), 7);
+        assert_eq!(world.scaffold.segments.len(), 8);
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
         assert_eq!(world.tick, 0);

@@ -28,7 +28,7 @@ Codex is doing the hard work; life is unfortunately consuming too much time and 
 > - `yam` is – and probably will be – in constant development, so nothing here is set in stone and everything is subject to change
 > - the only real readers are me, Codex, and you, dear curious person, so keep in mind that the rest of this README is only a compact, rather machine-readable orientation sheet
 
-## twimc: some systematized info
+# twimc: some systematized info
 
 Current release: `0.3.9`
 

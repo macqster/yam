@@ -442,7 +442,7 @@ mod tests {
 
         assert_eq!(
             z_indices,
-            vec![0, 10, 20, 100, 100, 100, 300, 305, 390, 395, 397, 398, 400, 405, 950, 1000,]
+            vec![0, 8, 10, 20, 100, 100, 100, 300, 305, 390, 395, 397, 398, 400, 405, 950, 1000,]
         );
     }
 
@@ -711,7 +711,7 @@ mod tests {
     }
 
     #[test]
-    fn vine_layer_does_not_write_into_the_footer_row() {
+    fn world_layers_do_not_write_into_the_footer_row() {
         let backend = TestBackend::new(132, 36);
         let mut terminal = Terminal::new(backend).expect("terminal should initialize");
         let world = crate::core::world::WorldState::new();

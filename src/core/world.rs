@@ -3,6 +3,7 @@ use crate::core::{
     flora::{main_scene_vine_guides, realize_border_vine_axis, FloraState},
     grid::Grid,
     guide::GuideState,
+    scaffold::ScaffoldState,
     spatial::{SpatialAnchorLookup, SpatialGuideIndex, SpatialPoint as WorldPos},
 };
 
@@ -33,6 +34,7 @@ pub struct WorldState {
     pub entities: Vec<Entity>,
     pub fields: Fields,
     pub flora: FloraState,
+    pub scaffold: ScaffoldState,
     pub guides: GuideState,
     pub tick: u64,
 }
@@ -255,6 +257,7 @@ impl WorldState {
             entities: Vec::new(),
             fields: Fields::new(profile.grid.width, profile.grid.height),
             flora,
+            scaffold: scaffold_for_kind(kind),
             guides,
             tick: 0,
         }
@@ -303,6 +306,14 @@ fn flora_for_plan(plan: WorldPopulationPlan) -> FloraState {
     }
 }
 
+fn scaffold_for_kind(kind: WorldKind) -> ScaffoldState {
+    if kind.has_main_scene_composition() {
+        ScaffoldState::main_scene_hero_support()
+    } else {
+        ScaffoldState::default()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -313,6 +324,7 @@ mod tests {
         BORDER_VINE_GUIDE_SET_LABEL, BORDER_VINE_ROOT, BORDER_VINE_SEED_AXIS_ID,
         BORDER_VINE_SEED_ID,
     };
+    use crate::core::scaffold::ScaffoldRole;
 
     #[test]
     fn world_state_initializes_seeded_flora_without_affecting_other_state() {
@@ -333,6 +345,12 @@ mod tests {
             Some(BORDER_VINE_GUIDE_SET_LABEL)
         );
         assert!(!world.flora.vines[0].axes[0].segments.is_empty());
+        assert_eq!(world.scaffold.segments.len(), 5);
+        assert!(world
+            .scaffold
+            .segments
+            .iter()
+            .any(|segment| segment.role == ScaffoldRole::SeatCradle));
         assert!(world.entities.is_empty());
         assert!(world
             .guides
@@ -349,6 +367,7 @@ mod tests {
 
         assert_eq!(world.kind, WorldKind::Sandbox);
         assert!(world.flora.vines.is_empty());
+        assert!(world.scaffold.segments.is_empty());
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
         assert_eq!(world.tick, 0);
@@ -362,6 +381,7 @@ mod tests {
 
         assert_eq!(world.kind, WorldKind::Boot);
         assert!(world.flora.vines.is_empty());
+        assert!(world.scaffold.segments.is_empty());
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
         assert_eq!(world.tick, 0);

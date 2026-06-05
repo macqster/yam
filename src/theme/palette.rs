@@ -45,3 +45,5 @@ pub const POINTER_PROBE: Color = BTAS.pms_156;
 pub const DEBUG_FG: Color = BTAS.pms_340;
 pub const VINE_HEALTHY: Color = BTAS.pms_345;
 pub const VINE_AGED: Color = BTAS.pms_465;
+pub const SCAFFOLD_BARK: Color = Color::Rgb(141, 106, 63);
+pub const SCAFFOLD_BARK_LIGHT: Color = Color::Rgb(166, 124, 72);

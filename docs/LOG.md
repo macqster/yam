@@ -15,6 +15,10 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-06-05
+
+- `14:27 CEST` landed the first main-scene scaffold runtime slice after inspecting the repo's actual starting point: added `core::scaffold` as the world-owned home for a static rear hero-support cradle, attached that data to `WorldState` for the main scene only, and rendered it through a dedicated read-only `ScaffoldLayer` beneath the hero using the shared spatial/drawing path. The batch intentionally stops short of a foreground lip, decorative branch spread, or vine-led overgrowth so the support contract stays small and reviewable. `docs/main-scene-scaffold.md`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `TODO.md`, and `docs/audit.md` were updated to match.
+
 ## 2026-05-31
 
 - `11:14 CEST` consolidated greenhouse planning back into a single authoritative `docs/greenhouse-roadmap.md` surface: the non-redundant operation stages, immediate next tasks, stop conditions, and handoff checklist from the temporary greenhouse TODO draft were folded into the roadmap, while `docs/README.md`, `TODO.md`, and `docs/audit.md` were updated to remove the second active greenhouse TODO pointer.

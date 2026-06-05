@@ -19,6 +19,21 @@ Related contracts:
 - [vines.md](vines.md) owns vine-specific readiness and future phases
 - [../TODO.md](../TODO.md) owns active execution work
 
+## Current Runtime State
+
+The first scaffold runtime slice is now present in a deliberately narrow form:
+
+- `core::scaffold` owns a static main-scene support shape
+- the current shape is rear-only and support-first: seat cradle, back brace,
+  leg brace, and a small fork mass
+- the scaffold renders through a dedicated read-only scene layer beneath the
+  hero
+- there is not yet a foreground lip, decorative branch spread, or vine-led
+  overgrowth
+
+This is intentional. The current goal is to prove world ownership and support
+readability before adding another layer of composition complexity.
+
 ## Current Role
 
 The scaffold exists to ground the current hero GIF inside the main scene.
@@ -177,6 +192,8 @@ The first scaffold pass should stay:
 - world-attached
 - composition-led
 - low-noise
+- rear-support-only if that is the cleanest way to preserve ownership and pose
+  readability in the first batch
 
 It should not yet be:
 

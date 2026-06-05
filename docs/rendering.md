@@ -50,8 +50,8 @@ Rules:
 
 ## Visible Content Map
 
-- main scene: hero GIF, tree-stump scaffolding with a Y-shaped fork under the hero, vines, flora, guides, weather/clock composition, and world-tied diagnostic geometry
-- future scaffold enrichment should follow [`main-scene-scaffold.md`](main-scene-scaffold.md): preserve the hero's seated support read first, keep the support world-attached, and treat any foreground lip or rear brace as composition-owned geometry rather than decorative wallpaper
+- main scene: hero GIF, world-owned scaffold cradle, vines, flora, guides, weather/clock composition, and world-tied diagnostic geometry
+- the live scaffold pass is intentionally narrow: a static rear support cradle/back-brace/leg-brace set rendered beneath the hero from world-owned scaffold data; future enrichment should follow [`main-scene-scaffold.md`](main-scene-scaffold.md), preserve the seated support read first, and treat any later foreground lip as composition-owned geometry rather than decorative wallpaper
 - weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
 - sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only

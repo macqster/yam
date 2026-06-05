@@ -3,6 +3,7 @@ use ratatui::style::{Modifier, Style};
 use super::btas::BTAS;
 use super::palette;
 use crate::core::flora::VineHealth;
+use crate::core::scaffold::ScaffoldRole;
 
 #[allow(dead_code)]
 pub fn accent_border() -> Style {
@@ -203,4 +204,14 @@ pub fn vine_shadow(health: VineHealth) -> Style {
             .fg(palette::DIVIDER)
             .add_modifier(Modifier::DIM)
     }
+}
+
+pub fn scaffold_bark(role: ScaffoldRole) -> Style {
+    let color = match role {
+        ScaffoldRole::SeatCradle | ScaffoldRole::BackBrace | ScaffoldRole::ForkMass => {
+            palette::SCAFFOLD_BARK
+        }
+        ScaffoldRole::LegBrace => palette::SCAFFOLD_BARK_LIGHT,
+    };
+    Style::default().fg(color)
 }

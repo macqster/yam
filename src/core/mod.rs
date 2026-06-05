@@ -14,5 +14,6 @@ pub mod grid;
 pub mod guide;
 pub mod guide_line;
 pub mod organism;
+pub mod scaffold;
 pub mod spatial;
 pub mod world;

@@ -160,6 +160,8 @@ Last reviewed: 2026-05-31
   - evidence: `src/render/chafa.rs`, `docs/rendering.md`, `docs/architecture.md`, `docs/LOG.md`
 - `low` `Space::Anchor(EntityId)` now has a core-backed lookup path through `SpatialAnchorLookup`, but the broader spatial layer is still on compatibility shims and the rest of the callers have not been migrated to entity-backed relation helpers yet.
   - evidence: `src/scene/coords.rs`, `src/core/world.rs`, `src/scene/entity.rs`, `src/ui/state.rs`
+- `low` The scaffold note is no longer purely aspirational: the main scene now has a small world-owned scaffold runtime slice in `core::scaffold`, and a dedicated read-only layer renders that rear support cradle beneath the hero without making render code the source of truth. The remaining scaffold work is composition refinement, especially whether and how to add a foreground nesting edge without muddying ownership or layering.
+  - evidence: `src/core/scaffold.rs`, `src/core/world.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/main-scene-scaffold.md`
 - `low` A recent footer visual check exposed a stale-binary risk pattern: `yam-install` can complete while `yam-rust --version` still reports an older build stamp, so screenshot comparisons should verify the installed runtime identity before treating the output as the current source of truth.
   - evidence: `yam-rust --version`, `docs/LOG.md`, `docs/config.md`, `README.md`
 

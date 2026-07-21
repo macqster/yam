@@ -92,9 +92,11 @@ toolchain; other rows carried forward from the 2026-05-31 pass).
 Current status:
 
 - baseline verification is green: `bash scripts/verify.sh` passed with docs
-  checks, ownership checks, clippy, cargo check, and `255` tests
+  checks, ownership checks, clippy, cargo check, and `258` tests
 - `known_issues.md` has no active tracked issues
-- dependency inventory is clean: `cargo tree -d` reports nothing to print
+- dependency inventory has one low-priority upstream duplicate: `cargo tree -d`
+  reports `hashbrown` `0.16.1` through `kasuari` and `0.17.1` through `lru`,
+  both below Ratatui and not directly controlled by this crate
 - world profile/selectability tests cover `Boot`, `MainScene`, and `Sandbox`,
   including `Boot` staying non-selectable
 - `scripts/check.sh` guards `core`/`systems` module-boundary ownership; the
@@ -118,7 +120,7 @@ start visible greenhouse behavior.
 | Gate | Status | Evidence | Remaining Work |
 | --- | --- | --- | --- |
 | Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
-| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `255` tests (re-verified 2026-07-21 with a working toolchain) | Re-run before each implementation batch |
+| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `258` tests (re-verified 2026-07-21 with a working toolchain) | Re-run before each implementation batch |
 | Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
 | Flora storage decision | Decision-biased | `FloraState` adapters are tested; enum-backed family store is the current first-pass bias | Lock the enum-backed shape before a second plant family lands |
 | Greenhouse/world contract | Contract-ready, not runtime-ready | Functional-space contract lives below; `WorldKind::profile()` is the future world seam | Add pure data tests before any visible `WorldKind::Greenhouse` variant |

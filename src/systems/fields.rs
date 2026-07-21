@@ -4,11 +4,15 @@ use crate::core::world::WorldState;
 pub fn update_fields(world: &mut WorldState) {
     let width = world.grid.width;
     let height = world.grid.height;
+    let field_len = (width as usize) * (height as usize);
 
-    for i in 0..world.fields.density.len() {
-        world.fields.density[i] = 0.0;
-        world.fields.attraction[i] = 0.0;
-        world.fields.avoidance[i] = 0.0;
+    for field in [
+        &mut world.fields.density,
+        &mut world.fields.attraction,
+        &mut world.fields.avoidance,
+    ] {
+        field.resize(field_len, 0.0);
+        field.fill(0.0);
     }
 
     for entity in &world.entities {
@@ -75,5 +79,27 @@ mod tests {
 
         let idx = world.grid.index(0, 0);
         assert_eq!(world.fields.density[idx], 1.0);
+    }
+
+    #[test]
+    fn mismatched_field_storage_is_repaired_before_indexing() {
+        let mut world = WorldState::new();
+        world.fields.density.clear();
+        world.fields.attraction.truncate(3);
+        world.fields.avoidance.push(1.0);
+        world.entities.push(Entity {
+            id: 1,
+            x: 0,
+            y: 0,
+            age: 0,
+        });
+
+        update_fields(&mut world);
+
+        let expected_len = (world.grid.width as usize) * (world.grid.height as usize);
+        assert_eq!(world.fields.density.len(), expected_len);
+        assert_eq!(world.fields.attraction.len(), expected_len);
+        assert_eq!(world.fields.avoidance.len(), expected_len);
+        assert_eq!(world.fields.density[world.grid.index(0, 0)], 1.0);
     }
 }

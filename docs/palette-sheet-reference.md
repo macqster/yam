@@ -4,7 +4,7 @@ This document is YAM's local handoff note for the shared BTAS/TNBA palette sheet
 
 The actual shareable sheet source currently lives in:
 
-- `~/_git/dotfiles/themes/btas-tnba_reference_sheet.md`
+- `~/_git/legacy/archive-dotfiles/themes/btas-tnba_reference_sheet.md`
 
 The currently adopted exported packet asset now also lives in:
 
@@ -32,10 +32,10 @@ The revised shared sheet source fixes that by keeping three layers distinct:
 
 For YAM work, the relevant chain is:
 
-1. `~/_git/dotfiles/themes/yam_btas_extracted_swatches.md`
-2. `~/_git/dotfiles/themes/btas-tnba_color_palette.md`
-3. `~/_git/dotfiles/themes/btas-tnba_reference_guide.md`
-4. `~/_git/dotfiles/themes/btas-tnba_reference_sheet.md`
+1. `~/_git/home/themes/palette/yam_btas_extracted_swatches.md`
+2. `~/_git/home/themes/palette/btas-tnba_color_palette.md`
+3. `~/_git/home/themes/palette/btas-tnba_reference_guide.md`
+4. `~/_git/legacy/archive-dotfiles/themes/btas-tnba_reference_sheet.md`
 5. `docs/palette-reference.md`
 6. `docs/theme.md`
 

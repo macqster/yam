@@ -59,7 +59,7 @@ Weather-widget work should stay inside this palette vocabulary as well; the cano
 
 The current weather token pass intentionally keeps the atlas monochrome asset files frozen while giving runtime theme application more semantic range, especially for heavy-rain and thunder/lightning families that were previously sharing broader generic accents.
 
-For a human-friendly summary of the current palette chain as YAM should understand it, see [`palette-reference.md`](palette-reference.md). For the PDF/layout-ready palette-sheet source, see [`palette-sheet-reference.md`](palette-sheet-reference.md). For the currently adopted shareable packet export, see [`btas_tnba_color_system_canonical_packet.pdf`](btas_tnba_color_system_canonical_packet.pdf). The extracted source SSOT and curated workstation master palette currently live in `~/_git/dotfiles/themes/`.
+For a human-friendly summary of the current palette chain as YAM should understand it, see [`palette-reference.md`](palette-reference.md). For the PDF/layout-ready palette-sheet source, see [`palette-sheet-reference.md`](palette-sheet-reference.md). For the currently adopted shareable packet export, see [`btas_tnba_color_system_canonical_packet.pdf`](btas_tnba_color_system_canonical_packet.pdf). The active extracted source SSOT and curated workstation master palette now live in `~/_git/home/themes/palette/`; older packet-era companions belong to `~/_git/legacy/archive-dotfiles/themes/` as archive reference material.
 
 ## Style model
 

@@ -45,7 +45,7 @@
 - Main-scene enrichment and greenhouse ecosystem work should start from infrastructure, not from another visible object bolted onto the current scene.
 - Before a second plant family or greenhouse population lands, the flora layer needs a small shared organism vocabulary. The first cut now lives in `core::organism` for organism id, species id, journal id, lifecycle state, generic stats, identity grouping, organism family, species-profile payload shape, an in-memory species registry, and per-instance journal events; future axes/metamers/organs and growth tips/meristems should build from that vocabulary rather than reintroducing vine-only identifiers.
 - Before a greenhouse or lab world lands, world selection should extend the explicit `WorldKind::SELECTABLE` and `WorldKind::profile()` contracts rather than reintroducing a UI-local toggle. `Boot` stays non-selectable, transition labels, coarse `WorldComposition`, grid, camera defaults, guide plans, population plans, and capabilities live on `WorldKind`, and persisted UI snapshots convert through that core contract.
-- Before denser organism rendering lands, spatial projection, entity-backed anchoring, and guide relation logic should keep moving toward `core::spatial` as the canonical resolver, with `scene::coords` treated as compatibility surface.
+- Before denser organism rendering lands, spatial projection, entity-backed anchoring, and guide relation logic should keep moving toward `core::spatial` as the canonical resolver; `core::spatial` is now that resolver directly, with no remaining `scene::coords` compatibility surface (see the Spatial Relation Layer section below).
 - Conceptual work for those future features is in scope during stabilization when it tightens contracts, tests, data shape, or tooling; large runtime mechanics should wait for those gates to be deliberate.
 
 ## Rendering Pipeline
@@ -221,43 +221,20 @@ The intended model is:
 - hud-ui elements stay tied to viewport/camera/terminal position and follow the screen contract
 - clock is treated as a world entity: it stays tied to the hero in world space and carries its own hero-relative offset
 - footer/status is treated as hud-ui: it lives in screen space alongside hotkeys and version/build labels
-- the repo now exposes explicit helpers for both sides of that split:
-- `resolve_world_ui(...)` resolves anchor + offset in world space and stays world-pinned
-- `resolve_hud_ui(...)` keeps hud values screen-attached and camera-independent, even when their spacing/alignment logic is derived from the shared world model
-- `project_world_to_screen(...)` is the signed screen-position projection helper isolated inside `scene/coords.rs` compatibility code, while `resolve_element_screen_position(...)` is the screen-typed compatibility resolver for `Space::{World, Anchor, Screen}`; `scripts/check.sh` prevents new `crate::scene::coords` imports outside that module
-- the long-term goal is a single spatial relation resolver that can serve world datum guides, relative anchors, masks, and lifecycle-driven movement without each feature inventing its own attachment math
-- the smallest useful canonical spatial relation layer now owns four things first: datum/world transforms, attachment resolution, guide/guide-set lookup, and screen projection helpers; higher-level mask and organism relations can be layered on later without forcing the first cut to solve every spatial question at once
-- the lowest-risk extraction plan is likely:
-  - `scene/coords.rs` keeps compatibility re-exports and transform helpers until more call sites can depend on `core::spatial` directly
-  - `scene/entity.rs` keeps attachment composition helpers while resolving simple anchor/offset math through `core::spatial`
-  - `core/guide.rs` keeps guide data and guide-set lookup as the canonical guide store
-  - `render/guide.rs` stays render-only and consumes the guide store through `core::spatial` projection helpers instead of redefining relations
-  - the new canonical spatial relation layer should eventually absorb only the shared resolver logic, not the render helpers or the raw data structs on day one
-- the first canonical spatial API surface is now present and should stay small and explicit:
+- world-ui and hud-ui resolve through different paths by construction rather than through a shared dispatch helper: world-attached composition (hero, companions) resolves anchor+offset through `core::spatial::SpatialResolver::resolve_anchor`/`resolve_attachment` via `scene::entity`, while hud-ui values are computed directly in screen space and never pass through world-to-screen projection at all
+- `core::spatial::SpatialResolver::world_to_screen_point(...)` is the single signed world-to-screen projection path; there is no separate compatibility projection function
+- **the `scene::coords` compatibility module has been fully retired** (2026-07-21): it was introduced as a transitional shim while call sites migrated onto `core::spatial`, but a repo-wide audit found zero remaining call sites outside its own test module, so the shim (`Space`, `EntityId`, `Element`, `resolve_anchored_position(...)`, `resolve_projected_position(...)`, `resolve_screen_position(...)`, `resolve_element_screen_position(...)`, `project_world_to_screen(...)`, and the `WorldPos`/`ScreenPos`/`Projection` re-export aliases) was deleted outright rather than kept as dead weight; `core::spatial` is now the sole resolver for every active call site
+- the canonical spatial API surface is small and explicit, and every listed type now has real production call sites (not only tests):
   - `SpatialPoint` for world-space coordinates
   - `SpatialScreenPoint` for signed on-screen or off-screen screen-space coordinates
-  - `scene::coords::ScreenPos` as a module-internal compatibility re-export while active call sites use the core name
   - `SpatialAnchor` for attachment origins
   - `SpatialAttachment` for anchor-plus-offset resolution
   - `SpatialProjection` for world-to-screen and screen-to-world helpers
   - `SpatialGuideIndex` for guide and guide-set lookup
-  - `SpatialAnchorLookup` for entity-backed anchor lookup without making the scene compatibility layer own anchor identity
+  - `SpatialAnchorLookup` for entity-backed anchor lookup, implemented for real by `WorldState`
   - `SpatialResolver` for the shared relation glue that ties those pieces together
-- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `core::spatial::SpatialAnchorLookup` when an entity is present, so anchor identity is no longer owned by scene projection code even though the broader spatial layer still needs consolidation
-- that projected anchor helper is still a compatibility path; the long-term goal remains to move more relation callers fully into `core/spatial`
-- the likely mapping from today’s modules to that surface is:
-  - `core/spatial` -> `SpatialPoint`, `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialAnchorLookup`, and `SpatialResolver`
-  - `scene/coords.rs` -> compatibility re-exports and transition helpers such as `project_world_to_screen(...)`
-  - `scene/entity.rs` -> attachment composition helpers that can later collapse into `SpatialAttachment`
-  - `core/guide.rs` -> `SpatialGuideIndex` and the raw guide/guide-set data model
-  - `render/guide.rs` -> render-only consumers of `SpatialGuideIndex`, `SpatialProjection`, and `SpatialResolver`
-- the safest migration order is likely:
-  1. introduce `core/spatial` with the new shared types and resolver helpers, while keeping the old modules as compatibility shims
-  2. move shared projection and attachment math into the new layer without changing the visible contracts
-  3. switch guide lookup consumers to the new `SpatialGuideIndex` surface while preserving `GuideState` storage
-  4. keep render guide drawing on the core spatial projection helpers
-  5. only then retire the old helper paths once the tests and docs are all pointing at the new canonical layer
-- each migration step should be guarded by the existing projection, resize, guide-set, and render-determinism tests before the old helper is removed
+- `scene/entity.rs` (`EntityPose`, `AttachedEntityPose`, `HeroSceneAttachment`) still expresses attachment composition with its own domain-named structs rather than constructing `core::spatial::SpatialAttachment`/`SpatialAnchor` directly; all of its anchor math already delegates to `SpatialResolver::resolve_anchor`, so this is a naming/shape duplication rather than a routing gap, and it is not currently planned to change (see Known Architectural Debt)
+- `core/guide.rs` remains the canonical guide/guide-set data store (`GuideState`, `GuideSet`); `core::spatial::SpatialGuideIndex` is a thin borrowing wrapper over it, consumed directly by `render/guide.rs` and `core::world`
 - the footer row is intentionally the bottom terminal row of the full terminal frame, while the world itself occupies the `212x56` playfield above it; `footer_row(height)` encodes that contract
 - projection is defined in `docs/scene-model.md` and applied by the renderer
 
@@ -274,11 +251,11 @@ The intended model is:
 - hud-ui should not inherit world coordinates directly; it should use viewport/screen positioning while still borrowing the shared spacing model for consistent offsets, insets, and alignment
 - the debug border probe is a datum-centered world-border indicator that is rendered in world space and therefore moves with camera panning
 
-The remaining architectural gap is that `coords::Space` is not yet the authoritative resolver for all placement paths. Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
+Camera semantics are intentionally treated as a viewport crop helper on the active path; new features should not invent a second meaning for camera or viewport.
 
 ## Known Architectural Debt
 
 - Historical `Layer::render(...)` references are archive-only; the active layer API is `Layer::render_to_grid(...)`.
 - Hero and clock layers read from the per-frame `RenderState`; on the active path they are world-pinned and do not move with camera projection.
-- `coords::Space` exists but is not yet the authoritative position resolver.
+- `scene::entity::EntityPose`/`AttachedEntityPose` duplicate the shape of `core::spatial::SpatialAnchor`/`SpatialAttachment` under domain-specific names rather than constructing them directly; low risk, not currently scheduled for change.
 - Masks are present but are still a probe, not a complete scene-wide occlusion policy.

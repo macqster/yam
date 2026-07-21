@@ -95,148 +95,6 @@ pub fn hero_frames_cached(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
     frames
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{
-        cache_is_fresh_against, decode_gif_frames, hero_frames, render_frame_with_command,
-        tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
-    };
-    use image::Rgba;
-    use ratatui::text::Line;
-    use std::{fs, thread, time::Duration};
-
-    #[test]
-    fn hero_frame_buffer_has_multiple_frames() {
-        let frames = hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
-        assert!(frames.len() > 1, "expected multiple hero frames");
-    }
-
-    #[test]
-    fn decoded_hero_frames_keep_full_canvas_geometry() {
-        let frames = decode_gif_frames(super::HERO_GIF_PATH).expect("decode hero gif");
-        assert_eq!(frames.len(), 64);
-        for frame_index in [0, 1, 15, 19, 30, 63] {
-            assert_eq!(
-                frames[frame_index].width(),
-                820,
-                "frame {frame_index} width"
-            );
-            assert_eq!(
-                frames[frame_index].height(),
-                820,
-                "frame {frame_index} height"
-            );
-            assert_eq!(
-                frames[frame_index].to_rgba8().get_pixel(0, 0)[3],
-                255,
-                "frame {frame_index} must be flattened to an opaque canvas"
-            );
-        }
-    }
-
-    #[test]
-    fn dark_reds_get_lifted_before_chafa_conversion() {
-        let lifted = tone_lift_dark_reds(Rgba([114, 22, 15, 255]));
-        assert!(lifted[0] >= 114);
-        assert!(lifted[1] >= 22);
-        assert!(lifted[2] >= 15);
-        assert!(lifted[0] <= 132);
-        assert!(lifted[1] <= 34);
-        assert!(lifted[2] <= 26);
-        assert_eq!(lifted[3], 255);
-    }
-
-    #[test]
-    fn neutral_dark_pixels_stay_neutral() {
-        let pixel = Rgba([18, 18, 18, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn warm_skin_tones_stay_neutral() {
-        let pixel = Rgba([180, 120, 90, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn bright_orange_tones_stay_neutral() {
-        let pixel = Rgba([200, 40, 20, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn temp_frame_dir_is_removed_on_drop() {
-        let path = {
-            let temp_dir = super::TempFrameDir::new().expect("temp frame dir");
-            let path = temp_dir.path().to_path_buf();
-            assert!(
-                path.exists(),
-                "temp frame dir should exist during render batch"
-            );
-            path
-        };
-
-        assert!(
-            !path.exists(),
-            "temp frame dir should be removed when the render batch ends"
-        );
-    }
-
-    #[test]
-    fn missing_hero_gif_returns_decode_error_instead_of_panicking() {
-        let err = decode_gif_frames("__yam_missing_hero.gif").expect_err("missing gif should fail");
-        assert!(err.contains("failed to open gif"));
-    }
-
-    #[test]
-    fn placeholder_hero_frames_are_not_cacheable() {
-        let frames = vec![vec![Line::from("chafa unavailable: missing")]];
-        assert!(!super::hero_frames_are_cacheable(&frames));
-
-        let frames = vec![vec![Line::from("hero gif unavailable: missing")]];
-        assert!(!super::hero_frames_are_cacheable(&frames));
-    }
-
-    #[test]
-    fn render_frame_returns_placeholder_when_chafa_is_unavailable() {
-        let lines =
-            render_frame_with_command("__yam_missing_chafa_binary__", super::HERO_GIF_PATH, 4, 2);
-        assert_eq!(lines.len(), 1);
-        let text = lines[0]
-            .spans
-            .iter()
-            .map(|span| span.content.as_ref())
-            .collect::<String>();
-        assert!(text.starts_with("chafa unavailable:"));
-    }
-
-    #[test]
-    fn cache_freshness_accepts_newer_cache_file() {
-        let temp_dir = tempfile::tempdir().expect("tempdir");
-        let source = temp_dir.path().join("hero.gif");
-        let cache = temp_dir.path().join("hero.frame_cache.json");
-
-        fs::write(&source, b"source").expect("write source");
-        thread::sleep(Duration::from_millis(5));
-        fs::write(&cache, b"cache").expect("write cache");
-
-        assert!(cache_is_fresh_against(&cache, &source));
-    }
-
-    #[test]
-    fn cache_freshness_rejects_stale_cache_file() {
-        let temp_dir = tempfile::tempdir().expect("tempdir");
-        let source = temp_dir.path().join("hero.gif");
-        let cache = temp_dir.path().join("hero.frame_cache.json");
-
-        fs::write(&cache, b"cache").expect("write cache");
-        thread::sleep(Duration::from_millis(5));
-        fs::write(&source, b"source").expect("write source");
-
-        assert!(!cache_is_fresh_against(&cache, &source));
-    }
-}
-
 fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
     let file = fs::File::open(path).map_err(|err| format!("failed to open gif {path}: {err}"))?;
     let reader = std::io::BufReader::new(file);
@@ -472,4 +330,146 @@ fn render_image_frame(
         .ok_or_else(|| format!("temp path not utf-8: {temp_path:?}"))?;
     let rendered = render_frame(temp_path, width, height);
     Ok(rendered)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        cache_is_fresh_against, decode_gif_frames, hero_frames, render_frame_with_command,
+        tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
+    };
+    use image::Rgba;
+    use ratatui::text::Line;
+    use std::{fs, thread, time::Duration};
+
+    #[test]
+    fn hero_frame_buffer_has_multiple_frames() {
+        let frames = hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
+        assert!(frames.len() > 1, "expected multiple hero frames");
+    }
+
+    #[test]
+    fn decoded_hero_frames_keep_full_canvas_geometry() {
+        let frames = decode_gif_frames(super::HERO_GIF_PATH).expect("decode hero gif");
+        assert_eq!(frames.len(), 64);
+        for frame_index in [0, 1, 15, 19, 30, 63] {
+            assert_eq!(
+                frames[frame_index].width(),
+                820,
+                "frame {frame_index} width"
+            );
+            assert_eq!(
+                frames[frame_index].height(),
+                820,
+                "frame {frame_index} height"
+            );
+            assert_eq!(
+                frames[frame_index].to_rgba8().get_pixel(0, 0)[3],
+                255,
+                "frame {frame_index} must be flattened to an opaque canvas"
+            );
+        }
+    }
+
+    #[test]
+    fn dark_reds_get_lifted_before_chafa_conversion() {
+        let lifted = tone_lift_dark_reds(Rgba([114, 22, 15, 255]));
+        assert!(lifted[0] >= 114);
+        assert!(lifted[1] >= 22);
+        assert!(lifted[2] >= 15);
+        assert!(lifted[0] <= 132);
+        assert!(lifted[1] <= 34);
+        assert!(lifted[2] <= 26);
+        assert_eq!(lifted[3], 255);
+    }
+
+    #[test]
+    fn neutral_dark_pixels_stay_neutral() {
+        let pixel = Rgba([18, 18, 18, 255]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
+
+    #[test]
+    fn warm_skin_tones_stay_neutral() {
+        let pixel = Rgba([180, 120, 90, 255]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
+
+    #[test]
+    fn bright_orange_tones_stay_neutral() {
+        let pixel = Rgba([200, 40, 20, 255]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    }
+
+    #[test]
+    fn temp_frame_dir_is_removed_on_drop() {
+        let path = {
+            let temp_dir = super::TempFrameDir::new().expect("temp frame dir");
+            let path = temp_dir.path().to_path_buf();
+            assert!(
+                path.exists(),
+                "temp frame dir should exist during render batch"
+            );
+            path
+        };
+
+        assert!(
+            !path.exists(),
+            "temp frame dir should be removed when the render batch ends"
+        );
+    }
+
+    #[test]
+    fn missing_hero_gif_returns_decode_error_instead_of_panicking() {
+        let err = decode_gif_frames("__yam_missing_hero.gif").expect_err("missing gif should fail");
+        assert!(err.contains("failed to open gif"));
+    }
+
+    #[test]
+    fn placeholder_hero_frames_are_not_cacheable() {
+        let frames = vec![vec![Line::from("chafa unavailable: missing")]];
+        assert!(!super::hero_frames_are_cacheable(&frames));
+
+        let frames = vec![vec![Line::from("hero gif unavailable: missing")]];
+        assert!(!super::hero_frames_are_cacheable(&frames));
+    }
+
+    #[test]
+    fn render_frame_returns_placeholder_when_chafa_is_unavailable() {
+        let lines =
+            render_frame_with_command("__yam_missing_chafa_binary__", super::HERO_GIF_PATH, 4, 2);
+        assert_eq!(lines.len(), 1);
+        let text = lines[0]
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+        assert!(text.starts_with("chafa unavailable:"));
+    }
+
+    #[test]
+    fn cache_freshness_accepts_newer_cache_file() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
+        fs::write(&source, b"source").expect("write source");
+        thread::sleep(Duration::from_millis(5));
+        fs::write(&cache, b"cache").expect("write cache");
+
+        assert!(cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn cache_freshness_rejects_stale_cache_file() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
+        fs::write(&cache, b"cache").expect("write cache");
+        thread::sleep(Duration::from_millis(5));
+        fs::write(&source, b"source").expect("write source");
+
+        assert!(!cache_is_fresh_against(&cache, &source));
+    }
 }

@@ -219,25 +219,15 @@ The active implementation treats camera as a viewport crop helper:
 - the world datum is the shared absolute reference for rulers, guides, masks, and organism guidance; screen space remains a separate terminal projection layer
 - the smallest canonical spatial layer should stay narrow at first: datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers are the minimum shared contract before masks and organism guidance become first-class relation types
 - the first canonical spatial API surface stays narrow here too: `SpatialPoint`, signed `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, `SpatialAnchorLookup`, and `SpatialResolver` should be enough for rendering to consume the shared relation layer without taking ownership of the raw spatial data model; the compatibility layer re-exports that signed screen type as `ScreenPos` for module-internal compatibility projections that may be off-screen, and the active companion, hero, debug, guide, and vine render paths now consume core spatial types directly
-- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `core::spatial::SpatialAnchorLookup` when an entity is present, so render-side anchor use can rely on entity-backed lookup without making scene projection code own anchor identity
-- that anchor lookup is still a compatibility path, not the final canonical resolver; the long-term goal remains to move entity-backed relation logic fully into `core/spatial`
-- the likely module mapping from render’s point of view is:
-  - `scene/coords.rs` supplies compatibility projection helpers and transitional type names
+- render-side anchor use consumes `core::spatial::SpatialAnchorLookup` directly for entity-backed lookup; the `scene::coords` compatibility layer that used to sit in front of it has been retired (2026-07-21) after a repo-wide audit found zero call sites outside its own tests
+- the module mapping from render's point of view is:
   - `core/guide.rs` supplies the queryable guide index and guide sets
   - `render/guide.rs` stays render-only and consumes those primitives through `core::spatial`
-  - `core/spatial` already owns the shared resolver first cut so render does not need to know relation details
-- the safest migration order from the renderer’s point of view is:
-  1. keep the current render output unchanged while the shared spatial layer appears
-  2. move only relation math into the new resolver, not the grid composition logic
-  3. keep guide drawing on the new guide index/projection API
-  4. preserve the existing render-determinism and layer-order tests at each step
-  5. retire the old helper calls only when the renderer no longer needs to know where the relation math lives
+  - `core/spatial` owns the shared resolver so render does not need to know relation details
 - fullscreen is a special case of the camera contract: when the viewport matches or exceeds the world extent, the visible crop should be static and centered on the world datum `(0, 0)`, even if debug controls still mutate the stored camera position
 - fullscreen lock is now exercised in `build_render_state(...)`: the stored camera can still move, but the frame uses a datum-centered crop whenever the terminal fully covers the world extent
 - `RenderState::clock_screen()` is the shared core-spatial signed projected clock position used by both the clock layer and the debug overlay
-- `resolve_world_ui(...)` is the helper for world-attached elements that stay pinned in world space
-- `resolve_hud_ui(...)` is the helper for screen-attached overlays
-- `resolve_hud_ui(...)` is the helper for screen-attached overlays, including those whose layout rules are derived from world-spacing conventions
+- world-attached elements stay pinned in world space by composing anchor+offset through `core::spatial::SpatialResolver::resolve_anchor` (via `scene::entity`); screen-attached overlays are computed directly in screen space and never pass through world-to-screen projection, including those whose layout rules are derived from world-spacing conventions
 - `GuideState` in `core/guide.rs` is the queryable world-space guide store that future vines can use for linework primitives such as points, lines, polylines, and outline shapes; each guide is individually labeled and may also participate in an optional named group, and `GuideState` also carries named `GuideSet` collections so larger guide groups can be queried or edited as collections; guide sets are constructed with `GuideSet::new(...)` and registered through `GuideState::add_set(...)`
 - footer placement is intentionally the bottom row of the full terminal frame via `footer_row(height)`, while the world playfield occupies the `212x56` area above it
 - the footer is plain text on the bottom row, with no green background highlight, rendered in BTAS-grey, and the version stamp stays right-aligned

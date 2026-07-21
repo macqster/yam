@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$repo_root"
+
+echo "pre-push: running scripts/verify.sh (skip once with 'git push --no-verify')"
+bash scripts/verify.sh

@@ -85,19 +85,23 @@ The current repo already has the first seams that greenhouse work should use:
 
 ## 0.4 Readiness Snapshot
 
-Last checked: 2026-05-31.
+Last checked: 2026-07-21 (baseline verification, spatial ownership, and
+dependency inventory rows below re-verified directly with a working Rust
+toolchain; other rows carried forward from the 2026-05-31 pass).
 
 Current status:
 
 - baseline verification is green: `bash scripts/verify.sh` passed with docs
-  checks, ownership checks, clippy, cargo check, and `245` tests
+  checks, ownership checks, clippy, cargo check, and `255` tests
 - `known_issues.md` has no active tracked issues
 - dependency inventory is clean: `cargo tree -d` reports nothing to print
 - world profile/selectability tests cover `Boot`, `MainScene`, and `Sandbox`,
   including `Boot` staying non-selectable
-- `scripts/check.sh` guards `core::spatial` ownership by keeping
-  `project_world_to_screen(...)` and `crate::scene::coords` imports isolated in
-  `src/scene/coords.rs`
+- `scripts/check.sh` guards `core`/`systems` module-boundary ownership; the
+  former `crate::scene::coords` isolation guard was removed 2026-07-21 when
+  the compatibility module it guarded was retired (zero remaining call sites
+  outside its own tests), so `core::spatial` is now the sole spatial resolver
+  with no compatibility layer left to isolate
 - `FloraState` still stores only vines, but family-count and organism-identity
   adapters are tested and remain the current bridge toward a future enum-backed
   family store decision
@@ -114,8 +118,8 @@ start visible greenhouse behavior.
 | Gate | Status | Evidence | Remaining Work |
 | --- | --- | --- | --- |
 | Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
-| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `245` tests | Re-run before each implementation batch |
-| Spatial ownership stable | Prep-ready | `scripts/check.sh` isolates `project_world_to_screen(...)` and `crate::scene::coords`; active render paths consume `core::spatial` | Continue relation consolidation before masks or organism guidance become first-class |
+| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `255` tests (re-verified 2026-07-21 with a working toolchain) | Re-run before each implementation batch |
+| Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
 | Flora storage decision | Decision-biased | `FloraState` adapters are tested; enum-backed family store is the current first-pass bias | Lock the enum-backed shape before a second plant family lands |
 | Greenhouse/world contract | Contract-ready, not runtime-ready | Functional-space contract lives below; `WorldKind::profile()` is the future world seam | Add pure data tests before any visible `WorldKind::Greenhouse` variant |
 | Hero/render fallback hardened | Prep-ready | Chafa fallback/cache tests cover missing GIF, unavailable Chafa, placeholder cache rejection, and cache freshness | Keep offline `CellGrid` / editor work deferred |
@@ -307,7 +311,7 @@ Accepted constraints:
 
 Architecture decision bias from the preflight:
 
-- `core::spatial` stays canonical and `scene::coords` stays compatibility-only
+- `core::spatial` is the canonical resolver; `scene::coords` was retired 2026-07-21 rather than kept as a compatibility shim once it had no remaining external callers
 - before a new plant family lands, prefer an enum-backed family store as the
   first `FloraState` generalization unless inspection proves another shape is
   simpler

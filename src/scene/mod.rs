@@ -11,7 +11,6 @@ use ratatui::widgets::{Clear, Paragraph};
 use std::cell::RefCell;
 
 pub mod camera;
-pub mod coords;
 pub mod entity;
 pub mod layers;
 pub mod viewport;

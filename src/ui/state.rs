@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
+#[cfg(not(test))]
+use std::thread;
 use std::{
     fs, io,
     path::{Path, PathBuf},
     sync::mpsc::{self, Receiver},
-    thread,
     time::{Duration, Instant},
 };
 
@@ -14,10 +15,35 @@ use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
 use crate::scene::entity::hero_scene_poses;
 use crate::weather::model::{WeatherLocale, WeatherLocation, WeatherSnapshot};
-use crate::weather::provider::{
-    StaticWeatherProvider, WeatherError, WeatherProvider, WttrInWeatherProvider,
-};
+#[cfg(not(test))]
+use crate::weather::provider::WttrInWeatherProvider;
+use crate::weather::provider::{StaticWeatherProvider, WeatherError, WeatherProvider};
 use crate::weather::render::WeatherLayout;
+
+/// Test builds resolve weather refreshes synchronously against
+/// `StaticWeatherProvider` instead of shelling out to the real `wttr.in`
+/// network endpoint, so the test suite stays deterministic, offline, and
+/// immune to rate limiting when many tests run in parallel.
+#[cfg(test)]
+fn spawn_weather_snapshot_fetch(
+    location: WeatherLocation,
+) -> Receiver<Result<WeatherSnapshot, WeatherError>> {
+    let (tx, rx) = mpsc::channel();
+    let _ = tx.send(StaticWeatherProvider.snapshot(&location));
+    rx
+}
+
+#[cfg(not(test))]
+fn spawn_weather_snapshot_fetch(
+    location: WeatherLocation,
+) -> Receiver<Result<WeatherSnapshot, WeatherError>> {
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        let result = WttrInWeatherProvider.snapshot(&location);
+        let _ = tx.send(result);
+    });
+    rx
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -768,13 +794,7 @@ impl UiState {
             return;
         }
         let location = self.weather_location.clone();
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || {
-            let provider = WttrInWeatherProvider;
-            let result = provider.snapshot(&location);
-            let _ = tx.send(result);
-        });
-        self.weather_refresh_rx = Some(rx);
+        self.weather_refresh_rx = Some(spawn_weather_snapshot_fetch(location));
     }
 
     fn finish_weather_refresh_if_ready(&mut self) {

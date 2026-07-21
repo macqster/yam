@@ -37,17 +37,14 @@ Issue link rule:
 
 ## 1. Spatial Relation Layer
 
-- `refactor` make `core::spatial` the canonical resolver for projection, attachments, guide lookup, and future organism guidance.
-- `refactor` reduce `scene::coords` toward a compatibility facade rather than a second conceptual owner of projection semantics.
-- `verify` entity-backed anchor resolution routes through `core::spatial::SpatialAnchorLookup` before the scene compatibility layer projects it.
+`core::spatial` is now the canonical resolver everywhere with no remaining compatibility facade: `scene::coords` was retired 2026-07-21 after confirming zero call sites outside its own tests (see `docs/LOG.md`, `docs/architecture.md`). Standing invariants to keep verifying as the layer grows:
+
 - `verify` world-space, screen-space, and anchor-space remain distinct in type names, helper names, tests, and docs.
 - `verify` projection remains singular and uses the same signed world-to-screen transform for hero, companions, guides, vines, and future plant geometry.
-- `verify` keep projected screen positions typed as signed screen-space values: `RenderState` companion helpers, hero rendering, debug rendering, guide rendering, and vine rendering now consume `core::spatial` directly, while compatibility element projection still returns `scene::coords::ScreenPos` through compatibility helpers.
-- `verify` keep `scene::coords` compatibility imports isolated inside `scene/coords.rs`; `scripts/check.sh` guards against new `crate::scene::coords` call sites outside the compatibility module.
-- `verify` guide rendering consumes `core::spatial::SpatialGuideIndex` and `SpatialResolver` directly instead of projecting through the scene compatibility facade.
 - `verify` vine rendering consumes `core::spatial::SpatialResolver` directly and keeps shared drawing writes on checked signed-to-grid conversion.
 - `verify` resize, camera movement, anchor resolution, and rounding/jitter coverage stays tight before adding new world-attached renderables.
 - `verify` guides remain semantic world-space linework and are not reinterpreted from rendered pixels.
+- `next` `scene::entity::EntityPose`/`AttachedEntityPose` still duplicate the shape of `core::spatial::SpatialAnchor`/`SpatialAttachment` under domain-specific names; low-risk, not scheduled, but worth revisiting if a third attachment-shaped consumer appears.
 
 ## 2. Flora Runtime And Organism Model
 

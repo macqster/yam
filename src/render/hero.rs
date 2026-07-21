@@ -294,6 +294,44 @@ fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
     Line::from(spans)
 }
 
+#[allow(dead_code)]
+pub fn draw_hero_debug(
+    frame: &mut Frame,
+    hero: &Hero,
+    viewport: &Viewport,
+    _offset_x: i32,
+    _offset_y: i32,
+) {
+    let center_x = (hero.x - viewport.x).max(0) as u16;
+    let center_y = (hero.y - viewport.y).max(0) as u16;
+    if center_x < frame.area().width && center_y < frame.area().height {
+        if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
+            cell.set_symbol(glyphs::HERO_CENTER_MARKER)
+                .set_fg(crate::theme::palette::MARKER);
+        }
+    }
+
+    let overlay = Paragraph::new(format!(
+        "Frame: {} / {}\nPlaying: {}",
+        hero.current_frame,
+        hero.frames.len(),
+        hero.playing
+    ))
+    .style(theme_style::hero_overlay());
+    frame.render_widget(overlay, Rect::new(0, 0, 28, 2));
+}
+
+#[allow(dead_code)]
+pub fn draw_hero_debug_at(
+    _frame: &mut Frame,
+    _hero: &Hero,
+    _start_x: i32,
+    _start_y: i32,
+    _offset_x: i32,
+    _offset_y: i32,
+) {
+}
+
 #[cfg(test)]
 mod tests {
     use super::{draw_hero_at, Hero};
@@ -333,42 +371,4 @@ mod tests {
         hero.step_animation();
         assert!(hero.playing);
     }
-}
-
-#[allow(dead_code)]
-pub fn draw_hero_debug(
-    frame: &mut Frame,
-    hero: &Hero,
-    viewport: &Viewport,
-    _offset_x: i32,
-    _offset_y: i32,
-) {
-    let center_x = (hero.x - viewport.x).max(0) as u16;
-    let center_y = (hero.y - viewport.y).max(0) as u16;
-    if center_x < frame.area().width && center_y < frame.area().height {
-        if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
-            cell.set_symbol(glyphs::HERO_CENTER_MARKER)
-                .set_fg(crate::theme::palette::MARKER);
-        }
-    }
-
-    let overlay = Paragraph::new(format!(
-        "Frame: {} / {}\nPlaying: {}",
-        hero.current_frame,
-        hero.frames.len(),
-        hero.playing
-    ))
-    .style(theme_style::hero_overlay());
-    frame.render_widget(overlay, Rect::new(0, 0, 28, 2));
-}
-
-#[allow(dead_code)]
-pub fn draw_hero_debug_at(
-    _frame: &mut Frame,
-    _hero: &Hero,
-    _start_x: i32,
-    _start_y: i32,
-    _offset_x: i32,
-    _offset_y: i32,
-) {
 }

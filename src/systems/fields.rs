@@ -12,8 +12,10 @@ pub fn update_fields(world: &mut WorldState) {
     }
 
     for entity in &world.entities {
-        let idx = world.grid.index(entity.x, entity.y);
-        world.fields.density[idx] = 1.0;
+        if entity.x < width && entity.y < height {
+            let idx = world.grid.index(entity.x, entity.y);
+            world.fields.density[idx] = 1.0;
+        }
     }
 
     let center_x = width / 2;
@@ -35,5 +37,43 @@ pub fn update_fields(world: &mut WorldState) {
                 world.fields.avoidance[idx] = 1.0;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::update_fields;
+    use crate::core::entity::Entity;
+    use crate::core::world::WorldState;
+
+    #[test]
+    fn out_of_bounds_entity_position_does_not_panic() {
+        let mut world = WorldState::new();
+        world.entities.push(Entity {
+            id: 1,
+            x: u16::MAX,
+            y: u16::MAX,
+            age: 0,
+        });
+
+        update_fields(&mut world);
+
+        assert!(world.fields.density.iter().all(|&value| value == 0.0));
+    }
+
+    #[test]
+    fn in_bounds_entity_position_marks_density() {
+        let mut world = WorldState::new();
+        world.entities.push(Entity {
+            id: 1,
+            x: 0,
+            y: 0,
+            age: 0,
+        });
+
+        update_fields(&mut world);
+
+        let idx = world.grid.index(0, 0);
+        assert_eq!(world.fields.density[idx], 1.0);
     }
 }

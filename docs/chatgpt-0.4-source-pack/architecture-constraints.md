@@ -27,8 +27,8 @@ Render code must not become the hidden owner of:
 
 ## Spatial Rules
 
-- `core::spatial` is the canonical shared spatial layer
-- `scene::coords` is compatibility-only
+- `core::spatial` is the canonical shared spatial layer, and the sole one:
+  `scene::coords` (the former compatibility shim) has been retired entirely
 - world-space, screen-space, anchor-space, and guide-space should stay distinct
 - new proposals should not invent a second projection model
 - new renderables should reuse shared spatial/entity pose helpers
@@ -42,8 +42,8 @@ Important vocabulary:
 
 - world switching belongs to `WorldKind::SELECTABLE` and `WorldKind::profile()`
 - `Boot` remains non-selectable
-- `MainScene` and `Sandbox` are the current selectable worlds
-- future greenhouse or lab work should route through the same world/profile
+- `MainScene`, `Sandbox`, and `Greenhouse` are the current selectable worlds
+- any future lab world should route through the same world/profile
   contract instead of becoming a UI-local mode toggle
 
 Useful rule of thumb:
@@ -56,10 +56,10 @@ Useful rule of thumb:
 ## Flora Rules
 
 - `core::organism` is the first shared plant identity vocabulary
-- `FloraState` is still vine-shaped in storage today
-- the current first-pass bias for multi-family storage is an enum-backed family
-  store
-- do not propose another ad hoc top-level family vector beside vines
+- `FloraState` storage is locked as an enum-backed `FloraInstance` family store
+  (`organisms: Vec<FloraInstance>`, one `Vine` variant today); a second family
+  adds a variant there
+- do not propose another ad hoc top-level family vector beside it
 - species defaults belong in a registry; per-instance history belongs in
   journals
 
@@ -71,7 +71,11 @@ Useful rule of thumb:
 - first greenhouse work is functional-space-first:
   `room -> access paths -> zones -> fixtures -> planting sites -> environment profile -> inspection surface`
 - the first code-bearing slice should be pure data plus invariant tests
-- visible greenhouse rendering should come only after data ownership is proven
+- visible greenhouse rendering should come only after data ownership is
+  proven; this order was followed for the current minimal read-only room
+  render (pure `core::greenhouse` data and tests first, `WorldState`
+  attachment second, the selectable world and render layer last) and should
+  hold for any further greenhouse work too
 
 The first runtime greenhouse slice should therefore optimize for:
 

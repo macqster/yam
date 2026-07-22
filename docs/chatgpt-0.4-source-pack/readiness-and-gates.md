@@ -10,15 +10,19 @@ The current 0.4 gate spine is:
 - docs aligned
 - verification green
 - spatial ownership stable
-- flora storage direction selected, exact shape still pending
-- greenhouse/world contract decided
+- flora storage locked (enum-backed `FloraInstance` family store)
+- greenhouse/world contract decided, and now landed as a minimal selectable
+  `WorldKind::Greenhouse` world (room-bounds outline plus fixture markers, no
+  growth dispatch, mutation, or inspection UI yet)
 - hero/render failure modes hardened
 
 Current practical reading:
 
 - the baseline is healthy enough for deliberate prep work
 - greenhouse planning is coherent enough to continue
-- some implementation decisions are still intentionally deferred
+- most first-pass prep decisions listed below are now resolved rather than
+  deferred; remaining open questions are about the *next* phase (growth
+  dispatch, inspection UI, multi-room expansion), not the first one
 
 ## What Is Already Strong
 
@@ -31,31 +35,38 @@ Current practical reading:
 
 ## What Is Still Deliberately Open
 
-- the exact shape of the first generalized flora store
 - the exact timing of a dedicated greenhouse doc split from the roadmap
 - when inspection should become a broader journal or registry surface
 - when one nursery room should widen into a frame-plus-labs runtime structure
+- when growth dispatch and an actual organism-in-a-planting-site should land
+  (the flora-store shape question that used to be here is resolved: locked as
+  an enum-backed `FloraInstance` family store)
 
 ## Locked First-Pass Defaults
 
 These defaults should be treated as active unless the repo later changes them
 explicitly:
 
-- `core::spatial` stays canonical
-- `scene::coords` stays compatibility-only
-- first greenhouse implementation starts as pure `core::greenhouse` data
+- `core::spatial` stays canonical; `scene::coords` (the former compatibility
+  shim) has been retired entirely
+- first greenhouse implementation started as pure `core::greenhouse` data,
+  then attached to `WorldState`, then became a selectable world with a
+  minimal render layer, in that order
 - first room identity is `greenhouse_nursery`
 - first pass is symbolic room-level environment, not rich simulation
 - first inspection is read-only
 - first room capacity is tiny, roughly one to three planting sites
-- first species/profile work should prefer static Rust fixtures
-- first multi-family flora generalization is biased toward enum-backed storage
+- first species/profile work uses static Rust fixtures (locked)
+- first multi-family flora generalization is locked as an enum-backed
+  `FloraInstance` family store
 
 ## Important Non-Goals For The First Greenhouse Pass
 
-Do not treat these as expected first moves:
+Do not treat these as expected first moves (a selectable greenhouse world did
+land, but only after the data-ownership and `WorldState`-attachment gates
+above were satisfied, not as a first move on its own):
 
-- selectable visible greenhouse world immediately
+- selectable visible greenhouse world before data ownership is proven
 - multiple live labs with tabbed runtime switching
 - large species registries
 - persistence architecture

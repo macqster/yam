@@ -10,10 +10,10 @@ main YAM repository and its owning docs.
 
 ## Export Metadata
 
-- Export date: `2026-05-31`
+- Export date: `2026-07-22`
 - Source repo: `https://github.com/macqster/yam.git`
 - Source branch: `main`
-- Source commit: `019700b3a68802fa50ccdba59ce6b1841d102f9d`
+- Source commit: `c49d4f03847a0af4c3b1a8942c2de5824ea24037`
 - Pack scope: YAM `0.4` planning context only
 - Pack authority: derived context, not implementation authority
 

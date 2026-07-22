@@ -2,8 +2,10 @@
 
 ## Core Premise
 
-The greenhouse is a future YAM simulation space for observing, growing,
-testing, and curating terminal-native organisms.
+The greenhouse is now a real, minimal YAM simulation world (a selectable
+`WorldKind::Greenhouse` rendering one inert nursery room, no growth or
+inspection yet) on its way toward observing, growing, testing, and curating
+terminal-native organisms.
 
 It should feel like:
 

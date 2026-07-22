@@ -11,16 +11,18 @@ The current application already has:
 
 - a main scene world
 - a sparse sandbox world
+- a minimal read-only greenhouse world (room-bounds outline and fixture markers only; no growth dispatch, mutation, or inspection UI yet)
 - a Chafa-backed hero render path
 - scaffold and vine composition around the main scene
 - clock, date, and weather companions
 - modal and debug surfaces
-- a first shared organism vocabulary in progress
+- a first shared organism vocabulary, with flora storage now locked to an enum-backed `FloraInstance` family store
 
 Current selectable worlds:
 
 - `MainScene`
 - `Sandbox`
+- `Greenhouse`
 
 Important baseline note:
 
@@ -68,8 +70,10 @@ The repo is intentionally protecting these priorities:
 
 ## Current Greenhouse Direction
 
-The greenhouse is a future separate simulation world or world-internal room
-model.
+The greenhouse is now a real separate `WorldKind::Greenhouse` simulation world,
+selectable via the same world cycle as `Sandbox`, rendering one inert nursery
+room (bounds outline plus fixture markers) with no growth, mutation, or
+inspection surfaces yet.
 
 It should eventually support:
 

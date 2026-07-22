@@ -29,8 +29,17 @@ No release has been tagged yet; everything below is accumulating under
 - `cargo audit` wired into CI; `.github/dependabot.yml` for routine `cargo`
   and `github-actions` dependency freshness.
 - `.github/PULL_REQUEST_TEMPLATE.md`.
+- `scripts/tmux-smoke.sh`: wraps the repo's manual `tmux`-based interactive
+  verification recipe into a reusable script (boots the release binary,
+  waits out the boot animation, sends a key sequence, prints the final
+  rendered pane).
 
 ### Changed
+
+- `scripts/check.sh`'s clippy and cargo-check invocations broadened to
+  `--all-targets --all-features` / `--all-targets`, so lints and compile
+  errors inside `#[cfg(test)]` modules are actually enforced by CI instead of
+  only checking the default binary target.
 
 - Flora storage locked to an enum-backed `FloraInstance` family store
   (`FloraState::organisms`, one `Vine` variant today), replacing the old

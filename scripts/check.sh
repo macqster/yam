@@ -11,6 +11,6 @@ if rg -n 'crate::(scene|render|ui)::|ratatui|crossterm' src/systems -g "*.rs"; t
   exit 1
 fi
 cargo fmt --check
-cargo clippy -- -D warnings
-cargo check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo check --all-targets
 echo "All checks passed."

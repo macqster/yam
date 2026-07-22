@@ -24,7 +24,7 @@ description: Use when doing maintenance work in the YAM repository, including cl
 
 ## Guardrails
 
-- Do not introduce greenhouse worlds, new plant families, or main-scene enrichment during maintenance prep.
+- Do not introduce greenhouse worlds, new plant families, or main-scene enrichment during maintenance prep unless the request explicitly asks for that implementation (matching `AGENTS.md`'s Operating Rules) — maintenance framing should not be read as a blanket ban once the user has actually asked for the feature.
 - Do not duplicate architecture facts in `TODO.md`, this skill, or logs; point to the owning docs.
 - Do not revert unrelated dirty worktree changes.
 - Prefer existing scripts and local patterns over new tooling.

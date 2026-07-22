@@ -25,6 +25,7 @@ It describes how to work here, not the full YAM architecture.
 - Keep `known_issues.md` empty unless there is a concrete unresolved user-visible or developer-visible issue.
 - Prefer contract repairs, tests, docs alignment, and workflow cleanup over speculative abstractions.
 - Treat `README.md` as a mostly-settled creative front door: preserve the intro tone, GIF, and compact orientation-sheet structure, and only make factual, hygiene, or clearly justified front-door changes unless explicitly asked for a broader rewrite.
+- This maintainer's default working style for this repo is fast-paced and low-friction: once a review or eval has been reported and the maintainer says to act on it, work through the findings one by one without re-confirming each individually, favor direct fixes over asking which of several options to pick, and keep pace by not re-deriving already-established context. This is a pacing preference, not a standing waiver of judgment — it does not change what still needs explicit confirmation (anything publish-facing: merging PRs, commenting on issues, cutting tags/releases) or what stays off-limits (destructive git operations, secrets) regardless of how the request is phrased.
 
 ## Architecture Guardrails
 

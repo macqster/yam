@@ -12,6 +12,7 @@ The repo front door is [../README.md](../README.md).
 - [../TODO.md](../TODO.md) - active execution backlog
 - [../known_issues.md](../known_issues.md) - active unresolved issues only
 - [LOG.md](LOG.md) - append-only project history
+- [../CHANGELOG.md](../CHANGELOG.md) - curated user/developer-facing change summary
 - [audit.md](audit.md) - current risk and drift snapshot
 
 ## Core Contracts

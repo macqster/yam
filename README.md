@@ -161,6 +161,7 @@ read these first:
 - [known_issues.md](known_issues.md) - concrete unresolved issues only
 - [docs/audit.md](docs/audit.md) - current risk and drift snapshot
 - [docs/LOG.md](docs/LOG.md) - append-only project history
+- [CHANGELOG.md](CHANGELOG.md) - curated user/developer-facing change summary
 
 core contracts:
 

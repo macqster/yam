@@ -650,6 +650,25 @@ Status tags for future work:
 - `gate` - stop/check condition before moving to the next stage
 - `defer` - intentionally later work
 
+Phase status as of 2026-07-22 (the phase sections below stay as reusable
+goal/task/gate definitions rather than per-phase status trackers; this
+summary is the pointer, and the 0.4 Gate Checklist above carries the detail):
+
+- Phases 0-6 (intake, contract decision, room/zone/fixture vocabulary,
+  environment model, flora/species prep, static fixtures, inert state):
+  **done** — `core::greenhouse` data, `WorldState` attachment, locked flora
+  storage, and locked species-profile format all landed 2026-07-21
+- Phase 8 (first runtime room render): **done** — `WorldKind::Greenhouse` is
+  selectable and `GreenhouseLayer` renders the nursery room, landed
+  2026-07-21, ahead of Phase 7 in practice (the roadmap's own dependency
+  order lists render after growth dispatch, but the user-confirmed scope for
+  this slice was selectable-plus-render; no growth dispatch was implied or
+  built)
+- Phase 7 (growth dispatch probe): **not started** — no organism occupies a
+  planting site yet; this is the natural next slice
+- Phases 9-11 (inspection/dev surface, curation/transfer gates, creative
+  expansion loop): **not started**
+
 ### Phase 0: Intake And Framing
 
 Goal: keep the idea space documented and bounded.
@@ -894,18 +913,20 @@ Gate:
 - creative output becomes data, contract text, fixtures, or small tasks
 - the greenhouse remains a place with rules, not a pile of decorations
 
-Immediate next tasks:
+Immediate next tasks (revised 2026-07-22 — the list above was fully resolved:
+`docs/greenhouse.md` split stays deferred, the functional-space contract and
+flora-storage generalization are both locked and implemented, and pure data
+tests for room/zone/fixture/environment/planting-site/inspectable refs all
+exist in `core::greenhouse`'s own test module):
 
-- keep brainstorming ingests candidate-only
-- run the 0.4 pre-expansion verification baseline before implementation work
-- decide whether `docs/greenhouse.md` is needed before inert state work begins
-- decide and document the functional-space-first room/access/zone/fixture/site
-  contract
-- decide the first visual review artifact for `greenhouse_nursery_static_v0`
-- decide the first flora storage generalization direction, with enum-backed
-  family store as current bias
-- identify first pure data tests for room, access path, zone, fixture,
-  environment, planting site, and inspectable refs
+- Phase 7, growth dispatch probe: define lifecycle/stability/transfer status
+  vocabulary, then the smallest deterministic growth behavior for one
+  organism in one planting site; keep it fixture-based or static before any
+  tick-based mutation
+- Phase 9, inspection: once an organism exists to inspect, start with
+  read-only room/zone/fixture/planting-site popups before any per-organism
+  detail
+- keep future brainstorming ingests candidate-only
 
 Stop conditions:
 

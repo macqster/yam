@@ -11,6 +11,7 @@ shopt -s nullglob
 active_docs=(
   "AGENTS.md"
   "README.md"
+  "CHANGELOG.md"
   "TODO.md"
   "known_issues.md"
   docs/*.md

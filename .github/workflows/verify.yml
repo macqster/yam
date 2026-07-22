@@ -32,3 +32,11 @@ jobs:
 
       - name: Run full verification
         run: bash scripts/verify.sh
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      - name: Audit dependencies for known vulnerabilities
+        run: cargo audit

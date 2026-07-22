@@ -103,53 +103,25 @@ The current repo already has the first seams that greenhouse work should use:
 
 ## 0.4 Readiness Snapshot
 
-Last checked: 2026-07-21 (baseline verification, spatial ownership, and
-dependency inventory rows below re-verified directly with a working Rust
-toolchain; other rows carried forward from the 2026-05-31 pass).
-
-Current status:
+Last checked: 2026-07-22. This section intentionally stays a short pointer
+rather than a restated status list: the 0.4 Gate Checklist immediately below
+is the single source of truth for per-gate status, and `docs/LOG.md` carries
+the full narrative of how each gate got there. Keeping detail in one place
+avoids the two drifting out of sync with each other, which happened twice
+already (a stale test count, a stale "no growth dispatch yet" note) before
+this section was trimmed.
 
 - baseline verification is green: `bash scripts/verify.sh` passed with docs
-  checks, ownership checks, clippy, cargo check, and `267` tests
+  checks, ownership checks, clippy, cargo check, and `273` tests
 - `known_issues.md` has no active tracked issues
-- dependency inventory has one low-priority upstream duplicate: `cargo tree -d`
-  reports `hashbrown` `0.16.1` through `kasuari` and `0.17.1` through `lru`,
-  both below Ratatui and not directly controlled by this crate
-- world profile/selectability tests cover `Boot`, `MainScene`, and `Sandbox`,
-  including `Boot` staying non-selectable
-- `scripts/check.sh` guards `core`/`systems` module-boundary ownership; the
-  former `crate::scene::coords` isolation guard was removed 2026-07-21 when
-  the compatibility module it guarded was retired (zero remaining call sites
-  outside its own tests), so `core::spatial` is now the sole spatial resolver
-  with no compatibility layer left to isolate
-- `FloraState`'s storage decision is now locked and implemented: an
-  enum-backed `FloraInstance` family store (still one `Vine` variant, since no
-  second family exists yet) replaced the bespoke `vines: Vec<VineInstance>`
-  field, with the full call-site migration (`systems::growth`,
-  `systems::aging`, `scene::layers::vine_layer`, `scene::layers::debug_layer`)
-  and dedicated `FloraInstance` tests landing 2026-07-21
-- `core::greenhouse::GreenhouseState` is now attached to `WorldState` as an
-  inert `Option<GreenhouseState>` field (2026-07-21): every current
-  `WorldKind` (`Boot`/`MainScene`/`Sandbox`) constructs it as `None` via an
-  explicit `greenhouse_for_kind(...)` match, so the attachment point exists
-  and is tested without any world rendering, ticking, or selecting greenhouse
-  content yet
-- Chafa/cache fallback tests cover missing GIF decode, unavailable Chafa,
-  placeholder non-cacheability, and cache freshness
-
-No new guard or test was added during this readiness pass beyond the flora
-storage and greenhouse attachment work above, because the remaining inspected
-0.4 gates already have matching coverage or an explicit open decision
-recorded below. The next implementation-prep work should keep resolving
-contract shape (a dedicated greenhouse world/room model, growth dispatch),
-not start visible greenhouse behavior.
+- every row in the Gate Checklist below currently reads Ready or Locked
 
 ## 0.4 Gate Checklist
 
 | Gate | Status | Evidence | Remaining Work |
 | --- | --- | --- | --- |
 | Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
-| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `267` tests (re-verified 2026-07-21 with a working toolchain) | Re-run before each implementation batch |
+| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `273` tests (re-verified 2026-07-22 with a working toolchain) | Re-run before each implementation batch |
 | Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
 | Flora storage decision | Locked | `FloraState` stores an enum-backed `FloraInstance` family store (locked and implemented 2026-07-21); all call sites migrated off the old `vines: Vec<VineInstance>` field | Add a new variant when a second family actually lands; no further shape decision needed |
 | Species-profile data format | Locked | Static Rust fixtures, matching `core::flora::border_vine_species_profile()` (locked 2026-07-21), validated by a `core::organism` test proving `SpeciesRegistry` holds multiple distinct profiles independently | Structured files remain deferred until schema stabilizes and real authoring volume appears |
@@ -163,8 +135,9 @@ not start visible greenhouse behavior.
   crowded to remain readable.
 - The first code-bearing greenhouse slice landed as a pure `core::greenhouse`
   data module with construction and invariant tests, then attached to
-  `WorldState` as `Option<GreenhouseState>` (2026-07-21). It still does not
-  tick growth, mutate flora, or expose mutation/inspection surfaces.
+  `WorldState` as `Option<GreenhouseState>` (2026-07-21). Growth dispatch and
+  read-only inspection both landed 2026-07-22 (see the Gate Checklist above);
+  no mutation/curation surface exists yet.
 - The first visible greenhouse is now a named `WorldKind::Greenhouse`
   (2026-07-21), selectable via the same cycle as `Sandbox`; it did not become
   hidden state on the sandbox or main scene.

@@ -18,8 +18,9 @@ This repository currently uses one active Rust maintenance branch with lightweig
 
 1. Keep `main` green under `bash scripts/verify.sh`. CI (`.github/workflows/verify.yml`) runs the same gate on every push and pull request, and `main` is branch-protected to require it before merging.
 2. Land maintenance batches directly on `main`, or through a short-lived branch/PR for a larger consolidated pass, with docs/tests/log updates in the same change either way.
-3. Cut and tag releases from the clean pushed `main` state when the branch is ready.
-4. Document any future branch-model change here before treating it as active workflow.
+3. When a branch merges through a PR, use a real merge commit — the repo only allows that merge method (squash and rebase-merge are disabled) so a consolidated pass's individually-verified commits stay visible in `main`'s history rather than collapsing into one blob. Head branches delete automatically on merge.
+4. Cut and tag releases from the clean pushed `main` state when the branch is ready.
+5. Document any future branch-model change here before treating it as active workflow.
 
 ## Repo Shape Goal
 

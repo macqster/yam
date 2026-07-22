@@ -18,7 +18,7 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 ## Layer Order
 
 - L0 - world base/background
-- L10 - world props and world-attached composition pieces
+- L10 - world props and world-attached composition pieces, including the `WorldKind::Greenhouse`-only room-bounds/fixture-marker render
 - L100 - world-tied companions and anchored world widgets
 - L300 - world-tied debug/dev probes and diagnostic overlays
 - L390 - help popup
@@ -56,6 +56,7 @@ Rules:
 - the current scaffold visibility contract is scene-conscious: the main scene owns its own scaffold visibility policy, while sandbox prototype toggles may expose hero, companions, and scaffold there for comparison without creating a second scaffold owner or a render-owned truth
 - weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
 - sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
+- greenhouse: a minimal read-only room render (bounds outline plus fixture-anchor markers only, `scene/layers/greenhouse_layer.rs`), gated on `WorldKind::Greenhouse`; no hero, companions, scaffold, or flora runtime render in this world yet
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only
 - debug/inspect: coordinate readouts, camera/world position, probe state, entity detail, and other readable diagnostics; it may show numbers and labels, but not the main command vocabulary
 - modal overlay: help, move, settings, palette inspection, weather atlas inspection, quit-confirm, and other temporary control surfaces that are opened intentionally

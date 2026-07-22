@@ -8,7 +8,7 @@
 
   <p>
     <img src="https://img.shields.io/badge/release-0.3.9-6f89a2" alt="release 0.3.9" />
-    <img src="https://img.shields.io/badge/next-0.4%20greenhouse-7fa36b" alt="next 0.4 greenhouse" />
+    <img src="https://img.shields.io/badge/0.4-greenhouse%20world%20landed-7fa36b" alt="0.4 greenhouse world landed" />
     <img src="https://img.shields.io/badge/runtime-Rust%20%2B%20Ratatui-8fb8c8" alt="Rust and Ratatui runtime" />
     <img src="https://img.shields.io/badge/posture-personal%20sandbox-879078" alt="personal sandbox posture" />
   </p>
@@ -42,7 +42,7 @@ current release: `0.3.9`
 
 </div>
 
-- `next_track`: `0.4 greenhouse ecosystem expansion`
+- `next_track`: `0.4 greenhouse ecosystem expansion (a minimal selectable greenhouse world has landed; rooms/labs/multi-species growth remain ahead)`
 - `repo_mode`: `personal sandbox / controlled stabilization`
 - `canonical_runtime`: `cargo run --release`
 - `canonical_maintenance_gate`: `bash scripts/verify.sh`
@@ -55,7 +55,7 @@ current release: `0.3.9`
 
 </div>
 
-- `worlds`: `boot`, `main`, `sandbox`
+- `worlds`: `boot`, `main`, `sandbox`, `greenhouse` (greenhouse is a minimal read-only room render, not yet growth-dispatched)
 - `hero`: `Chafa-backed animated hero`
 - `scene`: `world-space projection with read-only render layers`
 - `companions`: `clock`, `weather`, `Polish date`
@@ -63,7 +63,7 @@ current release: `0.3.9`
 - `dev_surfaces`: `help`, `move`, `settings`, `palette`, `weather`, `quit confirm`
 - `future_surfaces`:
   - `calendar companion seam`
-  - `greenhouse/lab spaces`
+  - `greenhouse growth dispatch, inspection UI, and multi-room/lab expansion`
   - `broader flora beyond current vine/scaffold prototype`
   - `terminal-art asset compilation and inspection workflows`
 

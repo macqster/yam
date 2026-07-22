@@ -33,7 +33,7 @@ Issue link rule:
 - `inspect` use `cargo tree -d` after dependency changes and prefer version convergence when it reduces duplicated terminal/runtime infrastructure without forcing design churn.
 - `verify` treat the current live vine runtime honestly: storage, deterministic seed, guide lookup, static axis derivation, read-only render layer, debug facts, deterministic growth, local tip lifespan, segment aging, and leaf-organ hosting are already implemented; branching, richer organs, and border behavior remain future work.
 - `verify` treat `core::organism` as the first shared flora identity vocabulary plus the first in-memory `SpeciesRegistry` / `OrganismJournal` skeleton; keep it small until another plant family or greenhouse population proves the next field is needed.
-- `verify` treat `WorldKind::profile()`, `WorldKind::SELECTABLE`, and `WorldKind::loading_label()` as the current world-selection/profile contract; profile-owned grid, camera, guide plan, population plan, and capabilities now route future greenhouse/lab worlds through this seam while `Boot` stays non-selectable.
+- `verify` treat `WorldKind::profile()`, `WorldKind::SELECTABLE`, and `WorldKind::loading_label()` as the current world-selection/profile contract; profile-owned grid, camera, guide plan, population plan, and capabilities already route `Greenhouse` (landed 2026-07-21) and would route any future lab world through this same seam, while `Boot` stays non-selectable.
 
 ## 1. Spatial Relation Layer
 

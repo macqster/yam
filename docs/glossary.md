@@ -28,7 +28,7 @@ This glossary is the shared vocabulary for YAM-specific nomenclature, recurring 
 | `anchor space` | inferred | offsets resolved relative to another object or entity | attachment and companion placement |
 | `main scene` | inferred | the primary visualiser world | hero, scaffold, companions, vines |
 | `sandbox` | inferred | the sparse alternate world for experiments | stripped test scene surface |
-| `greenhouse` | inferred | the future multi-species simulation space | rooms, labs, growth procedures |
+| `greenhouse` | inferred | the separate `WorldKind::Greenhouse` simulation world (a minimal read-only room render exists; multi-species growth, rooms, and labs remain future) | rooms, labs, growth procedures |
 | `world-attached` | repo | content that is positioned in world space and then projected | hero, companions, vines, guides |
 | `screen-attached` | repo | content that stays fixed to the terminal frame | footer, HUD indicators, modal placement |
 | `companion` | inferred | a world-attached UI-like scene element attached to the hero composition | clock, weather, date, reserved calendar seam |

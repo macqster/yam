@@ -84,10 +84,12 @@ The handwritten study files suggest the visible line grammar is more structured 
 
 The key implication is that the renderer should treat glyph choice as a small typed grammar, not as a single global ramp.
 
-Cross-reference:
+Cross-reference (personal, non-repo source material used to derive the
+grammar below; not committed here and not required to use this atlas):
 
 - `lines_straight_soft_primitives.txt`
 - `filled_soft_line_slope_form_v0_1.md`
+- `test_line_64x10.txt`
 
 ## Grammar Key V1
 

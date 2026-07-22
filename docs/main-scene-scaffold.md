@@ -21,12 +21,12 @@ Related contracts:
 
 Coordinate source note:
 
-- the local brainstorming note at
-  `/Users/mcq/Downloads/yam_tree_scaffold_brainstroming.md` now counts as an
-  active reference for scaffold coordinate anatomy during this thread; its
-  concrete origin/fork/target graph should be distilled here whenever runtime
-  geometry is updated so implementation does not depend on unstated local
-  memory
+- the origin/fork/target coordinate graph below was originally distilled from
+  a personal, non-repo brainstorming note (`yam_tree_scaffold_brainstroming.md`);
+  that source was never committed and should not be treated as available or
+  authoritative going forward. This doc's own Coordinate Reference table is
+  now the complete, self-contained record — re-distill here directly from
+  runtime geometry if it ever needs to change, not from the original note
 
 ## Current Runtime State
 
@@ -123,9 +123,8 @@ of unrelated limbs.
 
 ## Coordinate Reference
 
-The current coordinate reference is distilled directly from the local
-brainstorming note at
-`/Users/mcq/Downloads/yam_tree_scaffold_brainstroming.md`.
+The current coordinate reference below is the complete, self-contained record
+(see the provenance note above for where it originally came from).
 
 These coordinates are still authored composition targets, not final procedural
 plant anatomy:

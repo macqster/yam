@@ -66,14 +66,14 @@ This richer sequence is for startup boot only. World switching keeps a shorter t
 
 Relevant code paths:
 
-- [src/core/world.rs](/Users/mcq/_git/yam/src/core/world.rs): `WorldKind::Boot` and empty boot-world construction
-- [src/ui/state.rs](/Users/mcq/_git/yam/src/ui/state.rs): staged loading state machine and boot phases
-- [src/runtime.rs](/Users/mcq/_git/yam/src/runtime.rs): boot sequencing, input gating, and `tachyonfx` effect application
-- [src/scene/mod.rs](/Users/mcq/_git/yam/src/scene/mod.rs): scene-level suppression of non-loading layers while loading is active
-- [src/scene/layers/loading_layer.rs](/Users/mcq/_git/yam/src/scene/layers/loading_layer.rs): transparent loading-art rendering
-- [src/scene/layers/status_layer.rs](/Users/mcq/_git/yam/src/scene/layers/status_layer.rs): minimal footer during loading
-- [src/render/fonts.rs](/Users/mcq/_git/yam/src/render/fonts.rs): bundled FIGlet registry and font selection
-- [src/render/figlet.rs](/Users/mcq/_git/yam/src/render/figlet.rs): shared FIGlet-to-lines rendering helper
+- [src/core/world.rs](../src/core/world.rs): `WorldKind::Boot` and empty boot-world construction
+- [src/ui/state.rs](../src/ui/state.rs): staged loading state machine and boot phases
+- [src/runtime.rs](../src/runtime.rs): boot sequencing, input gating, and `tachyonfx` effect application
+- [src/scene/mod.rs](../src/scene/mod.rs): scene-level suppression of non-loading layers while loading is active
+- [src/scene/layers/loading_layer.rs](../src/scene/layers/loading_layer.rs): transparent loading-art rendering
+- [src/scene/layers/status_layer.rs](../src/scene/layers/status_layer.rs): minimal footer during loading
+- [src/render/fonts.rs](../src/render/fonts.rs): bundled FIGlet registry and font selection
+- [src/render/figlet.rs](../src/render/figlet.rs): shared FIGlet-to-lines rendering helper
 
 Important structural decisions that are now settled:
 

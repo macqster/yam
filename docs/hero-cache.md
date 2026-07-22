@@ -42,7 +42,7 @@ The initial runtime cache contract is:
   - `add_modifier`
   - `sub_modifier`
 
-The current code seam for this shape lives in [hero_cache.rs](/Users/mcq/_git/yam/src/render/hero_cache.rs:1).
+The current code seam for this shape lives in [hero_cache.rs](../src/render/hero_cache.rs).
 
 ## Migration Order
 

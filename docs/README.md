@@ -33,6 +33,7 @@ The repo front door is [../README.md](../README.md).
 - [vines.md](vines.md) - vine ownership/readiness contract
 - [config.md](config.md) - config ownership and boot-frame note
 - [hero-cache.md](hero-cache.md) - hero-frame cache design/runtime path
+- [soft-line-atlas.md](soft-line-atlas.md) - linework glyph grammar for guides and future mask edges
 
 ## Research And Policy
 
@@ -40,11 +41,12 @@ The repo front door is [../README.md](../README.md).
 - [reference-sigye.md](reference-sigye.md) - reference study of `sigye`
 - [release-model.md](release-model.md) - branch and release policy
 - [resource-map.md](resource-map.md) - research/reference map
+- [palette-reference.md](palette-reference.md) - human-friendly BTAS/TNBA palette chain summary
+- [palette-sheet-reference.md](palette-sheet-reference.md) - palette-sheet source/export handoff note
 
 ## Archive Entry Points
 
 - [archive/README.md](archive/README.md) - archive index
-- [REFERENCE_ARCHIVE.md](REFERENCE_ARCHIVE.md) - imported historical reference dump
 
 ## Doc Role Table
 

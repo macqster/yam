@@ -50,7 +50,7 @@ def main() -> int:
     model = build_demo_model(args.width, args.height)
     ecosystem = build_demo_ecosystem()
     ui = UIModel()
-    repo_root = Path(__file__).resolve().parent
+    repo_root = Path(__file__).resolve().parent.parent.parent
     scene_path = Path(args.config) if args.config else default_scene_config_path(repo_root)
     scene = load_scene_config(scene_path)
     if args.gif != "hero/assets/hero_go.gif" or args.clock_format != "%H:%M" or args.day_format != "%A, %d %B" or args.theme != "btas_dark_deco":

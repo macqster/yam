@@ -16,8 +16,8 @@ This repository currently uses one active Rust maintenance branch with lightweig
 
 ## Workflow
 
-1. Keep `main` green under `bash scripts/verify.sh`.
-2. Land maintenance batches directly on `main` with docs/tests/log updates in the same change.
+1. Keep `main` green under `bash scripts/verify.sh`. CI (`.github/workflows/verify.yml`) runs the same gate on every push and pull request, and `main` is branch-protected to require it before merging.
+2. Land maintenance batches directly on `main`, or through a short-lived branch/PR for a larger consolidated pass, with docs/tests/log updates in the same change either way.
 3. Cut and tag releases from the clean pushed `main` state when the branch is ready.
 4. Document any future branch-model change here before treating it as active workflow.
 

@@ -456,7 +456,7 @@ mod tests {
     fn quit_dissolve_uses_linear_progress() {
         let mut effect = build_quit_effect();
         let timer = effect.timer_mut().expect("quit dissolve should be timed");
-        let overflow = timer.process(std::time::Duration::from_millis(500).into());
+        let overflow = timer.process(std::time::Duration::from_millis(500));
         assert!(overflow.is_none());
         assert!((timer.alpha() - 0.5).abs() < 0.001);
     }

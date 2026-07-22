@@ -1,6 +1,7 @@
 use crate::core::{
     entity::Entity,
     flora::{main_scene_vine_guides, realize_border_vine_axis, FloraState},
+    greenhouse::GreenhouseState,
     grid::Grid,
     guide::GuideState,
     scaffold::ScaffoldState,
@@ -36,6 +37,12 @@ pub struct WorldState {
     pub flora: FloraState,
     pub scaffold: ScaffoldState,
     pub guides: GuideState,
+    /// Greenhouse room/state data. `Some(GreenhouseState::nursery())` only
+    /// for `WorldKind::Greenhouse`; `None` for `Boot`/`MainScene`/`Sandbox`,
+    /// since none of them are the greenhouse. Still inert beyond a minimal
+    /// bounds/fixture render layer: no growth dispatch, no mutation, no
+    /// flora attachment yet, per `docs/greenhouse-roadmap.md`.
+    pub greenhouse: Option<GreenhouseState>,
     pub tick: u64,
 }
 
@@ -44,6 +51,7 @@ pub enum WorldKind {
     Boot,
     MainScene,
     Sandbox,
+    Greenhouse,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -51,6 +59,7 @@ pub enum WorldComposition {
     EmptyBoot,
     MainScene,
     SparseSandbox,
+    Greenhouse,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -108,7 +117,7 @@ pub struct WorldProfile {
 }
 
 impl WorldKind {
-    pub const SELECTABLE: [Self; 2] = [Self::MainScene, Self::Sandbox];
+    pub const SELECTABLE: [Self; 3] = [Self::MainScene, Self::Sandbox, Self::Greenhouse];
 
     pub fn profile(self) -> WorldProfile {
         match self {
@@ -160,6 +169,27 @@ impl WorldKind {
                     pointer_probe: true,
                     debug_surfaces: WorldDebugSurfaces {
                         guides: true,
+                        flora: false,
+                        companions: false,
+                    },
+                },
+            },
+            WorldKind::Greenhouse => WorldProfile {
+                title: "greenhouse",
+                loading_label: "loading greenhouse...",
+                selectable: true,
+                composition: WorldComposition::Greenhouse,
+                grid: DEFAULT_WORLD_GRID,
+                camera: DEFAULT_WORLD_CAMERA,
+                guide_plan: WorldGuidePlan::Empty,
+                population_plan: WorldPopulationPlan::Empty,
+                capabilities: WorldCapabilities {
+                    scene_companions: false,
+                    flora_runtime: false,
+                    guide_authoring: false,
+                    pointer_probe: true,
+                    debug_surfaces: WorldDebugSurfaces {
+                        guides: false,
                         flora: false,
                         companions: false,
                     },
@@ -255,6 +285,7 @@ impl WorldState {
             flora,
             scaffold: scaffold_for_kind(kind),
             guides,
+            greenhouse: greenhouse_for_kind(kind),
             tick: 0,
         }
     }
@@ -269,6 +300,10 @@ impl WorldState {
 
     pub fn for_sandbox() -> Self {
         Self::for_kind(WorldKind::Sandbox)
+    }
+
+    pub fn for_greenhouse() -> Self {
+        Self::for_kind(WorldKind::Greenhouse)
     }
 
     pub fn entity_world(&self, id: u32) -> Option<WorldPos> {
@@ -305,7 +340,18 @@ fn flora_for_plan(plan: WorldPopulationPlan) -> FloraState {
 fn scaffold_for_kind(kind: WorldKind) -> ScaffoldState {
     match kind {
         WorldKind::MainScene | WorldKind::Sandbox => ScaffoldState::main_scene_hero_support(),
-        WorldKind::Boot => ScaffoldState::default(),
+        WorldKind::Boot | WorldKind::Greenhouse => ScaffoldState::default(),
+    }
+}
+
+/// `None` for `Boot`/`MainScene`/`Sandbox`: greenhouse content belongs only
+/// to the dedicated `Greenhouse` world, not to any of the others. Matched
+/// explicitly (not a wildcard default to `None`) so the compiler forces a
+/// decision here if another world kind is ever added.
+fn greenhouse_for_kind(kind: WorldKind) -> Option<GreenhouseState> {
+    match kind {
+        WorldKind::Boot | WorldKind::MainScene | WorldKind::Sandbox => None,
+        WorldKind::Greenhouse => Some(GreenhouseState::nursery()),
     }
 }
 
@@ -326,20 +372,20 @@ mod tests {
         let world = WorldState::new();
 
         assert_eq!(world.kind, WorldKind::MainScene);
-        assert_eq!(world.flora.vines.len(), 1);
-        assert_eq!(world.flora.vines[0].id, BORDER_VINE_SEED_ID);
-        assert_eq!(world.flora.vines[0].growth_tips.len(), 1);
+        assert_eq!(world.flora.vines().len(), 1);
+        assert_eq!(world.flora.vines()[0].id, BORDER_VINE_SEED_ID);
+        assert_eq!(world.flora.vines()[0].growth_tips.len(), 1);
         assert_eq!(
-            world.flora.vines[0].growth_tips[0].axis_id,
+            world.flora.vines()[0].growth_tips[0].axis_id,
             BORDER_VINE_SEED_AXIS_ID
         );
-        assert_eq!(world.flora.vines[0].root.world, BORDER_VINE_ROOT);
-        assert_eq!(world.flora.vines[0].axes.len(), 1);
+        assert_eq!(world.flora.vines()[0].root.world, BORDER_VINE_ROOT);
+        assert_eq!(world.flora.vines()[0].axes.len(), 1);
         assert_eq!(
-            world.flora.vines[0].axes[0].guide_set_label.as_deref(),
+            world.flora.vines()[0].axes[0].guide_set_label.as_deref(),
             Some(BORDER_VINE_GUIDE_SET_LABEL)
         );
-        assert!(!world.flora.vines[0].axes[0].segments.is_empty());
+        assert!(!world.flora.vines()[0].axes[0].segments.is_empty());
         assert_eq!(world.scaffold.segments.len(), 8);
         assert!(world.scaffold.segments.iter().any(|segment| {
             segment.start == crate::core::spatial::SpatialPoint { x: -20, y: -30 }
@@ -370,7 +416,7 @@ mod tests {
         let world = WorldState::for_sandbox();
 
         assert_eq!(world.kind, WorldKind::Sandbox);
-        assert!(world.flora.vines.is_empty());
+        assert!(world.flora.vines().is_empty());
         assert_eq!(world.scaffold.segments.len(), 8);
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
@@ -384,7 +430,7 @@ mod tests {
         let world = WorldState::for_boot();
 
         assert_eq!(world.kind, WorldKind::Boot);
-        assert!(world.flora.vines.is_empty());
+        assert!(world.flora.vines().is_empty());
         assert!(world.scaffold.segments.is_empty());
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
@@ -397,9 +443,18 @@ mod tests {
     fn selectable_worlds_exclude_boot_and_cycle_explicitly() {
         assert_eq!(
             WorldKind::SELECTABLE,
-            [WorldKind::MainScene, WorldKind::Sandbox]
+            [
+                WorldKind::MainScene,
+                WorldKind::Sandbox,
+                WorldKind::Greenhouse
+            ]
         );
-        for kind in [WorldKind::Boot, WorldKind::MainScene, WorldKind::Sandbox] {
+        for kind in [
+            WorldKind::Boot,
+            WorldKind::MainScene,
+            WorldKind::Sandbox,
+            WorldKind::Greenhouse,
+        ] {
             assert_eq!(kind.is_selectable(), WorldKind::SELECTABLE.contains(&kind));
         }
         assert_eq!(
@@ -407,7 +462,11 @@ mod tests {
             WorldKind::MainScene
         );
         assert_eq!(WorldKind::MainScene.next_selectable(), WorldKind::Sandbox);
-        assert_eq!(WorldKind::Sandbox.next_selectable(), WorldKind::MainScene);
+        assert_eq!(WorldKind::Sandbox.next_selectable(), WorldKind::Greenhouse);
+        assert_eq!(
+            WorldKind::Greenhouse.next_selectable(),
+            WorldKind::MainScene
+        );
     }
 
     #[test]
@@ -418,6 +477,10 @@ mod tests {
             "loading main scene..."
         );
         assert_eq!(WorldKind::Sandbox.loading_label(), "loading sandbox...");
+        assert_eq!(
+            WorldKind::Greenhouse.loading_label(),
+            "loading greenhouse..."
+        );
     }
 
     #[test]
@@ -471,5 +534,52 @@ mod tests {
         assert!(sandbox.capabilities.guide_authoring);
         assert!(sandbox.capabilities.pointer_probe);
         assert!(!WorldKind::Sandbox.has_flora_runtime());
+    }
+
+    #[test]
+    fn only_the_greenhouse_world_carries_greenhouse_state() {
+        assert!(WorldState::for_boot().greenhouse.is_none());
+        assert!(WorldState::for_main_scene().greenhouse.is_none());
+        assert!(WorldState::for_sandbox().greenhouse.is_none());
+
+        let greenhouse_world = WorldState::for_greenhouse();
+        let greenhouse = greenhouse_world
+            .greenhouse
+            .as_ref()
+            .expect("Greenhouse world must carry greenhouse state");
+        assert_eq!(
+            greenhouse.active_room().expect("active room").id.as_str(),
+            crate::core::greenhouse::FIRST_GREENHOUSE_ROOM_ID
+        );
+    }
+
+    #[test]
+    fn greenhouse_world_has_no_hero_companions_or_flora() {
+        let world = WorldState::for_greenhouse();
+
+        assert!(world.flora.vines().is_empty());
+        assert!(!world.kind.has_flora_runtime());
+        assert!(!world.kind.has_main_scene_composition());
+        assert_eq!(world.scaffold.segments.len(), 0);
+    }
+
+    #[test]
+    fn greenhouse_slot_accepts_real_state_without_disturbing_other_world_data() {
+        // Proves the attachment point on other worlds is a genuinely live
+        // slot (construction, invariants, and independence from
+        // flora/scaffold/guides), not a field that only ever happens to be
+        // populated by WorldState::for_kind itself.
+        let mut world = WorldState::for_main_scene();
+        let flora_before = world.flora.vines().len();
+
+        world.greenhouse = Some(crate::core::greenhouse::GreenhouseState::nursery());
+
+        let greenhouse = world.greenhouse.as_ref().expect("greenhouse must be set");
+        assert_eq!(
+            greenhouse.active_room().expect("active room").id.as_str(),
+            crate::core::greenhouse::FIRST_GREENHOUSE_ROOM_ID
+        );
+        assert_eq!(world.flora.vines().len(), flora_before);
+        assert_eq!(world.kind, WorldKind::MainScene);
     }
 }

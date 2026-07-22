@@ -95,6 +95,7 @@ Rules:
 
 - The weather widget should never block frame rendering.
 - Provider refresh should happen behind a cached runtime seam, such as a background worker or other non-render refresh path.
+- Tests may inject deterministic provider results, but they must exercise the same background worker and channel path used by production refreshes.
 - Cached stale data is better than a stalled frame.
 - Provider fetch failures should degrade gracefully into stale or missing weather state.
 - Normalized visual/weather facts should be the source of truth; any human-facing weather wording should be derived at the presentation layer rather than treated as provider-owned final UI text.

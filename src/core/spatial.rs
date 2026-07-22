@@ -279,4 +279,18 @@ mod tests {
         assert_eq!(resolved, SpatialPoint::new(154, 58));
         assert_eq!(fallback, SpatialPoint::new(-10, 5));
     }
+
+    #[test]
+    fn world_origin_and_quadrants_are_signed_from_zero() {
+        let datum = SpatialPoint::new(0, 0);
+        let top_left = SpatialPoint::new(-1, -1);
+        let top_right = SpatialPoint::new(1, -1);
+        let bottom_left = SpatialPoint::new(-1, 1);
+        let bottom_right = SpatialPoint::new(1, 1);
+
+        assert!(top_left.x < datum.x && top_left.y < datum.y);
+        assert!(top_right.x > datum.x && top_right.y < datum.y);
+        assert!(bottom_left.x < datum.x && bottom_left.y > datum.y);
+        assert!(bottom_right.x > datum.x && bottom_right.y > datum.y);
+    }
 }

@@ -76,7 +76,7 @@ post_exit_refresh() {
     printf '\n'
   elif command -v fastfetch >/dev/null 2>&1; then
     printf '\n\n'
-    fastfetch --config "$HOME/_git/dotfiles/fastfetch/config.jsonc"
+    fastfetch --config "$HOME/.config/fastfetch/config.jsonc"
     printf '\n'
   fi
 }

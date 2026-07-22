@@ -53,7 +53,7 @@ impl Layer for VineLayer {
         }
         let projection =
             VineProjection::new(ctx.hud.camera.x, ctx.hud.camera.y, ctx.hud.camera.height);
-        for vine in &world.flora.vines {
+        for vine in world.flora.vines() {
             for axis in &vine.axes {
                 for segment in &axis.segments {
                     draw_segment(

@@ -295,11 +295,16 @@ impl GreenhouseState {
         )
     }
 
-    pub fn active_room(&self) -> &GreenhouseRoom {
+    /// Returns the currently active room, or `None` if `active_room_id` does
+    /// not resolve against `rooms`. `GreenhouseState::new` enforces this
+    /// invariant at construction time, but both fields are public and can be
+    /// mutated independently afterward, so this stays fallible rather than
+    /// panicking (matching the no-panic-in-production pattern used elsewhere,
+    /// e.g. `render/chafa.rs`'s placeholder-frame fallback).
+    pub fn active_room(&self) -> Option<&GreenhouseRoom> {
         self.rooms
             .iter()
             .find(|room| room.id == self.active_room_id)
-            .expect("active greenhouse room must resolve")
     }
 }
 
@@ -606,7 +611,11 @@ mod tests {
         assert_eq!(greenhouse.rooms.len(), 1);
         assert_eq!(greenhouse.active_room_id.as_str(), FIRST_GREENHOUSE_ROOM_ID);
         assert_eq!(
-            greenhouse.active_room().id.as_str(),
+            greenhouse
+                .active_room()
+                .expect("active room must resolve")
+                .id
+                .as_str(),
             FIRST_GREENHOUSE_ROOM_ID
         );
         assert!(greenhouse.capabilities.inspection_read_only);
@@ -627,7 +636,10 @@ mod tests {
 
     #[test]
     fn active_room_contains_resolvable_zones_fixtures_sites_and_inspection_refs() {
-        let room = GreenhouseState::nursery().active_room().clone();
+        let room = GreenhouseState::nursery()
+            .active_room()
+            .expect("active room must resolve")
+            .clone();
 
         assert_eq!(room.zones.len(), 3);
         assert_eq!(room.fixtures.len(), 9);
@@ -654,7 +666,10 @@ mod tests {
 
     #[test]
     fn nursery_environment_is_symbolic_and_weather_independent() {
-        let room = GreenhouseState::nursery().active_room().clone();
+        let room = GreenhouseState::nursery()
+            .active_room()
+            .expect("active room must resolve")
+            .clone();
 
         assert_eq!(room.environment.id.as_str(), "nursery_symbolic_profile");
         assert_eq!(room.environment.light, SymbolicLight::BrightIndirect);
@@ -671,7 +686,10 @@ mod tests {
 
     #[test]
     fn inspection_refs_are_read_only_and_do_not_own_targets() {
-        let room = GreenhouseState::nursery().active_room().clone();
+        let room = GreenhouseState::nursery()
+            .active_room()
+            .expect("active room must resolve")
+            .clone();
 
         assert!(room
             .inspection_refs

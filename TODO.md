@@ -37,25 +37,21 @@ Issue link rule:
 
 ## 1. Spatial Relation Layer
 
-- `refactor` make `core::spatial` the canonical resolver for projection, attachments, guide lookup, and future organism guidance.
-- `refactor` reduce `scene::coords` toward a compatibility facade rather than a second conceptual owner of projection semantics.
-- `verify` entity-backed anchor resolution routes through `core::spatial::SpatialAnchorLookup` before the scene compatibility layer projects it.
+`core::spatial` is now the canonical resolver everywhere with no remaining compatibility facade: `scene::coords` was retired 2026-07-21 after confirming zero call sites outside its own tests (see `docs/LOG.md`, `docs/architecture.md`). Standing invariants to keep verifying as the layer grows:
+
 - `verify` world-space, screen-space, and anchor-space remain distinct in type names, helper names, tests, and docs.
 - `verify` projection remains singular and uses the same signed world-to-screen transform for hero, companions, guides, vines, and future plant geometry.
-- `verify` keep projected screen positions typed as signed screen-space values: `RenderState` companion helpers, hero rendering, debug rendering, guide rendering, and vine rendering now consume `core::spatial` directly, while compatibility element projection still returns `scene::coords::ScreenPos` through compatibility helpers.
-- `verify` keep `scene::coords` compatibility imports isolated inside `scene/coords.rs`; `scripts/check.sh` guards against new `crate::scene::coords` call sites outside the compatibility module.
-- `verify` guide rendering consumes `core::spatial::SpatialGuideIndex` and `SpatialResolver` directly instead of projecting through the scene compatibility facade.
 - `verify` vine rendering consumes `core::spatial::SpatialResolver` directly and keeps shared drawing writes on checked signed-to-grid conversion.
 - `verify` resize, camera movement, anchor resolution, and rounding/jitter coverage stays tight before adding new world-attached renderables.
 - `verify` guides remain semantic world-space linework and are not reinterpreted from rendered pixels.
+- `next` `scene::entity::EntityPose`/`AttachedEntityPose` still duplicate the shape of `core::spatial::SpatialAnchor`/`SpatialAttachment` under domain-specific names; low-risk, not scheduled, but worth revisiting if a third attachment-shaped consumer appears.
 
 ## 2. Flora Runtime And Organism Model
 
 - `refactor` split vine-specific types and helpers out of the broad `core::flora` surface once a second organism family is close enough to need shared vocabulary.
 - `verify` preserve the shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, and the first species-profile shape.
-- `inspect` decide where species profiles should be loaded from once there is more than the in-memory border-vine `SpeciesRegistry` profile: static Rust fixtures, structured data files, or a small registry loader.
-- `verify` preserve `FloraState` family-count and organism-identity adapters; do not add another top-level ad hoc vector beside `FloraState::vines` without first deciding whether `FloraState` needs an organism registry or a small enum-backed family store, with enum-backed family store as the current first-pass bias.
-- `refactor` move the current border-vine growth rule away from one hard-coded seed branch before adding another plant growth rule.
+- `verify` preserve `FloraState` family-count and organism-identity adapters and the locked enum-backed `FloraInstance` family store (`FloraState::organisms: Vec<FloraInstance>`, `vines()`/`vines_mut()`/`push_vine()` accessors); a second family gets a new `FloraInstance` variant, not another top-level ad hoc vector.
+- `verify` `systems::growth::run_growth` iterates every vine in `world.flora` (2026-07-21) rather than finding one hard-coded seed id, matching `systems::aging::run_aging`'s existing all-vines shape; keep this true as families beyond `Vine` are added.
 - `verify` render layers stay read-only and visualize geometry derived from world/flora/spatial state.
 - `verify` `OrganismJournal` remains a per-instance event log; `SpeciesRegistry` must not store runtime life history.
 - `inspect` keep botanical terminology grounded through `docs/glossary.md`; reserve `node` for plant morphology/anatomy unless the spatial terminology contract changes.
@@ -63,15 +59,15 @@ Issue link rule:
 ## 3. World Modes And Greenhouse Prep
 
 - `docs` treat `docs/greenhouse-roadmap.md` as the single owning greenhouse roadmap and operation plan; keep greenhouse strategy, phase tasks, candidate organisms, stop conditions, and creative-input briefs there instead of in this backlog.
-- `verify` preserve the explicit world-selection/profile contract before adding `Greenhouse` or lab worlds: selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots convert through that core contract.
-- `verify` `WorldKind::{Boot, MainScene, Sandbox}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
-- `verify` preserve the roadmap's 0.4 gate checklist and locked first-pass greenhouse decisions before implementation: docs aligned, verification green, spatial ownership stable, enum-backed flora store bias, functional-space contract first, and hero/render fallback hardened.
+- `verify` preserve the explicit world-selection/profile contract now that `Greenhouse` is a real selectable world (2026-07-21): selectable worlds live in `WorldKind::SELECTABLE`, titles, transition labels, coarse composition, grid, camera defaults, guide plan, population plan, and capabilities live in `WorldKind::profile()`, and UI persistence snapshots (`WorldKindSnapshot`) convert through that core contract.
+- `verify` `WorldKind::{Boot, MainScene, Sandbox, Greenhouse}` interaction with camera, loading, input, settings, persistence, and composition-gated render surfaces stays defined while the world-switching contract remains generalized.
+- `verify` preserve the roadmap's 0.4 gate checklist and locked first-pass greenhouse decisions: docs aligned, verification green, spatial ownership stable, enum-backed flora store (locked), species-profile format (locked), `WorldState.greenhouse` attachment (`Some(GreenhouseState::nursery())` for `Greenhouse` only, `None` elsewhere), functional-space contract, and hero/render fallback hardened.
 - `inspect` keep the first greenhouse pass functional-space-first: room,
   access paths, zones, fixtures, planting sites, symbolic environment, and
   read-only inspection before new plant families, lifecycle systems, or
   persistence.
-- `verify` keep the landed pure `core::greenhouse` slice inert: `GreenhouseState`, room, access path, zone, fixture, planting site, symbolic environment, and read-only inspection records stay data-only until a later batch deliberately attaches them to `WorldState`.
-- `verify` greenhouse remains a separate simulation world or world-internal room model, not panel chrome layered on top of the main scene; room selection stays internal to world state.
+- `verify` keep `core::greenhouse` state itself inert even though it's now attached and minimally rendered (2026-07-21, `GreenhouseLayer`: bounds outline + fixture markers only): no growth dispatch, no mutation, no inspect popups, no organism occupying a planting site yet.
+- `verify` greenhouse remains a separate simulation world (`WorldKind::Greenhouse`), not panel chrome layered on top of the main scene; room selection stays internal to world state.
 - `inspect` preserve the newly ingested greenhouse identity hierarchy before UI work: greenhouse/lab, planting site or bay, support, organism, warning, and journal-link identities must stay distinct.
 - `inspect` if greenhouse grows into a frame-plus-labs structure later, promote it in order: single inert nursery room first, then room-to-lab naming, then greenhouse frame/navigation chrome only after room ownership is proven.
 - `inspect` decide whether greenhouse inspection starts as lightweight per-organism popups or a dedicated registry/journal mode before building either surface.

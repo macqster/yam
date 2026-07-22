@@ -11,7 +11,6 @@ use ratatui::widgets::{Clear, Paragraph};
 use std::cell::RefCell;
 
 pub mod camera;
-pub mod coords;
 pub mod entity;
 pub mod layers;
 pub mod viewport;
@@ -443,7 +442,8 @@ mod tests {
         assert_eq!(
             z_indices,
             vec![
-                0, 8, 10, 15, 20, 100, 100, 100, 300, 305, 390, 395, 397, 398, 400, 405, 950, 1000,
+                0, 8, 10, 10, 15, 20, 100, 100, 100, 300, 305, 390, 395, 397, 398, 400, 405, 950,
+                1000,
             ]
         );
     }

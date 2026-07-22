@@ -74,12 +74,9 @@ Rules:
 - the intended end-state is a single spatial relation graph that can express absolute datum guides, relative anchors, masks, and organism guidance paths for growth, movement, and lifecycle state without duplicating attachment math across systems
 - the smallest canonical spatial layer should start with datum/world transforms, attachment resolution, guide-set lookup, and screen projection helpers; masks and organism guidance can remain layered concerns until the base relation layer is proven
 - the first canonical spatial API surface stays narrow: `SpatialPoint`, signed `SpatialScreenPoint`, `SpatialAnchor`, `SpatialAttachment`, `SpatialProjection`, `SpatialGuideIndex`, `SpatialAnchorLookup`, and `SpatialResolver` are enough to express the shared resolver without collapsing guide data or render helpers into one blob, and `SpatialGuideIndex` already feeds the runtime debug guide path
-- the compatibility layer in `scene/coords.rs` now re-exports `SpatialScreenPoint` as signed `ScreenPos` and exposes `project_world_to_screen(...)` plus `resolve_element_screen_position(...)` for remaining compatibility element projection paths; `crate::scene::coords` imports are guarded so new call sites stay inside that module, and central companion, hero, debug, guide, and vine rendering project through `core::spatial` directly
-- the compatibility layer in `scene/coords.rs` now resolves `Space::Anchor(EntityId)` through `core::spatial::SpatialAnchorLookup` when an entity is present, so anchor identity no longer belongs to scene projection code even though the spatial layer still has legacy seams
-- that projected anchor lookup is still a compatibility path; the long-term goal remains to move more entity-backed relation callers fully into `core/spatial`
-- the likely module mapping is:
-  - `scene/coords.rs` for compatibility projection helpers and transitional type names
-  - `scene/entity.rs` for simple attachment composition backed by `core::spatial`
+- the `scene::coords` compatibility layer has been retired (2026-07-21): a repo-wide audit found zero call sites outside its own tests, so it was deleted rather than kept as dead weight; companion, hero, debug, guide, and vine rendering, plus entity-backed anchor resolution through `core::spatial::SpatialAnchorLookup`, all consume `core::spatial` directly with no intermediate compatibility module
+- the current module mapping is:
+  - `scene/entity.rs` for attachment composition backed by `core::spatial`
   - `core/guide.rs` for the guide index and guide-set storage
   - `render/guide.rs` for render-only guide visualization backed by `core::spatial`
   - `core/spatial` for the shared resolver layer that already exists as the first cut

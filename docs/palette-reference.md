@@ -13,8 +13,8 @@ It exists so YAM-side theme, widget, weather, flora, and future scene work can r
 
 YAM should understand the current palette chain like this:
 
-1. extracted source SSOT in `~/_git/dotfiles/themes/yam_btas_extracted_swatches.md`
-2. curated workstation master palette in `~/_git/dotfiles/themes/btas-tnba_color_palette.md`
+1. extracted source SSOT in `~/_git/home/themes/palette/yam_btas_extracted_swatches.md`
+2. curated workstation master palette in `~/_git/home/themes/palette/btas-tnba_color_palette.md`
 3. YAM runtime semantic theme layer in:
    - `src/theme/btas.rs`
    - `src/theme/palette.rs`
@@ -40,7 +40,12 @@ Important boundary:
 - primitive aliases describe the curated color values themselves
 - YAM semantic tokens describe how YAM uses those values
 
-That means YAM can share the same palette vocabulary as dotfiles without collapsing into raw-hex-at-call-site usage.
+That means YAM can share the same palette vocabulary as the canonical shared palette docs without collapsing into raw-hex-at-call-site usage.
+
+Archive note:
+
+- older packet-era reference companions now live under
+  `~/_git/legacy/archive-dotfiles/themes/`
 
 ## Current Shared Palette Anchors
 

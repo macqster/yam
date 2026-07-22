@@ -3,11 +3,11 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-05-31
+Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-green, `FloraInstance` migration completeness, and `WorldKind::Greenhouse` exhaustiveness claims independently re-verified with a working toolchain rather than carried forward)
 
 ## Unresolved Risks
 
-- Highest-priority weak seam: the spatial relation layer is still the most structurally fragile area because projection, guide relation ownership, and higher-level organism guidance are still only partly unified, even though entity-backed anchor lookup now routes through a core spatial trait.
+- Highest-priority weak seam: the spatial relation layer's compatibility-shim phase is now closed (`scene::coords` was retired 2026-07-21 after a repo-wide audit found zero callers outside its own tests; `core::spatial` is the sole resolver everywhere), but higher-level guide/mask/organism-guidance unification is still only partly built out, so this remains the area to watch as greenhouse/flora work approaches.
 - The reserved `calendar` companion seam still crosses offsets, render-state, and dev UI surfaces; keep it clearly labeled as reserved until a future widget rework gives it a live rendered surface.
 - `UiState` remains the operational hub for runtime UI, modal state, weather refresh, camera inputs, settings editing, and persistence; future cleanup should prefer small vocabulary/helper extractions rather than a broad ownership rewrite.
 - The dev-mode surface family is structurally coherent, but the current debug panel still carries too many mixed-purpose facts by default and should be tightened before any broader UI work resumes.
@@ -16,7 +16,7 @@ Last reviewed: 2026-05-31
   studying dashboard TUIs like Glint as infrastructure references only, not as
   product-shape precedents.
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
-- Greenhouse planning now has a single dedicated roadmap and the first inert `core::greenhouse` data slice, but the broader implementation gates are still open: `WorldState` attachment, multi-family flora storage, growth dispatch, and inspection surfaces still need explicit work before visible greenhouse content starts.
+- Greenhouse planning now has a single dedicated roadmap; `WorldState` attachment, multi-family flora storage, species-profile format, and the world/room model itself are all now closed (2026-07-21: `WorldKind::Greenhouse` is selectable with a minimal read-only render, `docs/greenhouse-roadmap.md` has the full account). Growth dispatch and inspection surfaces (popups, per-fixture detail, an actual organism in a planting site) are the remaining open gaps before greenhouse content is more than an empty visitable room.
 - The greenhouse brainstorming sources have been distilled into the roadmap as candidate material only; the useful current bias is functional-space-first nursery/propagation-room work, symbolic per-room environment, read-only inspection, tiny planting-site capacity, and curation-style progression rather than gameplay.
 - The front-door README has now been hand-reworked into a broadly good-enough creative state for YAM, so future README intervention should stay minimal and factual. The remaining seams are low-stakes polish or hygiene details, chiefly the exact canonical release-line convention expected by `scripts/check-docs.sh` and a few presentational quirks such as the `twimc` heading / centering wrappers.
 
@@ -24,9 +24,9 @@ Last reviewed: 2026-05-31
 
 1. Spatial relation layer: still the most fragile seam because the canonical resolver and anchor lookup trait exist, but compatibility bridging and higher-level relation ownership remain only partly consolidated.
 2. Hero-rendering pipeline: Chafa is stable, but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
-3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, and `core::organism` now provides the first shared identity/species-registry/journal vocabulary, but broader multi-family storage and growth dispatch are still ahead of implementation.
+3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, `core::organism` provides the first shared identity/species-registry/journal vocabulary, multi-family storage is now locked as an enum-backed `FloraInstance` family store (2026-07-21), and growth/aging dispatch now iterates every vine instance rather than one hard-coded id (2026-07-21) — but the growth *rule* itself is still vine-specific code, since no second family exists yet to generalize it against, and that remains ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
-5. Greenhouse world modeling: the roadmap now has a functional-space contract and the first inert room/environment state, but there is not yet a `WorldState` attachment or tested world-profile shape for a future `Greenhouse` world.
+5. Greenhouse world modeling: the roadmap has a functional-space contract, an inert room/environment state, a real `WorldState` attachment, and a selectable `WorldKind::Greenhouse` with a minimal read-only render (2026-07-21) — but no growth dispatch, no inspection UI, and no organism actually occupying a planting site yet.
 6. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
 ## Current Work Priority
@@ -60,112 +60,61 @@ Last reviewed: 2026-05-31
   the roadmap for now, start future implementation as pure `core::greenhouse`
   data plus tests, use `greenhouse_nursery` as the first room identity, keep
   the first artifact as a docs/plain-text sketch, and delay visible
-  `WorldKind::Greenhouse` until data ownership is proven.
+  `WorldKind::Greenhouse` until data ownership is proven. **Fulfilled
+  2026-07-21**: data ownership was proven (tested `WorldState` attachment),
+  then `WorldKind::Greenhouse` landed with a minimal read-only render — see
+  `docs/greenhouse-roadmap.md`'s Gate Checklist for current status.
 
 ## Active Risk Notes
 
-- `low` The runtime loop is now less likely to strand the user's terminal in raw-mode / alternate-screen state if a later size, input, or draw step returns early: `runtime.rs` now keeps terminal teardown in a small drop guard instead of relying only on the happy-path exit tail.
+- `low` Terminal teardown runs through a drop guard in `runtime.rs`, so an early return from a size/input/draw step is less likely to strand raw-mode / alternate-screen state.
   - evidence: `src/runtime.rs`
-- `low` The live hero compiler path is less likely to turn asset/cache failure into a hard runtime crash or poisoned cache: missing or corrupt GIF decode, temp-directory creation, temp image writes, non-UTF-8 temp paths, and missing `chafa` now return placeholder hero frames instead of panicking, and placeholder frames are not saved as trusted hero caches.
+- `low` The live hero compiler path degrades to placeholder frames (not a panic) on GIF decode failure, temp-dir/write failure, non-UTF-8 temp paths, or missing `chafa`; placeholder frames are never saved as trusted hero caches.
   - evidence: `src/render/chafa.rs`
-- `low` Docs hygiene now covers the first-level active docs surface instead of only the oldest core subset, so current contracts such as vines, hero cache, weather widget, theme, resource map, and soft-line atlas participate in the same markdown/spell gate as the front-door docs.
+- `low` `scripts/check-docs.sh` covers the first-level active docs surface (vines, hero cache, weather widget, theme, resource map, soft-line atlas), not only the front-door docs.
   - evidence: `scripts/check-docs.sh`, `docs/hygiene.md`
-- `low` The direct terminal dependency is now aligned with the version already pulled through Ratatui, removing the previous duplicate `crossterm`/`mio` stack from this crate's dependency graph.
+- `low` The direct `crossterm`/`mio` dependency stays aligned with the version Ratatui already pulls in, avoiding a duplicate stack.
   - evidence: `Cargo.toml`, `Cargo.lock`
-- `low` Flora prep now has a small shared identity, registry, and journal vocabulary before a second plant family exists: organism id, species id, journal id, lifecycle state, generic stats, organism identity, organism family, species registry, per-instance journal events, and the first border-vine species profile live in `core::organism` / `core::flora` without changing visible runtime behavior.
+- `low` Flora prep has a shared identity/registry/journal vocabulary (organism id, species id, journal id, lifecycle state, stats, family, `SpeciesRegistry`, `OrganismJournal`) ahead of a second plant family, without changing visible runtime behavior.
   - evidence: `src/core/organism.rs`, `src/core/flora.rs`
-- `low` World switching is no longer only a binary UI-local toggle: selectable worlds, transition labels, titles, coarse composition, grid, camera defaults, guide plans, population plans, and capabilities now live on `WorldKind`, `Boot` is explicitly non-selectable, and UI persisted snapshots convert through the core world-selection/profile contract.
-  - evidence: `src/core/world.rs`, `src/ui/state.rs`
-- `low` The repo front door is less likely to drift into broken preview/media references again: the missing `docs/assets/...` README placeholders were removed, and `scripts/check-docs.sh` now fails if `README.md` references a local asset path that does not exist.
+- `low` The repo front door no longer references missing `docs/assets/...` paths; `scripts/check-docs.sh` fails the build if `README.md` points at a local asset that doesn't exist.
   - evidence: `README.md`, `scripts/check-docs.sh`, `docs/hygiene.md`
-- `low` The common direct-binary startup path is no longer an obvious performance problem after the hero-cache work: a small local audit on 2026-05-14 showed `./target/debug/yam-rust --version` effectively instant for a single run and about `1.21s` total over 200 repeated launches (roughly `6ms` per launch), while the much slower `cargo run -- --version` path was dominated by Cargo wrapper overhead rather than YAM runtime initialization.
-  - evidence: local timing audit on 2026-05-14; `src/render/chafa.rs`, `src/render/hero.rs`
-- `low` Recent `yam-install && yam` wall-clock variance is currently better explained by Cargo/install-path work than by YAM runtime startup: the pasted terminal history ranged from about `1.64s` to `21.78s` for the install step, including one near-no-op reinstall with no visible compile work. That output shape looked like an older direct Cargo install path rather than the newer offline-first wrapper; the repo now ships an explicit `bin/yam-install` wrapper that routes through `scripts/update.sh` so future timing reads are easier to interpret. Treat those numbers as build/install variance unless a timed direct-binary launch sample says otherwise.
-  - evidence: pasted terminal history on 2026-05-14; `bin/yam-install`, `scripts/update.sh`, `src/main.rs`
-- `low` The first opt-in diagnostics smoke test on 2026-05-14 also exposed brief Cargo package-cache lock waits during both install and full-verify flows, which is a much better match for the recent install-time wobble than any runtime startup regression. The new local NDJSON diagnostics path now gives the repo one concrete way to separate Cargo lock/build variance from launcher and runtime boot timing before any deeper optimization pass is justified.
-  - evidence: local `YAM_DIAGNOSTICS=1` smoke test on 2026-05-14; `scripts/update.sh`, `src/diagnostics.rs`, `src/runtime.rs`
-- `low` The launch wrappers were also still biasing measurements toward Cargo work because `bin/yam` and `bin/yam-sandbox` would unconditionally use `cargo run --release` whenever the repo checkout existed. They now prefer the installed runtime and only trigger the install/update path when the installed binary is missing or older than repo runtime inputs, with an explicit `YAM_USE_REPO_RUN=1` escape hatch for deliberate development runs.
-  - evidence: `bin/yam`, `bin/yam-sandbox`, `bin/yam-install`, `scripts/update.sh`
-- `low` A first interactive wall-clock timing sample is not a good proxy for steady-state runtime cost yet: launching the built binary into the real TUI and quitting under automation took about `33.89s`, but that figure is dominated by the intentional boot/loading sequence and terminal-session orchestration rather than ordinary per-frame render cost. Future profiling should sample inside the live loop or through a boot-bypass harness instead of reading wall-clock boot time as a render benchmark.
-  - evidence: local interactive timing audit on 2026-05-14; `src/runtime.rs`, `src/scene/mod.rs`
-- `medium` The first render-loop reuse, hidden-layer skip, final-buffer reuse, and scratch-grid adoption slices are now in place: runtime keeps one long-lived `Scene`, no longer asks obviously closed modal/help/quit layers to allocate empty grids, reuses the final composed `Grid` across frames, and can now reuse scratch grids for the simple active layers, the lightweight companion projection layers, the hero layer, the debug overlay, and the vine layer. The remaining hot-path seam is no longer another obvious layer conversion, but deciding whether any of the still-general draw paths deserve cheaper specialized helpers.
+- `low` Direct-binary startup (`yam-rust --version`) is not a performance concern (~6ms/launch measured 2026-05-14); `cargo run` overhead is Cargo wrapper cost, not YAM init cost. Install-time wall-clock variance (2026-05-14) is better explained by Cargo package-cache lock waits than by runtime startup; `bin/yam`/`bin/yam-sandbox` now prefer the installed binary over `cargo run --release` unless `YAM_USE_REPO_RUN=1`. Treat future timing reports as build/install variance unless a direct-binary sample says otherwise.
+  - evidence: `src/render/chafa.rs`, `src/render/hero.rs`, `bin/yam-install`, `scripts/update.sh`, `src/diagnostics.rs`, `src/runtime.rs`, `bin/yam`, `bin/yam-sandbox`
+- `medium` Render-loop reuse (long-lived `Scene`, no empty-grid allocation for closed modal/help/quit layers, reused final `Grid`, scratch-grid reuse for simple/companion/hero/debug/vine layers) is in place. Open question is whether remaining general draw paths need cheaper specialized helpers, not another obvious layer conversion.
   - evidence: `src/scene/mod.rs`, `src/ui/scene.rs`, `src/render/compositor.rs`
-- `medium` The renderer now has a narrow fast ASCII-only text-write helper for the hottest plain-ASCII chrome, and it is adopted by the always-on footer plus the debug/world-label chrome. The remaining question is whether more UI surfaces actually need it, not whether the seam should exist.
+- `medium` A narrow fast ASCII-only text-write helper exists and is adopted by the footer and debug/world-label chrome; open question is whether more surfaces need it.
   - evidence: `src/render/compositor.rs`, `src/scene/layers/modal.rs`, `src/scene/layers/status_layer.rs`
-- `medium` The current dev-mode cleanup seam is mostly about role tightening rather than missing features: the debug panel tab split is cleaner again after separating runtime control facts from hero-specific animation/placement facts, and the main-scene footer is quieter again now that the right side is back to the version stamp alone instead of a help/version catling, but `calendar (reserved)` still remains too visible across some move/settings/help-adjacent surfaces.
+- `medium` Dev-mode cleanup is mostly role-tightening at this point (debug panel tab split, quieter footer), but `calendar (reserved)` still shows up too visibly across some move/settings/help-adjacent surfaces.
   - evidence: `src/scene/layers/debug_layer.rs`, `src/scene/layers/hotkeys_layer.rs`, `src/scene/layers/move_layer.rs`, `src/scene/layers/settings_layer.rs`, `src/scene/layers/status_layer.rs`
-- `low` The last meaningful dev-UI vocabulary drift was tightened on 2026-05-14: the live settings tab and docs now agree on `ui`, the clean-boot manual camera seed references now agree on `(-60, -15)`, and the active contracts now describe the current dev-gated debug posture instead of implying a broader always-visible debug surface.
-  - evidence: `src/ui/state.rs`, `src/scene/layers/settings_layer.rs`, `docs/rendering.md`, `docs/architecture.md`, `docs/scene-model.md`, `TODO.md`
 - `medium` `scene_config.json` is active for tooling and should stay aligned with the tooling defaults if they change.
   - evidence: `scene_config.json`, `docs/config.md`, `tools/experiments/config.py`
-- `medium` The spatial model is still split across `scene/coords.rs`, `scene/entity.rs`, `core/guide.rs`, and `render/guide.rs`; we still need a single canonical relation layer for datum, anchors, guides, masks, and organism guidance.
-  - evidence: `src/scene/coords.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`
-- `low` The core/systems/spatial-compatibility ownership boundary is less likely to regress during spatial migration: `src/core/flora.rs`, `src/core/world.rs`, `src/render/render_state.rs`, `src/ui/state.rs`, and `src/systems/growth.rs` now use spatial vocabulary from `core::spatial` rather than scene compatibility aliases, and `scripts/check.sh` fails if `src/core` imports `crate::scene::`, if `src/systems` imports scene, render, UI, or terminal modules, or if `crate::scene::coords` is imported outside `src/scene/coords.rs`.
-  - evidence: `src/core/flora.rs`, `src/core/world.rs`, `src/render/render_state.rs`, `src/ui/state.rs`, `src/systems/growth.rs`, `scripts/check.sh`
-- `medium` Flora state remains vine-shaped in storage and growth dispatch even though shared identity, registry, journal, family-count, and organism-identity adapters now exist; the next implementation step should decide whether multi-family storage is an organism registry, an enum-backed family store, or a different small structure before another plant family or greenhouse population lands.
-  - evidence: `src/core/organism.rs`, `src/core/flora.rs`, `src/systems/growth.rs`, `docs/scene-model.md`, `docs/vines.md`
-- `low` World selection now has an explicit core contract for the current selectable worlds plus profile-owned composition, grid, camera defaults, guide plans, population plans, and capabilities. Greenhouse should still wait for room/environment ownership, inspection modes, and richer population/storage rules rather than adding a world enum variant alone.
-  - evidence: `src/core/world.rs`, `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/weather_layer.rs`, `docs/greenhouse-roadmap.md`
-- `low` The greenhouse expansion path is less likely to drift into scattered chat memory now that `docs/greenhouse-roadmap.md` owns the preliminary roadmap, hard rules, implementation phases, open decisions, and later creative-input brief. This reduces planning drift but does not close the underlying implementation gates.
+- `low` `core::spatial` is the sole spatial resolver; `scene::coords` (its `ScreenPos` alias, `project_world_to_screen`, `resolve_element_screen_position`, and the `Space`/`EntityId`/`Element` compatibility dispatch) was retired 2026-07-21 after confirming zero call sites outside its own tests, and the matching `scripts/check.sh` isolation guard was removed with it. `scene/entity.rs` still names its attachment structs domain-specifically (`EntityPose`/`AttachedEntityPose`) rather than constructing `SpatialAnchor`/`SpatialAttachment` directly, but its math already delegates to `SpatialResolver` — a naming duplication, not a routing split. Entity-backed anchor lookup is exclusively `core::spatial::SpatialAnchorLookup`, implemented on `WorldState`. See `docs/LOG.md` for the retirement's full account.
+  - evidence: `src/core/spatial.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`, `src/render/render_state.rs`, `scripts/check.sh`
+- `low` Flora storage is closed: `FloraState` stores an enum-backed `FloraInstance` family store (`organisms: Vec<FloraInstance>`, `Vine(VineInstance)` the sole variant so far) instead of a bespoke `vines` field, with every call site migrated. Growth dispatch (`systems::growth::run_growth`) now iterates every vine instance rather than one hard-coded id, matching `run_aging`; the growth *rule* itself remains vine-specific until a second family exists. See `docs/LOG.md` for the fix history.
+  - evidence: `src/core/flora.rs`, `src/systems/growth.rs`, `src/systems/aging.rs`, `src/scene/layers/vine_layer.rs`, `src/scene/layers/debug_layer.rs`, `src/core/world.rs`
+- `low` `WorldKind::Greenhouse` is a real selectable world (2026-07-21): `WorldState.greenhouse` is `Some(GreenhouseState::nursery())` for that world only, rendered by a minimal read-only `GreenhouseLayer` (bounds outline + fixture markers), verified end-to-end in the running app. No growth dispatch, mutation, or inspection UI yet — see "Weakest Areas" #5.
+  - evidence: `src/core/world.rs`, `src/core/greenhouse.rs`, `src/scene/layers/greenhouse_layer.rs`
+- `low` `docs/greenhouse-roadmap.md` is the single owning surface for greenhouse strategy, ingested brainstorming/reference material, phase tasks, gates, and stop conditions; `TODO.md` and `docs/audit.md` carry only pointers, not a second copy of the contract.
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`, `docs/README.md`
-- `low` The first greenhouse brainstorming session has been ingested into the roadmap without promoting runtime behavior: candidate identity, organism, fixture, label, environment, curation, and transfer vocabulary are now available for later planning while still gated from implementation.
-  - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`
-- `low` Greenhouse execution detail is now consolidated into the roadmap so phase tasks, gates, immediate next steps, and stop conditions do not split across a second active greenhouse TODO.
-  - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`, `docs/README.md`
-- `low` Architecture, scene-model, and rendering docs now carry shorter flora/greenhouse contracts instead of duplicating candidate species, fixture, and environment prose; the remaining detail points to the greenhouse roadmap, vines contract, and glossary.
-  - evidence: `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/glossary.md`
-- `low` The ChatGPT preflight and brainstorming notes have been ingested without promoting runtime work: the roadmap now records 0.4 readiness gates, the functional-space-first greenhouse ordering, bounded `cbonsai` / HighGrow / Viridi / terminal-ecosystem references, deferred plant-growth software lineage, and the current enum-backed flora-store bias.
-  - evidence: `docs/greenhouse-roadmap.md`, `docs/resource-map.md`, `TODO.md`
-- `low` The 0.4 expansion readiness pass found no immediate verification,
-  dependency, known-issue, or executable-guard blocker: full verification is
-  green, `cargo tree -d` is clean, `known_issues.md` is empty, world profiles,
-  flora adapters, and Chafa fallback paths have targeted passing tests, and the
-  remaining greenhouse/flora work is contract decision work rather than an
-  active regression.
-  - evidence: `scripts/verify.sh`, `cargo tree -d`, `known_issues.md`, `src/core/world.rs`, `src/core/flora.rs`, `src/render/chafa.rs`, `docs/greenhouse-roadmap.md`
-- `low` The greenhouse functional-space contract is now explicit enough for the
-  next non-visible implementation slice: future code should begin with pure
-  `core::greenhouse` data and invariant tests for state, room, access path,
-  zone, fixture, planting site, symbolic environment, and read-only inspection
-  records before attaching state to `WorldState` or adding a visible
-  `Greenhouse` world.
-  - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`
-- `low` The first real `0.4` greenhouse implementation slice is now present as
-  pure `core::greenhouse` data with invariant tests: the repo has stable room,
-  access-path, zone, fixture, planting-site, environment-profile, and
-  inspection-reference ids plus one inert `greenhouse_nursery` room, while
-  greenhouse ownership remains out of `WorldState`, render layers, UI, systems,
-  and weather code.
-  - evidence: `src/core/greenhouse.rs`, `docs/greenhouse-roadmap.md`,
-    `docs/architecture.md`
-- `low` The Glint study added a useful external contrast case for dashboard
-  drift: it is a strong Rust/Ratatui reference for widget registries,
-  feature-gated optional surfaces, polling/config/theme helpers, and setup
-  flows, but it also reinforces what YAM should not become - a pane-grid,
-  widget-first dashboard shell. Future borrowing should stay infrastructure-only
-  and preserve YAM's world-space place model.
-  - evidence: `docs/resource-map.md`, `/tmp/glint-study/README.md`,
-    `/tmp/glint-study/src/widgets/mod.rs`,
-    `/tmp/glint-study/src/widgets/registry.rs`
-- `low` The archived greenhouse ecosystem design notes and roadmap review are
-  now ingested into the roadmap as bounded architectural source material: they
-  strengthen the lab/frame vocabulary, shell/support/light/sensor/actuator
-  families, identity hierarchy, and journal-target ordering, while preserving
-  the current first-pass constraint of one inert nursery room before any
-  greenhouse-global chrome or multi-lab runtime structure.
-  - evidence: `docs/greenhouse-roadmap.md`, `docs/archive/greenhouse-brainstorming/`
-- `low` `RenderState` companion helpers, active companion screen consumers, hero rendering, debug rendering, guide rendering, and vine drawing now project through or consume `core::spatial` directly and use signed `core::spatial::SpatialScreenPoint` values; the remaining compatibility element projection path returns signed screen positions through the module-internal `scene::coords::ScreenPos` compatibility name and `project_world_to_screen(...)` / `resolve_element_screen_position(...)`. Hero row placement, debug marker writes, and shared drawing writes use checked signed-to-grid conversion. The old world-shaped screen wrappers have been removed from `scene::coords`; entity-backed anchor lookup now routes through `core::spatial::SpatialAnchorLookup`, and the remaining spatial prep issue is migrating more relation callers out of compatibility shims.
-  - evidence: `src/scene/coords.rs`, `src/render/render_state.rs`, `src/scene/layers/debug_layer.rs`, `src/scene/layers/hero_layer.rs`, `src/render/guide.rs`, `src/scene/layers/vine_layer.rs`
-- `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the `hero-ansipx` preview artifacts were not a replacement baseline, so the offline compiler / `CellGrid` direction remains documented but unproven.
-  - evidence: `src/render/chafa.rs`, `docs/rendering.md`, `docs/architecture.md`, `docs/LOG.md`
-- `low` `Space::Anchor(EntityId)` now has a core-backed lookup path through `SpatialAnchorLookup`, but the broader spatial layer is still on compatibility shims and the rest of the callers have not been migrated to entity-backed relation helpers yet.
-  - evidence: `src/scene/coords.rs`, `src/core/world.rs`, `src/scene/entity.rs`, `src/ui/state.rs`
-- `low` The scaffold note is no longer purely aspirational: the main scene now has a small world-owned scaffold runtime slice in `core::scaffold`, and dedicated read-only scaffold layers render both the rear support cradle and a small foreground nesting edge around the hero without making render code the source of truth. The immediate question is now visual sufficiency rather than missing ownership: does the foreground lip read strongly enough without needing a mask seam yet.
-  - evidence: `src/core/scaffold.rs`, `src/core/world.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/main-scene-scaffold.md`
-- `low` Sandbox is now a more useful proving ground for scaffold work instead of a composition dead-end: UI-owned prototype visibility policies can expose the hero, companions, and scaffold there without changing world ownership. The next open question is not whether sandbox can host those surfaces, but whether foreground scaffold geometry alone is enough before any explicit mask seam is introduced.
-  - evidence: `src/ui/state.rs`, `src/scene/layers/hero_layer.rs`, `src/scene/layers/clock_layer.rs`, `src/scene/layers/weather_layer.rs`, `src/scene/layers/date_layer.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/rendering.md`
-- `low` A recent footer visual check exposed a stale-binary risk pattern: `yam-install` can complete while `yam-rust --version` still reports an older build stamp, so screenshot comparisons should verify the installed runtime identity before treating the output as the current source of truth.
-  - evidence: `yam-rust --version`, `docs/LOG.md`, `docs/config.md`, `README.md`
+- `low` The Glint study is a useful external contrast case: a strong Rust/Ratatui reference for widget registries and setup flows, but also a reminder of what YAM should not become — a pane-grid, widget-first dashboard shell. Future borrowing should stay infrastructure-only.
+  - evidence: `docs/resource-map.md`
+- `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the offline compiler / `CellGrid` direction remains documented but unproven.
+  - evidence: `src/render/chafa.rs`, `docs/rendering.md`, `docs/architecture.md`
+- `low` The main-scene scaffold has a real world-owned runtime slice (`core::scaffold`) with read-only render layers (rear support cradle, foreground nesting edge); open question is visual sufficiency, not missing ownership. Sandbox hosts the same surfaces behind UI-owned visibility toggles for prototyping without changing world ownership.
+  - evidence: `src/core/scaffold.rs`, `src/core/world.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/main-scene-scaffold.md`, `src/ui/state.rs`
+- `low` Stale-binary risk: `yam-install` can complete while `yam-rust --version` still reports an older build stamp. Verify installed runtime identity before treating screenshot/output comparisons as current.
+  - evidence: `yam-rust --version`, `docs/config.md`
+- `low` Dependency graph is clean per `cargo tree -d` (trust this over manual `Cargo.lock` reading — a prior manual inference was wrong). Latest patch update applied 2026-07-21 (`ratatui`, `chrono`, `serde_json`, `unicode-segmentation`, `tachyonfx`); `serde` deliberately held at `1.0.228` since bumping it alone pulls in a new `syn` duplicate for no functional gain. One upstream duplicate remains: `hashbrown` `0.16.1`/`0.17.1` inside Ratatui's own tree (via `kasuari` vs. `lru`), not controllable from this crate's `Cargo.toml`. The `ratatui` patch bump itself (`0.30.0` → `0.30.2`) is larger than "patch" suggests at the `Cargo.lock` level: it pulled in 9 new transitive crates not present before (`approx`, `by_address`, `critical-section`, `fast-srgb8`, `libm`, `palette`, `palette_derive`, `ratatui-termina`, `termina` — color-math and an alternate terminal backend used internally by `ratatui-widgets`/`ratatui-core`), none of which are direct dependencies of this crate or introduce any *additional* duplicate-version conflict beyond the `hashbrown` pair above (re-confirmed via `cargo tree -d` and `cargo tree -i ratatui-termina`, which resolves to nothing built for this target — an unused alternate-backend feature, not shipped bloat).
+  - evidence: `Cargo.lock`, `Cargo.toml`
+- `low` The 19 non-test `.expect()`/`unreachable!()` call sites (`src/runtime.rs:50`, `src/render/hero.rs:92`, `src/render/fonts.rs:80`, 16 in `src/weather/atlas.rs`) are each traced to a structural invariant enforced by an exhaustive match, a constructor guarantee, or compile-time data — not a soft assumption. Considered closed unless a future change (e.g. exposing `Hero::frames` to external mutation) reopens the question.
+  - evidence: `src/runtime.rs`, `src/render/hero.rs`, `src/render/fonts.rs`, `src/weather/atlas.rs`
+- `low` Weather refresh tests inject deterministic results through an injectable-fetch seam while still traversing the same spawned worker/channel path as production, so tests can't drift from the production refresh contract; see `docs/weather-widget.md`'s rule to that effect.
+  - evidence: `src/ui/state.rs`, `docs/weather-widget.md`
+- `low` `systems::fields::update_fields()` skips out-of-bounds entities and repairs all three field buffers to the exact grid area before indexing/clearing, closing the same invariant-drift shape as the earlier `GreenhouseState::active_room()` fix (construction-only invariant, mutable public fields). A repo-wide sweep for the same shape (`.unwrap()`/`panic!()` in production code, find-by-id resolvers, direct grid/array indexing) came back clean elsewhere.
+  - evidence: `src/systems/fields.rs`
+- `low` `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, and `cargo check --all-targets` are clean; the ownership boundary guard in `scripts/check.sh` (`core` must not import `scene`; `systems` must not import scene/render/UI/terminal) is unchanged.
+  - evidence: `scripts/check.sh`, `src/render/chafa.rs`, `src/render/hero.rs`, `src/scene/layers/hero_layer.rs`, `src/runtime.rs`
 
 ## Priority Order
 

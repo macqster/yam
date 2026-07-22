@@ -12,15 +12,16 @@ It is intentionally not an implementation plan for the full multi-species flora 
 - The scaffold, guides, and pointer probe can prepare future vine placement, branching, boundary, and organ work, but they should not bypass the world-owned flora state.
 - Main-scene scaffold direction lives in [`main-scene-scaffold.md`](main-scene-scaffold.md); vine work may later attach to or frame that support, but should not redefine the scaffold's hero-support role.
 - Vines are one flora family, not a special-case renderer.
+- `FloraState` stores organisms through a locked enum-backed `FloraInstance` family store (`organisms: Vec<FloraInstance>`, one `Vine(VineInstance)` variant today), not a bespoke `vines: Vec<VineInstance>` field, with `vines()`/`vines_mut()`/`push_vine()` accessors.
 
 ## Ownership Contract
 
 | Concern | Owner | Rule |
 | --- | --- | --- |
-| Vine instance state | future world/flora state | stores life state, axes, growth progress, and per-organism journal identity |
+| Vine instance state | `FloraState::organisms` (`FloraInstance::Vine`) | stores life state, axes, growth progress, and per-organism journal identity |
 | Species defaults | `core::organism::SpeciesProfile` plus the in-memory `SpeciesRegistry` seam | stores reusable vine traits, not per-instance history |
 | Guide geometry | `core::guide::GuideState` | stores labeled points, lines, polylines, outlines, and guide sets |
-| Spatial resolution | `core::spatial` plus the active compatibility helpers | resolves world points, anchors, guide lookup, and screen projection |
+| Spatial resolution | `core::spatial` | resolves world points, anchors, guide lookup, and screen projection directly, with no intermediate compatibility layer |
 | Rendering | scene/render layers | visualizes already-resolved vine geometry; does not own vine state |
 | UI/debug | HUD, debug, or future inspect surfaces | reads state and diagnostics; does not mutate growth unless gated by dev tooling |
 
@@ -63,7 +64,7 @@ This shape is a contract sketch, not a demand to introduce these Rust types imme
 Before vine behavior is added, keep these checks green:
 
 - signed world-to-screen projection and off-screen preservation
-- anchor identity resolution through the active compatibility layer
+- anchor identity resolution through `core::spatial::SpatialAnchorLookup`
 - screen-attached HUD/footer invariance under camera movement
 - guide rendering from `SpatialGuideIndex`
 - resize and camera round-trip scene tests
@@ -100,7 +101,7 @@ Before feature work starts, keep the current invariants green together:
 
 - signed world-to-screen projection and off-screen preservation
 - guide-set lookup through `GuideState` and `SpatialGuideIndex`
-- anchor identity resolution through the active compatibility layer
+- anchor identity resolution through `core::spatial::SpatialAnchorLookup`
 - screen-attached HUD and footer invariance under camera movement
 - hero and clock placement stability
 - resize and camera round-trip scene behavior

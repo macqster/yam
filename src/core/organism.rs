@@ -292,6 +292,36 @@ mod tests {
         assert_eq!(registry.profiles().len(), 1);
     }
 
+    /// Locks the species-profile data-shape decision (`docs/greenhouse-roadmap.md`
+    /// Open Decisions / Phase 4): static Rust fixtures, not structured data
+    /// files, for the first species profiles. A single registered profile
+    /// doesn't prove the shape actually scales; this registers two distinct
+    /// profiles side by side and checks each still resolves independently.
+    #[test]
+    fn species_registry_holds_multiple_distinct_profiles_independently() {
+        let mut registry = SpeciesRegistry::new();
+
+        registry.register(fixture_profile("yam.vine.fixture_a", "fixture vine a"));
+        registry.register(fixture_profile("yam.vine.fixture_b", "fixture vine b"));
+
+        assert_eq!(registry.len(), 2);
+        assert_eq!(registry.profiles().len(), 2);
+
+        let a = registry
+            .profile(&SpeciesId::new("yam.vine.fixture_a"))
+            .expect("first registered profile");
+        let b = registry
+            .profile(&SpeciesId::new("yam.vine.fixture_b"))
+            .expect("second registered profile");
+
+        assert_eq!(a.display_name, "fixture vine a");
+        assert_eq!(b.display_name, "fixture vine b");
+        assert_ne!(a.species_id, b.species_id);
+        assert!(registry
+            .profile(&SpeciesId::new("yam.vine.unregistered"))
+            .is_none());
+    }
+
     #[test]
     fn organism_journal_records_per_instance_events() {
         let mut journal = OrganismJournal::new(JournalId::new("journal.vine.fixture.7"));

@@ -14,10 +14,47 @@ use crate::render::hero::Hero;
 use crate::scene::camera::Camera;
 use crate::scene::entity::hero_scene_poses;
 use crate::weather::model::{WeatherLocale, WeatherLocation, WeatherSnapshot};
-use crate::weather::provider::{
-    StaticWeatherProvider, WeatherError, WeatherProvider, WttrInWeatherProvider,
-};
+#[cfg(not(test))]
+use crate::weather::provider::WttrInWeatherProvider;
+use crate::weather::provider::{StaticWeatherProvider, WeatherError, WeatherProvider};
 use crate::weather::render::WeatherLayout;
+
+type WeatherSnapshotFetch = fn(&WeatherLocation) -> Result<WeatherSnapshot, WeatherError>;
+
+#[cfg(not(test))]
+fn fetch_live_weather_snapshot(
+    location: &WeatherLocation,
+) -> Result<WeatherSnapshot, WeatherError> {
+    WttrInWeatherProvider.snapshot(location)
+}
+
+#[cfg(test)]
+fn fetch_static_weather_snapshot(
+    location: &WeatherLocation,
+) -> Result<WeatherSnapshot, WeatherError> {
+    StaticWeatherProvider.snapshot(location)
+}
+
+#[cfg(not(test))]
+fn default_weather_snapshot_fetch() -> WeatherSnapshotFetch {
+    fetch_live_weather_snapshot
+}
+
+#[cfg(test)]
+fn default_weather_snapshot_fetch() -> WeatherSnapshotFetch {
+    fetch_static_weather_snapshot
+}
+
+fn spawn_weather_snapshot_fetch(
+    location: WeatherLocation,
+    fetch: WeatherSnapshotFetch,
+) -> Receiver<Result<WeatherSnapshot, WeatherError>> {
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        let _ = tx.send(fetch(&location));
+    });
+    rx
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -228,6 +265,7 @@ pub enum WorldKindSnapshot {
     #[default]
     MainScene,
     Sandbox,
+    Greenhouse,
 }
 
 impl WorldKindSnapshot {
@@ -236,6 +274,7 @@ impl WorldKindSnapshot {
             WorldKind::Boot => Self::MainScene,
             WorldKind::MainScene => Self::MainScene,
             WorldKind::Sandbox => Self::Sandbox,
+            WorldKind::Greenhouse => Self::Greenhouse,
         }
     }
 
@@ -243,6 +282,7 @@ impl WorldKindSnapshot {
         match self {
             Self::MainScene => WorldKind::MainScene,
             Self::Sandbox => WorldKind::Sandbox,
+            Self::Greenhouse => WorldKind::Greenhouse,
         }
     }
 
@@ -643,6 +683,7 @@ pub struct UiState {
     pub weather_last_refresh: Option<Instant>,
     pub weather_refresh_interval: Duration,
     pub weather_refresh_rx: Option<Receiver<Result<WeatherSnapshot, WeatherError>>>,
+    weather_snapshot_fetch: WeatherSnapshotFetch,
     pub weather_locale: WeatherLocale,
     pub weather_layout: WeatherLayout,
     pub persisted_state_dirty: bool,
@@ -671,6 +712,7 @@ impl UiState {
             weather_last_refresh: None,
             weather_refresh_interval: Duration::from_secs(15 * 60),
             weather_refresh_rx: None,
+            weather_snapshot_fetch: default_weather_snapshot_fetch(),
             weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
             persisted_state_dirty: false,
@@ -768,13 +810,10 @@ impl UiState {
             return;
         }
         let location = self.weather_location.clone();
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || {
-            let provider = WttrInWeatherProvider;
-            let result = provider.snapshot(&location);
-            let _ = tx.send(result);
-        });
-        self.weather_refresh_rx = Some(rx);
+        self.weather_refresh_rx = Some(spawn_weather_snapshot_fetch(
+            location,
+            self.weather_snapshot_fetch,
+        ));
     }
 
     fn finish_weather_refresh_if_ready(&mut self) {
@@ -1180,14 +1219,14 @@ impl UiState {
                     0 => match self.active_world_kind() {
                         WorldKind::MainScene => self.meta.cycle_vines_visibility_mode(),
                         WorldKind::Sandbox => self.meta.cycle_sandbox_hero_visibility_mode(),
-                        WorldKind::Boot => {}
+                        WorldKind::Boot | WorldKind::Greenhouse => {}
                     },
                     1 => match self.active_world_kind() {
                         WorldKind::MainScene => {
                             self.meta.cycle_main_scene_scaffold_visibility_mode()
                         }
                         WorldKind::Sandbox => self.meta.cycle_sandbox_companions_visibility_mode(),
-                        WorldKind::Boot => {}
+                        WorldKind::Boot | WorldKind::Greenhouse => {}
                     },
                     2 if self.active_world_kind() == WorldKind::Sandbox => {
                         self.meta.cycle_sandbox_scaffold_visibility_mode();
@@ -1376,7 +1415,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => true,
             WorldKind::Sandbox => self.meta.sandbox_hero_visible,
-            WorldKind::Boot => false,
+            WorldKind::Boot | WorldKind::Greenhouse => false,
         }
     }
 
@@ -1384,7 +1423,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => true,
             WorldKind::Sandbox => self.meta.sandbox_companions_visible,
-            WorldKind::Boot => false,
+            WorldKind::Boot | WorldKind::Greenhouse => false,
         }
     }
 
@@ -1392,7 +1431,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => self.meta.main_scene_scaffold_visible,
             WorldKind::Sandbox => self.meta.sandbox_scaffold_visible,
-            WorldKind::Boot => false,
+            WorldKind::Boot | WorldKind::Greenhouse => false,
         }
     }
 
@@ -1418,7 +1457,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => 2,
             WorldKind::Sandbox => 3,
-            WorldKind::Boot => 1,
+            WorldKind::Boot | WorldKind::Greenhouse => 1,
         }
     }
 
@@ -1748,8 +1787,15 @@ mod tests {
     };
     use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldKind;
+    use crate::weather::model::{WeatherLocation, WeatherSnapshot};
     use crate::weather::provider::WeatherError;
     use std::time::{Duration, Instant};
+
+    fn unavailable_weather_snapshot(
+        _location: &WeatherLocation,
+    ) -> Result<WeatherSnapshot, WeatherError> {
+        Err(WeatherError::Unavailable)
+    }
 
     #[test]
     fn clamp_camera_limits_windowed_pan_to_one_cell_overscan() {
@@ -2174,7 +2220,7 @@ mod tests {
     }
 
     #[test]
-    fn failed_weather_refresh_marks_existing_snapshot_stale() {
+    fn failed_weather_refresh_through_worker_marks_existing_snapshot_stale() {
         let mut ui = UiState::new();
         ui.refresh_weather_now();
         let fresh = ui
@@ -2183,7 +2229,8 @@ mod tests {
             .expect("refresh should populate a weather snapshot");
         assert!(!fresh.stale);
 
-        ui.apply_weather_refresh_result(Err(WeatherError::Unavailable));
+        ui.weather_snapshot_fetch = unavailable_weather_snapshot;
+        ui.refresh_weather_now();
 
         let refreshed = ui
             .weather_snapshot
@@ -2825,6 +2872,8 @@ mod tests {
         assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
         ui.cycle_world_kind();
         assert_eq!(ui.active_world_kind(), WorldKind::Sandbox);
+        ui.cycle_world_kind();
+        assert_eq!(ui.active_world_kind(), WorldKind::Greenhouse);
         ui.cycle_world_kind();
         assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
     }

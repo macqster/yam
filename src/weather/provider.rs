@@ -41,6 +41,7 @@ impl WeatherProvider for StaticWeatherProvider {
     }
 }
 
+#[cfg_attr(test, allow(dead_code))]
 pub struct WttrInWeatherProvider;
 
 impl WeatherProvider for WttrInWeatherProvider {

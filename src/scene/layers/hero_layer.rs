@@ -189,27 +189,6 @@ fn hero_row_grid_position(
     Some((draw_x, draw_y, clip_cols))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn hero_row_position_clips_negative_x_to_grid_origin() {
-        assert_eq!(
-            hero_row_grid_position(SpatialScreenPoint { x: -3, y: 2 }, 10, 5),
-            Some((0, 2, 3))
-        );
-    }
-
-    #[test]
-    fn hero_row_position_skips_oversized_positive_x_without_wrapping() {
-        assert_eq!(
-            hero_row_grid_position(SpatialScreenPoint { x: 70_000, y: 2 }, 80, 24),
-            None
-        );
-    }
-}
-
 fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
     let mut remaining = skip_cols;
     let mut spans = Vec::new();
@@ -230,4 +209,25 @@ fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
     }
 
     Line::from(spans)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hero_row_position_clips_negative_x_to_grid_origin() {
+        assert_eq!(
+            hero_row_grid_position(SpatialScreenPoint { x: -3, y: 2 }, 10, 5),
+            Some((0, 2, 3))
+        );
+    }
+
+    #[test]
+    fn hero_row_position_skips_oversized_positive_x_without_wrapping() {
+        assert_eq!(
+            hero_row_grid_position(SpatialScreenPoint { x: 70_000, y: 2 }, 80, 24),
+            None
+        );
+    }
 }

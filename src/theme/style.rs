@@ -10,6 +10,10 @@ pub fn accent_border() -> Style {
     Style::default().fg(palette::ACCENT)
 }
 
+pub fn greenhouse_fixture_marker() -> Style {
+    Style::default().fg(palette::MARKER)
+}
+
 pub fn panel_text() -> Style {
     BTAS.panel_text()
 }

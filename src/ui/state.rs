@@ -265,6 +265,7 @@ pub enum WorldKindSnapshot {
     #[default]
     MainScene,
     Sandbox,
+    Greenhouse,
 }
 
 impl WorldKindSnapshot {
@@ -273,6 +274,7 @@ impl WorldKindSnapshot {
             WorldKind::Boot => Self::MainScene,
             WorldKind::MainScene => Self::MainScene,
             WorldKind::Sandbox => Self::Sandbox,
+            WorldKind::Greenhouse => Self::Greenhouse,
         }
     }
 
@@ -280,6 +282,7 @@ impl WorldKindSnapshot {
         match self {
             Self::MainScene => WorldKind::MainScene,
             Self::Sandbox => WorldKind::Sandbox,
+            Self::Greenhouse => WorldKind::Greenhouse,
         }
     }
 
@@ -1216,14 +1219,14 @@ impl UiState {
                     0 => match self.active_world_kind() {
                         WorldKind::MainScene => self.meta.cycle_vines_visibility_mode(),
                         WorldKind::Sandbox => self.meta.cycle_sandbox_hero_visibility_mode(),
-                        WorldKind::Boot => {}
+                        WorldKind::Boot | WorldKind::Greenhouse => {}
                     },
                     1 => match self.active_world_kind() {
                         WorldKind::MainScene => {
                             self.meta.cycle_main_scene_scaffold_visibility_mode()
                         }
                         WorldKind::Sandbox => self.meta.cycle_sandbox_companions_visibility_mode(),
-                        WorldKind::Boot => {}
+                        WorldKind::Boot | WorldKind::Greenhouse => {}
                     },
                     2 if self.active_world_kind() == WorldKind::Sandbox => {
                         self.meta.cycle_sandbox_scaffold_visibility_mode();
@@ -1412,7 +1415,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => true,
             WorldKind::Sandbox => self.meta.sandbox_hero_visible,
-            WorldKind::Boot => false,
+            WorldKind::Boot | WorldKind::Greenhouse => false,
         }
     }
 
@@ -1420,7 +1423,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => true,
             WorldKind::Sandbox => self.meta.sandbox_companions_visible,
-            WorldKind::Boot => false,
+            WorldKind::Boot | WorldKind::Greenhouse => false,
         }
     }
 
@@ -1428,7 +1431,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => self.meta.main_scene_scaffold_visible,
             WorldKind::Sandbox => self.meta.sandbox_scaffold_visible,
-            WorldKind::Boot => false,
+            WorldKind::Boot | WorldKind::Greenhouse => false,
         }
     }
 
@@ -1454,7 +1457,7 @@ impl UiState {
         match self.meta.active_world_kind() {
             WorldKind::MainScene => 2,
             WorldKind::Sandbox => 3,
-            WorldKind::Boot => 1,
+            WorldKind::Boot | WorldKind::Greenhouse => 1,
         }
     }
 
@@ -2869,6 +2872,8 @@ mod tests {
         assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
         ui.cycle_world_kind();
         assert_eq!(ui.active_world_kind(), WorldKind::Sandbox);
+        ui.cycle_world_kind();
+        assert_eq!(ui.active_world_kind(), WorldKind::Greenhouse);
         ui.cycle_world_kind();
         assert_eq!(ui.active_world_kind(), WorldKind::MainScene);
     }

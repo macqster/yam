@@ -49,6 +49,16 @@ Good prompts should ask for options in small catalogs. For example:
 - five event/journal concepts that make plant lifecycles feel alive without
   requiring broad mechanics
 
+A second kind of external reference input, distinct from brainstorming
+prompts, is distilled analysis of real released plant-simulation software.
+[`docs/archive/greenhouse-brainstorming/highgrow_reference_analysis.md`](../archive/greenhouse-brainstorming/highgrow_reference_analysis.md)
+distills HighGrow 4.20 (already credited in `README.md`'s acknowledgements)
+into mechanics comparable to YAM's own vocabulary — room/fixture structure,
+a reusable soil-archetype data shape, a branch-on-prune growth-graph rule,
+and a deterministic once-per-day catch-up tick pattern for offline/idle
+time. Same promotion rule as brainstorming material: non-binding until an
+idea from it is explicitly pulled into this roadmap or `TODO.md`.
+
 ## Role
 
 - Own the greenhouse expansion roadmap.
@@ -70,14 +80,22 @@ The current repo already has the first seams that greenhouse work should use:
 
 - `WorldKind::profile()` owns selectable worlds, loading labels, composition,
   grid, camera defaults, guide plans, population plans, and capabilities.
-- `Boot` is explicitly not selectable; `MainScene` and `Sandbox` are the current
-  selectable worlds.
+- `Boot` is explicitly not selectable; `MainScene`, `Sandbox`, and `Greenhouse`
+  (added 2026-07-21) are the current selectable worlds, cycled with the same
+  `w` hotkey in that order.
 - `Sandbox` is the first sparse alternate space and should be treated as a dry
   trial surface for future room and guide work.
+- `Greenhouse` renders the active room (`GreenhouseState::nursery()`) through
+  a minimal read-only `GreenhouseLayer`: a bounds outline and a marker at each
+  fixture anchor, nothing more. No hero, companions, scaffold, or flora
+  runtime are active in this world (`WorldCapabilities` are all `false` except
+  `pointer_probe`).
 - `core::organism` owns the first shared identity, species registry, lifecycle,
   stats, and per-instance journal vocabulary.
-- `FloraState` is still vine-shaped in storage, but exposes family-count and
-  organism-identity adapters.
+- `FloraState` stores organisms through a locked enum-backed family store
+  (`FloraInstance`, one variant per family, currently only `Vine`) rather than
+  a bespoke per-family `Vec<T>` field, with `vines()`/`vines_mut()`/
+  `push_vine()` accessors and family-count/organism-identity adapters.
 - `core::spatial` owns the active projection, anchor, guide-index, and resolver
   vocabulary used by the central render paths.
 - Scene and render layers are read-only visualizers of world/flora/spatial
@@ -92,7 +110,7 @@ toolchain; other rows carried forward from the 2026-05-31 pass).
 Current status:
 
 - baseline verification is green: `bash scripts/verify.sh` passed with docs
-  checks, ownership checks, clippy, cargo check, and `258` tests
+  checks, ownership checks, clippy, cargo check, and `267` tests
 - `known_issues.md` has no active tracked issues
 - dependency inventory has one low-priority upstream duplicate: `cargo tree -d`
   reports `hashbrown` `0.16.1` through `kasuari` and `0.17.1` through `lru`,
@@ -104,26 +122,38 @@ Current status:
   the compatibility module it guarded was retired (zero remaining call sites
   outside its own tests), so `core::spatial` is now the sole spatial resolver
   with no compatibility layer left to isolate
-- `FloraState` still stores only vines, but family-count and organism-identity
-  adapters are tested and remain the current bridge toward a future enum-backed
-  family store decision
+- `FloraState`'s storage decision is now locked and implemented: an
+  enum-backed `FloraInstance` family store (still one `Vine` variant, since no
+  second family exists yet) replaced the bespoke `vines: Vec<VineInstance>`
+  field, with the full call-site migration (`systems::growth`,
+  `systems::aging`, `scene::layers::vine_layer`, `scene::layers::debug_layer`)
+  and dedicated `FloraInstance` tests landing 2026-07-21
+- `core::greenhouse::GreenhouseState` is now attached to `WorldState` as an
+  inert `Option<GreenhouseState>` field (2026-07-21): every current
+  `WorldKind` (`Boot`/`MainScene`/`Sandbox`) constructs it as `None` via an
+  explicit `greenhouse_for_kind(...)` match, so the attachment point exists
+  and is tested without any world rendering, ticking, or selecting greenhouse
+  content yet
 - Chafa/cache fallback tests cover missing GIF decode, unavailable Chafa,
   placeholder non-cacheability, and cache freshness
 
-No new guard or test was added during this readiness pass because the inspected
-0.4 gates already have matching coverage or an explicit open decision recorded
-below. The next implementation-prep work should resolve contract shape, not
-start visible greenhouse behavior.
+No new guard or test was added during this readiness pass beyond the flora
+storage and greenhouse attachment work above, because the remaining inspected
+0.4 gates already have matching coverage or an explicit open decision
+recorded below. The next implementation-prep work should keep resolving
+contract shape (a dedicated greenhouse world/room model, growth dispatch),
+not start visible greenhouse behavior.
 
 ## 0.4 Gate Checklist
 
 | Gate | Status | Evidence | Remaining Work |
 | --- | --- | --- | --- |
 | Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
-| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `258` tests (re-verified 2026-07-21 with a working toolchain) | Re-run before each implementation batch |
+| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `267` tests (re-verified 2026-07-21 with a working toolchain) | Re-run before each implementation batch |
 | Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
-| Flora storage decision | Decision-biased | `FloraState` adapters are tested; enum-backed family store is the current first-pass bias | Lock the enum-backed shape before a second plant family lands |
-| Greenhouse/world contract | Contract-ready, not runtime-ready | Functional-space contract lives below; `WorldKind::profile()` is the future world seam | Add pure data tests before any visible `WorldKind::Greenhouse` variant |
+| Flora storage decision | Locked | `FloraState` stores an enum-backed `FloraInstance` family store (locked and implemented 2026-07-21); all call sites migrated off the old `vines: Vec<VineInstance>` field | Add a new variant when a second family actually lands; no further shape decision needed |
+| Species-profile data format | Locked | Static Rust fixtures, matching `core::flora::border_vine_species_profile()` (locked 2026-07-21), validated by a `core::organism` test proving `SpeciesRegistry` holds multiple distinct profiles independently | Structured files remain deferred until schema stabilizes and real authoring volume appears |
+| Greenhouse/world contract | Selectable, minimal render live | `WorldKind::Greenhouse` landed 2026-07-21: selectable via the same `w`-cycle as `Sandbox`, `WorldState.greenhouse` populated with `GreenhouseState::nursery()` for that one world, and a minimal read-only `GreenhouseLayer` (room-bounds outline + fixture markers only, no labels) renders it. Verified end-to-end in the running app via `tmux`, not just unit tests. | Growth dispatch and inspection surfaces (popups, per-fixture detail) are still open; no organism occupies a planting site yet |
 | Hero/render fallback hardened | Prep-ready | Chafa fallback/cache tests cover missing GIF, unavailable Chafa, placeholder cache rejection, and cache freshness | Keep offline `CellGrid` / editor work deferred |
 
 ## Locked First-Pass Decisions
@@ -131,27 +161,42 @@ start visible greenhouse behavior.
 - Keep the greenhouse contract in this roadmap for now; create
   `docs/greenhouse.md` only after inert state exists or this roadmap becomes too
   crowded to remain readable.
-- The first code-bearing greenhouse slice has now landed as a pure
-  `core::greenhouse` data module with construction and invariant tests. It does
-  not render, tick growth, mutate flora, or add a selectable world.
-- The first visible greenhouse should eventually be a named
-  `WorldKind::Greenhouse`; the sandbox may support visual review, but it should
-  not become the hidden owner of greenhouse state.
+- The first code-bearing greenhouse slice landed as a pure `core::greenhouse`
+  data module with construction and invariant tests, then attached to
+  `WorldState` as `Option<GreenhouseState>` (2026-07-21). It still does not
+  tick growth, mutate flora, or expose mutation/inspection surfaces.
+- The first visible greenhouse is now a named `WorldKind::Greenhouse`
+  (2026-07-21), selectable via the same cycle as `Sandbox`; it did not become
+  hidden state on the sandbox or main scene.
 - The first room identity stays `greenhouse_nursery`: a nursery / propagation
   room with botanical-lab discipline and later conservatory atmosphere.
-- The first visual artifact stays a docs/plain-text room sketch until pure data
-  ownership is tested; no screenshot or golden art lock should lead the design.
+- The first visual artifact was a docs/plain-text room sketch until pure data
+  ownership was tested (per this same rule); once `WorldState` attachment was
+  verified with real tests and the pure-data gate closed, a minimal render
+  landed (2026-07-21): a room-bounds outline plus fixture-anchor markers only,
+  no per-fixture art, no labels, no golden-art lock — deliberately smaller
+  than a finished room sketch, matching the spirit of this rule rather than
+  ending it.
 - The first environment model is symbolic and room-level: light, humidity,
   temperature, water, airflow, substrate, and outside-weather influence, with
   outside weather disabled by default.
 - First inspection is read-only and closer-look oriented. Mutation controls,
   care loops, and edit surfaces wait until read-only inspection is stable.
 - First room capacity stays tiny: one to three planting sites per room.
-- First species/profile data, when plant work is promoted later, starts as
-  static Rust fixtures. Structured files wait until the schema stabilizes.
-- First flora-storage generalization remains biased toward an enum-backed family
-  store. A generic registry or broader store must beat that bias with a concrete
-  simplification.
+- First species/profile data format is locked (2026-07-21): static Rust
+  fixtures, matching the existing `border_vine_species_profile()` pattern in
+  `core::flora`, not structured data files. Validated by a new
+  `core::organism` test (`species_registry_holds_multiple_distinct_profiles_independently`)
+  proving `SpeciesRegistry` genuinely holds more than one fixture-built
+  profile at once with correct independent lookup, not just a single entry.
+  Structured files remain deferred until the schema stabilizes and a real
+  authoring-volume need appears; this is not an open bias to revisit
+  speculatively.
+- First flora-storage generalization is locked and implemented as an
+  enum-backed `FloraInstance` family store (2026-07-21). A generic registry
+  or broader store would need to beat this shape with a concrete
+  simplification once a second family is actually proposed; it is not an
+  open bias to revisit speculatively.
 
 ## North Star
 
@@ -696,25 +741,28 @@ Gate:
 
 Goal: prepare organism storage before adding a second plant family.
 
+Status (2026-07-21): both decision tasks below are done. `FloraState` now
+stores an enum-backed `FloraInstance` family store (one `Vine` variant
+today), and species-profile data format is locked as static Rust fixtures.
+The remaining task in this phase (naming actual candidate profiles) is still
+open and still gated behind a later work order.
+
 Tasks:
 
-- decide how `FloraState` grows beyond `vines`: enum-backed family store,
-  organism registry, or another small explicit structure
-- treat enum-backed family store as the current bias for the first
-  generalization, unless inspection proves an organism registry or explicit
-  multi-family structure is simpler
-- keep organism identity, species id, journal id, lifecycle state, stats, and
-  family vocabulary on every organism
-- decide whether first greenhouse species profiles are Rust fixtures or
-  structured data
+- ~~decide how `FloraState` grows beyond `vines`~~ — decided and implemented:
+  enum-backed `FloraInstance` family store
+- ~~decide whether first greenhouse species profiles are Rust fixtures or
+  structured data~~ — decided and validated: static Rust fixtures, proven by
+  a `core::organism` test registering and independently resolving multiple
+  fixture-built profiles at once
 - keep `seedling_tray` and `cutting_jar` as first candidate profiles
 - do not implement this phase during the first functional-space pass unless a
   later work order explicitly promotes plant-system work
 
 Gate:
 
-- no ad hoc top-level organism vector is added beside `FloraState::vines`
-  without a storage decision
+- no ad hoc top-level organism vector is added beside `FloraState::organisms`
+  (`FloraInstance` is the one closed enum for family variants) — satisfied
 - no plant-system-first implementation bypasses the room/site/environment
   contract
 
@@ -867,8 +915,8 @@ Stop conditions:
 - plant-system-first greenhouse work before the functional-space contract is
   stable
 - a selectable greenhouse world without room/environment ownership
-- another plant-family store beside `FloraState::vines` without a storage
-  decision
+- another plant-family store beside `FloraState::organisms`'s `FloraInstance`
+  family enum without a storage decision
 - screenshot/golden art locks before the visual vocabulary stabilizes
 - main-scene visual changes before transfer gates exist
 - crop simulation, harvest loops, genetics, yield optimization, or realistic
@@ -898,9 +946,6 @@ Handoff checklist:
   bias: per room first, planting-site modifiers later.
 - Should inspection begin as popups or a dedicated registry mode? Current bias:
   popups first, registry mode later if population size justifies it.
-- Should species definitions remain static Rust fixtures or move to structured
-  files? Current bias: static fixtures for the first two families, structured
-  data once the schema stabilizes.
 - Should greenhouse progression have game-like mechanics? Current bias: no;
   use curation, inspection, review, and promotion vocabulary instead.
 - Should Lua or another script layer enter species authoring? Current bias:

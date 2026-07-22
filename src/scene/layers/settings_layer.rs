@@ -277,7 +277,7 @@ fn feature_lines(ui: &UiState) -> Vec<String> {
                 }
             ),
         ],
-        crate::core::world::WorldKind::Boot => {
+        crate::core::world::WorldKind::Boot | crate::core::world::WorldKind::Greenhouse => {
             vec!["no scene feature toggles in this world".to_string()]
         }
     }

@@ -117,7 +117,7 @@
 - the UI should also expose read-only preview lists for guide sets and subsets so grouped geometry, such as a polyline outline used for a mask shape, can be inspected without mutation
 - the flora architecture should follow a hybrid graph-plus-segment model: plant state is a growth graph of organs, while geometry is emitted as Euclidean segments and outlines under deterministic rules
 - plant simulation must treat each organism as an independent life-form with identity, species id, family, lifecycle state, stats, and journal-backed events; species defaults live in a registry, while runtime history stays with the organism instance in `WorldState` / `FloraState`
-- the shared plant vocabulary should build from `core::organism`, `FloraState`, `SpeciesRegistry`, `OrganismJournal`, and `core::spatial`; do not add another ad hoc top-level plant-family store before the multi-family storage shape is chosen
+- the shared plant vocabulary should build from `core::organism`, `FloraState`, `SpeciesRegistry`, `OrganismJournal`, and `core::spatial`; the multi-family storage shape is locked (2026-07-21) as an enum-backed `FloraInstance` family store (`FloraState.organisms: Vec<FloraInstance>`, one variant per family), so a second family adds a variant there rather than another ad hoc top-level plant-family store
 - morphology and terminology details belong in [`scene-model.md`](scene-model.md) and [`glossary.md`](glossary.md); vine-specific readiness lives in [`vines.md`](vines.md); greenhouse strategy, staged operation, candidate species, fixture, environment, and inspection planning live in [`greenhouse-roadmap.md`](greenhouse-roadmap.md)
 - the main scene remains the live visualiser/screensaver composition, while the greenhouse remains a future separate simulation world or world-internal room model for multi-room lifecycle tuning and organism curation
 - linework guides are rendered through a shared Bresenham-style geometry layer plus a glyph-appearance layer, following [`docs/soft-line-atlas.md`](soft-line-atlas.md) for shallow/stroke transitions and longer world-spanning lines, not with filled blocks or raster masks; the engine target is universal line coverage across the full YAM world size, using the grammar key `LineFamily -> LengthBucket -> Direction -> PhaseRole -> LocalStep`
@@ -176,6 +176,7 @@
 
 - field/background: `z_index = 0`
 - hero/entity: `z_index = 10`
+- greenhouse room (bounds outline and fixture markers, `WorldKind::Greenhouse` only): `z_index = 10`
 - clock/world companion: `z_index = 100`
 - weather/world companion: `z_index = 100`
 - debug overlay: `z_index = 300`

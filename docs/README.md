@@ -40,7 +40,7 @@ The repo front door is [../README.md](../README.md).
 
 - [apple-music-companion.md](apple-music-companion.md) - Apple Music companion feasibility and architecture note
 - [reference-sigye.md](reference-sigye.md) - reference study of `sigye`
-- [release-model.md](release-model.md) - branch and release policy
+- [release-model.md](release-model.md) - branch/version policy; no public release, ever (build from source only)
 - [resource-map.md](resource-map.md) - research/reference map
 - [palette-reference.md](palette-reference.md) - human-friendly BTAS/TNBA palette chain summary
 - [palette-sheet-reference.md](palette-sheet-reference.md) - palette-sheet source/export handoff note

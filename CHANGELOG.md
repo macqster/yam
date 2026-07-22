@@ -6,8 +6,12 @@ here, in the style of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This file is a curated summary. For the full, detailed, append-only record of
 every maintenance batch, see [`docs/LOG.md`](docs/LOG.md).
 
-No release has been tagged yet; everything below is accumulating under
-`Unreleased` ahead of the first real `0.x` tag.
+This project has no public release process — see
+[`docs/release-model.md`](docs/release-model.md)'s Distribution section: no
+GitHub Releases, tags, or prebuilt binaries will ever be provided, and the
+only way to run YAM is to build it from source. `Unreleased` below is a
+permanent heading, not a holding area for a future tag; it accumulates the
+full change history in one running section instead of per-version ones.
 
 ## [Unreleased]
 

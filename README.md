@@ -162,6 +162,7 @@ read these first:
 - [docs/audit.md](docs/audit.md) - current risk and drift snapshot
 - [docs/LOG.md](docs/LOG.md) - append-only project history
 - [CHANGELOG.md](CHANGELOG.md) - curated user/developer-facing change summary
+- [docs/release-model.md](docs/release-model.md) - branch/version policy; no public release, ever (build from source only)
 
 core contracts:
 

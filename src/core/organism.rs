@@ -121,6 +121,7 @@ impl OrganismIdentity {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OrganismFamily {
     Vine,
+    Seedling,
 }
 
 #[allow(dead_code)]

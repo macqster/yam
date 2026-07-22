@@ -1,6 +1,6 @@
 use crate::core::flora::{
-    VineGrowthTipState, VineHealth, VineInstance, VineLifeState, VineSegment,
-    BORDER_VINE_GROWTH_INTERVAL_TICKS, BORDER_VINE_MAX_SEGMENTS,
+    SeedlingInstance, SeedlingLifeState, VineGrowthTipState, VineHealth, VineInstance,
+    VineLifeState, VineSegment, BORDER_VINE_GROWTH_INTERVAL_TICKS, BORDER_VINE_MAX_SEGMENTS,
 };
 use crate::core::spatial::SpatialPoint as WorldPos;
 use crate::core::world::WorldState;
@@ -17,6 +17,43 @@ pub fn run_growth(world: &mut WorldState) {
     for vine in world.flora.vines_mut() {
         grow_vine(vine);
     }
+}
+
+/// The first greenhouse growth cadence, distinct from the vine cadence above
+/// since it is a separate family with its own tuning; nothing currently
+/// requires them to match.
+pub const GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS: u64 = 6;
+
+/// Advances every greenhouse seedling's deterministic growth stage by one
+/// step, gated on its own tick cadence. Iterates every seedling in
+/// `world.flora` rather than one hardcoded id, matching `run_growth`'s and
+/// `run_aging`'s all-instances shape. Per `docs/greenhouse-roadmap.md` Phase
+/// 7, this is deliberately a fixture-based life-state stage advance, not
+/// tick-based geometric mutation like vine growth: unlike `VineInstance`,
+/// `SeedlingInstance` has no axes/segments to extend.
+pub fn run_greenhouse_growth(world: &mut WorldState) {
+    if !(world.tick + 1).is_multiple_of(GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS) {
+        return;
+    }
+
+    for seedling in world.flora.seedlings_mut() {
+        grow_seedling(seedling);
+    }
+}
+
+fn grow_seedling(seedling: &mut SeedlingInstance) {
+    let next_state = match seedling.life_state {
+        SeedlingLifeState::Dormant => Some(SeedlingLifeState::Growing),
+        SeedlingLifeState::Growing => Some(SeedlingLifeState::Mature),
+        SeedlingLifeState::Mature | SeedlingLifeState::Senescent | SeedlingLifeState::Dead => None,
+    };
+
+    let Some(next_state) = next_state else {
+        return;
+    };
+
+    seedling.life_state = next_state;
+    seedling.stats.age_ticks += 1;
 }
 
 fn grow_vine(vine: &mut VineInstance) {
@@ -268,5 +305,86 @@ mod tests {
             world.flora.vines()[0].growth_tips[0].remaining_growth_steps,
             0
         );
+    }
+
+    mod greenhouse {
+        use super::super::{run_greenhouse_growth, GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS};
+        use crate::core::flora::{SeedlingInstance, SeedlingLifeState};
+        use crate::core::organism::{JournalId, OrganismId, SpeciesId};
+        use crate::core::world::WorldState;
+
+        #[test]
+        fn advances_seedling_through_life_stages_on_its_own_cadence() {
+            let mut world = WorldState::for_greenhouse();
+            assert_eq!(
+                world.flora.seedlings()[0].life_state,
+                SeedlingLifeState::Dormant
+            );
+
+            world.tick = GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS - 1;
+            run_greenhouse_growth(&mut world);
+            assert_eq!(
+                world.flora.seedlings()[0].life_state,
+                SeedlingLifeState::Growing
+            );
+            assert_eq!(world.flora.seedlings()[0].stats.age_ticks, 1);
+
+            world.tick += GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS;
+            run_greenhouse_growth(&mut world);
+            assert_eq!(
+                world.flora.seedlings()[0].life_state,
+                SeedlingLifeState::Mature
+            );
+            assert_eq!(world.flora.seedlings()[0].stats.age_ticks, 2);
+
+            // A mature seedling does not keep advancing or aging further.
+            world.tick += GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS;
+            run_greenhouse_growth(&mut world);
+            assert_eq!(
+                world.flora.seedlings()[0].life_state,
+                SeedlingLifeState::Mature
+            );
+            assert_eq!(world.flora.seedlings()[0].stats.age_ticks, 2);
+        }
+
+        #[test]
+        fn waits_for_its_own_tick_cadence_before_advancing() {
+            let mut world = WorldState::for_greenhouse();
+            world.tick = 0;
+
+            run_greenhouse_growth(&mut world);
+
+            assert_eq!(
+                world.flora.seedlings()[0].life_state,
+                SeedlingLifeState::Dormant
+            );
+        }
+
+        #[test]
+        fn advances_every_seedling_not_only_the_first_seeded_one() {
+            let mut world = WorldState::for_greenhouse();
+            world.flora.push_seedling(SeedlingInstance {
+                id: OrganismId::new(99),
+                species_id: SpeciesId::new("yam.seedling.fixture"),
+                journal_id: JournalId::new("journal.seedling.fixture.99"),
+                life_state: SeedlingLifeState::Dormant,
+                stats: crate::core::organism::OrganismStats {
+                    age_ticks: 0,
+                    vigor: 100,
+                },
+            });
+
+            world.tick = GREENHOUSE_SEEDLING_GROWTH_INTERVAL_TICKS - 1;
+            run_greenhouse_growth(&mut world);
+
+            assert!(
+                world
+                    .flora
+                    .seedlings()
+                    .iter()
+                    .all(|seedling| seedling.life_state == SeedlingLifeState::Growing),
+                "every seedling should advance, not just one hardcoded id"
+            );
+        }
     }
 }

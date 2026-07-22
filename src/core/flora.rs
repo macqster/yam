@@ -117,6 +117,30 @@ pub struct VineGuidePath {
     pub points: Vec<WorldPos>,
 }
 
+pub type SeedlingLifeState = OrganismLifeState;
+pub type SeedlingStats = OrganismStats;
+
+/// A greenhouse nursery organism. Deliberately static/symbolic rather than
+/// geometric (no axes, segments, or growth tips like `VineInstance`): the
+/// first greenhouse growth pass is a life-state stage advance only, matching
+/// `docs/greenhouse-roadmap.md` Phase 7's "start with fixture-based or
+/// static stages before tick-based mutation."
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SeedlingInstance {
+    pub id: OrganismId,
+    pub species_id: SpeciesId,
+    pub journal_id: JournalId,
+    pub life_state: SeedlingLifeState,
+    pub stats: SeedlingStats,
+}
+
+impl SeedlingInstance {
+    pub fn identity(&self) -> OrganismIdentity {
+        OrganismIdentity::new(self.id, self.species_id.clone(), self.journal_id.clone())
+    }
+}
+
 /// The locked flora-storage shape: one closed enum wrapping each family's own
 /// instance type, held in a single unified `Vec`, rather than one bespoke
 /// `Vec<T>` field per family. Adding a second family means adding a variant
@@ -126,6 +150,7 @@ pub struct VineGuidePath {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FloraInstance {
     Vine(VineInstance),
+    Seedling(SeedlingInstance),
 }
 
 impl FloraInstance {
@@ -133,24 +158,42 @@ impl FloraInstance {
     pub fn family(&self) -> OrganismFamily {
         match self {
             FloraInstance::Vine(_) => OrganismFamily::Vine,
+            FloraInstance::Seedling(_) => OrganismFamily::Seedling,
         }
     }
 
     pub fn identity(&self) -> OrganismIdentity {
         match self {
             FloraInstance::Vine(vine) => vine.identity(),
+            FloraInstance::Seedling(seedling) => seedling.identity(),
         }
     }
 
     pub fn as_vine(&self) -> Option<&VineInstance> {
         match self {
             FloraInstance::Vine(vine) => Some(vine),
+            FloraInstance::Seedling(_) => None,
         }
     }
 
     pub fn as_vine_mut(&mut self) -> Option<&mut VineInstance> {
         match self {
             FloraInstance::Vine(vine) => Some(vine),
+            FloraInstance::Seedling(_) => None,
+        }
+    }
+
+    pub fn as_seedling(&self) -> Option<&SeedlingInstance> {
+        match self {
+            FloraInstance::Seedling(seedling) => Some(seedling),
+            FloraInstance::Vine(_) => None,
+        }
+    }
+
+    pub fn as_seedling_mut(&mut self) -> Option<&mut SeedlingInstance> {
+        match self {
+            FloraInstance::Seedling(seedling) => Some(seedling),
+            FloraInstance::Vine(_) => None,
         }
     }
 }
@@ -229,6 +272,41 @@ pub fn border_vine_species_profile() -> SpeciesProfile {
 #[allow(dead_code)]
 pub fn border_vine_species_registry() -> SpeciesRegistry {
     SpeciesRegistry::with_profiles(vec![border_vine_species_profile()])
+}
+
+pub const FIRST_GREENHOUSE_SEEDLING_ID: u32 = 1;
+pub const FIRST_GREENHOUSE_SEEDLING_ORGANISM_ID: OrganismId =
+    OrganismId::new(FIRST_GREENHOUSE_SEEDLING_ID);
+pub const FIRST_GREENHOUSE_SEEDLING_SPECIES_ID: &str = "yam.seedling.nursery_v1";
+pub const FIRST_GREENHOUSE_SEEDLING_JOURNAL_ID: &str = "journal.seedling.nursery_v1.seed";
+
+#[allow(dead_code)]
+pub fn first_greenhouse_seedling() -> SeedlingInstance {
+    SeedlingInstance {
+        id: FIRST_GREENHOUSE_SEEDLING_ORGANISM_ID,
+        species_id: SpeciesId::new(FIRST_GREENHOUSE_SEEDLING_SPECIES_ID),
+        journal_id: JournalId::new(FIRST_GREENHOUSE_SEEDLING_JOURNAL_ID),
+        life_state: SeedlingLifeState::Dormant,
+        stats: SeedlingStats {
+            age_ticks: 0,
+            vigor: 100,
+        },
+    }
+}
+
+#[allow(dead_code)]
+pub fn greenhouse_seedling_species_profile() -> SpeciesProfile {
+    SpeciesProfile {
+        species_id: SpeciesId::new(FIRST_GREENHOUSE_SEEDLING_SPECIES_ID),
+        display_name: "nursery seedling".to_string(),
+        family: OrganismFamily::Seedling,
+        habit: "static nursery-tray seedling".to_string(),
+        anatomy_defaults: "single symbolic growth stage, no geometric axes".to_string(),
+        growth_rule: "deterministic life-state stage advance on a fixed tick interval".to_string(),
+        lifecycle_tuning: "seeded dormant, growing, mature after the stage budget".to_string(),
+        allowed_organs: Vec::new(),
+        debug_label: "nursery seedling".to_string(),
+    }
 }
 
 #[allow(dead_code)]
@@ -449,6 +527,13 @@ impl FloraState {
     }
 
     #[allow(dead_code)]
+    pub fn with_first_greenhouse_seedling() -> Self {
+        Self {
+            organisms: vec![FloraInstance::Seedling(first_greenhouse_seedling())],
+        }
+    }
+
+    #[allow(dead_code)]
     pub fn organism_count(&self) -> usize {
         self.organisms.len()
     }
@@ -463,10 +548,16 @@ impl FloraState {
 
     #[allow(dead_code)]
     pub fn family_summary(&self) -> Vec<FloraFamilySummary> {
-        vec![FloraFamilySummary {
-            family: OrganismFamily::Vine,
-            count: self.family_count(OrganismFamily::Vine),
-        }]
+        vec![
+            FloraFamilySummary {
+                family: OrganismFamily::Vine,
+                count: self.family_count(OrganismFamily::Vine),
+            },
+            FloraFamilySummary {
+                family: OrganismFamily::Seedling,
+                count: self.family_count(OrganismFamily::Seedling),
+            },
+        ]
     }
 
     #[allow(dead_code)]
@@ -499,6 +590,31 @@ impl FloraState {
     #[allow(dead_code)]
     pub fn push_vine(&mut self, vine: VineInstance) {
         self.organisms.push(FloraInstance::Vine(vine));
+    }
+
+    /// Read-only view of every seedling instance, filtered out of the
+    /// unified `organisms` store. Mirrors [`FloraState::vines`].
+    #[allow(dead_code)]
+    pub fn seedlings(&self) -> Vec<&SeedlingInstance> {
+        self.organisms
+            .iter()
+            .filter_map(FloraInstance::as_seedling)
+            .collect()
+    }
+
+    /// Mutable counterpart to [`FloraState::seedlings`].
+    #[allow(dead_code)]
+    pub fn seedlings_mut(&mut self) -> Vec<&mut SeedlingInstance> {
+        self.organisms
+            .iter_mut()
+            .filter_map(FloraInstance::as_seedling_mut)
+            .collect()
+    }
+
+    /// Adds a seedling instance to the unified organism store.
+    #[allow(dead_code)]
+    pub fn push_seedling(&mut self, seedling: SeedlingInstance) {
+        self.organisms.push(FloraInstance::Seedling(seedling));
     }
 }
 
@@ -662,10 +778,16 @@ mod tests {
         assert_eq!(flora.family_count(OrganismFamily::Vine), 1);
         assert_eq!(
             flora.family_summary(),
-            vec![FloraFamilySummary {
-                family: OrganismFamily::Vine,
-                count: 1,
-            }]
+            vec![
+                FloraFamilySummary {
+                    family: OrganismFamily::Vine,
+                    count: 1,
+                },
+                FloraFamilySummary {
+                    family: OrganismFamily::Seedling,
+                    count: 0,
+                },
+            ]
         );
         assert_eq!(
             flora.organism_identities(),

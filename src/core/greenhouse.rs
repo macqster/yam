@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::core::organism::OrganismId;
 use crate::core::spatial::SpatialPoint;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -205,6 +206,12 @@ pub struct PlantingSite {
     pub anchor: SpatialPoint,
     pub capacity: u8,
     pub fixture_id: Option<FixtureId>,
+    /// A soft reference to the organism occupying this site, if any. This is
+    /// a pointer only: the planting site does not own organism/plant state
+    /// (that lives in `FloraState`, per the Functional-Space Contract's
+    /// Minimum Data Owners table), so nothing here is invalidated if the
+    /// referenced organism is ever removed elsewhere.
+    pub occupant: Option<OrganismId>,
 }
 
 #[allow(dead_code)]
@@ -439,6 +446,11 @@ impl GreenhouseRoom {
                     anchor: SpatialPoint::new(-12, 1),
                     capacity: 1,
                     fixture_id: Some(FixtureId::new("left_tray")),
+                    // The first greenhouse organism: a soft reference only,
+                    // not ownership -- see `PlantingSite::occupant`'s doc
+                    // comment. The actual seedling data lives in
+                    // `FloraState`, populated via `WorldPopulationPlan`.
+                    occupant: Some(crate::core::flora::FIRST_GREENHOUSE_SEEDLING_ORGANISM_ID),
                 },
                 PlantingSite {
                     id: PlantingSiteId::new("cutting_jar_slot"),
@@ -447,6 +459,7 @@ impl GreenhouseRoom {
                     anchor: SpatialPoint::new(-5, 1),
                     capacity: 1,
                     fixture_id: Some(FixtureId::new("cutting_jar_slot")),
+                    occupant: None,
                 },
                 PlantingSite {
                     id: PlantingSiteId::new("specimen_shelf_slot"),
@@ -455,6 +468,7 @@ impl GreenhouseRoom {
                     anchor: SpatialPoint::new(12, 1),
                     capacity: 1,
                     fixture_id: Some(FixtureId::new("specimen_shelf")),
+                    occupant: None,
                 },
             ],
             environment: EnvironmentProfile {
@@ -737,6 +751,7 @@ mod tests {
             anchor: SpatialPoint::new(14, 1),
             capacity: 1,
             fixture_id: Some(FixtureId::new("specimen_shelf")),
+            occupant: None,
         });
 
         GreenhouseState::new(

@@ -72,6 +72,7 @@ pub enum WorldGuidePlan {
 pub enum WorldPopulationPlan {
     Empty,
     MainSceneBorderVine,
+    GreenhouseNurserySeedling,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -182,7 +183,7 @@ impl WorldKind {
                 grid: DEFAULT_WORLD_GRID,
                 camera: DEFAULT_WORLD_CAMERA,
                 guide_plan: WorldGuidePlan::Empty,
-                population_plan: WorldPopulationPlan::Empty,
+                population_plan: WorldPopulationPlan::GreenhouseNurserySeedling,
                 capabilities: WorldCapabilities {
                     scene_companions: false,
                     flora_runtime: false,
@@ -334,6 +335,9 @@ fn flora_for_plan(plan: WorldPopulationPlan) -> FloraState {
     match plan {
         WorldPopulationPlan::Empty => FloraState::new(),
         WorldPopulationPlan::MainSceneBorderVine => FloraState::with_border_vine_seed(),
+        WorldPopulationPlan::GreenhouseNurserySeedling => {
+            FloraState::with_first_greenhouse_seedling()
+        }
     }
 }
 
@@ -554,13 +558,41 @@ mod tests {
     }
 
     #[test]
-    fn greenhouse_world_has_no_hero_companions_or_flora() {
+    fn greenhouse_world_has_no_hero_companions_or_vines() {
         let world = WorldState::for_greenhouse();
 
         assert!(world.flora.vines().is_empty());
         assert!(!world.kind.has_flora_runtime());
         assert!(!world.kind.has_main_scene_composition());
         assert_eq!(world.scaffold.segments.len(), 0);
+    }
+
+    #[test]
+    fn greenhouse_world_seeds_one_seedling_occupying_the_left_tray() {
+        let world = WorldState::for_greenhouse();
+
+        let seedlings = world.flora.seedlings();
+        assert_eq!(seedlings.len(), 1);
+        let seedling = seedlings[0];
+
+        let room = world
+            .greenhouse
+            .as_ref()
+            .expect("greenhouse world must carry greenhouse state")
+            .active_room()
+            .expect("active room");
+        let left_tray = room
+            .planting_sites
+            .iter()
+            .find(|site| site.id.as_str() == "left_tray")
+            .expect("left tray planting site");
+
+        assert_eq!(left_tray.occupant, Some(seedling.id));
+        assert!(room
+            .planting_sites
+            .iter()
+            .filter(|site| site.id.as_str() != "left_tray")
+            .all(|site| site.occupant.is_none()));
     }
 
     #[test]

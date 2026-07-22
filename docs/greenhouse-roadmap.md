@@ -663,9 +663,17 @@ summary is the pointer, and the 0.4 Gate Checklist above carries the detail):
   2026-07-21, ahead of Phase 7 in practice (the roadmap's own dependency
   order lists render after growth dispatch, but the user-confirmed scope for
   this slice was selectable-plus-render; no growth dispatch was implied or
-  built)
-- Phase 7 (growth dispatch probe): **not started** — no organism occupies a
-  planting site yet; this is the natural next slice
+  built at the time)
+- Phase 7 (growth dispatch probe): **done** (2026-07-22) — a first
+  `OrganismFamily::Seedling` occupies the nursery's `left_tray` planting
+  site (a soft `PlantingSite::occupant: Option<OrganismId>` reference, not
+  ownership, per the Minimum Data Owners table), with a deterministic
+  life-state stage advance (`Dormant -> Growing -> Mature`) on its own tick
+  cadence, matching "fixture-based/static stages before tick-based
+  mutation." Journal event *wiring* (the vocabulary already exists in
+  `core::organism::OrganismJournal`) is deliberately deferred: it isn't
+  wired in for vines either yet, and doing it only for seedlings would be
+  inconsistent rather than a real Phase 7 gap.
 - Phases 9-11 (inspection/dev surface, curation/transfer gates, creative
   expansion loop): **not started**
 

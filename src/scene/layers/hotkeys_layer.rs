@@ -56,6 +56,7 @@ impl Layer for HotkeysLayer {
                     HelpLine::item("sandbox: features tab hosts prototype toggles"),
                     HelpLine::item("[P] palette popup"),
                     HelpLine::item("[W] weather popup"),
+                    HelpLine::item("[i] greenhouse inspect"),
                     HelpLine::item("[p] pointer probe"),
                     HelpLine::item("[v] vines"),
                     HelpLine::item("[F5] next font"),
@@ -88,6 +89,7 @@ impl Layer for HotkeysLayer {
                     HelpLine::item("[m] move strip"),
                     HelpLine::item("[P] palette popup"),
                     HelpLine::item("[W] weather popup"),
+                    HelpLine::item("[i] greenhouse inspect"),
                     HelpLine::item("[p] pointer probe"),
                 ],
                 vec![
@@ -255,6 +257,7 @@ mod tests {
         assert!(text.contains("in dev mode"));
         assert!(text.contains("[m] move strip"));
         assert!(text.contains("[Tab/Shift+Tab] cycle move target"));
-        assert!(!text.contains("inspect"));
+        assert!(text.contains("[i] greenhouse inspect"));
+        assert!(!text.contains("core"));
     }
 }

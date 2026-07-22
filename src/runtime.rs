@@ -203,6 +203,9 @@ pub fn run(
                     KeyCode::Char('W') if ui_state.weather_popup_toggle_allowed() => {
                         ui_state.toggle_weather_popup();
                     }
+                    KeyCode::Char('i') if ui_state.greenhouse_inspect_toggle_allowed() => {
+                        ui_state.toggle_greenhouse_inspect();
+                    }
                     KeyCode::Char('m') if ui_state.move_mode_toggle_allowed() => {
                         ui_state.toggle_move_mode()
                     }

@@ -66,11 +66,10 @@ Issue link rule:
   access paths, zones, fixtures, planting sites, symbolic environment, and
   read-only inspection before new plant families, lifecycle systems, or
   persistence.
-- `verify` keep `core::greenhouse` state itself inert even though it's now attached and minimally rendered (2026-07-21, `GreenhouseLayer`: bounds outline + fixture markers only): no growth dispatch, no mutation, no inspect popups, no organism occupying a planting site yet.
+- `verify` growth dispatch and inspection have landed (2026-07-22): a first `OrganismFamily::Seedling` occupies `left_tray` (soft `PlantingSite::occupant` reference) and advances `Dormant -> Growing -> Mature` on its own tick cadence via `run_greenhouse_growth`; a read-only `GreenhouseInspectLayer` (`i` hotkey, dev-mode + Greenhouse-world gated) surfaces the room's `inspection_refs`. Remaining: per-fixture/per-organism live detail and any curation/transfer write-path.
 - `verify` greenhouse remains a separate simulation world (`WorldKind::Greenhouse`), not panel chrome layered on top of the main scene; room selection stays internal to world state.
 - `inspect` preserve the newly ingested greenhouse identity hierarchy before UI work: greenhouse/lab, planting site or bay, support, organism, warning, and journal-link identities must stay distinct.
 - `inspect` if greenhouse grows into a frame-plus-labs structure later, promote it in order: single inert nursery room first, then room-to-lab naming, then greenhouse frame/navigation chrome only after room ownership is proven.
-- `inspect` decide whether greenhouse inspection starts as lightweight per-organism popups or a dedicated registry/journal mode before building either surface.
 - `inspect` keep the first external creative-input request bounded by the roadmap brief so ideas enter as room profiles, species profiles, fixtures, environment presets, or inspection text instead of hidden UI or render-owned behavior.
 - `verify` greenhouse progression remains curation-oriented rather than game-like: no chores, currency, unlock grind, daily obligations, or automatic main-scene mutation from transfer status.
 

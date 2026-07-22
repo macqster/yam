@@ -153,7 +153,7 @@ not start visible greenhouse behavior.
 | Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
 | Flora storage decision | Locked | `FloraState` stores an enum-backed `FloraInstance` family store (locked and implemented 2026-07-21); all call sites migrated off the old `vines: Vec<VineInstance>` field | Add a new variant when a second family actually lands; no further shape decision needed |
 | Species-profile data format | Locked | Static Rust fixtures, matching `core::flora::border_vine_species_profile()` (locked 2026-07-21), validated by a `core::organism` test proving `SpeciesRegistry` holds multiple distinct profiles independently | Structured files remain deferred until schema stabilizes and real authoring volume appears |
-| Greenhouse/world contract | Selectable, minimal render live | `WorldKind::Greenhouse` landed 2026-07-21: selectable via the same `w`-cycle as `Sandbox`, `WorldState.greenhouse` populated with `GreenhouseState::nursery()` for that one world, and a minimal read-only `GreenhouseLayer` (room-bounds outline + fixture markers only, no labels) renders it. Verified end-to-end in the running app via `tmux`, not just unit tests. | Growth dispatch and inspection surfaces (popups, per-fixture detail) are still open; no organism occupies a planting site yet |
+| Greenhouse/world contract | Ready | `WorldKind::Greenhouse` landed 2026-07-21: selectable via the same `w`-cycle as `Sandbox`, `WorldState.greenhouse` populated with `GreenhouseState::nursery()`, and a minimal read-only `GreenhouseLayer` renders it. Growth dispatch landed 2026-07-22: a first `OrganismFamily::Seedling` occupies `left_tray` and advances `Dormant -> Growing -> Mature` on a 6-tick cadence via `run_greenhouse_growth`. Inspection landed 2026-07-22: a read-only `GreenhouseInspectLayer` (`i` hotkey) surfaces the room's 4 `inspection_refs`. All verified end-to-end in the running app via `tmux`, not just unit tests. | Per-fixture live detail (beyond the static ref text) and any curation/transfer write-path are deferred to Phase 10+ |
 | Hero/render fallback hardened | Prep-ready | Chafa fallback/cache tests cover missing GIF, unavailable Chafa, placeholder cache rejection, and cache freshness | Keep offline `CellGrid` / editor work deferred |
 
 ## Locked First-Pass Decisions
@@ -674,8 +674,17 @@ summary is the pointer, and the 0.4 Gate Checklist above carries the detail):
   `core::organism::OrganismJournal`) is deliberately deferred: it isn't
   wired in for vines either yet, and doing it only for seedlings would be
   inconsistent rather than a real Phase 7 gap.
-- Phases 9-11 (inspection/dev surface, curation/transfer gates, creative
-  expansion loop): **not started**
+- Phase 9 (inspection, labels, and dev surface): **started, read-only slice
+  done** (2026-07-22) — a `GreenhouseInspectLayer` (`i` hotkey, dev-mode and
+  Greenhouse-world gated, participates in the standard popup mutual-exclusion
+  set) surfaces the active room's pre-existing `inspection_refs` (label +
+  short_text for each of `room_overview`, `bench_overview`,
+  `marker_reference`, `left_tray_reference`) read-only. No selection,
+  per-fixture live detail beyond the static ref text, or write-path (curation)
+  work is included — that is the remaining Phase 9 scope, layered on top of
+  this base
+- Phases 10-11 (curation/transfer gates, creative expansion loop): **not
+  started**
 
 ### Phase 0: Intake And Framing
 
@@ -921,19 +930,18 @@ Gate:
 - creative output becomes data, contract text, fixtures, or small tasks
 - the greenhouse remains a place with rules, not a pile of decorations
 
-Immediate next tasks (revised 2026-07-22 — the list above was fully resolved:
-`docs/greenhouse.md` split stays deferred, the functional-space contract and
-flora-storage generalization are both locked and implemented, and pure data
-tests for room/zone/fixture/environment/planting-site/inspectable refs all
-exist in `core::greenhouse`'s own test module):
+Immediate next tasks (revised 2026-07-22 — Phase 7 growth dispatch and the
+read-only slice of Phase 9 inspection have both landed: a first
+`OrganismFamily::Seedling` occupies `left_tray` and advances on its own tick
+cadence, and a `GreenhouseInspectLayer` (`i` hotkey) surfaces the room's
+`inspection_refs` read-only):
 
-- Phase 7, growth dispatch probe: define lifecycle/stability/transfer status
-  vocabulary, then the smallest deterministic growth behavior for one
-  organism in one planting site; keep it fixture-based or static before any
-  tick-based mutation
-- Phase 9, inspection: once an organism exists to inspect, start with
-  read-only room/zone/fixture/planting-site popups before any per-organism
-  detail
+- Phase 9, inspection (remaining): per-fixture/per-organism live detail
+  beyond the static `inspection_refs` text (e.g. reflecting the seedling's
+  current `life_state`), and a way to select which ref is inspected rather
+  than always listing all of them
+- Phase 10, curation/transfer gates: not yet started — needs its own
+  narrowest-slice scoping conversation before implementation
 - keep future brainstorming ingests candidate-only
 
 Stop conditions:

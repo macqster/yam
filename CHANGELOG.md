@@ -16,7 +16,14 @@ No release has been tagged yet; everything below is accumulating under
 - `WorldKind::Greenhouse`: a real, selectable third world (cycled with the
   same `w` hotkey as `Sandbox`), rendering one inert nursery room via a
   minimal read-only `GreenhouseLayer` (bounds outline plus fixture markers,
-  no labels). No growth dispatch, mutation, or inspection UI yet.
+  no labels).
+- Greenhouse growth dispatch: a first `OrganismFamily::Seedling` occupies the
+  nursery's `left_tray` planting site (a soft `PlantingSite::occupant`
+  reference, not ownership) and advances `Dormant -> Growing -> Mature` on
+  its own 6-tick cadence via `systems::growth::run_greenhouse_growth`.
+- Greenhouse inspection: a read-only `GreenhouseInspectLayer` (`i` hotkey,
+  dev-mode and Greenhouse-world gated) surfaces the active room's
+  `inspection_refs` (room, bench, fixture, and planting-site descriptions).
 - CI (`.github/workflows/verify.yml`): runs `scripts/verify.sh` on every push
   and pull request; `main` requires it via branch protection.
 - `cargo audit` wired into CI; `.github/dependabot.yml` for routine `cargo`

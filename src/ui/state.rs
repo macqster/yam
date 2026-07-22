@@ -76,6 +76,7 @@ pub struct MetaState {
     pub move_mode_open: bool,
     pub palette_open: bool,
     pub weather_popup_open: bool,
+    pub greenhouse_inspect_open: bool,
     pub settings_open: bool,
     pub pointer_probe_open: bool,
     pub world_frame_visible: bool,
@@ -108,6 +109,7 @@ impl MetaState {
             move_mode_open: false,
             palette_open: false,
             weather_popup_open: false,
+            greenhouse_inspect_open: false,
             settings_open: false,
             pointer_probe_open: false,
             world_frame_visible: true,
@@ -127,6 +129,7 @@ impl MetaState {
         self.move_mode_open = false;
         self.palette_open = false;
         self.weather_popup_open = false;
+        self.greenhouse_inspect_open = false;
         self.settings_open = false;
         self.pointer_probe_open = false;
     }
@@ -167,6 +170,14 @@ impl MetaState {
         if self.weather_popup_open {
             self.close_dev_overlays();
             self.weather_popup_open = true;
+        }
+    }
+
+    pub fn toggle_greenhouse_inspect(&mut self) {
+        self.greenhouse_inspect_open = !self.greenhouse_inspect_open;
+        if self.greenhouse_inspect_open {
+            self.close_dev_overlays();
+            self.greenhouse_inspect_open = true;
         }
     }
 
@@ -910,6 +921,11 @@ impl UiState {
         self.quit_confirm_open = false;
     }
 
+    pub fn toggle_greenhouse_inspect(&mut self) {
+        self.meta.toggle_greenhouse_inspect();
+        self.quit_confirm_open = false;
+    }
+
     pub fn settings_toggle_allowed(&self) -> bool {
         self.meta.dev_mode
     }
@@ -951,6 +967,7 @@ impl UiState {
             && !self.meta.hotkeys_open
             && !self.meta.palette_open
             && !self.meta.weather_popup_open
+            && !self.meta.greenhouse_inspect_open
             && !self.meta.move_mode_open
     }
 
@@ -960,6 +977,7 @@ impl UiState {
             && !self.meta.hotkeys_open
             && !self.meta.move_mode_open
             && !self.meta.weather_popup_open
+            && !self.meta.greenhouse_inspect_open
     }
 
     pub fn weather_popup_toggle_allowed(&self) -> bool {
@@ -968,6 +986,20 @@ impl UiState {
             && !self.meta.hotkeys_open
             && !self.meta.move_mode_open
             && !self.meta.palette_open
+            && !self.meta.greenhouse_inspect_open
+    }
+
+    /// Only meaningful in the greenhouse world: there is nothing else to
+    /// inspect yet, and keeping it world-gated avoids a popup that always
+    /// shows the same one room regardless of which world is active.
+    pub fn greenhouse_inspect_toggle_allowed(&self) -> bool {
+        self.meta.dev_mode
+            && self.active_world_kind() == WorldKind::Greenhouse
+            && !self.meta.settings_open
+            && !self.meta.hotkeys_open
+            && !self.meta.move_mode_open
+            && !self.meta.palette_open
+            && !self.meta.weather_popup_open
     }
 
     pub fn global_help_active(&self) -> bool {
@@ -985,6 +1017,7 @@ impl UiState {
             && !self.meta.hotkeys_open
             && !self.meta.palette_open
             && !self.meta.weather_popup_open
+            && !self.meta.greenhouse_inspect_open
             && !self.meta.move_mode_open
     }
 
@@ -999,6 +1032,7 @@ impl UiState {
             && !self.meta.hotkeys_open
             && !self.meta.palette_open
             && !self.meta.weather_popup_open
+            && !self.meta.greenhouse_inspect_open
     }
 
     pub fn next_move_target(&mut self) {
@@ -1020,6 +1054,7 @@ impl UiState {
             && !self.meta.move_mode_open
             && !self.meta.palette_open
             && !self.meta.weather_popup_open
+            && !self.meta.greenhouse_inspect_open
             && !self.meta.settings_open
             && !self.quit_confirm_open
     }
@@ -1059,6 +1094,10 @@ impl UiState {
         }
         if self.meta.weather_popup_open {
             self.meta.weather_popup_open = false;
+            return true;
+        }
+        if self.meta.greenhouse_inspect_open {
+            self.meta.greenhouse_inspect_open = false;
             return true;
         }
         if self.meta.settings_open {
@@ -2328,6 +2367,7 @@ mod tests {
                 move_mode_open: true,
                 palette_open: false,
                 weather_popup_open: false,
+                greenhouse_inspect_open: false,
                 settings_open: true,
                 pointer_probe_open: true,
                 world_frame_visible: false,

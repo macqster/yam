@@ -2,6 +2,7 @@ pub mod clock_layer;
 pub mod date_layer;
 pub mod debug_layer;
 pub mod field_layer;
+pub mod greenhouse_inspect_layer;
 pub mod greenhouse_layer;
 pub mod hero_layer;
 pub mod hotkeys_layer;

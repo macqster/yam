@@ -326,20 +326,20 @@ mod tests {
         let world = WorldState::new();
 
         assert_eq!(world.kind, WorldKind::MainScene);
-        assert_eq!(world.flora.vines.len(), 1);
-        assert_eq!(world.flora.vines[0].id, BORDER_VINE_SEED_ID);
-        assert_eq!(world.flora.vines[0].growth_tips.len(), 1);
+        assert_eq!(world.flora.vines().len(), 1);
+        assert_eq!(world.flora.vines()[0].id, BORDER_VINE_SEED_ID);
+        assert_eq!(world.flora.vines()[0].growth_tips.len(), 1);
         assert_eq!(
-            world.flora.vines[0].growth_tips[0].axis_id,
+            world.flora.vines()[0].growth_tips[0].axis_id,
             BORDER_VINE_SEED_AXIS_ID
         );
-        assert_eq!(world.flora.vines[0].root.world, BORDER_VINE_ROOT);
-        assert_eq!(world.flora.vines[0].axes.len(), 1);
+        assert_eq!(world.flora.vines()[0].root.world, BORDER_VINE_ROOT);
+        assert_eq!(world.flora.vines()[0].axes.len(), 1);
         assert_eq!(
-            world.flora.vines[0].axes[0].guide_set_label.as_deref(),
+            world.flora.vines()[0].axes[0].guide_set_label.as_deref(),
             Some(BORDER_VINE_GUIDE_SET_LABEL)
         );
-        assert!(!world.flora.vines[0].axes[0].segments.is_empty());
+        assert!(!world.flora.vines()[0].axes[0].segments.is_empty());
         assert_eq!(world.scaffold.segments.len(), 8);
         assert!(world.scaffold.segments.iter().any(|segment| {
             segment.start == crate::core::spatial::SpatialPoint { x: -20, y: -30 }
@@ -370,7 +370,7 @@ mod tests {
         let world = WorldState::for_sandbox();
 
         assert_eq!(world.kind, WorldKind::Sandbox);
-        assert!(world.flora.vines.is_empty());
+        assert!(world.flora.vines().is_empty());
         assert_eq!(world.scaffold.segments.len(), 8);
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());
@@ -384,7 +384,7 @@ mod tests {
         let world = WorldState::for_boot();
 
         assert_eq!(world.kind, WorldKind::Boot);
-        assert!(world.flora.vines.is_empty());
+        assert!(world.flora.vines().is_empty());
         assert!(world.scaffold.segments.is_empty());
         assert!(world.guides.guides.is_empty());
         assert!(world.entities.is_empty());

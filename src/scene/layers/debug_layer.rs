@@ -133,7 +133,7 @@ impl Layer for DebugLayer {
             && date_screen.x < grid.width as i32
             && date_screen.y < grid.height as i32;
         let vine_count = world.flora.family_count(OrganismFamily::Vine);
-        let first_vine = world.flora.vines.first();
+        let first_vine = world.flora.vines().first().copied();
         let vine_line = if let Some(vine) = first_vine {
             let identity = vine.identity();
             format!(

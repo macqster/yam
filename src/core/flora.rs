@@ -117,10 +117,48 @@ pub struct VineGuidePath {
     pub points: Vec<WorldPos>,
 }
 
+/// The locked flora-storage shape: one closed enum wrapping each family's own
+/// instance type, held in a single unified `Vec`, rather than one bespoke
+/// `Vec<T>` field per family. Adding a second family means adding a variant
+/// here, not a new top-level `FloraState` field and a new set of parallel
+/// accessors.
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FloraInstance {
+    Vine(VineInstance),
+}
+
+impl FloraInstance {
+    #[allow(dead_code)]
+    pub fn family(&self) -> OrganismFamily {
+        match self {
+            FloraInstance::Vine(_) => OrganismFamily::Vine,
+        }
+    }
+
+    pub fn identity(&self) -> OrganismIdentity {
+        match self {
+            FloraInstance::Vine(vine) => vine.identity(),
+        }
+    }
+
+    pub fn as_vine(&self) -> Option<&VineInstance> {
+        match self {
+            FloraInstance::Vine(vine) => Some(vine),
+        }
+    }
+
+    pub fn as_vine_mut(&mut self) -> Option<&mut VineInstance> {
+        match self {
+            FloraInstance::Vine(vine) => Some(vine),
+        }
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct FloraState {
-    pub vines: Vec<VineInstance>,
+    pub organisms: Vec<FloraInstance>,
 }
 
 #[allow(dead_code)]
@@ -296,8 +334,8 @@ pub fn main_scene_vine_guides() -> GuideState {
 pub fn realize_border_vine_axis(flora: &mut FloraState, guide_index: SpatialGuideIndex<'_>) {
     let guide_paths = derive_vine_axis_from_guide_set(guide_index, BORDER_VINE_GUIDE_SET_LABEL);
     let Some(vine) = flora
-        .vines
-        .iter_mut()
+        .vines_mut()
+        .into_iter()
         .find(|vine| vine.id == BORDER_VINE_SEED_ID)
     else {
         return;
@@ -398,39 +436,69 @@ fn guide_point_to_world(point: GuidePoint) -> WorldPos {
 impl FloraState {
     #[allow(dead_code)]
     pub fn new() -> Self {
-        Self { vines: Vec::new() }
+        Self {
+            organisms: Vec::new(),
+        }
     }
 
     #[allow(dead_code)]
     pub fn with_border_vine_seed() -> Self {
         Self {
-            vines: vec![border_vine_seed()],
+            organisms: vec![FloraInstance::Vine(border_vine_seed())],
         }
     }
 
     #[allow(dead_code)]
     pub fn organism_count(&self) -> usize {
-        self.vines.len()
+        self.organisms.len()
     }
 
     #[allow(dead_code)]
     pub fn family_count(&self, family: OrganismFamily) -> usize {
-        match family {
-            OrganismFamily::Vine => self.vines.len(),
-        }
+        self.organisms
+            .iter()
+            .filter(|organism| organism.family() == family)
+            .count()
     }
 
     #[allow(dead_code)]
     pub fn family_summary(&self) -> Vec<FloraFamilySummary> {
         vec![FloraFamilySummary {
             family: OrganismFamily::Vine,
-            count: self.vines.len(),
+            count: self.family_count(OrganismFamily::Vine),
         }]
     }
 
     #[allow(dead_code)]
     pub fn organism_identities(&self) -> Vec<OrganismIdentity> {
-        self.vines.iter().map(VineInstance::identity).collect()
+        self.organisms.iter().map(FloraInstance::identity).collect()
+    }
+
+    /// Read-only view of every vine instance, filtered out of the unified
+    /// `organisms` store. Returns owned references (not clones) so existing
+    /// vine-shaped call sites keep working with a small `()` addition rather
+    /// than a full rewrite.
+    #[allow(dead_code)]
+    pub fn vines(&self) -> Vec<&VineInstance> {
+        self.organisms
+            .iter()
+            .filter_map(FloraInstance::as_vine)
+            .collect()
+    }
+
+    /// Mutable counterpart to [`FloraState::vines`].
+    #[allow(dead_code)]
+    pub fn vines_mut(&mut self) -> Vec<&mut VineInstance> {
+        self.organisms
+            .iter_mut()
+            .filter_map(FloraInstance::as_vine_mut)
+            .collect()
+    }
+
+    /// Adds a vine instance to the unified organism store.
+    #[allow(dead_code)]
+    pub fn push_vine(&mut self, vine: VineInstance) {
+        self.organisms.push(FloraInstance::Vine(vine));
     }
 }
 
@@ -443,7 +511,34 @@ mod tests {
     fn flora_state_starts_empty() {
         let flora = FloraState::new();
 
-        assert!(flora.vines.is_empty());
+        assert!(flora.vines().is_empty());
+        assert!(flora.organisms.is_empty());
+    }
+
+    #[test]
+    fn flora_instance_wraps_and_unwraps_a_vine_without_losing_identity() {
+        let vine = border_vine_seed();
+        let expected_identity = vine.identity();
+        let instance = FloraInstance::Vine(vine);
+
+        assert_eq!(instance.family(), OrganismFamily::Vine);
+        assert_eq!(instance.identity(), expected_identity);
+        assert!(instance.as_vine().is_some());
+
+        let mut instance = instance;
+        assert!(instance.as_vine_mut().is_some());
+    }
+
+    #[test]
+    fn push_vine_adds_to_the_unified_organism_store_directly() {
+        let mut flora = FloraState::new();
+
+        flora.push_vine(border_vine_seed());
+
+        assert_eq!(flora.organisms.len(), 1);
+        assert_eq!(flora.vines().len(), 1);
+        assert_eq!(flora.organism_count(), 1);
+        assert_eq!(flora.family_count(OrganismFamily::Vine), 1);
     }
 
     #[test]
@@ -555,8 +650,8 @@ mod tests {
     fn seeded_flora_starts_with_exactly_one_border_vine() {
         let flora = FloraState::with_border_vine_seed();
 
-        assert_eq!(flora.vines.len(), 1);
-        assert_eq!(flora.vines[0], border_vine_seed());
+        assert_eq!(flora.vines().len(), 1);
+        assert_eq!(flora.vines()[0], &border_vine_seed());
     }
 
     #[test]
@@ -826,17 +921,18 @@ mod tests {
 
         realize_border_vine_axis(&mut flora, SpatialGuideIndex::new(&guides));
 
-        assert_eq!(flora.vines.len(), 1);
-        assert_eq!(flora.vines[0].axes.len(), 1);
+        let vines = flora.vines();
+        assert_eq!(vines.len(), 1);
+        assert_eq!(vines[0].axes.len(), 1);
         assert_eq!(
-            flora.vines[0].axes[0].guide_set_label.as_deref(),
+            vines[0].axes[0].guide_set_label.as_deref(),
             Some(BORDER_VINE_GUIDE_SET_LABEL)
         );
-        assert!(!flora.vines[0].axes[0].segments.is_empty());
-        assert_eq!(flora.vines[0].axes[0].segments[0].start, BORDER_VINE_ROOT);
+        assert!(!vines[0].axes[0].segments.is_empty());
+        assert_eq!(vines[0].axes[0].segments[0].start, BORDER_VINE_ROOT);
         assert_eq!(
-            flora.vines[0].growth_tips[0].position,
-            flora.vines[0].axes[0]
+            vines[0].growth_tips[0].position,
+            vines[0].axes[0]
                 .segments
                 .last()
                 .expect("derived segment")

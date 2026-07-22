@@ -70,6 +70,9 @@ ensure_installed_runtime_is_current() {
 post_exit_refresh() {
   [[ "${YAM_POST_FASTFETCH:-1}" == "0" ]] && return 0
   printf '\033[H\033[2J\033[3J'
+  # fastfetch-chafa is an optional personal enhancement wrapper managed
+  # outside this repo (nothing here installs it); fall back to plain
+  # fastfetch when it isn't present.
   if [[ -x "$HOME/.local/bin/fastfetch-chafa" ]]; then
     printf '\n\n'
     "$HOME/.local/bin/fastfetch-chafa"

@@ -1,4 +1,10 @@
-"""Top-level YAM application entrypoint."""
+"""Top-level YAM application entrypoint.
+
+This script's own config module lives alongside it in tools/experiments/,
+but engine/runtime/ui belong to the legacy Python system in the sibling
+tools/legacy-python/ directory (see that directory's README). The path
+insert below makes those importable without duplicating or moving them.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +12,8 @@ import argparse
 import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "legacy-python"))
 
 from config import SceneConfig, default_scene_config_path, load_scene_config
 from engine.ecosystem import Ecosystem, Organism

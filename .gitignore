@@ -4,3 +4,5 @@ target/
 *.log
 *.tmp
 todo.md
+__pycache__/
+*.pyc

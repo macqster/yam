@@ -7,8 +7,7 @@
   <p>Rust + Ratatui terminal diorama engine</p>
 
   <p>
-    <img src="https://img.shields.io/badge/release-0.3.9-6f89a2" alt="release 0.3.9" />
-    <img src="https://img.shields.io/badge/0.4-greenhouse%20world%20landed-7fa36b" alt="0.4 greenhouse world landed" />
+    <img src="https://img.shields.io/badge/version-0.4.0-6f89a2" alt="version 0.4.0" />
     <img src="https://img.shields.io/badge/runtime-Rust%20%2B%20Ratatui-8fb8c8" alt="Rust and Ratatui runtime" />
     <img src="https://img.shields.io/badge/posture-personal%20sandbox-879078" alt="personal sandbox posture" />
   </p>
@@ -36,13 +35,13 @@ Codex is doing most of the hard work here; life is unfortunately consuming so mu
 
 </div>
 
-current release: `0.3.9`
+current release: `0.4.0`
 
 ## snapshot
 
 </div>
 
-- `next_track`: `0.4 greenhouse ecosystem expansion (a minimal selectable greenhouse world has landed; rooms/labs/multi-species growth remain ahead)`
+- `next_track`: `greenhouse curation/transfer gates and richer per-fixture inspection detail — not yet scoped, see docs/greenhouse-roadmap.md`
 - `repo_mode`: `personal sandbox / controlled stabilization`
 - `canonical_runtime`: `cargo run --release`
 - `canonical_maintenance_gate`: `bash scripts/verify.sh`

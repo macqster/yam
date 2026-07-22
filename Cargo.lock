@@ -2203,7 +2203,7 @@ dependencies = [
 
 [[package]]
 name = "yam-rust"
-version = "0.3.9"
+version = "0.4.0"
 dependencies = [
  "ansi-to-tui",
  "chrono",

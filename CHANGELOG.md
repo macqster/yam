@@ -40,6 +40,10 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.0` (from `0.3.9`) now that the
+  Greenhouse world, growth dispatch, and read-only inspection have all
+  landed and `bash scripts/verify.sh` is green — see `docs/release-model.md`
+  for what this number does and does not mean (no tagged release follows).
 - `scripts/check.sh`'s clippy and cargo-check invocations broadened to
   `--all-targets --all-features` / `--all-targets`, so lints and compile
   errors inside `#[cfg(test)]` modules are actually enforced by CI instead of

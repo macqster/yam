@@ -20,6 +20,7 @@ It describes how to work here, not the full YAM architecture.
 - Treat an already-dirty worktree as user-owned context; do not revert unrelated changes.
 - Keep edits narrow and consistent with existing Rust/Ratatui patterns.
 - Do not add main-scene enrichment, greenhouse worlds, plant families, or large mechanics during prep work unless the request explicitly asks for implementation.
+- Even after that request, discuss scope in narrow slices rather than the whole feature at once: propose the smallest next slice, confirm it, build it, then propose the next. This surfaces design questions (naming, ownership, UX) before code exists instead of after.
 - When changing behavior, update the owning doc and append `docs/LOG.md` in the same batch.
 - Keep `known_issues.md` empty unless there is a concrete unresolved user-visible or developer-visible issue.
 - Prefer contract repairs, tests, docs alignment, and workflow cleanup over speculative abstractions.

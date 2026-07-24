@@ -68,13 +68,20 @@ full change history in one running section instead of per-version ones.
 - A RUSTSEC vulnerability (`crossbeam-epoch`, via `image`'s unused default
   AVIF/OpenEXR/WebP features) and two lesser warnings (`paste`, `anyhow`) —
   see Security below.
+- Hero frames silently failing to render (`chafa unavailable`-shaped
+  placeholder output) since the `image` dependency trim below: that trim's
+  premise ("the only format this crate decodes") was incomplete, since the
+  render pipeline also *encodes* temp frames to PNG before shelling out to
+  `chafa`, and PNG encoding is a separate `image` feature not implied by
+  `gif`. Fixed by adding `"png"` back to the feature list.
 
 ### Security
 
-- `image` trimmed to `default-features = false, features = ["gif"]` (the
-  only format this crate decodes), dropping the dependency count from 300 to
-  239 and removing the vulnerable `crossbeam-epoch`/`ravif`/`rav1e` chain
-  entirely rather than just patching around it.
+- `image` trimmed to `default-features = false, features = ["gif", "png"]`
+  (the two formats this crate actually decodes/encodes), dropping the
+  dependency count from 300 to 241 and removing the vulnerable
+  `crossbeam-epoch`/`ravif`/`rav1e` chain entirely rather than just patching
+  around it.
 - GitHub Dependabot security updates enabled.
 
 ### Removed

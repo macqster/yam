@@ -57,6 +57,15 @@ full change history in one running section instead of per-version ones.
 - Species-profile data format locked as static Rust fixtures.
 - Repo merge policy: merge-commit only (squash and rebase-merge disabled),
   branches auto-delete on merge.
+- Hero source asset (`assets/hero_gif_1.gif`) swapped for a working master
+  that carries real per-pixel alpha (previously fully opaque, with a flat
+  matte background baked in); the render pipeline now preserves that alpha
+  end to end instead of compositing every frame onto an opaque fill, and
+  `--color-extractor` switched from `average` to `median`. Together these
+  fix a long-standing coverage bug: `average` against the flattened canvas
+  was dropping roughly 80% of the frame grid as "no coverage" (any
+  low-contrast dark region, not only reds), rather than merely desaturating
+  it.
 
 ### Fixed
 

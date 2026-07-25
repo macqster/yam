@@ -33,6 +33,7 @@ The repo front door is [../README.md](../README.md).
 - [weather-widget.md](weather-widget.md) - weather-widget contract
 - [vines.md](vines.md) - vine ownership/readiness contract
 - [config.md](config.md) - config ownership and boot-frame note
+- [hero-track.md](hero-track.md) - traced hero-pipeline baseline, measurements, and revision prep **(0.4 main goal: hero track)**
 - [hero-cache.md](hero-cache.md) - hero-frame cache design/runtime path **(0.4 main goal: hero track)**
 - [soft-line-atlas.md](soft-line-atlas.md) - linework glyph grammar for guides and future mask edges
 

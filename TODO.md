@@ -94,6 +94,15 @@ Pre-Expansion Batch above and `docs/audit.md`'s Hero Track section for scope and
 standing constraints. Items here take precedence over sections 1-4 and 6-9
 unless a concrete regression says otherwise.
 
+`docs/hero-track.md` is the traced baseline for this work (measured 2026-07-25:
+stage-by-stage trace, cold/warm costs, ranked opportunities, open questions).
+Start there rather than re-deriving the pipeline. Its ranked list is deliberately
+ordered by measured value, and the top item is *not* hero-specific: the
+unconditional 120 FPS redraw loop outweighs every hero-local optimization.
+
+- `next` answer `docs/hero-track.md`'s open questions before or during the revision: whether `tone_lift_dark_reds` still earns its place now that the alpha + median fix landed, whether 120 FPS is intentional, whether `chafa` stays a subprocess, whether the fixed 96x48 geometry survives, and whether the 64-frame source shape itself is up for revision.
+- `next` close the `ANSI_PARSE_ERROR` cacheability gap (`src/render/chafa.rs:44` vs `is_placeholder_frame`): a parse failure is currently judged cacheable and would be persisted as trusted art. Prefer a typed error over the in-band magic string.
+
 - `verify` hero rendering stays renderer-owned and cache-first on the common path.
 - `verify` the live Chafa compiler path degrades to placeholder frames instead of panicking when the GIF, temp directory, temp image write, or `chafa` command fails.
 - `inspect` define the future `HeroFrameSet` offline compiler contract before replacing or bypassing the active Chafa-backed path.

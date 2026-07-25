@@ -54,15 +54,15 @@ current release: `0.4.0`
 
 </div>
 
-- `worlds`: `boot`, `main`, `sandbox`, `greenhouse` (greenhouse is a minimal read-only room render, not yet growth-dispatched)
+- `worlds`: `boot`, `main`, `sandbox`, `greenhouse` (greenhouse is one nursery room: read-only render, a growth-dispatched seedling in a planting site, and read-only inspection)
 - `hero`: `Chafa-backed animated hero`
 - `scene`: `world-space projection with read-only render layers`
 - `companions`: `clock`, `weather`, `Polish date`
 - `framing`: `scaffold` plus `vine` prototype
-- `dev_surfaces`: `help`, `move`, `settings`, `palette`, `weather`, `quit confirm`
+- `dev_surfaces`: `help`, `move`, `settings`, `palette`, `weather`, `greenhouse inspect`, `quit confirm`
 - `future_surfaces`:
   - `calendar companion seam`
-  - `greenhouse growth dispatch, inspection UI, and multi-room/lab expansion`
+  - `greenhouse curation/transfer gates, richer per-fixture detail, and multi-room/lab expansion`
   - `broader flora beyond current vine/scaffold prototype`
   - `terminal-art asset compilation and inspection workflows`
 

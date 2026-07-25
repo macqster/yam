@@ -154,19 +154,28 @@ fn hero_cache_is_fresh(path: &Path) -> bool {
     cache_is_fresh_against(path, Path::new(HERO_GIF_PATH))
 }
 
+/// A cache is stale only when the source can be shown to be newer than it.
+///
+/// The asymmetry between the two missing-metadata arms is deliberate. No cache
+/// file means there is nothing to reuse, so that arm is `false`. An unreachable
+/// *source* is different: `HERO_GIF_PATH` is an absolute compile-time path, so
+/// a binary whose build tree has moved or been deleted cannot read the GIF even
+/// though nothing is wrong with the cache it already wrote. Discarding the
+/// cache there would trade the real hero art for a placeholder frame, since the
+/// live compile path needs that same unreachable GIF. Keeping it is the only
+/// way the hero survives, and a source that reappears resumes normal mtime
+/// comparison on the next launch.
 fn cache_is_fresh_against(cache_path: &Path, source_path: &Path) -> bool {
-    let cache_meta = match fs::metadata(cache_path) {
-        Ok(meta) => meta,
-        Err(_) => return false,
+    let Ok(cache_meta) = fs::metadata(cache_path) else {
+        return false;
     };
-    let gif_meta = match fs::metadata(source_path) {
-        Ok(meta) => meta,
-        Err(_) => return false,
+    let Ok(source_meta) = fs::metadata(source_path) else {
+        return true;
     };
 
-    match (cache_meta.modified(), gif_meta.modified()) {
-        (Ok(cache_modified), Ok(gif_modified)) => cache_modified >= gif_modified,
-        _ => false,
+    match (cache_meta.modified(), source_meta.modified()) {
+        (Ok(cache_modified), Ok(source_modified)) => cache_modified >= source_modified,
+        _ => true,
     }
 }
 
@@ -457,6 +466,33 @@ mod tests {
 
         fs::write(&cache, b"cache").expect("write cache");
         thread::sleep(Duration::from_millis(5));
+        fs::write(&source, b"source").expect("write source");
+
+        assert!(!cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn cache_freshness_keeps_cache_when_source_is_unreachable() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
+        fs::write(&cache, b"cache").expect("write cache");
+
+        // The source was never written, standing in for a binary whose
+        // compile-time `HERO_GIF_PATH` no longer resolves. The cache is the
+        // only hero art left, so it must survive rather than be discarded in
+        // favor of the placeholder frame the live path would produce.
+        assert!(!source.exists());
+        assert!(cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn cache_freshness_rejects_missing_cache_file() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
         fs::write(&source, b"source").expect("write source");
 
         assert!(!cache_is_fresh_against(&cache, &source));

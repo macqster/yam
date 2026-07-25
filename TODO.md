@@ -45,6 +45,7 @@ Issue link rule:
 - `verify` resize, camera movement, anchor resolution, and rounding/jitter coverage stays tight before adding new world-attached renderables.
 - `verify` guides remain semantic world-space linework and are not reinterpreted from rendered pixels.
 - `next` `scene::entity::EntityPose`/`AttachedEntityPose` still duplicate the shape of `core::spatial::SpatialAnchor`/`SpatialAttachment` under domain-specific names; low-risk, not scheduled, but worth revisiting if a third attachment-shaped consumer appears.
+- `next` retire `src/ui/anchor.rs`: an entirely unused screen-anchor module duplicating what `core::spatial` owns, and the same leftover shape as the retired `scene::coords` — confirm zero call sites the same way, then remove.
 
 ## 2. Flora Runtime And Organism Model
 
@@ -94,6 +95,7 @@ Issue link rule:
 - `inspect` prototype `.xp` export/import only after `CellGrid` exists, with explicit braille font/tile mapping and round-trip validation for glyph/color fidelity.
 - `verify` cached frames, Chafa output, and any future manual corrections preserve fixed hero frame geometry across resize and scene stabilization checks.
 - `inspect` continue render-loop optimization only when live-loop profiling points at a real remaining hot path; do not restart broad startup optimization from wall-clock boot timing alone.
+- `next` decide whether to close the `HERO_GIF_PATH` build-tree binding properly (`include_bytes!` at ~4.3MB binary cost, or binary-relative resolution behind an install layout contract); the 2026-07-25 cache-retention change is a mitigation only — such a binary still cannot rebuild its cache. See `docs/audit.md` and `docs/hero-cache.md`'s Source Reachability section.
 
 ## 6. UI, Dev Surfaces, And Workflow
 
@@ -114,6 +116,9 @@ Issue link rule:
 - `verify` README local asset references must point to committed files.
 - `verify` `README.md` current release stays synchronized with `Cargo.toml`.
 - `inspect` keep future README polish bounded and factual: preserve the restored intro voice, but revisit small front-door nits from the external eval only when touching the README anyway, especially heading hierarchy around `twimc`, terse unlabeled command blocks, and repo-shape claim precision.
+- `next` teach `scripts/check-docs.sh` to validate markdown link targets, not only doc existence and README `src="..."` assets; exclude `docs/archive/`, whose export-era `sediment://` URIs are dead by nature. The one broken active link this gap allowed was fixed 2026-07-25, but nothing stops the next one.
+- `next` audit the 136 `allow(dead_code)` suppressions (two module-wide) hiding 75 bin-target findings; remove the plain leftovers (`merge_grid_legacy`, the two unused `scene::render_scene*` entry points, the unused `render/hero.rs` and `render/clock.rs` helpers, both `ui` debug helpers) and keep only the deliberate forward vocabulary, so the `-D warnings` gate stops being green by suppression.
+- `next` fix `scene_config.json`'s `gif_path`, which resolves to nothing from the repo root and degrades to a silently empty hero in the only consumer that honors it.
 - `verify` `TODO.md` issue references must point to active `known_issues.md` ids.
 - `verify` append each completed maintenance batch to `docs/LOG.md` using the local system time noted in the log's current logging rule.
 - `verify` keep `docs/audit.md` risk-focused and `docs/LOG.md` historical; avoid re-accumulating completed work in the active backlog.

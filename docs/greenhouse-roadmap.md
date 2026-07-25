@@ -51,7 +51,7 @@ Good prompts should ask for options in small catalogs. For example:
 
 A second kind of external reference input, distinct from brainstorming
 prompts, is distilled analysis of real released plant-simulation software.
-[`docs/archive/greenhouse-brainstorming/highgrow_reference_analysis.md`](../archive/greenhouse-brainstorming/highgrow_reference_analysis.md)
+[`docs/archive/greenhouse-brainstorming/highgrow_reference_analysis.md`](archive/greenhouse-brainstorming/highgrow_reference_analysis.md)
 distills HighGrow 4.20 (already credited in `README.md`'s acknowledgements)
 into mechanics comparable to YAM's own vocabulary — room/fixture structure,
 a reusable soil-archetype data shape, a branch-on-prune growth-graph rule,

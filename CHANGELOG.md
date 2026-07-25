@@ -72,6 +72,15 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Hero frame cache is no longer thrown away when the source GIF is
+  unreachable. `HERO_GIF_PATH` is an absolute compile-time path, so a binary
+  whose build tree has moved or been deleted could not read the GIF — and the
+  old freshness rule treated that unreadable source as grounds to invalidate
+  the cache, dropping to the live compile path (which needs the same missing
+  GIF) and rendering a `hero gif unavailable: ...` placeholder despite a
+  perfectly good 27MB cache on disk. The rule is now "stale only when the
+  source can be shown to be newer", so an unreachable source keeps the cache.
+  See `docs/hero-cache.md` for the remaining limits of this mitigation.
 - The real root cause of an intermittently-failing weather test: it was
   making live network calls to `wttr.in` from the test suite.
 - Two panic-safety gaps following the same shape (an invariant enforced only

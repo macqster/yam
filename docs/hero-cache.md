@@ -56,5 +56,29 @@ The current code seam for this shape lives in [hero_cache.rs](../src/render/hero
 - Runtime startup should avoid the current GIF decode plus temp-frame plus per-frame process-spawn cost on the common path.
 - Visible hero geometry, frame count, and color stability should stay aligned with the current Chafa baseline.
 - The cache should remain a runtime-owned representation, not a second independent rendering authority.
-- The cache freshness rule should stay simple and explicit: cached hero frames are reusable only when the cache file is at least as new as the source GIF.
+- The cache freshness rule should stay simple and explicit: a cache is stale
+  only when the source GIF can be shown to be newer than it.
 - On a fresh machine without `chafa`, startup should degrade explicitly rather than panic: the uncached path may fall back to a visible placeholder frame, but the runtime should remain alive and the cache loader should still be preferred whenever a valid cache already exists.
+
+## Source Reachability
+
+`HERO_GIF_PATH` in [chafa.rs](../src/render/chafa.rs) is an absolute
+compile-time path (`CARGO_MANIFEST_DIR`), and the GIF is read at runtime rather
+than embedded in the binary. A binary therefore stays bound to the tree it was
+built from: move, rename, or delete that tree — including building from a
+throwaway git worktree — and the source GIF becomes unreachable to the
+installed binary.
+
+The freshness rule above is written so that this degrades to *cached art*
+rather than to nothing. An unreachable source cannot prove the cache stale, so
+an existing cache is kept and rendered; only a missing cache falls through to
+the live compile path, which needs that same unreachable GIF and will produce a
+placeholder frame. A source that reappears resumes ordinary mtime comparison on
+the next launch.
+
+This is a mitigation, not a fix for the underlying path binding: a binary
+installed from a since-deleted tree still cannot *rebuild* the cache, so a
+resolution change or a cache wipe leaves it with placeholder frames. Embedding
+the asset (`include_bytes!`) or resolving it relative to the installed binary
+would close that gap properly, at the cost of a ~4.3MB binary or an install
+layout contract respectively.

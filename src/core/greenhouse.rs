@@ -513,7 +513,7 @@ impl GreenhouseRoom {
                     target: InspectionTarget::PlantingSite,
                     target_id: "left_tray".to_string(),
                     label: "Left Tray Site".to_string(),
-                    short_text: "Small tray site for one future nursery occupant.".to_string(),
+                    short_text: "Small tray site holding the nursery's first seedling.".to_string(),
                     read_only: true,
                 },
             ],
@@ -676,6 +676,31 @@ mod tests {
             .iter()
             .any(|inspection| inspection.target == InspectionTarget::Fixture
                 && inspection.target_id == "inspection_marker"));
+    }
+
+    #[test]
+    fn occupied_planting_sites_are_not_described_as_awaiting_an_occupant() {
+        let room = GreenhouseState::nursery()
+            .active_room()
+            .expect("active room must resolve")
+            .clone();
+
+        for site in room.planting_sites.iter().filter(|s| s.occupant.is_some()) {
+            let refs = room
+                .inspection_refs
+                .iter()
+                .filter(|i| i.target_id == site.id.as_str());
+            for inspection in refs {
+                let text = inspection.short_text.to_lowercase();
+                assert!(
+                    !text.contains("future") && !text.contains("awaiting"),
+                    "planting site `{}` is occupied but its inspection text still \
+                     describes it as empty: {:?}",
+                    site.id.as_str(),
+                    inspection.short_text
+                );
+            }
+        }
     }
 
     #[test]

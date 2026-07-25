@@ -13,7 +13,7 @@ use ratatui::text::{Line, Text};
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
-const HERO_FRAME_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
+const HERO_DISPLAY_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
 pub const HERO_RENDER_WIDTH: u16 = 96;
 pub const HERO_RENDER_HEIGHT: u16 = 48;
 
@@ -54,10 +54,13 @@ fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Ou
         .arg("--symbols=braille")
         .arg("--colors=full")
         .arg("--color-space=rgb")
-        .arg("--color-extractor=average")
+        .arg("--color-extractor=median")
         .arg("--dither=none")
         .arg("--fg-only")
-        .arg("--bg=#100100")
+        .arg(format!(
+            "--bg=#{:02x}{:02x}{:02x}",
+            HERO_DISPLAY_BG[0], HERO_DISPLAY_BG[1], HERO_DISPLAY_BG[2]
+        ))
         .arg("--animate=off")
         .output()
 }
@@ -184,43 +187,19 @@ fn hero_cache_dir() -> PathBuf {
 }
 
 fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {
-    let mut image = RgbaImage::from_pixel(canvas.0, canvas.1, HERO_FRAME_BG);
+    let mut image = RgbaImage::from_pixel(canvas.0, canvas.1, Rgba([0, 0, 0, 0]));
     let left = frame.left();
     let top = frame.top();
     for (x, y, pixel) in frame.into_buffer().enumerate_pixels() {
         let target_x = left + x;
         let target_y = top + y;
         if target_x < canvas.0 && target_y < canvas.1 {
-            image.put_pixel(
-                target_x,
-                target_y,
-                tone_lift_dark_reds(flatten_pixel(*pixel)),
-            );
+            image.put_pixel(target_x, target_y, tone_lift_dark_reds(*pixel));
         }
     }
     image
 }
 
-fn flatten_pixel(pixel: Rgba<u8>) -> Rgba<u8> {
-    let alpha = pixel[3] as u16;
-    if alpha == 255 {
-        return pixel;
-    }
-    if alpha == 0 {
-        return HERO_FRAME_BG;
-    }
-
-    let inv_alpha = 255 - alpha;
-    let blend =
-        |fg: u8, bg: u8| -> u8 { (((fg as u16 * alpha) + (bg as u16 * inv_alpha)) / 255) as u8 };
-
-    Rgba([
-        blend(pixel[0], HERO_FRAME_BG[0]),
-        blend(pixel[1], HERO_FRAME_BG[1]),
-        blend(pixel[2], HERO_FRAME_BG[2]),
-        255,
-    ])
-}
 fn rgb_to_hsv(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
     let r = r as f32 / 255.0;
     let g = g as f32 / 255.0;
@@ -263,6 +242,10 @@ fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (u8, u8, u8) {
 }
 
 fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
+    if pixel[3] == 0 {
+        return pixel;
+    }
+
     let r = pixel[0];
     let g = pixel[1];
     let b = pixel[2];
@@ -275,7 +258,7 @@ fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
     let value = (value + 0.08).min(0.45);
     let saturation = (saturation * 1.02).min(1.0);
     let (r, g, b) = hsv_to_rgb(hue, saturation, value);
-    Rgba([r, g, b, 255])
+    Rgba([r, g, b, pixel[3]])
 }
 
 fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
@@ -365,10 +348,16 @@ mod tests {
             );
             assert_eq!(
                 frames[frame_index].to_rgba8().get_pixel(0, 0)[3],
-                255,
-                "frame {frame_index} must be flattened to an opaque canvas"
+                0,
+                "frame {frame_index} corner must stay transparent, not flattened to a matte"
             );
         }
+    }
+
+    #[test]
+    fn transparent_pixels_are_never_tone_lifted() {
+        let pixel = Rgba([114, 22, 15, 0]);
+        assert_eq!(tone_lift_dark_reds(pixel), pixel);
     }
 
     #[test]

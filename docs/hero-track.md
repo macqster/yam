@@ -16,6 +16,24 @@ chosen plan.
 Traced 2026-07-25 against `611f7ca`, on a 10-core darwin host with
 `chafa 1.18.2`.
 
+## Status
+
+**Prep complete as of 2026-07-25.** The trace, measurements, evaluation, and
+resolution points in this document are finished and are the intended starting
+point for the rework phase. Nothing further is planned here before rework
+begins.
+
+- Delivered on branch `claude/full-audit-1e44b1`, pushed to `origin`.
+- **No pull request was opened**, deliberately. `.github/workflows/verify.yml`
+  triggers only on pushes to `main` and pull requests targeting `main`, so this
+  branch has run **no CI**. The gate was run locally and was green (277/277,
+  `bash scripts/verify.sh`) at every commit, but treat CI as not having run at all
+  until a PR exists.
+- `HQ-1` through `HQ-6` are all `open` and are to be settled *during* rework,
+  not before it.
+- The numbers here are a snapshot. If the source art or `chafa` version changes,
+  re-run the trace before trusting them — the last section explains how.
+
 Owning docs this one defers to: [`rendering.md`](rendering.md) for render/layer
 contracts, [`hero-cache.md`](hero-cache.md) for the cache path,
 [`architecture.md`](architecture.md) for the geometry contract, and

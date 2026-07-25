@@ -55,7 +55,7 @@ bash scripts/check.sh
 cargo test --quiet
 ```
 
-`.github/workflows/verify.yml` runs the same `scripts/verify.sh` gate in CI on every push and pull request targeting `main`, and `main` requires it to pass before merging (branch protection). Treat that as a backstop, not a substitute for running it locally first.
+`.github/workflows/verify.yml` runs the same `scripts/verify.sh` gate in CI on pushes to `main` and on pull requests targeting `main`, and `main` requires it to pass before merging (branch protection). Note what that excludes: **a topic branch pushed without a pull request runs no CI at all.** Treat CI as a backstop, not a substitute for running the gate locally first.
 
 If a command cannot be run, record that clearly in the handoff.
 

@@ -100,6 +100,12 @@ Start there rather than re-deriving the pipeline. Its ranked list is deliberatel
 ordered by measured value, and the top item is *not* hero-specific: the
 unconditional 120 FPS redraw loop outweighs every hero-local optimization.
 
+**Prep for this track is complete (2026-07-25); the rework phase is the next
+action.** Nothing further is planned before rework starts. The prep landed on
+`claude/full-audit-1e44b1`, pushed with no pull request opened, so it has run no
+CI — the gate was green locally at every commit, but see `docs/hygiene.md` on
+what a pushed topic branch does and does not verify.
+
 Six decisions are recorded as `HQ-1` through `HQ-6` in that document's Resolution
 Points section, to be resolved *during* the rework phase rather than up front.
 Each carries its own resolution criteria and names the doc that owns its answer;

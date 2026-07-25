@@ -159,7 +159,10 @@ pub fn save_hero_frame_set(path: &Path, frame_set: &HeroFrameSet) -> io::Result<
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    let json = serde_json::to_string_pretty(frame_set)
+    // Compact, not pretty: this file is machine-only and large (tens of MB for
+    // a full 96x48 frame set), so indentation would be a substantial share of
+    // it for no reader benefit.
+    let json = serde_json::to_string(frame_set)
         .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
     fs::write(path, json)
 }

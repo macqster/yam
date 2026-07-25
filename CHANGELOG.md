@@ -66,6 +66,9 @@ full change history in one running section instead of per-version ones.
   was dropping roughly 80% of the frame grid as "no coverage" (any
   low-contrast dark region, not only reds), rather than merely desaturating
   it.
+- Hero frame cache now written as compact JSON instead of pretty-printed,
+  cutting the generated cache file from 81MB to 27MB with no behavior
+  change (it is machine-only, so the indentation was pure overhead).
 
 ### Fixed
 
@@ -77,6 +80,13 @@ full change history in one running section instead of per-version ones.
 - A RUSTSEC vulnerability (`crossbeam-epoch`, via `image`'s unused default
   AVIF/OpenEXR/WebP features) and two lesser warnings (`paste`, `anyhow`) —
   see Security below.
+- Greenhouse inspect popup describing the left tray site as awaiting "one
+  future nursery occupant" when a seedling already occupies it; a test now
+  fails if an occupied planting site's inspection text drifts back to
+  describing it as empty.
+- `bin/yam` and `bin/yam-sandbox` missing the executable bit, so `./bin/yam`
+  failed from a fresh clone (the installed copies were unaffected, since
+  `scripts/update.sh` chmods them).
 - Hero frames silently failing to render (`chafa unavailable`-shaped
   placeholder output) since the `image` dependency trim below: that trim's
   premise ("the only format this crate decodes") was incomplete, since the

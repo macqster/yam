@@ -7,6 +7,12 @@ hero pipeline as it actually runs today, records measured numbers rather than
 estimates, and evaluates each stage. It is a **baseline and evaluation**, not a
 phase plan — no implementation order is committed here.
 
+The decisions the rework needs are recorded as `HQ-1` through `HQ-6` in
+Resolution Points, to be settled *during* the rework phase. They are
+deliberately left open: each states its resolution criteria and owning doc, and
+none is pre-judged. The rankings in Opportunities reflect measured cost, not a
+chosen plan.
+
 Traced 2026-07-25 against `611f7ca`, on a 10-core darwin host with
 `chafa 1.18.2`.
 
@@ -107,7 +113,7 @@ to the terminal) at a different and more correct layer — real alpha plus
 `--color-extractor=median`. Two corrections for one symptom, one of which is a
 hand-tuned magic-number color transform applied to 672,400 pixels per frame.
 It has unit coverage of its own behavior but no test asserting it is still
-*needed*. See Open Questions.
+*needed*. Tracked as `HQ-1`; not decided here.
 
 ### 4. Temp PNG + subprocess
 
@@ -251,26 +257,133 @@ Items 1 and 2 are runtime cost; 3, 4, and 5 are compile-path cost and
 robustness; 6 and 7 are hygiene. Item 1 is not hero-specific but was found by
 tracing the hero, and it dominates everything else here.
 
-## Open Questions For The Revision
+## Resolution Points For The Rework Phase
 
-These need a decision before or during the revision; none is answered here.
+Open decisions to resolve **during** the rework phase. Nothing here is decided,
+and nothing here should be read as leaning toward an outcome — each point states
+the question, why it is genuinely open, what evidence would settle it, what it
+blocks, and which doc owns the answer once made. `HQ-` ids are stable so backlog
+items and log entries can cite a single point rather than restating it.
 
-- **Is `tone_lift_dark_reds` still earning its place?** Needs an A/B of rendered
-  output with it disabled, against the current alpha + median path. If it still
-  matters, its constants should be explained; if not, it should go.
-- **Is 120 FPS intentional?** If yes, the reason should be written down, since
-  it costs ~23 CPU points at idle. If not, what should drive redraws — a frame
-  cap, dirty-tracking, or event-driven redraw?
-- **Does the revision keep `chafa` as a subprocess at all?** Item 4 assumes yes.
-  An in-process converter changes the calculus for 3, 4, and 5 together, and is
-  the natural home of the offline-compiler direction.
-- **Does the fixed 96x48 geometry survive?** The cache is keyed by dimensions,
-  so any move to terminal-responsive hero sizing implies a cache entry per size
-  and a recompile on resize. This interacts with `architecture.md`'s Hero
-  Geometry Contract.
-- **Now that hero art is in scope, is the 64-frame / 820x820 / 4.31 MB source
-  shape itself up for revision?** Frame count drives the entire compile cost
-  linearly.
+Status vocabulary: `open` (no decision), `resolved` (decision made and recorded
+per the protocol below). All points are `open`.
+
+### HQ-1 — Does `tone_lift_dark_reds` stay?
+
+- `status:` open
+- `question:` Is the per-pixel HSV dark-red lift (`chafa.rs:253-271`) still
+  contributing to the rendered result now that real alpha plus
+  `--color-extractor=median` landed (2026-07-22)?
+- `why open:` Two corrections address the same symptom at different layers. The
+  pre-pass predates the other one. Its tests assert what it does, not that it is
+  still required, so neither "keep" nor "remove" currently has evidence behind
+  it.
+- `resolved by:` An A/B of rendered output — cold-compile the frame set with the
+  pre-pass disabled, capture with `capture-pane -p -e`, and compare dark-red
+  coverage and overall color distribution against the current path. Both
+  outcomes are legitimate; if it stays, the constants need an explanation, and
+  if it goes, the removal needs the same live verification.
+- `blocks:` Nothing structurally. Independent of every other point.
+- `answer lands in:` `docs/rendering.md`, plus the `chafa.rs` doc comment if it
+  stays.
+
+### HQ-2 — What drives redraws, and is 120 FPS intentional?
+
+- `status:` open
+- `question:` The render loop targets 120 FPS unconditionally (`runtime.rs:90`,
+  `runtime.rs:374`) while the fastest content moves at 2 FPS. Is that
+  deliberate, and if it changes, what should drive redraws?
+- `why open:` No recorded rationale exists for the figure, and the measurement
+  (~23.5 of ~29 idle CPU points) means the answer has real cost either way. A
+  deliberate 120 FPS for input latency or effect smoothness is a defensible
+  answer that simply needs writing down.
+- `resolved by:` Establishing intent first, then — only if it changes — choosing
+  among a lower fixed cap, dirty-region tracking, or event-driven redraw, each
+  measured against idle CPU and against input responsiveness and the `tachyonfx`
+  loading/quit effects, which are the surfaces most likely to suffer from fewer
+  redraws.
+- `blocks:` The value of HQ-3 partly, since a much lower redraw rate changes how
+  much per-draw hero cost matters.
+- `answer lands in:` `docs/rendering.md`. Not hero-owned — this is a render-loop
+  decision surfaced by the hero trace.
+
+### HQ-3 — Does `chafa` remain a subprocess?
+
+- `status:` open
+- `question:` Does the rework keep shelling out to `chafa`, or move conversion
+  in-process (the offline compiler / `CellGrid` direction)?
+- `why open:` The ranked opportunities include both subprocess-preserving work
+  (piping via stdin, parallelizing spawns) and a replacement direction. These
+  are not contradictory but the ordering depends on this answer, and an
+  in-process converter would make the stdin and parallelism work moot.
+- `resolved by:` Deciding whether YAM owns pixel-to-cell conversion. Note
+  `CellGrid` already exists and is exercised as the cache format
+  (`hero_cache.rs:41`), so a replacement starts from an existing type rather
+  than a blank design. Whichever way this goes, output fidelity must be compared
+  live against the current braille/median baseline.
+- `blocks:` The sequencing of opportunities 3, 4, and 5. Settle this before
+  investing in either branch.
+- `answer lands in:` `docs/rendering.md` and `docs/hero-cache.md`.
+
+### HQ-4 — Does the fixed 96x48 geometry survive?
+
+- `status:` open
+- `question:` Does the hero stay at a fixed 96x48 cell footprint, or become
+  responsive to terminal size?
+- `why open:` The cache is keyed by render dimensions
+  (`hero_gif_1.{w}x{h}.frame_cache.json`), so responsive sizing implies a cache
+  entry per observed size and a recompile on resize — at the cold cost measured
+  above unless HQ-3 changes it.
+- `resolved by:` Deciding whether the hero is a fixed-composition element or a
+  scaling one. This is a composition question first and a performance question
+  second; the scaffold and companion layout assume the current footprint.
+- `blocks:` Cache format and key design; interacts with HQ-3 and HQ-5.
+- `answer lands in:` `docs/architecture.md`'s Hero Geometry Contract, and
+  `docs/hero-cache.md` for the keying consequence.
+
+### HQ-5 — Is the source art shape itself up for revision?
+
+- `status:` open
+- `question:` Now that art is in scope, does the 64-frame / 820x820 / 4.31 MB
+  source shape change?
+- `why open:` Frame count drives the entire cold compile cost linearly, so this
+  is the one point that can move the performance numbers without any code change
+  at all. It was out of scope while the art was frozen and has never been
+  examined.
+- `resolved by:` An art decision, not a measurement — though the trace supplies
+  the cost per frame if frame count is traded against smoothness. Any change
+  must move `assets/hero_gif_1.gif` and
+  `tools/legacy-python/hero/assets/hero_go.gif` together, per the existing
+  byte-identical-duplicate rule in `docs/audit.md`.
+- `blocks:` Nothing, but it changes the baseline every other point is measured
+  against, so resolving it early avoids re-measuring.
+- `answer lands in:` `docs/architecture.md`'s Hero Geometry Contract and
+  `docs/audit.md`'s asset-duplication note.
+
+### HQ-6 — How is the `ANSI_PARSE_ERROR` cacheability gap closed?
+
+- `status:` open
+- `question:` The gap itself is a bug to fix, not a decision. The open part is
+  the approach: add the string to `is_placeholder_frame`'s list, or replace the
+  in-band magic string with a typed error so the failure cannot be mistaken for
+  content.
+- `why open:` The list approach is a one-line fix that keeps the existing shape;
+  the typed-error approach removes the class but touches the return type of the
+  render path and so interacts with HQ-3.
+- `resolved by:` Choosing between a minimal fix now and a structural fix folded
+  into whatever HQ-3 decides. Either way the fix needs a test asserting a parse
+  failure is never persisted.
+- `blocks:` Nothing. Can be fixed independently at any point.
+- `answer lands in:` `src/render/chafa.rs` and `docs/audit.md`'s matching risk
+  note.
+
+### Resolution protocol
+
+When a point is resolved: record the decision and its reasoning in
+`docs/LOG.md`, update the owning doc named in that point, flip its `status:` here
+to `resolved` with the date, and drop the matching `TODO.md` item. Keep the point
+in place rather than deleting it — the question and the evidence behind the
+answer are worth more later than a clean list.
 
 ## Constraints That Must Hold Through The Revision
 

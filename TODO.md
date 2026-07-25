@@ -100,8 +100,20 @@ Start there rather than re-deriving the pipeline. Its ranked list is deliberatel
 ordered by measured value, and the top item is *not* hero-specific: the
 unconditional 120 FPS redraw loop outweighs every hero-local optimization.
 
-- `next` answer `docs/hero-track.md`'s open questions before or during the revision: whether `tone_lift_dark_reds` still earns its place now that the alpha + median fix landed, whether 120 FPS is intentional, whether `chafa` stays a subprocess, whether the fixed 96x48 geometry survives, and whether the 64-frame source shape itself is up for revision.
-- `next` close the `ANSI_PARSE_ERROR` cacheability gap (`src/render/chafa.rs:44` vs `is_placeholder_frame`): a parse failure is currently judged cacheable and would be persisted as trusted art. Prefer a typed error over the in-band magic string.
+Six decisions are recorded as `HQ-1` through `HQ-6` in that document's Resolution
+Points section, to be resolved *during* the rework phase rather than up front.
+Each carries its own resolution criteria and names the doc that owns its answer;
+cite the id rather than restating the question. All are currently `open` and none
+is pre-judged. Resolve `HQ-3` before investing in either conversion branch, since
+it sequences the others; `HQ-5` changes the baseline the rest are measured
+against, so it is worth settling early.
+
+- `next` `HQ-1` decide whether `tone_lift_dark_reds` stays, via an A/B of rendered output against the current alpha + median path.
+- `next` `HQ-2` establish whether the unconditional 120 FPS redraw loop is intentional, and if it changes, what should drive redraws.
+- `next` `HQ-3` decide whether `chafa` remains a subprocess or conversion moves in-process; this sequences the stdin, parallelism, and offline-compiler work.
+- `next` `HQ-4` decide whether the fixed 96x48 hero geometry survives or becomes terminal-responsive, and what that implies for cache keying.
+- `next` `HQ-5` decide whether the 64-frame / 820x820 source art shape is itself revised, now that art is in scope.
+- `next` `HQ-6` close the `ANSI_PARSE_ERROR` cacheability gap (`src/render/chafa.rs:44` vs `is_placeholder_frame`), where a parse failure is currently judged cacheable and would be persisted as trusted art; the open part is whether to extend the detection list or replace the in-band magic string with a typed error.
 
 - `verify` hero rendering stays renderer-owned and cache-first on the common path.
 - `verify` the live Chafa compiler path degrades to placeholder frames instead of panicking when the GIF, temp directory, temp image write, or `chafa` command fails.

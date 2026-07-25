@@ -21,7 +21,8 @@ Issue link rule:
 
 ## Current Pre-Expansion Batch
 
-- `verify` keep the repo in soft feature freeze mode while this batch is active: polish, stability, bug fixes, contract repairs, and architecture preparation are in scope; large new entities, mechanics, and worlds are not.
+- `next` **the hero GIF and its rendering infrastructure are the main goal of the 0.4 development phase** (set 2026-07-25): source art, GIF decode, the `chafa` compile path, the frame cache, and the offline compiler / `CellGrid` direction. Both the infrastructure and the rendered art are in scope for deliberate change — the previous repo-wide hero art freeze is lifted for this track only. Execution items live in section 5 below; the scope, standing constraints, and what the lifted freeze does *not* change are in `docs/audit.md`'s Hero Track section.
+- `verify` keep the repo in soft feature freeze mode while this batch is active: polish, stability, bug fixes, contract repairs, and architecture preparation are in scope; large new entities, mechanics, and worlds are not. The hero track above is explicitly in scope for this batch — it is infrastructure and art on an existing surface, not a new entity, mechanic, or world.
 - `docs` keep `TODO.md`, `docs/audit.md`, `docs/greenhouse-roadmap.md`, `docs/vines.md`, `docs/scene-model.md`, `docs/architecture.md`, `docs/rendering.md`, and `docs/hygiene.md` aligned before any main-scene enrichment or greenhouse work starts.
 - `docs` prepare the external eval report ingestion path before the first report lands: keep the raw report as reference input, route active findings into `TODO.md` or `docs/audit.md`, record the ingestion batch in `docs/LOG.md`, and avoid creating a second competing authority surface.
 - `verify` keep `known_issues.md` empty unless a concrete active issue appears; broad pre-expansion risks belong in the audit and this backlog.
@@ -76,7 +77,7 @@ Issue link rule:
 
 ## 4. Main Scene Enrichment Prep
 
-- `verify` main-scene enrichment must preserve hero aesthetics, footer placement, modal geometry, and companion projection semantics.
+- `verify` main-scene enrichment must preserve hero aesthetics, footer placement, modal geometry, and companion projection semantics. As with the vine rule, this is scoped: enrichment work must not change the hero as a side effect, but the hero track itself may change it deliberately.
 - `verify` the main scene remains the live visualiser/screensaver composition; enrichment should add world-attached content, not a dashboard layout.
 - `verify` keep the landed scaffold passes honest: `core::scaffold` owns the rear support cradle plus the small foreground nesting edge for the main scene, scaffold render layers stay read-only, and decorative branching still remains deferred until the seated silhouette is proven.
 - `verify` use sandbox as the first scaffold-prototyping room: hero, companions, and scaffold may be toggled there for composition trials, but the toggles remain UI-owned presentation switches over the shared world/render pipeline rather than a second runtime owner.
@@ -87,6 +88,11 @@ Issue link rule:
 - `verify` add negative tests for any enrichment that could blur world/HUD boundaries, mutate world state from render code, or disturb the footer row.
 
 ## 5. Rendering And Hero Pipeline
+
+**This section is the 0.4 main goal** (set 2026-07-25) — see the Current
+Pre-Expansion Batch above and `docs/audit.md`'s Hero Track section for scope and
+standing constraints. Items here take precedence over sections 1-4 and 6-9
+unless a concrete regression says otherwise.
 
 - `verify` hero rendering stays renderer-owned and cache-first on the common path.
 - `verify` the live Chafa compiler path degrades to placeholder frames instead of panicking when the GIF, temp directory, temp image write, or `chafa` command fails.

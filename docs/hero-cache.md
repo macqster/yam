@@ -1,5 +1,14 @@
 # Hero Cache Plan
 
+> **0.4 main goal.** This document sits inside the hero track, the primary
+> development focus for 0.4 (set 2026-07-25) — see [`audit.md`](audit.md)'s Hero
+> Track section for the full scope. Expect this note to move faster than most
+> contract docs while that track is active. Two consequences worth stating up
+> front: the source art is now in scope for deliberate change, so the freshness
+> rule below will see real cache invalidations rather than only theoretical
+> ones; and the offline compiler / `CellGrid` direction in Migration Order is
+> now active direction rather than a parked idea.
+
 This note defines the first runtime-facing `HeroFrameSet` seam and the current cache-first startup path.
 
 ## Goal

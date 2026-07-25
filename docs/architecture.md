@@ -241,6 +241,13 @@ The intended model is:
 
 ## Hero Geometry Contract
 
+> **0.4 main goal.** The hero and its rendering infrastructure are the primary
+> development focus for 0.4 (set 2026-07-25), source art included — so the
+> geometry figures below are the most likely numbers in this document to change.
+> Treat them as current fact, not as fixed contract, and update this section in
+> the same batch as any pipeline or art change. See [`audit.md`](audit.md)'s
+> Hero Track section.
+
 - source hero GIF: square `820x820` pixels
 - terminal render target: fixed `96x48` cells
 - decoded GIF subimage frames are expanded onto a full `820x820` logical canvas before terminal conversion; the canvas is transparent, preserving the source's real per-pixel alpha rather than flattening it to an opaque matte

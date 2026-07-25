@@ -41,7 +41,8 @@ current release: `0.4.0`
 
 </div>
 
-- `next_track`: `greenhouse curation/transfer gates and richer per-fixture inspection detail — not yet scoped, see docs/greenhouse-roadmap.md`
+- `next_track`: `hero GIF and its rendering infrastructure (source art, chafa path, frame cache, offline compiler direction) — the main goal of the 0.4 phase, see docs/audit.md's Hero Track section`
+- `following_track`: `greenhouse curation/transfer gates and richer per-fixture inspection detail — not yet scoped, see docs/greenhouse-roadmap.md`
 - `repo_mode`: `personal sandbox / controlled stabilization`
 - `canonical_runtime`: `cargo run --release`
 - `canonical_maintenance_gate`: `bash scripts/verify.sh`

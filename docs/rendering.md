@@ -1,5 +1,14 @@
 # YAM-RUST Render Contract
 
+> **0.4 main goal.** The hero GIF and its rendering infrastructure — source art,
+> GIF decode, the `chafa` compile path, the frame cache, and the offline
+> compiler / `CellGrid` direction — are the primary development focus for 0.4
+> (set 2026-07-25). Both the infrastructure and the rendered art are in scope
+> for deliberate change. Scope and standing constraints live in
+> [`audit.md`](audit.md)'s Hero Track section; the cache path is owned by
+> [`hero-cache.md`](hero-cache.md). The contracts below still hold — this
+> promotes the work's priority, not permission to bypass layer ownership.
+
 ## Assertions
 
 - Numeric layer ordering implements the conceptual layer model defined in [`scene-model.md`](scene-model.md).

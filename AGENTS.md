@@ -11,7 +11,7 @@ It describes how to work here, not the full YAM architecture.
 - [docs/architecture.md](docs/architecture.md) owns data flow and coupling rules.
 - [docs/scene-model.md](docs/scene-model.md) owns scene/world behavior.
 - [docs/rendering.md](docs/rendering.md) owns render order, layer, and UI/render contracts.
-- [docs/audit.md](docs/audit.md) owns current risks and drift notes.
+- [docs/audit.md](docs/audit.md) owns current risks, drift notes, and the active development priority — its Hero Track section names the 0.4 main goal.
 - [docs/LOG.md](docs/LOG.md) is append-only history.
 
 ## Operating Rules

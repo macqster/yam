@@ -13,14 +13,14 @@ The repo front door is [../README.md](../README.md).
 - [../known_issues.md](../known_issues.md) - active unresolved issues only
 - [LOG.md](LOG.md) - append-only project history
 - [../CHANGELOG.md](../CHANGELOG.md) - curated user/developer-facing change summary
-- [audit.md](audit.md) - current risk and drift snapshot
+- [audit.md](audit.md) - current risk and drift snapshot, and the active development priority (its Hero Track section names the 0.4 main goal)
 
 ## Core Contracts
 
 - [glossary.md](glossary.md) - shared terminology source of truth
 - [architecture.md](architecture.md) - ownership and implementation architecture
 - [scene-model.md](scene-model.md) - deterministic scene model
-- [rendering.md](rendering.md) - render order, layering, and UI/render contracts
+- [rendering.md](rendering.md) - render order, layering, and UI/render contracts **(0.4 main goal: hero track)**
 - [theme.md](theme.md) - reusable BTAS theme contract
 - [hygiene.md](hygiene.md) - repo hygiene rules
 
@@ -33,7 +33,7 @@ The repo front door is [../README.md](../README.md).
 - [weather-widget.md](weather-widget.md) - weather-widget contract
 - [vines.md](vines.md) - vine ownership/readiness contract
 - [config.md](config.md) - config ownership and boot-frame note
-- [hero-cache.md](hero-cache.md) - hero-frame cache design/runtime path
+- [hero-cache.md](hero-cache.md) - hero-frame cache design/runtime path **(0.4 main goal: hero track)**
 - [soft-line-atlas.md](soft-line-atlas.md) - linework glyph grammar for guides and future mask edges
 
 ## Research And Policy

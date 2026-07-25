@@ -1,5 +1,14 @@
 # Greenhouse Roadmap
 
+> **Priority position.** Greenhouse breadth now sits *behind* the hero track for
+> 0.4: the hero GIF and its rendering infrastructure were made the phase's main
+> goal on 2026-07-25 (see [`audit.md`](audit.md)'s Hero Track section). This
+> document remains the sole owning surface for greenhouse strategy and its
+> contents stay valid — the first vertical slice (read-only render, growth
+> dispatch, inspection popup) is landed and unaffected. What changed is
+> sequencing: the remaining phases below are the following track, not the
+> current one.
+
 This document is the preliminary roadmap for the future greenhouse architecture
 and environment. It is a planning contract, not an implementation batch.
 

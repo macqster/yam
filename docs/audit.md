@@ -31,11 +31,42 @@ Last reviewed: 2026-07-25 (full audit; every claim below re-derived from the tre
 
 ## Current Work Priority
 
-1. Prioritize overall stability and efficiency before adding new features.
-2. Keep hero GIF aesthetics held steady and defer large flora/world expansions until the system is prepared for them; conceptual prep is fine when it tightens the contracts.
-3. Prepare flora runtime development systematically around organism identity, species registry payloads, per-instance journals, family-aware storage, and shared spatial guidance instead of adding another ad hoc plant family.
-4. Improve coherence and consistency across UI, theming, and docs.
-5. Keep `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite green together now that the broader stabilization pass is restored.
+1. **The hero GIF and its rendering infrastructure are the main goal of the 0.4 development phase** (set 2026-07-25). This covers the whole chain — source art, GIF decode, the `chafa` compile path, the frame cache, and the offline compiler / `CellGrid` direction — and both the infrastructure *and* the rendered art are in scope for deliberate change. See "Hero Track (0.4 Main Goal)" below.
+2. Prioritize overall stability and efficiency before adding new features.
+3. Defer large flora/world expansions until the system is prepared for them; conceptual prep is fine when it tightens the contracts.
+4. Prepare flora runtime development systematically around organism identity, species registry payloads, per-instance journals, family-aware storage, and shared spatial guidance instead of adding another ad hoc plant family.
+5. Improve coherence and consistency across UI, theming, and docs.
+6. Keep `cargo fmt && bash scripts/check.sh` and the full `cargo test` suite green together now that the broader stabilization pass is restored.
+
+## Hero Track (0.4 Main Goal)
+
+Set 2026-07-25. The hero GIF and its surrounding code infrastructure are the
+primary development focus for 0.4, promoted from "hardening" to the leading
+track.
+
+Scope: the source art itself, GIF decode, the live `chafa` compile path, the
+frame cache, the offline compiler / `CellGrid` direction, and the render/scene
+seams the hero sits in.
+
+What changed about the aesthetics rule: hero art was previously frozen
+repo-wide. That global freeze is lifted for this track — reworked or new source
+art is a legitimate 0.4 outcome, not a regression. The *scoped* rules survive
+unchanged, because they exist to stop unrelated work from dragging the hero
+along as a side effect rather than to protect the art from deliberate change:
+vine work must still not require hero appearance changes
+([`docs/vines.md`](vines.md)), and main-scene enrichment must still preserve
+hero aesthetics ([`TODO.md`](../TODO.md)). Incidental drift from work that is
+not on this track remains a regression.
+
+Standing constraints for the track:
+
+- Changes touching `src/render/chafa.rs` still require live `scripts/tmux-smoke.sh`
+  verification, since CI has no `chafa` and every live-path test tolerates
+  placeholder frames by design.
+- The cache must stay a runtime-owned representation, not a second independent
+  rendering authority ([`docs/hero-cache.md`](hero-cache.md)).
+- Aesthetic changes should be deliberate and reviewed against the BTAS/TNBA
+  color discipline, not accepted as incidental pipeline output.
 
 ## Active Readiness Gates
 
@@ -48,7 +79,7 @@ Last reviewed: 2026-07-25 (full audit; every claim below re-derived from the tre
 - Do not start broader flora feature work until the signed projection, core-backed anchor identity, and screen-attached invariance tests stay green together.
 - Keep vines as world-attached organisms that query guide/spatial state; render layers should visualize resolved vine geometry rather than own vine state.
 - Keep vines independent of raster masks, filled sprites, or empty-cell masking until the mask contract is explicitly promoted.
-- Keep the current hero GIF aesthetics and footer contract stable while testing vine placement around them.
+- Keep the footer contract stable while testing vine placement around it, and keep hero aesthetics stable *as seen from vine work* — vine slices must not require hero appearance changes. This is no longer a repo-wide art freeze: deliberate hero art changes are in scope for the 0.4 hero track above.
 - Clean terminology drift before implementation: spatial capture uses points, anchors, guides, lines, and polylines; `node` remains reserved for plant morphology/anatomy.
 - Readiness validation on 2026-05-05: targeted Phase 0 checks are green for spatial projection, guide-set lookup, anchor identity, footer/HUD invariance, and resize round-trip behavior; the remaining risk is architectural consolidation, not an active regression.
 - The active backlog now treats vine phases 1 through 7 as landed and keeps only branching/organs, border awareness, and broader flora/greenhouse preparation as future execution work.
@@ -132,9 +163,13 @@ Last reviewed: 2026-07-25 (full audit; every claim below re-derived from the tre
 
 ## Priority Order
 
-1. Spatial relation layer consolidation
-2. Hero-rendering pipeline hardening
+1. Hero GIF and rendering infrastructure — the 0.4 main goal (see "Hero Track")
+2. Spatial relation layer consolidation
 3. Broader flora runtime implementation
+
+Greenhouse breadth (curation/transfer gates, richer per-fixture detail) now sits
+behind the hero track for 0.4; [`docs/greenhouse-roadmap.md`](greenhouse-roadmap.md)
+remains its owning surface.
 
 ## Rule
 

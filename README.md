@@ -178,6 +178,7 @@ active surface docs:
 - [docs/vines.md](docs/vines.md) - vine ownership and readiness
 - [docs/weather-widget.md](docs/weather-widget.md) - weather ownership contract
 - [docs/hero-cache.md](docs/hero-cache.md) - hero cache/runtime path
+- [docs/hero-revision.md](docs/hero-revision.md) - hero color-fidelity revision north star and roadmap
 
 <div align="center">
 

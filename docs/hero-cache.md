@@ -18,8 +18,8 @@ The intended direction is:
 
 The currently wired runtime cache file lives in the user cache directory:
 
-- `$XDG_CACHE_HOME/yam/hero_gif_1.96x48.frame_cache.json` when `XDG_CACHE_HOME` is set
-- otherwise `~/.cache/yam/hero_gif_1.96x48.frame_cache.json`
+- `$XDG_CACHE_HOME/yam/hero_gif_1.r2.96x48.frame_cache.json` when `XDG_CACHE_HOME` is set
+- otherwise `~/.cache/yam/hero_gif_1.r2.96x48.frame_cache.json`
 
 ## Runtime Shape
 
@@ -56,5 +56,8 @@ The current code seam for this shape lives in [hero_cache.rs](../src/render/hero
 - Runtime startup should avoid the current GIF decode plus temp-frame plus per-frame process-spawn cost on the common path.
 - Visible hero geometry, frame count, and color stability should stay aligned with the current Chafa baseline.
 - The cache should remain a runtime-owned representation, not a second independent rendering authority.
-- The cache freshness rule should stay simple and explicit: cached hero frames are reusable only when the cache file is at least as new as the source GIF.
+- The cache freshness rule is explicit: cached hero frames are reusable only
+  when the cache file is at least as new as the source GIF and its cache-key
+  revision matches the renderer. Bump that revision whenever renderer options,
+  ANSI conversion, or the serialized frame contract changes.
 - On a fresh machine without `chafa`, startup should degrade explicitly rather than panic: the uncached path may fall back to a visible placeholder frame, but the runtime should remain alive and the cache loader should still be preferred whenever a valid cache already exists.

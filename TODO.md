@@ -87,6 +87,16 @@ Issue link rule:
 
 ## 5. Rendering And Hero Pipeline
 
+- `priority` treat the unresolved dark-color fidelity failure (dark reds,
+  browns, greens, and blacks) as the next product-critical hero tranche; use
+  `docs/hero-revision.md` as the north star and do not call the 2026-07-22
+  alpha/coverage repair a complete color fix.
+- `docs` establish the hero revision reference set, canonical anchor semantic,
+  manifest/package schema, and explicit compiler preset before replacing the
+  source GIF or promoting another renderer.
+- `verify` require real-terminal review of representative frames and motion
+  after every source, color, braille, compiler, timing, or cache-identity
+  change; ANSI-code presence and non-placeholder frame counts are insufficient.
 - `verify` hero rendering stays renderer-owned and cache-first on the common path.
 - `verify` the live Chafa compiler path degrades to placeholder frames instead of panicking when the GIF, temp directory, temp image write, or `chafa` command fails.
 - `inspect` define the future `HeroFrameSet` offline compiler contract before replacing or bypassing the active Chafa-backed path.

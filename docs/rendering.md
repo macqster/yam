@@ -290,6 +290,10 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 ## Text And Geometry Caveats
 
+- The unresolved dark-color fidelity problem (dark reds, browns, greens, and
+  blacks) is product-critical. The alpha/coverage repair does not constitute a
+  complete color fix; follow [hero-revision.md](hero-revision.md) for the
+  north star, acceptance bar, and experiment rules.
 - Hero source GIF is `820x820` pixels and is rendered into a fixed `96x48` cell footprint.
 - That `96x48` target is the current layout result used to preserve the GIF's proportions in terminal cell space.
 - GIF subimage frames are expanded onto a full `820x820` logical canvas before chafa rendering so partial frames, including frames 15 and 30, cannot stretch vertically. The canvas is transparent (not an opaque matte fill): the source GIF carries real per-pixel alpha, and the pipeline preserves it end to end into the temp PNG chafa reads, instead of compositing every frame onto a flatten color. `assets/hero_gif_1.gif` was replaced 2026-07-22 with the alpha-carrying original that has been tracked in this repo all along as `tools/legacy-python/hero/assets/hero_go.gif`; the file it replaced was a flattened, alpha-stripped copy of the same art introduced by the first Rust hero commit, which is why the Rust renderer lost dark regions from its first day. See `docs/audit.md` for the full provenance trace.

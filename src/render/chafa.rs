@@ -14,6 +14,9 @@ use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFr
 
 const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 const HERO_DISPLAY_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
+// Bump whenever the renderer, ANSI conversion, or serialized frame contract
+// changes; GIF mtimes alone cannot invalidate those cached frames.
+const HERO_CACHE_REVISION: u8 = 2;
 pub const HERO_RENDER_WIDTH: u16 = 96;
 pub const HERO_RENDER_HEIGHT: u16 = 48;
 
@@ -171,7 +174,9 @@ fn cache_is_fresh_against(cache_path: &Path, source_path: &Path) -> bool {
 }
 
 fn hero_frame_cache_path(width: u16, height: u16) -> PathBuf {
-    hero_cache_dir().join(format!("hero_gif_1.{width}x{height}.frame_cache.json"))
+    hero_cache_dir().join(format!(
+        "hero_gif_1.r{HERO_CACHE_REVISION}.{width}x{height}.frame_cache.json"
+    ))
 }
 
 fn hero_cache_dir() -> PathBuf {
@@ -460,5 +465,11 @@ mod tests {
         fs::write(&source, b"source").expect("write source");
 
         assert!(!cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn hero_cache_path_includes_the_renderer_revision() {
+        let path = super::hero_frame_cache_path(4, 2);
+        assert!(path.ends_with("hero_gif_1.r2.4x2.frame_cache.json"));
     }
 }

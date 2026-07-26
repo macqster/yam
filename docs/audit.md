@@ -3,7 +3,7 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-green, `FloraInstance` migration completeness, and `WorldKind::Greenhouse` exhaustiveness claims independently re-verified with a working toolchain rather than carried forward)
+Last reviewed: 2026-07-25 (hero-cache invalidation and greenhouse status reconciled; full verification green)
 
 ## Unresolved Risks
 
@@ -16,17 +16,20 @@ Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-gree
   studying dashboard TUIs like Glint as infrastructure references only, not as
   product-shape precedents.
 - The pre-expansion architecture batch is active: main-scene enrichment and greenhouse ecosystem work should remain conceptual or infrastructural until spatial, flora storage/growth dispatch, world rooms/environments, inspection modes, and docs/tooling readiness are prepared deliberately.
-- Greenhouse planning now has a single dedicated roadmap; `WorldState` attachment, multi-family flora storage, species-profile format, and the world/room model itself are all now closed (2026-07-21: `WorldKind::Greenhouse` is selectable with a minimal read-only render, `docs/greenhouse-roadmap.md` has the full account). Growth dispatch and inspection surfaces (popups, per-fixture detail, an actual organism in a planting site) are the remaining open gaps before greenhouse content is more than an empty visitable room.
+- Greenhouse planning now has a single dedicated roadmap; `WorldState` attachment, multi-family flora storage, species-profile format, world/room model, growth dispatch, and read-only inspection are all landed. Remaining scope is per-fixture/per-organism live detail and any curation/transfer write-path; `docs/greenhouse-roadmap.md` owns that sequencing.
 - The greenhouse brainstorming sources have been distilled into the roadmap as candidate material only; the useful current bias is functional-space-first nursery/propagation-room work, symbolic per-room environment, read-only inspection, tiny planting-site capacity, and curation-style progression rather than gameplay.
 - The front-door README has now been hand-reworked into a broadly good-enough creative state for YAM, so future README intervention should stay minimal and factual. The remaining seams are low-stakes polish or hygiene details, chiefly the exact canonical release-line convention expected by `scripts/check-docs.sh` and a few presentational quirks such as the `twimc` heading / centering wrappers.
 
 ## Weakest Areas
 
 1. Spatial relation layer: still the most fragile seam because the canonical resolver and anchor lookup trait exist, but compatibility bridging and higher-level relation ownership remain only partly consolidated.
-2. Hero-rendering pipeline: Chafa is stable and the long-standing dark-region/dark-red coverage loss is now fixed (2026-07-22, see Active Risk Notes), but the offline compiler / `CellGrid` path remains experimental and the hero pipeline still has more than one proving ground.
+2. Hero-rendering pipeline: dark-color fidelity is the current product-critical
+   risk. The 2026-07-22 alpha/coverage repair remains necessary, but Chafa
+   still misrepresents dark red, brown, green, and black regions; the offline
+   compiler / `CellGrid` path remains experimental. See `hero-revision.md`.
 3. Flora runtime: the first vine prototype is live through deterministic growth and leaf hosting, `core::organism` provides the first shared identity/species-registry/journal vocabulary, multi-family storage is now locked as an enum-backed `FloraInstance` family store (2026-07-21), and growth/aging dispatch now iterates every vine instance rather than one hard-coded id (2026-07-21) — but the growth *rule* itself is still vine-specific code, since no second family exists yet to generalize it against, and that remains ahead of implementation.
 4. Theme/surface consistency: the BTAS contract is now reusable, but a few surfaces still rely on legacy semantic aliases and need gradual convergence rather than sudden rewrites.
-5. Greenhouse world modeling: the roadmap has a functional-space contract, an inert room/environment state, a real `WorldState` attachment, and a selectable `WorldKind::Greenhouse` with a minimal read-only render (2026-07-21) — but no growth dispatch, no inspection UI, and no organism actually occupying a planting site yet.
+5. Greenhouse world modeling: the roadmap has a functional-space contract, room/environment state, a real `WorldState` attachment, a selectable `WorldKind::Greenhouse`, seedling growth dispatch, and a read-only inspection UI. The remaining risk is keeping future live detail and curation/transfer behavior inside the established world/flora ownership boundaries.
 6. Docs/runtime synchronization: most current contracts are aligned, but visual changes still need runtime identity checks and source verification to avoid stale-binary confusion.
 
 ## Current Work Priority
@@ -93,19 +96,25 @@ Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-gree
   - evidence: `src/core/spatial.rs`, `src/scene/entity.rs`, `src/core/guide.rs`, `src/render/guide.rs`, `src/render/render_state.rs`, `scripts/check.sh`
 - `low` Flora storage is closed: `FloraState` stores an enum-backed `FloraInstance` family store (`organisms: Vec<FloraInstance>`, `Vine(VineInstance)` the sole variant so far) instead of a bespoke `vines` field, with every call site migrated. Growth dispatch (`systems::growth::run_growth`) now iterates every vine instance rather than one hard-coded id, matching `run_aging`; the growth *rule* itself remains vine-specific until a second family exists. See `docs/LOG.md` for the fix history.
   - evidence: `src/core/flora.rs`, `src/systems/growth.rs`, `src/systems/aging.rs`, `src/scene/layers/vine_layer.rs`, `src/scene/layers/debug_layer.rs`, `src/core/world.rs`
-- `low` `WorldKind::Greenhouse` is a real selectable world (2026-07-21): `WorldState.greenhouse` is `Some(GreenhouseState::nursery())` for that world only, rendered by a minimal read-only `GreenhouseLayer` (bounds outline + fixture markers), verified end-to-end in the running app. No growth dispatch, mutation, or inspection UI yet — see "Weakest Areas" #5.
-  - evidence: `src/core/world.rs`, `src/core/greenhouse.rs`, `src/scene/layers/greenhouse_layer.rs`
+- `low` `WorldKind::Greenhouse` is a real selectable world: `WorldState.greenhouse` is `Some(GreenhouseState::nursery())` for that world only; a seedling occupies `left_tray` and advances through its greenhouse growth cadence; `GreenhouseInspectLayer` exposes the room's read-only inspection references. No mutation/curation UI exists yet.
+  - evidence: `src/core/world.rs`, `src/core/greenhouse.rs`, `src/systems/growth.rs`, `src/scene/layers/greenhouse_layer.rs`, `src/scene/layers/greenhouse_inspect_layer.rs`
 - `low` `docs/greenhouse-roadmap.md` is the single owning surface for greenhouse strategy, ingested brainstorming/reference material, phase tasks, gates, and stop conditions; `TODO.md` and `docs/audit.md` carry only pointers, not a second copy of the contract.
   - evidence: `docs/greenhouse-roadmap.md`, `TODO.md`, `docs/README.md`
 - `low` The Glint study is a useful external contrast case: a strong Rust/Ratatui reference for widget registries and setup flows, but also a reminder of what YAM should not become — a pane-grid, widget-first dashboard shell. Future borrowing should stay infrastructure-only.
   - evidence: `docs/resource-map.md`
 - `low` The hero-rendering pipeline is still experiment-heavy outside the active Chafa path: the offline compiler / `CellGrid` direction remains documented but unproven.
   - evidence: `src/render/chafa.rs`, `docs/rendering.md`, `docs/architecture.md`
+- `high` Dark-color fidelity in the active hero remains unresolved: dark reds,
+  browns, greens, and blacks are still not rendered reliably enough for the
+  intended composition. The 2026-07-22 alpha/coverage repair is a necessary
+  precursor, not proof of color correctness; `docs/hero-revision.md` owns the
+  acceptance bar and revision direction.
+  - evidence: `src/render/chafa.rs`, `src/scene/layers/hero_layer.rs`, `docs/hero-revision.md`
 - `low` Fixed the dark-region/dark-red coverage loss that has affected hero rendering since the Rust baseline (2026-07-22): a direct sanity-check investigation found the prior `--color-extractor=average` Chafa flag, combined with flattening every frame onto an opaque matte canvas, was dropping roughly 80% of the frame grid as "no coverage" — not desaturating it, omitting it — because low-contrast dark regions (any dark content, not only reds) read as close enough to the assumed background to skip. Two changes together fix it: the source asset (`assets/hero_gif_1.gif`) now carries real per-pixel alpha that the pipeline preserves end to end instead of discarding at flatten time, and the extractor switched to `--color-extractor=median`. The asset's provenance is worth recording precisely, because it explains the "since day 0" part: the alpha-carrying original has been tracked in this repo the whole time at `tools/legacy-python/hero/assets/hero_go.gif` (imported in `768b193`, used by the legacy Python hero pipeline), and the very first Rust hero commit (`0606be7`, 2026-04-23) added `assets/hero_gif_1.gif` as a *separate, flattened, alpha-stripped copy* of that same art rather than pointing at the original. The Rust renderer has therefore been reading alpha-free frames since its first day, which is exactly the window over which dark reds were reported missing. The new `assets/hero_gif_1.gif` is byte-identical (md5 `8afff117…`) to that in-repo original. Neither alone is correct: `median` against the old flattened canvas recovered coverage only by also painting the true background; real alpha alone (`average` extractor) barely moved the numbers. Verified live in the running app (`scripts/tmux-smoke.sh`), not just synthetic frame tests: color codes in the rendered output now include genuine dark-red values that were previously absent. The renamed `HERO_DISPLAY_BG` constant (formerly `HERO_FRAME_BG`) now reflects its actual role, "chafa `--bg` display hint only," not "opaque flatten fill," and the corner-transparency assumption in `decoded_hero_frames_keep_full_canvas_geometry` flipped from asserting opacity to asserting transparency.
   - evidence: `src/render/chafa.rs`, `assets/hero_gif_1.gif`, `docs/rendering.md`
 - `low` `assets/hero_gif_1.gif` and `tools/legacy-python/hero/assets/hero_go.gif` are now byte-identical (~4.1MB each, ~8.2MB total) after the 2026-07-22 asset swap. This duplication is known and currently deliberate rather than accidental: the Rust runtime reads the former by a compile-time path, while `tools/legacy-python/runtime/system.py` and `tools/experiments/` still resolve the latter, and the legacy Python tree is frozen reference material that is not worth repointing for ~4MB. Revisit only if the legacy tree is retired or the art changes again — if it changes, both copies must move together or the two pipelines will silently diverge on source art.
   - evidence: `assets/hero_gif_1.gif`, `tools/legacy-python/hero/assets/hero_go.gif`, `tools/legacy-python/runtime/system.py`
-- `low` The hero frame cache is written with compact JSON (`serde_json::to_string`, not `to_string_pretty`), which cut the generated file from 81MB to 27MB with no behavior change; the file is machine-only, so indentation was pure overhead. Warm-load cost measured at ~150ms against ~4300ms for the live `chafa` compile path (2026-07-25), so the cache-first startup path in `docs/hero-cache.md` is comfortably meeting its acceptance bar.
+- `low` The hero frame cache is written with compact JSON (`serde_json::to_string`, not `to_string_pretty`), which cut the generated file from 81MB to 27MB with no behavior change; the file is machine-only, so indentation was pure overhead. Its key includes a renderer revision as well as the dimensions, so renderer-only changes cannot reuse stale frames; GIF mtime still governs freshness within a revision. Warm-load cost measured at ~150ms against ~4300ms for the live `chafa` compile path (2026-07-25), so the cache-first startup path in `docs/hero-cache.md` is comfortably meeting its acceptance bar.
   - evidence: `src/render/hero_cache.rs`, `docs/hero-cache.md`
 - `low` The main-scene scaffold has a real world-owned runtime slice (`core::scaffold`) with read-only render layers (rear support cradle, foreground nesting edge); open question is visual sufficiency, not missing ownership. Sandbox hosts the same surfaces behind UI-owned visibility toggles for prototyping without changing world ownership.
   - evidence: `src/core/scaffold.rs`, `src/core/world.rs`, `src/scene/layers/scaffold_layer.rs`, `docs/main-scene-scaffold.md`, `src/ui/state.rs`
@@ -124,8 +133,8 @@ Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-gree
 
 ## Priority Order
 
-1. Spatial relation layer consolidation
-2. Hero-rendering pipeline hardening
+1. Hero dark-color fidelity and revision contract
+2. Spatial relation layer consolidation
 3. Broader flora runtime implementation
 
 ## Rule

@@ -6,3 +6,4 @@ target/
 todo.md
 __pycache__/
 *.pyc
+.codex/

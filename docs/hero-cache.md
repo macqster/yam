@@ -16,10 +16,12 @@ The intended direction is:
 2. persist them as a runtime-owned cache
 3. let normal startup load that cache directly
 
-The currently wired runtime cache file lives in the user cache directory:
+Runtime cache files live in the user cache directory, one per hero source:
 
-- `$XDG_CACHE_HOME/yam/hero_gif_1.96x48.frame_cache.json` when `XDG_CACHE_HOME` is set
-- otherwise `~/.cache/yam/hero_gif_1.96x48.frame_cache.json`
+- `$XDG_CACHE_HOME/yam/<stem>.<width>x<height>.frame_cache.json` when `XDG_CACHE_HOME` is set
+- otherwise `~/.cache/yam/<stem>.<width>x<height>.frame_cache.json`
+
+`<stem>` comes from the `HeroSource` descriptor (`src/render/hero_source.rs`), so the currently registered `IVY` source resolves to `hero_gif_1.96x48.frame_cache.json`. The per-source key matters as soon as more than one hero asset exists: the previous hardcoded filename would have made two sources silently share one cache, and `cache_is_fresh_against` compares mtimes against that source's own GIF, which cannot detect a swap between two different assets writing the same file.
 
 ## Runtime Shape
 

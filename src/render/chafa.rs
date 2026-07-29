@@ -11,11 +11,9 @@ use image::{Rgba, RgbaImage};
 use ratatui::text::{Line, Text};
 
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
+use crate::render::hero_source::HeroSource;
 
-const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 const HERO_DISPLAY_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
-pub const HERO_RENDER_WIDTH: u16 = 96;
-pub const HERO_RENDER_HEIGHT: u16 = 48;
 
 pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
     render_frame_with_command("chafa", path, width, height)
@@ -65,8 +63,8 @@ fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Ou
         .output()
 }
 
-pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
-    let frames = match decode_gif_frames(HERO_GIF_PATH) {
+pub fn hero_frames_from(source: &HeroSource, width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
+    let frames = match decode_gif_frames(source.path) {
         Ok(frames) => frames,
         Err(err) => return vec![vec![format!("hero gif unavailable: {err}").into()]],
     };
@@ -84,13 +82,17 @@ pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
         .collect()
 }
 
-pub fn hero_frames_cached(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
-    let cache_path = hero_frame_cache_path(width, height);
-    if let Some(frame_set) = load_cached_hero_frames(&cache_path, width, height) {
+pub fn hero_frames_cached_from(
+    source: &HeroSource,
+    width: u16,
+    height: u16,
+) -> Vec<Vec<Line<'static>>> {
+    let cache_path = hero_frame_cache_path(source);
+    if let Some(frame_set) = load_cached_hero_frames(&cache_path, source, width, height) {
         return frame_set.to_lines();
     }
 
-    let frames = hero_frames(width, height);
+    let frames = hero_frames_from(source, width, height);
     if hero_frames_are_cacheable(&frames) {
         let frame_set = HeroFrameSet::from_lines(width, height, &frames);
         let _ = save_hero_frame_set(&cache_path, &frame_set);
@@ -114,8 +116,13 @@ fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
         .collect())
 }
 
-fn load_cached_hero_frames(path: &Path, width: u16, height: u16) -> Option<HeroFrameSet> {
-    if !hero_cache_is_fresh(path) {
+fn load_cached_hero_frames(
+    path: &Path,
+    source: &HeroSource,
+    width: u16,
+    height: u16,
+) -> Option<HeroFrameSet> {
+    if !cache_is_fresh_against(path, Path::new(source.path)) {
         return None;
     }
 
@@ -150,10 +157,6 @@ fn is_placeholder_frame(frame: &[Line<'static>]) -> bool {
         || text.starts_with("hero frame render failed:")
 }
 
-fn hero_cache_is_fresh(path: &Path) -> bool {
-    cache_is_fresh_against(path, Path::new(HERO_GIF_PATH))
-}
-
 fn cache_is_fresh_against(cache_path: &Path, source_path: &Path) -> bool {
     let cache_meta = match fs::metadata(cache_path) {
         Ok(meta) => meta,
@@ -170,8 +173,8 @@ fn cache_is_fresh_against(cache_path: &Path, source_path: &Path) -> bool {
     }
 }
 
-fn hero_frame_cache_path(width: u16, height: u16) -> PathBuf {
-    hero_cache_dir().join(format!("hero_gif_1.{width}x{height}.frame_cache.json"))
+fn hero_frame_cache_path(source: &HeroSource) -> PathBuf {
+    hero_cache_dir().join(source.cache_file_name())
 }
 
 fn hero_cache_dir() -> PathBuf {
@@ -194,76 +197,10 @@ fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {
         let target_x = left + x;
         let target_y = top + y;
         if target_x < canvas.0 && target_y < canvas.1 {
-            image.put_pixel(target_x, target_y, tone_lift_dark_reds(*pixel));
+            image.put_pixel(target_x, target_y, *pixel);
         }
     }
     image
-}
-
-fn rgb_to_hsv(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
-    let r = r as f32 / 255.0;
-    let g = g as f32 / 255.0;
-    let b = b as f32 / 255.0;
-
-    let max = r.max(g.max(b));
-    let min = r.min(g.min(b));
-    let delta = max - min;
-
-    let hue = if delta == 0.0 {
-        0.0
-    } else if max == r {
-        60.0 * ((g - b) / delta).rem_euclid(6.0)
-    } else if max == g {
-        60.0 * (((b - r) / delta) + 2.0)
-    } else {
-        60.0 * (((r - g) / delta) + 4.0)
-    };
-
-    let saturation = if max == 0.0 { 0.0 } else { delta / max };
-    (hue.rem_euclid(360.0), saturation, max)
-}
-
-fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (u8, u8, u8) {
-    let c = value * saturation;
-    let x = c * (1.0 - ((hue / 60.0).rem_euclid(2.0) - 1.0).abs());
-    let m = value - c;
-
-    let (r1, g1, b1) = match hue {
-        h if h < 60.0 => (c, x, 0.0),
-        h if h < 120.0 => (x, c, 0.0),
-        h if h < 180.0 => (0.0, c, x),
-        h if h < 240.0 => (0.0, x, c),
-        h if h < 300.0 => (x, 0.0, c),
-        _ => (c, 0.0, x),
-    };
-
-    let to_u8 = |channel: f32| ((channel + m).clamp(0.0, 1.0) * 255.0).round() as u8;
-    (to_u8(r1), to_u8(g1), to_u8(b1))
-}
-
-fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
-    if pixel[3] == 0 {
-        return pixel;
-    }
-
-    let r = pixel[0];
-    let g = pixel[1];
-    let b = pixel[2];
-    let (hue, saturation, value) = rgb_to_hsv(r, g, b);
-
-    if !is_dark_red(hue, saturation, value) {
-        return pixel;
-    }
-
-    let value = (value + 0.08).min(0.45);
-    let saturation = (saturation * 1.02).min(1.0);
-    let (r, g, b) = hsv_to_rgb(hue, saturation, value);
-    Rgba([r, g, b, pixel[3]])
-}
-
-fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
-    let red_hue = hue <= 20.0 || hue >= 340.0;
-    red_hue && saturation >= 0.45 && value <= 0.42
 }
 
 fn prepare_temp_frame_dir() -> std::io::Result<PathBuf> {
@@ -318,76 +255,75 @@ fn render_image_frame(
 #[cfg(test)]
 mod tests {
     use super::{
-        cache_is_fresh_against, decode_gif_frames, hero_frames, render_frame_with_command,
-        tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
+        cache_is_fresh_against, decode_gif_frames, hero_frames_from, render_frame_with_command,
     };
-    use image::Rgba;
+    use crate::render::hero_source::{self, HeroSource, DEFAULT as DEFAULT_HERO_SOURCE};
     use ratatui::text::Line;
     use std::{fs, thread, time::Duration};
 
     #[test]
     fn hero_frame_buffer_has_multiple_frames() {
-        let frames = hero_frames(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
+        let frames = hero_frames_from(
+            &DEFAULT_HERO_SOURCE,
+            DEFAULT_HERO_SOURCE.render_width,
+            DEFAULT_HERO_SOURCE.render_height,
+        );
         assert!(frames.len() > 1, "expected multiple hero frames");
     }
 
+    /// Every registered hero source must decode to the frame count and canvas
+    /// geometry its descriptor claims. This is the swap gate: new art fails
+    /// here first if its descriptor is wrong, instead of silently rendering
+    /// at the wrong size.
     #[test]
-    fn decoded_hero_frames_keep_full_canvas_geometry() {
-        let frames = decode_gif_frames(super::HERO_GIF_PATH).expect("decode hero gif");
-        assert_eq!(frames.len(), 64);
-        for frame_index in [0, 1, 15, 19, 30, 63] {
+    fn every_hero_source_matches_its_declared_geometry() {
+        for source in hero_source::ALL {
+            assert_declared_geometry(source);
+        }
+    }
+
+    fn assert_declared_geometry(source: &HeroSource) {
+        let stem = source.stem;
+        let frames = decode_gif_frames(source.path)
+            .unwrap_or_else(|err| panic!("decode hero gif {stem}: {err}"));
+        assert_eq!(
+            frames.len(),
+            source.frame_count,
+            "{stem} declared {} frames",
+            source.frame_count
+        );
+
+        for (frame_index, frame) in frames.iter().enumerate() {
             assert_eq!(
-                frames[frame_index].width(),
-                820,
-                "frame {frame_index} width"
+                frame.width(),
+                source.canvas_width,
+                "{stem} frame {frame_index} width"
             );
             assert_eq!(
-                frames[frame_index].height(),
-                820,
-                "frame {frame_index} height"
-            );
-            assert_eq!(
-                frames[frame_index].to_rgba8().get_pixel(0, 0)[3],
-                0,
-                "frame {frame_index} corner must stay transparent, not flattened to a matte"
+                frame.height(),
+                source.canvas_height,
+                "{stem} frame {frame_index} height"
             );
         }
     }
 
+    /// The alpha contract: subimage frames are expanded onto a transparent
+    /// canvas, never flattened onto an opaque matte. Losing this is what cost
+    /// the renderer its dark regions before 2026-07-22.
     #[test]
-    fn transparent_pixels_are_never_tone_lifted() {
-        let pixel = Rgba([114, 22, 15, 0]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn dark_reds_get_lifted_before_chafa_conversion() {
-        let lifted = tone_lift_dark_reds(Rgba([114, 22, 15, 255]));
-        assert!(lifted[0] >= 114);
-        assert!(lifted[1] >= 22);
-        assert!(lifted[2] >= 15);
-        assert!(lifted[0] <= 132);
-        assert!(lifted[1] <= 34);
-        assert!(lifted[2] <= 26);
-        assert_eq!(lifted[3], 255);
-    }
-
-    #[test]
-    fn neutral_dark_pixels_stay_neutral() {
-        let pixel = Rgba([18, 18, 18, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn warm_skin_tones_stay_neutral() {
-        let pixel = Rgba([180, 120, 90, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn bright_orange_tones_stay_neutral() {
-        let pixel = Rgba([200, 40, 20, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
+    fn hero_frames_keep_a_transparent_canvas_rather_than_a_matte() {
+        for source in hero_source::ALL {
+            let stem = source.stem;
+            let frames = decode_gif_frames(source.path)
+                .unwrap_or_else(|err| panic!("decode hero gif {stem}: {err}"));
+            for (frame_index, frame) in frames.iter().enumerate() {
+                assert_eq!(
+                    frame.to_rgba8().get_pixel(0, 0)[3],
+                    0,
+                    "{stem} frame {frame_index} corner must stay transparent, not flattened to a matte"
+                );
+            }
+        }
     }
 
     #[test]
@@ -425,8 +361,12 @@ mod tests {
 
     #[test]
     fn render_frame_returns_placeholder_when_chafa_is_unavailable() {
-        let lines =
-            render_frame_with_command("__yam_missing_chafa_binary__", super::HERO_GIF_PATH, 4, 2);
+        let lines = render_frame_with_command(
+            "__yam_missing_chafa_binary__",
+            DEFAULT_HERO_SOURCE.path,
+            4,
+            2,
+        );
         assert_eq!(lines.len(), 1);
         let text = lines[0]
             .spans

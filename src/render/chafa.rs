@@ -271,6 +271,92 @@ mod tests {
         assert!(frames.len() > 1, "expected multiple hero frames");
     }
 
+    /// Is a real `chafa` available to this process?
+    ///
+    /// Content-level hero assertions are only meaningful when it is. CI does
+    /// not install `chafa`, so every live-path render there legitimately
+    /// yields placeholder frames; a content test that ignored this would fail
+    /// in CI permanently rather than catch anything.
+    fn chafa_is_available() -> bool {
+        std::process::Command::new("chafa")
+            .arg("--version")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+    }
+
+    /// Rendered hero frames must contain actual art, not a batch of
+    /// placeholders.
+    ///
+    /// This is the gate that was missing when an incomplete `image` feature
+    /// trim silently broke every hero frame for a day in July 2026: the only
+    /// live-path test checked frame *count*, which a placeholder batch
+    /// satisfies just as well as real output. Skips rather than fails where
+    /// `chafa` is absent, so it stays honest in CI instead of red.
+    #[test]
+    fn rendered_hero_frames_contain_real_content_not_placeholders() {
+        if !chafa_is_available() {
+            eprintln!("skipping: chafa not available, live render yields placeholders by design");
+            return;
+        }
+
+        let source = &DEFAULT_HERO_SOURCE;
+        let frames = hero_frames_from(source, source.render_width, source.render_height);
+        assert_eq!(
+            frames.len(),
+            source.frame_count,
+            "live render should produce every declared frame"
+        );
+
+        for (frame_index, frame) in frames.iter().enumerate() {
+            assert!(
+                !super::is_placeholder_frame(frame),
+                "frame {frame_index} rendered as a placeholder: {:?}",
+                frame_text(frame)
+            );
+
+            let covered = covered_cells(frame);
+            assert!(
+                covered > 0,
+                "frame {frame_index} rendered no visible cells at all"
+            );
+        }
+
+        // Coverage is the number the 2026-07-22 investigation moved: the
+        // pre-fix pipeline dropped roughly 80% of the grid as "no coverage".
+        // Frame 0 measured 41.5% after that fix. A floor well under the
+        // measurement catches a collapse without pinning an exact value that
+        // legitimate art or extractor changes would churn.
+        let first_covered = covered_cells(&frames[0]);
+        let total = (source.render_width as usize) * (source.render_height as usize);
+        let ratio = first_covered as f64 / total as f64;
+        assert!(
+            ratio > 0.20,
+            "frame 0 coverage collapsed to {:.1}% of the grid ({first_covered}/{total})",
+            ratio * 100.0
+        );
+    }
+
+    fn covered_cells(frame: &[Line<'static>]) -> usize {
+        frame
+            .iter()
+            .flat_map(|line| line.spans.iter())
+            .flat_map(|span| span.content.chars())
+            .filter(|ch| !ch.is_whitespace() && *ch != '\u{2800}')
+            .count()
+    }
+
+    fn frame_text(frame: &[Line<'static>]) -> String {
+        frame
+            .iter()
+            .flat_map(|line| line.spans.iter())
+            .map(|span| span.content.as_ref())
+            .collect::<String>()
+            .chars()
+            .take(80)
+            .collect()
+    }
+
     /// Every registered hero source must decode to the frame count and canvas
     /// geometry its descriptor claims. This is the swap gate: new art fails
     /// here first if its descriptor is wrong, instead of silently rendering

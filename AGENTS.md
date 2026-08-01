@@ -57,6 +57,8 @@ cargo test --quiet
 
 `.github/workflows/verify.yml` runs the same `scripts/verify.sh` gate in CI on every push and pull request targeting `main`, and `main` requires it to pass before merging (branch protection). Treat that as a backstop, not a substitute for running it locally first.
 
+The docs half of that gate needs `markdownlint-cli2` and `cspell` (`npm install -g markdownlint-cli2 cspell`). Without them `scripts/check-docs.sh` still runs every structural check, but prints an explicit `SKIPPED` summary rather than reporting a clean pass — read that line before treating a local run as green. `YAM_DOCS_STRICT=1` makes a missing linter fail instead, and CI sets it.
+
 If a command cannot be run, record that clearly in the handoff.
 
 ## Docs And Logs
@@ -65,7 +67,7 @@ If a command cannot be run, record that clearly in the handoff.
 - Keep `docs/audit.md` risk-focused.
 - Keep `docs/LOG.md` historical and append-only.
 - Keep architecture facts out of the backlog when an owning contract doc exists.
-- Keep active markdown clean under repo-configured `markdownlint`, `markdownlint-cli2`, and `cspell`.
+- Keep active markdown clean under repo-configured `markdownlint-cli2` and `cspell`.
 
 ## Skills
 

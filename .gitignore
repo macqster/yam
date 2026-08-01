@@ -7,3 +7,10 @@ todo.md
 __pycache__/
 *.pyc
 .codex/
+
+# Claude Code state. .claude/settings.json is tracked as shared project config;
+# everything else under .claude/ is per-machine or agent-generated, and .mcp.json
+# is local server wiring.
+/.claude/*
+!/.claude/settings.json
+/.mcp.json

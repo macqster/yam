@@ -138,18 +138,40 @@ if [[ -n "$todo_issue_ids" ]]; then
   done <<<"$todo_issue_ids"
 fi
 
-run_if_available() {
+# The structural checks above always run; the markdown/spelling linters below
+# are external Node tools that may be absent locally. Skipping them is allowed,
+# but it must never be silent: a skipped linter changes what "passed" means, and
+# this script previously reported unqualified success while running none of them.
+missing_linters=()
+
+run_docs_linter() {
   local tool="$1"
   shift
   if command -v "$tool" >/dev/null 2>&1; then
     "$tool" "$@"
   else
-    echo "Skipping $tool: not installed in current environment."
+    missing_linters+=("$tool")
+    echo "Skipping $tool: not installed in current environment." >&2
   fi
 }
 
-run_if_available markdownlint --config .markdownlint.jsonc "${active_docs[@]}"
-run_if_available markdownlint-cli2 "${active_docs[@]}"
-run_if_available cspell --config .cspell.json "${active_docs[@]}" "${skill_agent_files[@]}"
+# markdownlint-cli2 is the current CLI for the markdownlint rule set and picks
+# up .markdownlint.jsonc on its own. The older `markdownlint` (from the separate
+# markdownlint-cli package) is deliberately not invoked: it was never installed
+# in CI either, so that line could only ever skip, and running both would lint
+# every file twice against the same rules.
+run_docs_linter markdownlint-cli2 "${active_docs[@]}"
+run_docs_linter cspell --config .cspell.json "${active_docs[@]}" "${skill_agent_files[@]}"
+
+if (( ${#missing_linters[@]} > 0 )); then
+  if [[ -n "${YAM_DOCS_STRICT:-}" ]]; then
+    echo "Docs checks incomplete: ${missing_linters[*]} not installed, and YAM_DOCS_STRICT is set." >&2
+    echo "Install with: npm install -g markdownlint-cli2 cspell" >&2
+    exit 1
+  fi
+  echo "Docs structure checks passed. SKIPPED ${#missing_linters[@]} linter(s): ${missing_linters[*]}"
+  echo "Markdown and spelling were NOT checked. Install with: npm install -g markdownlint-cli2 cspell"
+  exit 0
+fi
 
 echo "All docs checks passed."

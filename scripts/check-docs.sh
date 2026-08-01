@@ -160,8 +160,11 @@ run_docs_linter() {
 # markdownlint-cli package) is deliberately not invoked: it was never installed
 # in CI either, so that line could only ever skip, and running both would lint
 # every file twice against the same rules.
+# --no-progress keeps cspell from printing a timed line per file; this gate runs
+# on every maintenance batch and its output should stay scannable, with the
+# failures being the part that stands out.
 run_docs_linter markdownlint-cli2 "${active_docs[@]}"
-run_docs_linter cspell --config .cspell.json "${active_docs[@]}" "${skill_agent_files[@]}"
+run_docs_linter cspell --config .cspell.json --no-progress "${active_docs[@]}" "${skill_agent_files[@]}"
 
 if (( ${#missing_linters[@]} > 0 )); then
   if [[ -n "${YAM_DOCS_STRICT:-}" ]]; then

@@ -919,3 +919,9 @@ Logging rule:
 
 - nudged the weather companion one cell left relative to the frozen clock anchor
 - applied a matching one-cell left bias to the date line's self-centering so the date and weather pair stay visually grouped against the clock
+
+## 2026-08-02 17:38 CEST
+
+- completed the bounded YAM review follow-up on `experimental`: CI now installs `chafa` before the full verification gate, so the hero-content regression test executes in the pipeline instead of taking its intentional missing-tool fallback
+- refreshed `docs/audit.md` to record the current review date and the actual lockfile state (`serde 1.0.229`, duplicate `hashbrown` and `syn` families); installed `cargo-audit` locally, but its advisory database fetch was unavailable, so CI remains the current vulnerability-result authority
+- ran the full local verification after the review changes: documentation lint/spell checks, formatting, Clippy, architecture checks, and all 276 tests passed

@@ -3,7 +3,7 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-green, `FloraInstance` migration completeness, and `WorldKind::Greenhouse` exhaustiveness claims independently re-verified with a working toolchain rather than carried forward)
+Last reviewed: 2026-08-02 (full repository and branch review; current verification green, CI hero-renderer gap closed, and dependency documentation reconciled)
 
 ## Unresolved Risks
 
@@ -66,6 +66,9 @@ Last reviewed: 2026-07-22 (full read-through and pruning pass; verification-gree
   `docs/greenhouse-roadmap.md`'s Gate Checklist for current status.
 
 ## Active Risk Notes
+
+- `medium` The current dependency graph contains two known duplicate families: `hashbrown` `0.16.1`/`0.17.1` inside Ratatui's tree and `syn` 2/3 across transitive procedural-macro dependencies. `Cargo.lock` currently resolves Serde `1.0.229`; the older dependency paragraph below records the 2026-07-22 remediation history and should not be read as the current lockfile state. `cargo audit` remains a CI-enforced check; local `cargo-audit` is installed, but its advisory database could not be fetched in this environment, so a current local vulnerability result is still unavailable.
+  - evidence: `Cargo.lock`, `Cargo.toml`, `.github/workflows/verify.yml`
 
 - `low` Terminal teardown runs through a drop guard in `runtime.rs`, so an early return from a size/input/draw step is less likely to strand raw-mode / alternate-screen state.
   - evidence: `src/runtime.rs`

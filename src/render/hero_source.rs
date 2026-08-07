@@ -13,8 +13,8 @@
 
 /// Stable identity for a hero asset.
 ///
-/// The `stem` doubles as the cache-file prefix, so two sources can never share
-/// a frame cache the way the previous hardcoded `hero_gif_1` filename allowed.
+/// The `stem` and `cache_revision` form the cache-file prefix, so two sources
+/// cannot share frames and older renderer output cannot mask revised behavior.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct HeroSource {
     /// Stable short id, also used as the frame-cache filename prefix.
@@ -29,6 +29,9 @@ pub struct HeroSource {
     /// Cell footprint requested from chafa.
     pub render_width: u16,
     pub render_height: u16,
+    /// Bump when source-specific compilation or the serialized frame contract
+    /// changes, so an older cache can never mask the new renderer behavior.
+    pub cache_revision: u16,
 }
 
 /// The original BTAS/TNBA-derived Ivy hero.
@@ -40,6 +43,7 @@ pub const IVY: HeroSource = HeroSource {
     frame_count: 64,
     render_width: 96,
     render_height: 48,
+    cache_revision: 2,
 };
 
 /// Every hero source the runtime knows about.
@@ -57,8 +61,8 @@ impl HeroSource {
     /// Frame-cache filename for this source at its render size.
     pub fn cache_file_name(&self) -> String {
         format!(
-            "{}.{}x{}.frame_cache.json",
-            self.stem, self.render_width, self.render_height
+            "{}.r{}.{}x{}.frame_cache.json",
+            self.stem, self.cache_revision, self.render_width, self.render_height
         )
     }
 }
@@ -96,6 +100,9 @@ mod tests {
 
     #[test]
     fn ivy_cache_name_matches_the_documented_runtime_path() {
-        assert_eq!(IVY.cache_file_name(), "hero_gif_1.96x48.frame_cache.json");
+        assert_eq!(
+            IVY.cache_file_name(),
+            "hero_gif_1.r2.96x48.frame_cache.json"
+        );
     }
 }

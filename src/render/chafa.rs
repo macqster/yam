@@ -152,6 +152,7 @@ fn is_placeholder_frame(frame: &[Line<'static>]) -> bool {
         .collect::<String>();
     text.starts_with("chafa unavailable:")
         || text.starts_with("chafa exited with status")
+        || text == "ANSI_PARSE_ERROR"
         || text.starts_with("hero gif unavailable:")
         || text.starts_with("hero temp dir unavailable:")
         || text.starts_with("hero frame render failed:")
@@ -162,14 +163,18 @@ fn cache_is_fresh_against(cache_path: &Path, source_path: &Path) -> bool {
         Ok(meta) => meta,
         Err(_) => return false,
     };
-    let gif_meta = match fs::metadata(source_path) {
+    let source_meta = match fs::metadata(source_path) {
         Ok(meta) => meta,
-        Err(_) => return false,
+        // The source path is embedded at compile time. If that build tree is
+        // later moved or removed, a valid existing cache is the only path that
+        // can still render real art instead of a placeholder.
+        Err(_) => return true,
     };
 
-    match (cache_meta.modified(), gif_meta.modified()) {
-        (Ok(cache_modified), Ok(gif_modified)) => cache_modified >= gif_modified,
-        _ => false,
+    match (cache_meta.modified(), source_meta.modified()) {
+        (Ok(cache_modified), Ok(source_modified)) => cache_modified >= source_modified,
+        // Unknown timestamps cannot prove that the cache is stale.
+        _ => true,
     }
 }
 
@@ -443,6 +448,9 @@ mod tests {
 
         let frames = vec![vec![Line::from("hero gif unavailable: missing")]];
         assert!(!super::hero_frames_are_cacheable(&frames));
+
+        let frames = vec![vec![Line::from("ANSI_PARSE_ERROR")]];
+        assert!(!super::hero_frames_are_cacheable(&frames));
     }
 
     #[test]
@@ -484,6 +492,26 @@ mod tests {
         fs::write(&cache, b"cache").expect("write cache");
         thread::sleep(Duration::from_millis(5));
         fs::write(&source, b"source").expect("write source");
+
+        assert!(!cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn cache_freshness_keeps_existing_cache_when_source_is_unreachable() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("missing-hero.gif");
+        let cache = temp_dir.path().join("hero.frame_cache.json");
+
+        fs::write(&cache, b"cache").expect("write cache");
+
+        assert!(cache_is_fresh_against(&cache, &source));
+    }
+
+    #[test]
+    fn cache_freshness_rejects_missing_cache_even_when_source_is_unreachable() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let source = temp_dir.path().join("missing-hero.gif");
+        let cache = temp_dir.path().join("missing-cache.json");
 
         assert!(!cache_is_fresh_against(&cache, &source));
     }

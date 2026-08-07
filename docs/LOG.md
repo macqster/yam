@@ -925,3 +925,10 @@ Logging rule:
 - completed the bounded YAM review follow-up on `experimental`: CI now installs `chafa` before the full verification gate, so the hero-content regression test executes in the pipeline instead of taking its intentional missing-tool fallback
 - refreshed `docs/audit.md` to record the current review date and the actual lockfile state (`serde 1.0.229`, duplicate `hashbrown` and `syn` families); installed `cargo-audit` locally, but its advisory database fetch was unavailable, so CI remains the current vulnerability-result authority
 - ran the full local verification after the review changes: documentation lint/spell checks, formatting, Clippy, architecture checks, and all 276 tests passed
+
+## 2026-08-07 18:40 CEST
+
+- reconciled the three post-`main` development tracks into `experimental`: retained the cache-revision contract from `agent/hero-revision-contract` (`cbac94d`) and the relocated-build cache fallback identified on `claude/full-audit-1e44b1` (`2a7e14b`) without merging either conflicting branch wholesale
+- made hero caches source-specific and revision-keyed (`<stem>.r<revision>.<width>x<height>.frame_cache.json`), kept a valid matching cache when its compile-time source path is no longer reachable, and rejected `ANSI_PARSE_ERROR` frames from cache persistence; added regression coverage for each boundary
+- repaired build identity tracking so Cargo watches Git HEAD, its symbolic branch ref, and packed refs; a commit now invalidates the embedded hash even when no Rust source file changed
+- reconciled the canonical hero/dependency audit prose with current CI and lockfile state; a fresh local `cargo audit` loaded 1,190 RustSec advisories and reported no findings

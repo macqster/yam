@@ -36,6 +36,19 @@ if [[ "${1:-}" == "--delay" ]]; then
   shift 2
 fi
 
+# A cold hero cache makes boot far slower than the animation phases alone:
+# the runtime shells out to `chafa` once per source frame (64 for the current
+# hero) before the loading screen can finish, which takes several seconds.
+# Waiting only for the boot animation in that case captures the loading
+# screen instead of the scene and reads as a hang. Detect the cold-cache case
+# up front and extend the initial wait rather than making every caller
+# remember to pass a bigger --delay.
+hero_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/yam"
+if ! compgen -G "$hero_cache_dir/*.frame_cache.json" >/dev/null; then
+  boot_wait="20"
+  echo "note: no hero frame cache in $hero_cache_dir; waiting ${boot_wait}s for a cold chafa rebuild" >&2
+fi
+
 if [[ $# -eq 0 ]]; then
   echo "usage: scripts/tmux-smoke.sh [--delay SECONDS] KEY [KEY...]" >&2
   exit 1

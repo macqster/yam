@@ -30,7 +30,17 @@ jobs:
       - name: Install docs tooling
         run: npm install -g markdownlint-cli2 cspell
 
+      - name: Install hero renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes chafa
+
       - name: Run full verification
+        # YAM_DOCS_STRICT turns a missing markdown/spelling linter into a
+        # failure instead of a skip, so a broken install step can never let CI
+        # report success while silently linting nothing.
+        env:
+          YAM_DOCS_STRICT: "1"
         run: bash scripts/verify.sh
 
       - name: Install cargo-audit

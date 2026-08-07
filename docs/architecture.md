@@ -241,9 +241,11 @@ The intended model is:
 
 ## Hero Geometry Contract
 
-- source hero GIF: square `820x820` pixels
-- terminal render target: fixed `96x48` cells
-- decoded GIF subimage frames are expanded onto a full `820x820` logical canvas before terminal conversion; the canvas is transparent, preserving the source's real per-pixel alpha rather than flattening it to an opaque matte
+- hero source assets are owned by `render::hero_source::HeroSource` descriptors; the render path reads canvas size, frame count, requested footprint, and cache prefix from there rather than from module constants
+- current registered source: `IVY`, square `820x820` pixels, 64 frames
+- terminal render target: `96x48` cells requested from chafa; the emitted footprint is measured from the rendered frames, since chafa preserves source aspect
+- decoded GIF subimage frames are expanded onto that source's full logical canvas before terminal conversion; the canvas is transparent, preserving the source's real per-pixel alpha rather than flattening it to an opaque matte
+- the decode path performs no per-pixel color correction; per-asset correction, if it returns, belongs on the descriptor rather than in the shared decode loop
 - the target is a layout/scaling result, not a raw pixel-to-cell division
 - hero world anchor: `(0, 0)` when centered in world space
 - hero visual center should cross the datum, while the rendered cell footprint remains `96x48`

@@ -110,7 +110,7 @@ Issue link rule:
 - `verify` `scripts/check-docs.sh` covers the live root/front-door docs and first-level `docs/*.md` contract surface, not only the oldest core contract subset.
 - `verify` keep `AGENTS.md` short, procedural, and pointer-heavy; do not let it duplicate architecture contracts or active backlog content.
 - `verify` keep repo-local `skills/*/SKILL.md` files short and procedural with matching `agents/openai.yaml` metadata; their names, frontmatter descriptions, and interface metadata must pass `scripts/check-docs.sh`, and they should promote only repeatable work modes that point back to canonical docs.
-- `verify` active markdown docs stay clean under repo-configured `markdownlint`, `markdownlint-cli2`, and `cspell`.
+- `verify` active markdown docs stay clean under repo-configured `markdownlint-cli2` and `cspell`; a local run that prints `SKIPPED` has not checked them.
 - `verify` README local asset references must point to committed files.
 - `verify` `README.md` current release stays synchronized with `Cargo.toml`.
 - `inspect` keep future README polish bounded and factual: preserve the restored intro voice, but revisit small front-door nits from the external eval only when touching the README anyway, especially heading hierarchy around `twimc`, terse unlabeled command blocks, and repo-shape claim precision.

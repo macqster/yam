@@ -1,4 +1,4 @@
-use crate::render::chafa::{HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH};
+use crate::render::hero_source::{HeroSource, DEFAULT as DEFAULT_HERO_SOURCE};
 use crate::scene::viewport::Viewport;
 use crate::theme::{glyphs, style as theme_style};
 use ratatui::{
@@ -21,10 +21,23 @@ pub struct Hero {
 impl Hero {
     #[cfg_attr(test, allow(dead_code))]
     pub fn new(world_width: usize, world_height: usize) -> Self {
-        // The source hero GIF is square (820x820); the terminal render target is intentionally
-        // downscaled to a fixed 96x48 cell footprint to compensate for terminal cell aspect.
-        let frames =
-            crate::render::chafa::hero_frames_cached(HERO_RENDER_WIDTH, HERO_RENDER_HEIGHT);
+        Self::from_source(&DEFAULT_HERO_SOURCE, world_width, world_height)
+    }
+
+    /// Build a hero from an explicit source asset.
+    ///
+    /// The emitted cell footprint is measured from the rendered frames rather
+    /// than assumed from `source.render_width`/`render_height`: chafa preserves
+    /// the source's aspect ratio, so the requested size is an upper bound, not
+    /// a guarantee. Every frame is then hard-locked to frame 0's measured
+    /// footprint so animation cannot shift the hero's geometry mid-loop.
+    #[cfg_attr(test, allow(dead_code))]
+    pub fn from_source(source: &HeroSource, world_width: usize, world_height: usize) -> Self {
+        let frames = crate::render::chafa::hero_frames_cached_from(
+            source,
+            source.render_width,
+            source.render_height,
+        );
         let first_frame = frames
             .first()
             .cloned()

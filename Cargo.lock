@@ -2236,6 +2236,7 @@ dependencies = [
  "ratatui",
  "serde",
  "serde_json",
+ "sha2",
  "tachyonfx",
  "tempfile",
  "unicode-segmentation",

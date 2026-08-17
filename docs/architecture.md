@@ -19,6 +19,8 @@
 - `core/world.rs` - owns world bootstrapping by explicit world kind and profile; profile-owned grid, camera defaults, guide plans, population plans, and capabilities keep main-scene, sandbox, greenhouse, and any future lab worlds selected and described intentionally rather than hidden behind one implicit `WorldState::new()` payload
 - `systems/` - mutate `WorldState` only, no rendering, and no imports from scene/render/UI/terminal modules
 - `render/` - terminal render primitives, chafa/hero conversion, grid composition, masks, shared drawing-engine primitives, and final text conversion
+- `render/cell_grid.rs` - the shared per-cell symbol/style serialization contract consumed by both the disposable runtime hero cache and the validated hero package (2026-07-27)
+- `render/hero_manifest.rs` / `render/hero_package.rs` / `render/hero_compiler.rs` - the validated, versioned "compiled package" layer and its offline compiler (`yam-rust --compile-hero`), distinct from the disposable `render/hero_cache.rs`; see [`hero-package.md`](hero-package.md)
 - `render/drawing.rs` - reusable path stroke, glyph stamping, checked signed-to-grid writes, and occupancy tracking for features that need deterministic generative cell drawing without re-owning raster logic in a single layer
 - `scene/` - layer ordering, camera/viewport types, coordinate helpers, and scene-level grid composition
 - `ui/` - runtime UI state, persisted offsets/settings, screen-space presentation helpers, and the temporary scene adapter entrypoint

@@ -12,16 +12,61 @@ use ratatui::text::{Line, Text};
 
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
 
-const HERO_GIF_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
+pub(crate) const HERO_GIF_PATH: &str =
+    concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif");
 const HERO_DISPLAY_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
 // Bump whenever the renderer, ANSI conversion, or serialized frame contract
 // changes; GIF mtimes alone cannot invalidate those cached frames.
-const HERO_CACHE_REVISION: u8 = 2;
+// r3: `tone_lift_dark_reds` was removed from `frame_to_canvas`, which changes
+// every rendered pixel. Without this bump an `r2` cache written while the tone
+// lift was still live would keep being served as trusted art and the removal
+// would be invisible.
+const HERO_CACHE_REVISION: u8 = 3;
 pub const HERO_RENDER_WIDTH: u16 = 96;
 pub const HERO_RENDER_HEIGHT: u16 = 48;
 
-pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
-    render_frame_with_command("chafa", path, width, height)
+/// Human-readable name for the exact chafa preset below. Bump this whenever
+/// `chafa_preset_args()` changes in a way that affects visible output --
+/// it is recorded verbatim in every compiled `HeroManifest`
+/// (`render::hero_manifest`) so a package's rendering intent is legible
+/// without cross-referencing this file.
+pub(crate) const HERO_PRESET_ID: &str = "rgb-median-fgonly-braille-v1";
+
+/// The single authoritative chafa preset, shared by ordinary runtime
+/// rendering (`chafa_output`) and the offline compiler
+/// (`render::hero_compiler`), so the two paths cannot silently drift apart.
+/// Excludes the input path and `--size`, which callers supply per frame.
+pub(crate) fn chafa_preset_args() -> Vec<String> {
+    vec![
+        "--format=symbols".to_string(),
+        "--symbols=braille".to_string(),
+        "--colors=full".to_string(),
+        "--color-space=rgb".to_string(),
+        "--color-extractor=median".to_string(),
+        "--dither=none".to_string(),
+        "--fg-only".to_string(),
+        format!(
+            "--bg=#{:02x}{:02x}{:02x}",
+            HERO_DISPLAY_BG[0], HERO_DISPLAY_BG[1], HERO_DISPLAY_BG[2]
+        ),
+        "--animate=off".to_string(),
+    ]
+}
+
+/// Best-effort captured compiler version string for manifest provenance.
+/// Returns `"unknown"` rather than failing when the binary is missing or
+/// `--version` cannot be parsed; version capture should never be the reason
+/// an offline compile run fails.
+pub(crate) fn chafa_version(command: &str) -> String {
+    match Command::new(command).arg("--version").output() {
+        Ok(output) if output.status.success() => String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .next()
+            .unwrap_or("unknown")
+            .trim()
+            .to_string(),
+        _ => "unknown".to_string(),
+    }
 }
 
 fn render_frame_with_command(
@@ -49,23 +94,12 @@ fn render_frame_with_command(
 }
 
 fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Output> {
-    Command::new(command)
-        .arg(path)
-        .arg("--size")
-        .arg(size_arg)
-        .arg("--format=symbols")
-        .arg("--symbols=braille")
-        .arg("--colors=full")
-        .arg("--color-space=rgb")
-        .arg("--color-extractor=median")
-        .arg("--dither=none")
-        .arg("--fg-only")
-        .arg(format!(
-            "--bg=#{:02x}{:02x}{:02x}",
-            HERO_DISPLAY_BG[0], HERO_DISPLAY_BG[1], HERO_DISPLAY_BG[2]
-        ))
-        .arg("--animate=off")
-        .output()
+    let mut cmd = Command::new(command);
+    cmd.arg(path).arg("--size").arg(size_arg);
+    for arg in chafa_preset_args() {
+        cmd.arg(arg);
+    }
+    cmd.output()
 }
 
 pub fn hero_frames(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
@@ -101,7 +135,7 @@ pub fn hero_frames_cached(width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
     frames
 }
 
-fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
+fn decode_gif_raw(path: &str) -> Result<(Vec<image::Frame>, (u32, u32)), String> {
     let file = fs::File::open(path).map_err(|err| format!("failed to open gif {path}: {err}"))?;
     let reader = std::io::BufReader::new(file);
     let decoder =
@@ -111,9 +145,33 @@ fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
         .into_frames()
         .collect_frames()
         .map_err(|err| format!("failed to collect gif frames from {path}: {err}"))?;
+    Ok((frames, canvas))
+}
+
+fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
+    let (frames, canvas) = decode_gif_raw(path)?;
     Ok(frames
         .into_iter()
         .map(|frame| DynamicImage::ImageRgba8(frame_to_canvas(frame, canvas)))
+        .collect())
+}
+
+/// Like `decode_gif_frames`, but also returns each frame's authored delay
+/// in milliseconds, for `render::hero_compiler` to record in a
+/// `HeroManifest`. The ordinary runtime hero path does not need per-frame
+/// timing today (`Hero::tick()` uses a fixed FPS), so this stays a separate
+/// entry point rather than changing `decode_gif_frames`'s signature.
+pub(crate) fn decode_gif_frames_with_delays(
+    path: &str,
+) -> Result<Vec<(DynamicImage, u32)>, String> {
+    let (frames, canvas) = decode_gif_raw(path)?;
+    Ok(frames
+        .into_iter()
+        .map(|frame| {
+            let delay_ms = std::time::Duration::from(frame.delay()).as_millis() as u32;
+            let image = DynamicImage::ImageRgba8(frame_to_canvas(frame, canvas));
+            (image, delay_ms)
+        })
         .collect())
 }
 
@@ -192,6 +250,15 @@ fn hero_cache_dir() -> PathBuf {
 }
 
 fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {
+    // No pixel-side color correction happens here by design: dark-color
+    // fidelity is owned by the source art and the chafa preset (see
+    // docs/hero-revision.md), not by a code-side tone lift. A prior
+    // hue/saturation/value dark-red lift lived here and was removed 2026-07-27
+    // ahead of the vector-redrawn source it anticipates, on the bet that a
+    // clean source needs no per-pixel compensation. That source has NOT landed
+    // yet -- `assets/hero_gif_1.gif` is still the 2026-07-22 raster original --
+    // so the removal is currently unverified against rendered output. Confirm
+    // with a live `scripts/tmux-smoke.sh` A/B before treating it as settled.
     let mut image = RgbaImage::from_pixel(canvas.0, canvas.1, Rgba([0, 0, 0, 0]));
     let left = frame.left();
     let top = frame.top();
@@ -199,76 +266,10 @@ fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {
         let target_x = left + x;
         let target_y = top + y;
         if target_x < canvas.0 && target_y < canvas.1 {
-            image.put_pixel(target_x, target_y, tone_lift_dark_reds(*pixel));
+            image.put_pixel(target_x, target_y, *pixel);
         }
     }
     image
-}
-
-fn rgb_to_hsv(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
-    let r = r as f32 / 255.0;
-    let g = g as f32 / 255.0;
-    let b = b as f32 / 255.0;
-
-    let max = r.max(g.max(b));
-    let min = r.min(g.min(b));
-    let delta = max - min;
-
-    let hue = if delta == 0.0 {
-        0.0
-    } else if max == r {
-        60.0 * ((g - b) / delta).rem_euclid(6.0)
-    } else if max == g {
-        60.0 * (((b - r) / delta) + 2.0)
-    } else {
-        60.0 * (((r - g) / delta) + 4.0)
-    };
-
-    let saturation = if max == 0.0 { 0.0 } else { delta / max };
-    (hue.rem_euclid(360.0), saturation, max)
-}
-
-fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (u8, u8, u8) {
-    let c = value * saturation;
-    let x = c * (1.0 - ((hue / 60.0).rem_euclid(2.0) - 1.0).abs());
-    let m = value - c;
-
-    let (r1, g1, b1) = match hue {
-        h if h < 60.0 => (c, x, 0.0),
-        h if h < 120.0 => (x, c, 0.0),
-        h if h < 180.0 => (0.0, c, x),
-        h if h < 240.0 => (0.0, x, c),
-        h if h < 300.0 => (x, 0.0, c),
-        _ => (c, 0.0, x),
-    };
-
-    let to_u8 = |channel: f32| ((channel + m).clamp(0.0, 1.0) * 255.0).round() as u8;
-    (to_u8(r1), to_u8(g1), to_u8(b1))
-}
-
-fn tone_lift_dark_reds(pixel: Rgba<u8>) -> Rgba<u8> {
-    if pixel[3] == 0 {
-        return pixel;
-    }
-
-    let r = pixel[0];
-    let g = pixel[1];
-    let b = pixel[2];
-    let (hue, saturation, value) = rgb_to_hsv(r, g, b);
-
-    if !is_dark_red(hue, saturation, value) {
-        return pixel;
-    }
-
-    let value = (value + 0.08).min(0.45);
-    let saturation = (saturation * 1.02).min(1.0);
-    let (r, g, b) = hsv_to_rgb(hue, saturation, value);
-    Rgba([r, g, b, pixel[3]])
-}
-
-fn is_dark_red(hue: f32, saturation: f32, value: f32) -> bool {
-    let red_hue = hue <= 20.0 || hue >= 340.0;
-    red_hue && saturation >= 0.45 && value <= 0.42
 }
 
 fn prepare_temp_frame_dir() -> std::io::Result<PathBuf> {
@@ -282,16 +283,16 @@ fn prepare_temp_frame_dir() -> std::io::Result<PathBuf> {
     Ok(temp_dir)
 }
 
-struct TempFrameDir {
+pub(crate) struct TempFrameDir {
     path: PathBuf,
 }
 
 impl TempFrameDir {
-    fn new() -> std::io::Result<Self> {
+    pub(crate) fn new() -> std::io::Result<Self> {
         prepare_temp_frame_dir().map(|path| Self { path })
     }
 
-    fn path(&self) -> &Path {
+    pub(crate) fn path(&self) -> &Path {
         &self.path
     }
 }
@@ -302,7 +303,18 @@ impl Drop for TempFrameDir {
     }
 }
 
-fn render_image_frame(
+pub(crate) fn render_image_frame(
+    temp_dir: &Path,
+    frame_index: usize,
+    image: &DynamicImage,
+    width: u16,
+    height: u16,
+) -> Result<Vec<Line<'static>>, String> {
+    render_image_frame_with_command("chafa", temp_dir, frame_index, image, width, height)
+}
+
+pub(crate) fn render_image_frame_with_command(
+    command: &str,
     temp_dir: &Path,
     frame_index: usize,
     image: &DynamicImage,
@@ -316,17 +328,17 @@ fn render_image_frame(
     let temp_path = temp_path
         .to_str()
         .ok_or_else(|| format!("temp path not utf-8: {temp_path:?}"))?;
-    let rendered = render_frame(temp_path, width, height);
+    let rendered = render_frame_with_command(command, temp_path, width, height);
     Ok(rendered)
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        cache_is_fresh_against, decode_gif_frames, hero_frames, render_frame_with_command,
-        tone_lift_dark_reds, HERO_RENDER_HEIGHT, HERO_RENDER_WIDTH,
+        cache_is_fresh_against, chafa_preset_args, chafa_version, decode_gif_frames,
+        decode_gif_frames_with_delays, hero_frames, render_frame_with_command, HERO_RENDER_HEIGHT,
+        HERO_RENDER_WIDTH,
     };
-    use image::Rgba;
     use ratatui::text::Line;
     use std::{fs, thread, time::Duration};
 
@@ -357,42 +369,6 @@ mod tests {
                 "frame {frame_index} corner must stay transparent, not flattened to a matte"
             );
         }
-    }
-
-    #[test]
-    fn transparent_pixels_are_never_tone_lifted() {
-        let pixel = Rgba([114, 22, 15, 0]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn dark_reds_get_lifted_before_chafa_conversion() {
-        let lifted = tone_lift_dark_reds(Rgba([114, 22, 15, 255]));
-        assert!(lifted[0] >= 114);
-        assert!(lifted[1] >= 22);
-        assert!(lifted[2] >= 15);
-        assert!(lifted[0] <= 132);
-        assert!(lifted[1] <= 34);
-        assert!(lifted[2] <= 26);
-        assert_eq!(lifted[3], 255);
-    }
-
-    #[test]
-    fn neutral_dark_pixels_stay_neutral() {
-        let pixel = Rgba([18, 18, 18, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn warm_skin_tones_stay_neutral() {
-        let pixel = Rgba([180, 120, 90, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
-    }
-
-    #[test]
-    fn bright_orange_tones_stay_neutral() {
-        let pixel = Rgba([200, 40, 20, 255]);
-        assert_eq!(tone_lift_dark_reds(pixel), pixel);
     }
 
     #[test]
@@ -470,6 +446,31 @@ mod tests {
     #[test]
     fn hero_cache_path_includes_the_renderer_revision() {
         let path = super::hero_frame_cache_path(4, 2);
-        assert!(path.ends_with("hero_gif_1.r2.4x2.frame_cache.json"));
+        assert!(path.ends_with("hero_gif_1.r3.4x2.frame_cache.json"));
+    }
+
+    #[test]
+    fn chafa_preset_args_is_stable_and_non_empty() {
+        let args = chafa_preset_args();
+        assert!(!args.is_empty());
+        assert_eq!(args, chafa_preset_args(), "preset must be deterministic");
+        assert!(args.contains(&"--symbols=braille".to_string()));
+    }
+
+    #[test]
+    fn chafa_version_falls_back_to_unknown_for_missing_binary() {
+        assert_eq!(chafa_version("__yam_missing_chafa_binary__"), "unknown");
+    }
+
+    #[test]
+    fn decode_with_delays_matches_frame_count_of_plain_decode() {
+        let plain = decode_gif_frames(super::HERO_GIF_PATH).expect("decode hero gif");
+        let with_delays =
+            decode_gif_frames_with_delays(super::HERO_GIF_PATH).expect("decode hero gif");
+        assert_eq!(plain.len(), with_delays.len());
+        assert!(
+            with_delays.iter().all(|(_, delay_ms)| *delay_ms < 10_000),
+            "hero frame delays should be small, not a units mixup"
+        );
     }
 }

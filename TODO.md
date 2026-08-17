@@ -91,9 +91,23 @@ Issue link rule:
   browns, greens, and blacks) as the next product-critical hero tranche; use
   `docs/hero-revision.md` as the north star and do not call the 2026-07-22
   alpha/coverage repair a complete color fix.
-- `docs` establish the hero revision reference set, canonical anchor semantic,
-  manifest/package schema, and explicit compiler preset before replacing the
-  source GIF or promoting another renderer.
+- `priority` the hero source is being rebuilt from a fully vector-redrawn
+  original (2026-07-27 decision); the manifest/package schema and offline
+  compiler landed ahead of that asset (`docs/hero-package.md`), and is locally
+  compiled, structurally validated, and exercised through a bounded live
+  main-scene smoke, but the new source GIF has not arrived. Do not swap
+  `assets/hero_gif_1.gif` or retune the chafa preset until the new asset is in
+  hand; do not consider the hero fixed until the full dark-color acceptance
+  bar passes.
+- `verify` run `cargo build`, `cargo test`, `cargo fmt`, and
+  `cargo clippy --all-targets -- -D warnings` locally on the 2026-07-27
+  hero-package/cell_grid/hero_compiler batch before trusting it or treating
+  `scripts/verify.sh` as green; the offline compiler still requires a real
+  package compile and terminal review before visual claims are accepted.
+- `docs` establish the hero revision reference set and canonical anchor
+  semantic before replacing the source GIF or promoting another renderer;
+  the manifest/package schema and explicit compiler preset are now landed
+  (`docs/hero-package.md`).
 - `verify` require real-terminal review of representative frames and motion
   after every source, color, braille, compiler, timing, or cache-identity
   change; ANSI-code presence and non-placeholder frame counts are insufficient.

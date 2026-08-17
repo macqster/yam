@@ -28,6 +28,28 @@ appearance, cache provenance, and scene placement all participate in the
 visible result. Treat dark-color fidelity as a first-class product constraint,
 not as a final polish pass.
 
+## Status (2026-07-27)
+
+Decision: rebuild the hero source from a fully vector-redrawn original
+instead of continuing to patch the existing raster GIF, specifically so
+color fidelity is controlled at the source rather than compensated for in
+code. As part of that decision, the one piece of code-side pixel correction
+that existed (`tone_lift_dark_reds`, a narrow HSV lift for dark-red hues
+only) was removed from `src/render/chafa.rs`; it is not being replaced by an
+equivalent, on the bet that a clean vector source should not need it. This
+is unconfirmed until real frames from the new source are reviewed.
+
+The Phase 1 infrastructure below (manifest, package, offline compiler) has
+landed as asset-independent groundwork and has now passed local compilation,
+structural package validation, and a bounded live main-scene smoke -- see
+[`hero-package.md`](hero-package.md) for the contract and
+[`LOG.md`](LOG.md)'s 2026-08-01 entry for the verification. It has not been
+reviewed against the full dark-color acceptance bar, and the new source asset
+itself plus the preset retune against that source (Phase 2) are still
+outstanding. Do not treat any part of this as fixing the dark-color problem
+until a package compiled from the new source passes `scripts/tmux-smoke.sh`
+review against the acceptance bar below.
+
 ## Product Goals
 
 1. Preserve the intended silhouette and transparent surround without using a
@@ -109,14 +131,27 @@ The source GIF and the compiled terminal package are different owner layers:
 
 ### Phase 1 — Make compilation explicit
 
-- Define a manifest and `HeroFrameSet` schema carrying asset id/digest,
-  dimensions, frame durations, loop mode, compiler id/version, preset, and
-  package revision.
-- Add an explicit offline compiler command and validation report. It may use
-  Chafa initially, but must emit a reviewable package without entering the
-  interactive runtime.
-- Add fixture tests for alpha, partial-frame/disposal semantics, timing,
-  fixed geometry, placeholder rejection, and package provenance.
+- `landed 2026-07-27` Defined a manifest and package schema
+  (`HeroManifest`/`HeroPackage` in `render/hero_manifest.rs` and
+  `render/hero_package.rs`) carrying asset id/digest, dimensions, frame
+  durations, loop mode, compiler id/version, the literal preset args, and a
+  package schema revision. See [`hero-package.md`](hero-package.md).
+- `landed 2026-07-27` Added an explicit offline compiler
+  (`render/hero_compiler.rs`, invoked via `yam-rust --compile-hero`) and a
+  validation report (`HeroPackage::validate()` / `PackageValidation`). Uses
+  Chafa, and emits a reviewable package without entering the interactive
+  runtime.
+- `landed 2026-07-27` Added fixture tests for fixed geometry, placeholder
+  (blank-frame) rejection, and package provenance, using synthetic frames
+  rather than the real hero asset. Not yet covered: alpha and partial-frame
+  disposal semantics at the manifest/package level (the existing
+  `decoded_hero_frames_keep_full_canvas_geometry` chafa-level test covers
+  alpha/geometry for the decode step, but nothing yet asserts on it through
+  the compiled package).
+- `verified locally 2026-08-01` The package/compiler batch passes the full
+  repository gate, produces a valid current-source package, and reaches the
+  main scene in a bounded live smoke. This does not close the dark-color
+  fidelity acceptance bar or runtime package wiring.
 
 ### Phase 2 — Revise the source art and renderer together
 

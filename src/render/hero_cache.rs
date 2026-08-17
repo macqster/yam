@@ -2,12 +2,17 @@
 
 use std::{fs, io, path::Path};
 
-use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::Line;
 use serde::{Deserialize, Serialize};
 
-use crate::render::compositor::{grid_to_lines, lines_to_grid};
+use crate::render::cell_grid::CellGrid;
 
+/// The disposable, runtime-local hero frame cache. This is the "user
+/// cache" owner layer in docs/hero-revision.md's pipeline table: it exists
+/// purely to skip GIF-decode/chafa-spawn cost on ordinary startup and is
+/// never the authority for what the hero should look like. The validated,
+/// versioned authority is `render::hero_package::HeroPackage`; this type
+/// intentionally carries no manifest/provenance fields.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HeroFrameSet {
     pub render_width: u16,
@@ -34,119 +39,6 @@ impl HeroFrameSet {
 
     pub fn to_lines(&self) -> Vec<Vec<Line<'static>>> {
         self.frames.iter().map(CellGrid::to_lines).collect()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CellGrid {
-    pub width: u16,
-    pub height: u16,
-    pub cells: Vec<CachedCell>,
-}
-
-impl CellGrid {
-    pub fn from_lines(lines: &[Line<'static>], width: u16, height: u16) -> Self {
-        let grid = lines_to_grid(lines, width, height);
-        let cells = grid
-            .cells
-            .into_iter()
-            .map(|cell| CachedCell {
-                symbol: cell.symbol.to_string(),
-                style: CachedStyle::from_style(cell.style),
-            })
-            .collect();
-        Self {
-            width,
-            height,
-            cells,
-        }
-    }
-
-    pub fn to_lines(&self) -> Vec<Line<'static>> {
-        let mut grid = crate::render::compositor::Grid::new(self.width, self.height);
-        for (index, cached) in self.cells.iter().enumerate() {
-            if let Some(cell) = grid.cells.get_mut(index) {
-                cell.symbol = cached.symbol.chars().next().unwrap_or(' ');
-                cell.style = cached.style.to_style();
-            }
-        }
-        grid_to_lines(&grid)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CachedCell {
-    pub symbol: String,
-    pub style: CachedStyle,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct CachedStyle {
-    pub fg: Option<CachedColor>,
-    pub bg: Option<CachedColor>,
-    pub add_modifier: u16,
-    pub sub_modifier: u16,
-}
-
-impl CachedStyle {
-    fn from_style(style: Style) -> Self {
-        Self {
-            fg: style.fg.map(CachedColor::from_color),
-            bg: style.bg.map(CachedColor::from_color),
-            add_modifier: style.add_modifier.bits(),
-            sub_modifier: style.sub_modifier.bits(),
-        }
-    }
-
-    fn to_style(&self) -> Style {
-        Style {
-            fg: self.fg.as_ref().map(CachedColor::to_color),
-            bg: self.bg.as_ref().map(CachedColor::to_color),
-            add_modifier: Modifier::from_bits_truncate(self.add_modifier),
-            sub_modifier: Modifier::from_bits_truncate(self.sub_modifier),
-            ..Style::default()
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum CachedColor {
-    Reset,
-    Rgb(u8, u8, u8),
-    Indexed(u8),
-}
-
-impl CachedColor {
-    fn from_color(color: Color) -> Self {
-        match color {
-            Color::Reset => Self::Reset,
-            Color::Rgb(r, g, b) => Self::Rgb(r, g, b),
-            Color::Indexed(index) => Self::Indexed(index),
-            Color::Black => Self::Indexed(0),
-            Color::Red => Self::Indexed(1),
-            Color::Green => Self::Indexed(2),
-            Color::Yellow => Self::Indexed(3),
-            Color::Blue => Self::Indexed(4),
-            Color::Magenta => Self::Indexed(5),
-            Color::Cyan => Self::Indexed(6),
-            Color::Gray => Self::Indexed(7),
-            Color::DarkGray => Self::Indexed(8),
-            Color::LightRed => Self::Indexed(9),
-            Color::LightGreen => Self::Indexed(10),
-            Color::LightYellow => Self::Indexed(11),
-            Color::LightBlue => Self::Indexed(12),
-            Color::LightMagenta => Self::Indexed(13),
-            Color::LightCyan => Self::Indexed(14),
-            Color::White => Self::Indexed(15),
-        }
-    }
-
-    fn to_color(&self) -> Color {
-        match self {
-            Self::Reset => Color::Reset,
-            Self::Rgb(r, g, b) => Color::Rgb(*r, *g, *b),
-            Self::Indexed(index) => Color::Indexed(*index),
-        }
     }
 }
 

@@ -15,6 +15,115 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-08-17 - Commit the hero package tranche; two review corrections
+
+- `context` a full-repo review found the entire Phase 1 hero-package tranche
+  (`render/cell_grid.rs`, `render/hero_manifest.rs`, `render/hero_package.rs`,
+  `render/hero_compiler.rs`, `docs/hero-package.md`, the `--compile-hero` flag,
+  the `sha2` dependency, and the `tone_lift_dark_reds` removal) sitting
+  **entirely uncommitted** in the default worktree — 857 new lines and 20 new
+  tests backed by no commit anywhere. Committed as-is apart from the two
+  corrections below.
+- `gate` `scripts/verify.sh` was failing (exit 1) on an unrelated cause: an
+  uncommitted `AGENTS.md` addition left a bare `## Imported Claude Cowork
+  project instructions` heading with no body, and `cspell` rejected `Cowork`.
+  Because `check-docs.sh` runs *before* `cargo test` in `verify.sh`, that
+  one-word failure aborted the gate before a single Rust test ran, presenting a
+  green 294-test suite as a red gate. Dropped the empty heading rather than
+  adding a dictionary word for a section that governed nothing; it is one line
+  to restore with real content.
+- `fix` bumped `HERO_CACHE_REVISION` 2 → 3. Removing `tone_lift_dark_reds`
+  changes every rendered pixel, which is exactly the case that constant's own
+  doc comment says to bump for, but the revision had stayed at the value
+  `cbac94d` introduced. An `r2` cache written during the ~16h window between
+  `cbac94d` (2026-07-26 15:25) and the tone-lift removal (2026-07-27 07:47)
+  would have kept being served as trusted art, making the removal invisible.
+  This machine's `~/.cache/yam/hero_gif_1.r2.96x48.frame_cache.json` is dated
+  2026-08-01 and so postdates the removal, but the contract was still violated.
+  Updated the matching path test.
+- `fix` corrected two surfaces that described the vector-redrawn hero source in
+  the past tense — the `frame_to_canvas` comment and `docs/rendering.md` — when
+  the 2026-07-27 entry below correctly records it as *not yet delivered*.
+  `assets/hero_gif_1.gif` is unchanged (md5 `8afff117…`, byte-identical to HEAD
+  and to `tools/legacy-python/hero/assets/hero_go.gif`), so the tone-lift
+  removal is still unverified against rendered output and still owes the live
+  A/B that `HQ-1` asks for. Also repointed `hero_package.rs`'s doc comment from
+  a non-existent `src/bin/hero_compile.rs` to `render::hero_compiler`.
+- `open` `HQ-1` is answered in code but not in evidence; `HQ-3` is likewise
+  answered in code by this tranche while `docs/hero-track.md` still lists the
+  offline compiler as "documented but not yet built" and all six `HQ-` points as
+  `open`. Reconciling `hero-track.md` against `hero-revision.md` is the next
+  decision and is deliberately not made here.
+
+## 2026-08-01 - Hero package review corrections
+
+- `review follow-up` corrected the offline compiler's Chafa executable seam so
+  the configured command performs frame rendering as well as version capture;
+  replaced the unstable `DefaultHasher` source identity with a stable SHA-256
+  digest; strengthened package validation for serialized cell count and schema
+  revision; and added regression tests for those contracts. This was a narrow
+  corrective pass over the existing dirty hero-package tranche. Formatting,
+  tests, Clippy, and the full maintenance gate remain the required handoff
+  checks; real package compilation and terminal visual review remain open.
+- `verification` ran the full `bash scripts/verify.sh` gate successfully at
+  294 passing tests, compiled `target/hero_package.json` from the current GIF
+  with 64 valid `96x48` frames and 64 source durations, and reached the main
+  scene through `scripts/tmux-smoke.sh` after the boot transition. This proves
+  operational plumbing, not dark-color fidelity; runtime package wiring and
+  the full visual acceptance bar remain open.
+
+## 2026-07-27 - Hero pipeline ground-up rebuild, Phase 1 infrastructure
+
+- `07:47 CEST` started the ground-up hero rebuild the maintainer requested: the
+  hero source is being replaced with a fully vector-redrawn GIF (not yet
+  delivered) specifically so the renderer no longer needs code-side pixel
+  compensation for a lossy raster source. Landed the asset-independent half
+  of `docs/hero-revision.md`'s Phase 1 ("make compilation explicit") ahead of
+  that asset arriving:
+  - removed `tone_lift_dark_reds`/`is_dark_red`/the HSV helpers from
+    `src/render/chafa.rs`; `frame_to_canvas` now writes decoded pixels
+    through unmodified. This was the one piece of the pipeline actually
+    listed nowhere in `docs/hero-revision.md` or `docs/audit.md` despite
+    being live code affecting every frame; removing it is a deliberate bet
+    that the new source shouldn't need it, to be confirmed once real frames
+    exist.
+  - extracted `CellGrid`/`CachedCell`/`CachedStyle`/`CachedColor` out of
+    `render/hero_cache.rs` into a new shared `render/cell_grid.rs`, since the
+    "cell corrections" owner layer in `hero-revision.md`'s pipeline table
+    needs to serve both the disposable runtime cache and the new package
+    format identically.
+  - added `render/hero_manifest.rs` (`HeroManifest`, `LoopMode`): asset id,
+    a non-cryptographic content digest of the source file, canvas/render
+    dimensions, per-frame timing, compiler id/version, the exact preset id
+    plus literal chafa args used, and a schema revision -- the provenance
+    record the roadmap calls for but the code never had.
+  - added `render/hero_package.rs` (`HeroPackage`, `PackageValidation`): the
+    validated, versioned "compiled package" layer, explicitly distinct from
+    `hero_cache::HeroFrameSet` (disposable, no provenance). `validate()`
+    checks frame count, fixed geometry, and rejects blank/placeholder
+    frames; it is documented as unable to judge color fidelity, matching
+    the roadmap's "ANSI-code presence... is insufficient" rule.
+  - added `render/hero_compiler.rs` plus a `yam-rust --compile-hero
+    [SOURCE_PATH]` flag in `main.rs` (same early-return shape as
+    `--update`/`--check-updates`): decodes the source GIF with per-frame
+    delays, compiles through the same `chafa_preset_args()` the runtime
+    path now shares (refactored so both consume one authoritative preset
+    instead of two flag lists that could drift), builds and validates a
+    manifest+package, and writes it to `target/hero_package.json`. This
+    intentionally is not a second `[[bin]]` target: the repo has no
+    `src/lib.rs`, so a separate binary crate under `src/bin/` cannot see
+    `main.rs`'s modules at all; a flag on the existing binary was the only
+    option that did not require restructuring the crate.
+  - runtime wiring (`Hero::new()` preferring a `HeroPackage` over the
+    Chafa/cache path) is deliberately not done yet: it depends on having a
+    real compiled package from the new source first.
+  - none of this was compiled or run: the working sandbox this batch was
+    written in has no Rust toolchain and no `chafa` install. Every new
+    module needs `cargo build`, `cargo test`, `cargo clippy --all-targets --
+    -D warnings`, and (once the new source lands) `scripts/tmux-smoke.sh`
+    run locally before any of it can be trusted or `scripts/verify.sh`
+    claimed green.
+
 ## 2026-07-25 - Cache and greenhouse audit follow-up
 
 - `21:30 CEST` acted on the general-review findings as one narrow maintenance tranche. Versioned the runtime hero-cache filename (`r2`) so a renderer-only change (Chafa flags, tone mapping, ANSI conversion, or serialized-frame contract) cannot reuse frames that are merely newer than the GIF; preserved the GIF-mtime freshness check within each revision and added a focused cache-path regression test. Updated `docs/hero-cache.md` and the concise cache risk note in `docs/audit.md` to own the new contract. Reconciled `docs/audit.md`'s stale greenhouse statements with the already-landed seedling growth dispatch and read-only inspection surfaces, while keeping only per-fixture/per-organism live detail and curation/transfer mutation as deferred scope.

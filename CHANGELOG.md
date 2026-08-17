@@ -37,8 +37,22 @@ full change history in one running section instead of per-version ones.
   verification recipe into a reusable script (boots the release binary,
   waits out the boot animation, sends a key sequence, prints the final
   rendered pane).
+- Offline hero package compiler (`yam-rust --compile-hero [SOURCE]`) and a
+  validated, versioned `HeroPackage`/`HeroManifest` format
+  (`render/hero_package.rs`, `render/hero_manifest.rs`), distinct from the
+  disposable runtime hero cache — see `docs/hero-package.md`. **Unverified**:
+  written without a local Rust toolchain; needs `cargo build`/`cargo
+  test`/`cargo clippy` before it can be trusted.
 
 ### Changed
+
+- Runtime and the new offline hero compiler now share one authoritative
+  chafa preset (`chafa_preset_args()` in `render/chafa.rs`) instead of two
+  independently maintained flag lists.
+- Removed the code-side `tone_lift_dark_reds` hue/saturation/value
+  correction for dark reds from the hero rendering path
+  (`src/render/chafa.rs`), as part of rebuilding the hero source from a
+  vector-redrawn original — see `docs/hero-revision.md`.
 
 - Development version bumped to `0.4.0` (from `0.3.9`) now that the
   Greenhouse world, growth dispatch, and read-only inspection have all

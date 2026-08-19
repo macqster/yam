@@ -305,40 +305,57 @@ mod tests {
             return;
         }
 
-        let source = &DEFAULT_HERO_SOURCE;
+        for source in hero_source::ALL {
+            assert_live_render_is_real_art(source);
+        }
+    }
+
+    fn assert_live_render_is_real_art(source: &HeroSource) {
         let frames = hero_frames_from(source, source.render_width, source.render_height);
+        let stem = source.stem;
         assert_eq!(
             frames.len(),
             source.frame_count,
-            "live render should produce every declared frame"
+            "{stem} live render should produce every declared frame"
         );
 
         for (frame_index, frame) in frames.iter().enumerate() {
             assert!(
                 !super::is_placeholder_frame(frame),
-                "frame {frame_index} rendered as a placeholder: {:?}",
+                "{stem} frame {frame_index} rendered as a placeholder: {:?}",
                 frame_text(frame)
             );
 
             let covered = covered_cells(frame);
             assert!(
                 covered > 0,
-                "frame {frame_index} rendered no visible cells at all"
+                "{stem} frame {frame_index} rendered no visible cells at all"
             );
         }
 
         // Coverage is the number the 2026-07-22 investigation moved: the
         // pre-fix pipeline dropped roughly 80% of the grid as "no coverage".
-        // Frame 0 measured 41.5% after that fix. A floor well under the
-        // measurement catches a collapse without pinning an exact value that
-        // legitimate art or extractor changes would churn.
+        // A floor well under the measurement catches a collapse without
+        // pinning an exact value that legitimate art or extractor changes
+        // would churn. The floor is per-source because density is a property
+        // of the art: see `HeroSource::min_frame0_coverage_percent`.
+        //
+        // The 41.5% frame-0 figure this comment used to cite for `hero_gif_1`
+        // does not reproduce. Measured 2026-08-19 against chafa 1.18.2 through
+        // this same helper: 932/4608, 20.2% - which leaves that source's
+        // unchanged 20% floor with 0.2 points of headroom, not the ~2x the
+        // original note implied. Left as-is deliberately; see docs/audit.md.
         let first_covered = covered_cells(&frames[0]);
         let total = (source.render_width as usize) * (source.render_height as usize);
-        let ratio = first_covered as f64 / total as f64;
+        let floor = source.min_frame0_coverage_percent;
+        let percent = first_covered as f64 / total as f64 * 100.0;
+        eprintln!(
+            "{stem} frame 0 coverage: {first_covered}/{total} ({percent:.1}%), floor {floor}%"
+        );
         assert!(
-            ratio > 0.20,
-            "frame 0 coverage collapsed to {:.1}% of the grid ({first_covered}/{total})",
-            ratio * 100.0
+            first_covered * 100 > total * floor as usize,
+            "{stem} frame 0 coverage collapsed to {percent:.1}% of the grid \
+             ({first_covered}/{total}), under its declared {floor}% floor"
         );
     }
 

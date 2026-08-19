@@ -23,7 +23,7 @@ Runtime cache files live in the user cache directory, one per hero source:
 
 `<stem>` and `<revision>` come from the `HeroSource` descriptor
 (`src/render/hero_source.rs`), so the default `IVY_VECTOR` source resolves to
-`hero_gif_2.r3.96x48.frame_cache.json` and the previous `IVY` default to
+`hero_gif_2.r4.96x48.frame_cache.json` and the previous `IVY` default to
 `hero_gif_1.r5.96x48.frame_cache.json`. The per-source key prevents different
 assets from sharing a cache, while the revision prevents a renderer,
 compiler-preset, or serialized-contract change from silently reusing frames

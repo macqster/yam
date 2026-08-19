@@ -972,3 +972,13 @@ Logging rule:
 - gave the absent-colour gate a significance floor of half a rendered cell, derived from the render footprint rather than picked, because a colour thinner than that is discarded by cell averaging whatever `absent_color` is; policing it meant policing the exporter's fringe. On `hero_gif_1` that removes 108 of 249 distinct colours from consideration and moves the reported clearance from 160 to 162
 - recorded two of the ten authored colours as never rendering, for reasons that are not the drop rule: `ffffff` has zero opaque pixels because white is the transparency index, and `395f0b` (the iris) peaks at 177 pixels in a frame against a 253-pixel cell, so cell averaging absorbs it. Neither is recoverable in the renderer
 - bumped cache revisions for the retune: `IVY` r4 -> r5, `IVY_VECTOR` r2 -> r3
+
+## 2026-08-19 15:20 CEST
+
+- set `IVY_VECTOR`'s `absent_color` to `#336699` at the maintainer's direction, after previewing candidates live with `chafa assets/hero_gif_2.gif --size 96x48 ... --fg-only --bg=<value>`; verified that invocation is byte-identical to the runtime pipeline (15192 bytes both ways), so flag iteration needs no build and no cache
+- recorded the intent explicitly, because it inverts the contract this field carried through 0.4.3: the overlap with the palette is wanted. The asset is ten flat colours, flat fills render as fully-lit `⣿`, and under `--fg-only` a uniform cell is all eight dots or none, so culling the darkest tiers is the only lever chafa offers for keeping the hero open rather than a solid mass
+- established why the value has to be chromatic rather than a dark neutral: `7c0307` and `332a29` have identical RGB sums (134 each), so every grey or black tested drops both together, and raising a neutral loses the bright red before it recovers the dark one. A sweep of the RGB cube found 11 values that keep `7c0307` while still dropping `332a29`, all blue or green
+- measured the shortlist on the real frame rather than on patches: dark-red cells go 0 -> 233 and leggings stay at 0, with reconstruction error dropping 284 -> 122
+- gave the absent-colour gate an `ACCEPTED_OVERLAP` list rather than deleting it, at the maintainer's choice: `hero_gif_2` is pinned at 259464 pixels inside the drop radius in its worst frame, so the art stays guarded against drift while the deliberate overlap is allowed. Sources not listed are still required to separate, which is how `IVY` is still checked
+- bumped `IVY_VECTOR` `r3` -> `r4`; `IVY` untouched at `r5` and still on a non-overlapping `#00e000`, so its render is unchanged
+- frame-0 coverage for `hero_gif_2` is 923/4608 (20.0%) against its unchanged 10% floor

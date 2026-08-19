@@ -101,13 +101,18 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
     frame_count: 48,
     render_width: 96,
     render_height: 48,
-    cache_revision: 3,
-    // Measured 2026-08-19 against chafa 1.18.2: 706/4608 cells, 15.3%. Lower
-    // than IVY by art style, not by fault - flat fills and clean line work
-    // simply light fewer dots than cel shading.
+    cache_revision: 4,
+    // Measured 2026-08-19 against chafa 1.18.2 at the chosen absent_color:
+    // 923/4608 cells, 20.0%.
     min_frame0_coverage_percent: 10,
-    // Nearest renderable art colour is the iris, (57, 95, 11), at 141.
-    absent_color: [0, 224, 0],
+    // #336699. Unlike IVY this deliberately overlaps its own palette, because
+    // the cull is wanted: flat fills render as fully-lit braille, and dropping
+    // the darkest tiers is what keeps the hero open rather than a solid mass.
+    // Chosen because 7c0307 and 332a29 have identical RGB sums (134 each), so
+    // no neutral value separates them - a chromatically opposite one does,
+    // keeping the dark red while still dropping the leggings and line art.
+    // Nearest art colour (104, 90, 110) at 69; see ACCEPTED_OVERLAP in chafa.rs.
+    absent_color: [51, 102, 153],
 };
 
 /// Every hero source the runtime knows about.
@@ -215,7 +220,7 @@ mod tests {
     fn ivy_vector_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY_VECTOR.cache_file_name(),
-            "hero_gif_2.r3.96x48.frame_cache.json"
+            "hero_gif_2.r4.96x48.frame_cache.json"
         );
     }
 

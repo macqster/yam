@@ -63,6 +63,23 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.4` (from `0.4.3`): `IVY_VECTOR`
+  (`hero_gif_2`, the default hero) uses `absent_color` `#336699`,
+  which deliberately overlaps its own palette. The asset is ten flat colours,
+  flat fills render as fully-lit `⣿`, and under `--fg-only` a uniform cell is
+  all eight dots or none — so discarding the darkest tiers is the only way to
+  keep the hero open rather than a solid mass. The value is chromatic rather
+  than neutral because `7c0307` and `332a29` have identical RGB sums (134
+  each): no grey or black separates them, a blue does, keeping the dark red
+  while still dropping the leggings and line art. Frame-0 coverage is
+  923/4608 (20.0%) against an unchanged 10% floor. `IVY` is untouched and
+  still uses a non-overlapping `#00e000`. Cache revision `r3` -> `r4`.
+- `absent_color_is_actually_absent_from_every_source` gained an
+  `ACCEPTED_OVERLAP` list. A source that overlaps its palette on purpose has
+  its overlap pinned exactly (`hero_gif_2`, 259464 pixels in the worst frame)
+  rather than being required to separate, so any drift in the palette, the
+  radius, or the chosen colour still fails the gate.
+
 - Development version bumped to `0.4.3` (from `0.4.2`): `absent_color`
   retuned from `#00ff00` to `#00e000` on both sources. Distance from the
   palette is a trade rather than a maximum — on partially transparent edge

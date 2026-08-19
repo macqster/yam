@@ -19,11 +19,11 @@ full change history in one running section instead of per-version ones.
 
 - Second registered hero source, `IVY_VECTOR` (`assets/hero_gif_2.gif`,
   `1080x1080`, 48 frames): the same character and pose cycle as `IVY`,
-  redrawn as flat vector art in Moho. It is a registry *probe*, not a hero
-  swap: `hero_source::DEFAULT` is still `IVY`, so an ordinary launch is
-  unaffected and only `YAM_HERO_SOURCE` (below) reaches the new art. It is
-  registered so `hero_source::ALL` and the three asset-swap gates run against
-  a genuinely second asset instead of checking one file against itself.
+  redrawn as flat vector art in Moho. Registered first as a probe so
+  `hero_source::ALL` and the three asset-swap gates would run against a
+  genuinely second asset instead of checking one file against itself, then
+  promoted to `hero_source::DEFAULT` in 0.4.1 once it had been looked at in
+  the running app.
 - `YAM_HERO_SOURCE=<stem>`: selects any registered hero source for one
   launch, resolved in `Hero::new` via `hero_source::resolve_from_env` and
   falling back to the default when unset or unknown. This is the smallest
@@ -56,6 +56,13 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.1` (from `0.4.0`): the rendered hero is
+  now `assets/hero_gif_2.gif` (`IVY_VECTOR`) rather than `assets/hero_gif_1.gif`
+  (`IVY`). `IVY` stays registered and gated, so `YAM_HERO_SOURCE=hero_gif_1`
+  returns to the previous art without a rebuild. The first launch after the
+  upgrade pays one cold `chafa` compile, because no existing frame cache
+  matches the new default. See `docs/release-model.md` for what this number
+  does and does not mean (no tagged release follows).
 - `rendered_hero_frames_contain_real_content_not_placeholders` now iterates
   `hero_source::ALL` instead of only the default source, so registering hero
   art also enrols it in the live-render gate. Its coverage assertion reads

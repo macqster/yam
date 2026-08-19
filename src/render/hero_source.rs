@@ -45,6 +45,10 @@ pub struct HeroSource {
 }
 
 /// The original BTAS/TNBA-derived Ivy hero.
+///
+/// The default until 0.4.1, when `IVY_VECTOR` replaced it. Still registered
+/// and still gated, so it stays reachable through `SOURCE_ENV` and keeps its
+/// own frame cache rather than becoming unreferenced art.
 pub const IVY: HeroSource = HeroSource {
     stem: "hero_gif_1",
     path: concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_1.gif"),
@@ -61,14 +65,12 @@ pub const IVY: HeroSource = HeroSource {
     min_frame0_coverage_percent: 20,
 };
 
-/// The Moho vector rebuild of the same window loop.
+/// The Moho vector rebuild of the same window loop, and the hero since 0.4.1.
 ///
 /// Same character, same pose cycle, redrawn as flat vector art rather than
 /// filtered from the raster original: `1080x1080` at 48 frames against `IVY`'s
-/// `820x820` at 64. Registered as a second-source *probe*, not a hero swap:
-/// `DEFAULT` stays `IVY`, so an ordinary launch is unaffected and only
-/// `SOURCE_ENV` reaches this art. Its job is to make the descriptor seam and
-/// its swap gates run against real second art instead of a registry of one.
+/// `820x820` at 64. It entered the registry as a probe and was promoted to
+/// `DEFAULT` once it had been looked at in the running app.
 pub const IVY_VECTOR: HeroSource = HeroSource {
     stem: "hero_gif_2",
     path: concat!(env!("CARGO_MANIFEST_DIR"), "/assets/hero_gif_2.gif"),
@@ -87,21 +89,23 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
 /// Every hero source the runtime knows about.
 ///
 /// Read by `from_stem` on the runtime path and by the geometry, uniqueness,
-/// and alpha gates in tests. `IVY_VECTOR` is a probe entry that proves the
-/// registry works with more than one asset. The world/settings wiring that
-/// would let something *persist* a choice between these is still the next
-/// slice - `SOURCE_ENV` is a per-launch lever, not that surface - and this
-/// registry is what that wiring will iterate.
+/// and alpha gates in tests. Both entries are live art: `IVY_VECTOR` renders
+/// by default and `IVY` remains reachable, so a swap is reversible without a
+/// rebuild. The world/settings wiring that would let something *persist* a
+/// choice between them is still the next slice - `SOURCE_ENV` is a per-launch
+/// lever, not that surface - and this registry is what that wiring will
+/// iterate.
 pub const ALL: &[HeroSource] = &[IVY, IVY_VECTOR];
 
 /// The source used when nothing selects one explicitly.
-pub const DEFAULT: HeroSource = IVY;
+pub const DEFAULT: HeroSource = IVY_VECTOR;
 
 /// Environment variable naming a registered source by `stem`.
 ///
 /// This is the smallest honest form of the selection surface: enough to look
-/// at candidate art in the running app before anything commits to it, without
-/// inventing a settings-modal contract for a decision that has not been made.
+/// at candidate art in the running app before anything commits to it, and now
+/// also the way back to `IVY` (`YAM_HERO_SOURCE=hero_gif_1`) without a
+/// rebuild. It is deliberately not a settings-modal contract.
 pub const SOURCE_ENV: &str = "YAM_HERO_SOURCE";
 
 /// The registered source with this `stem`, if any.
@@ -166,6 +170,15 @@ mod tests {
         assert!(ALL.contains(&DEFAULT), "default hero source must be in ALL");
     }
 
+    /// Which asset an ordinary launch renders is a product decision, not an
+    /// incidental ordering of `ALL`. Pin it so a swap has to be deliberate and
+    /// arrives with the docs that name the same stem.
+    #[test]
+    fn default_source_is_the_vector_hero() {
+        assert_eq!(DEFAULT.stem, "hero_gif_2");
+        assert_eq!(DEFAULT, IVY_VECTOR);
+    }
+
     #[test]
     fn ivy_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
@@ -201,10 +214,19 @@ mod tests {
         assert_eq!(super::resolve(Some("")), DEFAULT);
     }
 
+    /// Selecting by stem has to actually return that source. Silently falling
+    /// back to `DEFAULT` is the failure mode this path can hide behind - it
+    /// looks exactly like "the variable did nothing" - so prove it against a
+    /// source that is deliberately not the default, whichever that currently
+    /// is.
     #[test]
-    fn resolve_selects_the_probe_source_by_stem() {
-        assert_eq!(super::resolve(Some(IVY_VECTOR.stem)), IVY_VECTOR);
-        assert_ne!(super::resolve(Some(IVY_VECTOR.stem)), DEFAULT);
+    fn resolve_selects_a_non_default_source_by_stem() {
+        let other = ALL
+            .iter()
+            .find(|source| **source != DEFAULT)
+            .expect("registry needs a non-default source for this to prove anything");
+        assert_eq!(super::resolve(Some(other.stem)), *other);
+        assert_ne!(super::resolve(Some(other.stem)), DEFAULT);
     }
 
     /// The probe only proves the seam if it is genuinely a different asset:

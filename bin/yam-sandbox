@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="${YAM_ROOT:-$HOME/_git/yam}"
-INSTALLED_CMD="\"${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}\" --sandbox --clean-launch"
+INSTALLED_CMD="\"${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}\" --sandbox"
 UPDATE_CMD="cd \"$ROOT\" && bash scripts/update.sh"
 INSTALLED_BIN="${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}"
 
@@ -102,7 +102,7 @@ launch_in_current_window() {
 ARGS="$(quote_args "$@")"
 
 if [[ "${YAM_USE_REPO_RUN:-0}" == "1" && -f "$ROOT/Cargo.toml" ]]; then
-  launch_in_current_window "cd \"$ROOT\" && cargo run --release --quiet -- --sandbox --clean-launch${ARGS:+ $ARGS}"
+  launch_in_current_window "cd \"$ROOT\" && cargo run --release --quiet -- --sandbox${ARGS:+ $ARGS}"
 else
   ensure_diagnostics_session
   ensure_installed_runtime_is_current

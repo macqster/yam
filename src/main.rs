@@ -54,8 +54,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         crate::core::world::WorldKind::MainScene
     };
-    let clean_launch = !args.iter().any(|a| a == "--preserve-ui-state");
-    runtime::run(initial_world_kind, clean_launch)
+    // Saved dev positions are preserved by default. They are reseeded only on
+    // an explicit `--hard-reset`, or automatically when the saved file was
+    // written by a different version - see `saved_state_predates_this_version`.
+    let hard_reset = args.iter().any(|a| a == "--hard-reset");
+    runtime::run(initial_world_kind, hard_reset)
 }
 
 #[cfg(test)]

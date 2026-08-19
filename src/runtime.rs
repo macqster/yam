@@ -62,7 +62,7 @@ fn build_quit_effect() -> Effect {
 
 pub fn run(
     initial_world_kind: WorldKind,
-    clean_launch: bool,
+    hard_reset: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let runtime_start = Instant::now();
     enable_raw_mode()?;
@@ -73,7 +73,8 @@ pub fn run(
     let mut terminal = Terminal::new(backend)?;
 
     let mut ui_state = UiState::load_or_new();
-    if clean_launch {
+    let version_changed = ui_state.saved_state_predates_this_version;
+    if hard_reset || version_changed {
         ui_state.reset_for_clean_launch(initial_world_kind);
     }
     if ui_state.active_world_kind() != initial_world_kind {
@@ -105,7 +106,8 @@ pub fn run(
         "boot_start",
         &[
             ("initial_world", json!(initial_world_kind.title())),
-            ("clean_launch", json!(clean_launch)),
+            ("hard_reset", json!(hard_reset)),
+            ("reseeded_on_version_change", json!(version_changed)),
             ("version", json!(crate::build_info::VERSION)),
             ("build", json!(crate::build_info::build_hash())),
         ],

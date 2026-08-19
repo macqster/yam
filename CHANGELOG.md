@@ -63,6 +63,25 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.5` (from `0.4.4`): **dev-mode positions
+  now persist across launches.** Saved offsets are reseeded only on an
+  explicit `--hard-reset`, or automatically when `~/.config/yam/state.json`
+  carries a different crate version than the running binary — the upgrade
+  case, so new art or a new default composition is not fought by offsets
+  tuned against the previous one.
+- Through 0.4.4 every launch reseeded, so move mode could not persist
+  anything. Worse, because the reset ran at startup and a save then wrote the
+  whole offsets struct, any later save silently overwrote a previously-saved
+  hero position with the default.
+- `--preserve-ui-state` is gone; preserving is now the default. `--clean-launch`
+  is dropped from `bin/yam` and `bin/yam-sandbox`: nothing ever parsed it, and
+  leaving it there would read as forcing a reset now that `--hard-reset` does.
+- `~/.config/yam/state.json` gains a `version` field. Files without one (any
+  written before 0.4.5, including the pre-snapshot bare-offsets format) read as
+  versionless and reseed. The stamp is only written on save, so a session that
+  reseeds and then quits without saving reseeds again next launch — harmless,
+  because it reseeds to the same defaults, but it is not a one-time event.
+
 - Development version bumped to `0.4.4` (from `0.4.3`): `IVY_VECTOR`
   (`hero_gif_2`, the default hero) uses `absent_color` `#336699`,
   which deliberately overlaps its own palette. The asset is ten flat colours,

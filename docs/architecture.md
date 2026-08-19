@@ -213,6 +213,7 @@ The intended model is:
 - static full-screen world size: `212x56`
 - terminal full-screen frame: `212x57`, with the bottom row reserved for the footer
 - default startup camera state is manual pan with the stored seed `(-60, -15)` so the boot view starts with the current frozen screenshot-aligned hero/clock/date/weather composition; this manual seed is distinct from the centered `follow-hero` runtime path
+- those seeds are the *starting* composition, not a permanent override: positions saved through dev move mode (`~/.config/yam/state.json`) are preserved on an ordinary launch. They are reseeded only on an explicit `--hard-reset`, or automatically when the saved file carries a different crate version than the running binary, so an upgrade lands on the composition shipped with it rather than on offsets tuned against the previous one. Through 0.4.4 every launch reseeded, which meant move mode could not persist anything and a later save silently overwrote an earlier hero position with the default
 - default follow-hero camera crops are centered on the world datum across resizes once follow-hero mode is enabled; manual pan mode is clamped to one cell of overscan beyond the world border/frame
 - the centered `124x32` follow-hero crop starts at camera `(-62, -16)`
 - anchor space: offsets relative to another rendered object

@@ -629,6 +629,12 @@ impl LoadingState {
 struct UiStateSnapshot {
     offsets: UiOffsets,
     meta: MetaState,
+    /// Crate version that wrote this file. Absent in files written before
+    /// 0.4.5, which is why it defaults rather than failing the whole load -
+    /// an older file is simply treated as written by an older version, which
+    /// is exactly the stale case.
+    #[serde(default)]
+    version: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -698,6 +704,11 @@ pub struct UiState {
     pub weather_locale: WeatherLocale,
     pub weather_layout: WeatherLayout,
     pub persisted_state_dirty: bool,
+    /// Set at load when the saved file was written by a different version.
+    /// Positions are reseeded in that case, so an upgrade lands on the
+    /// composition shipped with it rather than on offsets tuned against the
+    /// previous one.
+    pub saved_state_predates_this_version: bool,
     pub quit_confirm_open: bool,
 }
 
@@ -727,13 +738,19 @@ impl UiState {
             weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
             persisted_state_dirty: false,
+            saved_state_predates_this_version: false,
             quit_confirm_open: false,
         }
+    }
+
+    fn current_version() -> &'static str {
+        env!("CARGO_PKG_VERSION")
     }
 
     pub fn load_or_new() -> Self {
         let mut state = Self::new();
         if let Ok(snapshot) = Self::load_snapshot() {
+            state.saved_state_predates_this_version = snapshot.version != Self::current_version();
             state.clock_font = ClockFont::from_name(&snapshot.offsets.clock_font);
             state.offsets = snapshot.offsets;
             state.meta = snapshot.meta;
@@ -794,6 +811,7 @@ impl UiState {
         self.pointer_blink_on = true;
         self.persisted_state_dirty = false;
         self.quit_confirm_open = false;
+        self.saved_state_predates_this_version = false;
     }
 
     pub fn refresh_weather_if_due(&mut self) {
@@ -1764,6 +1782,9 @@ impl UiState {
         Ok(UiStateSnapshot {
             offsets,
             meta: MetaState::default(),
+            // Pre-snapshot bare-offsets file: no version to trust, so leave it
+            // empty and let the mismatch reseed it.
+            version: String::new(),
         })
     }
 
@@ -1782,6 +1803,7 @@ impl UiState {
         let snapshot = UiStateSnapshot {
             offsets: self.offsets.clone(),
             meta: self.meta.clone(),
+            version: Self::current_version().to_string(),
         };
         match serde_json::to_string_pretty(&snapshot) {
             Ok(json) => {
@@ -2327,6 +2349,60 @@ mod tests {
         assert_eq!(ui.offsets.calendar_dy, 5);
     }
 
+    /// Dev-saved positions survive an ordinary launch. This is the behaviour
+    /// that flipped in 0.4.5: before it, every launch reseeded, so the move UI
+    /// could not persist anything and a later save silently overwrote an
+    /// earlier hero position with the default.
+    #[test]
+    fn state_written_by_this_version_is_not_treated_as_stale() {
+        let json = serde_json::json!({
+            "offsets": { "hero_dx": -150, "hero_dy": -12 },
+            "meta": {},
+            "version": env!("CARGO_PKG_VERSION"),
+        })
+        .to_string();
+
+        let snapshot = UiState::snapshot_from_json(&json).expect("snapshot should load");
+
+        assert_eq!(snapshot.version, env!("CARGO_PKG_VERSION"));
+        assert_eq!(snapshot.offsets.hero_dx, -150);
+    }
+
+    /// The upgrade case: a file written by another version reseeds, so new art
+    /// or a new default composition is not fought by offsets tuned against the
+    /// previous one.
+    #[test]
+    fn state_written_by_another_version_is_stale() {
+        let json = serde_json::json!({
+            "offsets": { "hero_dx": -150 },
+            "meta": {},
+            "version": "0.0.1-not-this-build",
+        })
+        .to_string();
+
+        let snapshot = UiState::snapshot_from_json(&json).expect("snapshot should load");
+
+        assert_ne!(snapshot.version, env!("CARGO_PKG_VERSION"));
+    }
+
+    /// A file predating the version stamp has no claim to being current, so it
+    /// reads as versionless and reseeds rather than being trusted by default.
+    #[test]
+    fn state_without_a_version_stamp_is_stale() {
+        let stamped = serde_json::json!({
+            "offsets": { "hero_dx": -150 },
+            "meta": {},
+        })
+        .to_string();
+        let legacy = serde_json::json!({ "hero_dx": -150 }).to_string();
+
+        for data in [stamped, legacy] {
+            let snapshot = UiState::snapshot_from_json(&data).expect("snapshot should load");
+            assert!(snapshot.version.is_empty());
+            assert_ne!(snapshot.version, env!("CARGO_PKG_VERSION"));
+        }
+    }
+
     #[test]
     fn snapshot_round_trips_meta_and_offsets() {
         let snapshot = UiStateSnapshot {
@@ -2386,6 +2462,7 @@ mod tests {
                 },
                 move_target: MoveTarget::Hero,
             },
+            version: "9.9.9".to_string(),
         };
 
         let json = serde_json::to_string(&snapshot).expect("snapshot should serialize");

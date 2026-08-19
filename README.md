@@ -35,7 +35,7 @@ Codex is doing most of the hard work here; life is unfortunately consuming so mu
 
 </div>
 
-current release: `0.4.4`
+current release: `0.4.5`
 
 ## snapshot
 
@@ -127,6 +127,7 @@ wrapper behavior that matters:
 - `YAM_USE_REPO_RUN=1` forces the older direct `cargo run --release` path
 - `YAM_DIAGNOSTICS=1` writes local NDJSON diagnostics
 - `YAM_HERO_SOURCE=<stem>` renders a registered hero source other than the default (`hero_gif_1`, `hero_gif_2`); an unset or unknown stem falls back to the default
+- dev-mode positions saved through move mode persist across launches; `yam --hard-reset` reseeds them to the shipped composition, and a version change reseeds them automatically
 
 <div align="center">
 

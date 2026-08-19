@@ -242,8 +242,8 @@ The intended model is:
 ## Hero Geometry Contract
 
 - hero source assets are owned by `render::hero_source::HeroSource` descriptors; the render path reads canvas size, frame count, requested footprint, cache prefix, and minimum frame-0 coverage from there rather than from module constants
-- current registered sources: `IVY`, square `820x820` pixels, 64 frames (the default); and `IVY_VECTOR`, square `1080x1080` pixels, 48 frames, registered as a probe
-- source selection is env-only for now: `Hero::new` resolves `YAM_HERO_SOURCE` against the registry and falls back to `DEFAULT`; there is no world-, settings-, or persistence-owned selector yet, and adding one is the open slice
+- current registered sources: `IVY_VECTOR`, square `1080x1080` pixels, 48 frames (the default since 0.4.1); and `IVY`, square `820x820` pixels, 64 frames, the previous default, still registered and gated
+- source selection is env-only for now: `Hero::new` resolves `YAM_HERO_SOURCE` against the registry and falls back to `DEFAULT`, so a swap is reversible without a rebuild; there is no world-, settings-, or persistence-owned selector yet, and adding one is the open slice
 - terminal render target: `96x48` cells requested from chafa; the emitted footprint is measured from the rendered frames, since chafa preserves source aspect
 - decoded GIF subimage frames are expanded onto that source's full logical canvas before terminal conversion; the canvas is transparent, preserving the source's real per-pixel alpha rather than flattening it to an opaque matte
 - the decode path performs no per-pixel color correction; per-asset correction, if it returns, belongs on the descriptor rather than in the shared decode loop

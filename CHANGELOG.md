@@ -17,6 +17,22 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- Second registered hero source, `IVY_VECTOR` (`assets/hero_gif_2.gif`,
+  `1080x1080`, 48 frames): the same character and pose cycle as `IVY`,
+  redrawn as flat vector art in Moho. It is a registry *probe*, not a hero
+  swap: `hero_source::DEFAULT` is still `IVY`, so an ordinary launch is
+  unaffected and only `YAM_HERO_SOURCE` (below) reaches the new art. It is
+  registered so `hero_source::ALL` and the three asset-swap gates run against
+  a genuinely second asset instead of checking one file against itself.
+- `YAM_HERO_SOURCE=<stem>`: selects any registered hero source for one
+  launch, resolved in `Hero::new` via `hero_source::resolve_from_env` and
+  falling back to the default when unset or unknown. This is the smallest
+  form of the selection surface — enough to look at candidate art in the
+  running app; a world- or settings-owned selector does not exist yet.
+- `HeroSource::min_frame0_coverage_percent`: the live-render coverage floor
+  is now per-source rather than one shared constant, because cell density is
+  a property of the art (flat vector fills light fewer braille dots than cel
+  shading at the same requested size).
 - `WorldKind::Greenhouse`: a real, selectable third world (cycled with the
   same `w` hotkey as `Sandbox`), rendering one inert nursery room via a
   minimal read-only `GreenhouseLayer` (bounds outline plus fixture markers,
@@ -40,6 +56,16 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- `rendered_hero_frames_contain_real_content_not_placeholders` now iterates
+  `hero_source::ALL` instead of only the default source, so registering hero
+  art also enrols it in the live-render gate. Its coverage assertion reads
+  the per-source floor rather than a hard-coded 20%.
+- Withdrew the 41.5% frame-0 coverage figure that the hero content test and
+  `docs/rendering.md` cited for `assets/hero_gif_1.gif`; re-measured through
+  the test's own helper against chafa 1.18.2 it is 932/4608 cells (20.2%),
+  which leaves that source's unchanged 20% floor with 0.2 points of headroom
+  rather than the roughly 2x the note assumed. The floor is deliberately not
+  recalibrated here — see the `medium` item in `docs/audit.md`.
 - Development version bumped to `0.4.0` (from `0.3.9`) now that the
   Greenhouse world, growth dispatch, and read-only inspection have all
   landed and `bash scripts/verify.sh` is green — see `docs/release-model.md`

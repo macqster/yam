@@ -1,4 +1,4 @@
-use crate::render::hero_source::{HeroSource, DEFAULT as DEFAULT_HERO_SOURCE};
+use crate::render::hero_source::{self, HeroSource};
 use crate::scene::viewport::Viewport;
 use crate::theme::{glyphs, style as theme_style};
 use ratatui::{
@@ -19,9 +19,14 @@ pub struct Hero {
 }
 
 impl Hero {
+    /// Build the hero the runtime should show.
+    ///
+    /// The source is resolved rather than hard-wired to `DEFAULT`, so
+    /// `YAM_HERO_SOURCE=<stem>` can point a normal launch at any registered
+    /// asset. Unset or unknown resolves back to `DEFAULT`.
     #[cfg_attr(test, allow(dead_code))]
     pub fn new(world_width: usize, world_height: usize) -> Self {
-        Self::from_source(&DEFAULT_HERO_SOURCE, world_width, world_height)
+        Self::from_source(&hero_source::resolve_from_env(), world_width, world_height)
     }
 
     /// Build a hero from an explicit source asset.

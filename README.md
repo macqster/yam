@@ -126,6 +126,7 @@ wrapper behavior that matters:
 - if repo runtime inputs are newer, wrappers refresh through `scripts/update.sh`
 - `YAM_USE_REPO_RUN=1` forces the older direct `cargo run --release` path
 - `YAM_DIAGNOSTICS=1` writes local NDJSON diagnostics
+- `YAM_HERO_SOURCE=<stem>` renders a registered hero source other than the default (`hero_gif_1`, `hero_gif_2`); an unset or unknown stem falls back to the default
 
 <div align="center">
 

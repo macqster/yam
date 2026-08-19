@@ -13,10 +13,13 @@ use ratatui::text::{Line, Text};
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
 use crate::render::hero_source::HeroSource;
 
-const HERO_DISPLAY_BG: Rgba<u8> = Rgba([16, 1, 0, 255]);
-
-pub fn render_frame(path: &str, width: u16, height: u16) -> Vec<Line<'static>> {
-    render_frame_with_command("chafa", path, width, height)
+pub fn render_frame(
+    path: &str,
+    width: u16,
+    height: u16,
+    absent_color: [u8; 3],
+) -> Vec<Line<'static>> {
+    render_frame_with_command("chafa", path, width, height, absent_color)
 }
 
 fn render_frame_with_command(
@@ -24,9 +27,10 @@ fn render_frame_with_command(
     path: &str,
     width: u16,
     height: u16,
+    absent_color: [u8; 3],
 ) -> Vec<Line<'static>> {
     let size_arg = format!("{}x{}", width, height);
-    let output = match chafa_output(command, path, &size_arg) {
+    let output = match chafa_output(command, path, &size_arg, absent_color) {
         Ok(output) => output,
         Err(err) => return vec![format!("chafa unavailable: {err}").into()],
     };
@@ -43,7 +47,15 @@ fn render_frame_with_command(
     text.lines
 }
 
-fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Output> {
+/// `--bg` is not a fill colour and is never painted under `--fg-only`. It is
+/// the colour chafa treats as already on screen, so it must be one the art
+/// does not contain - see `HeroSource::absent_color`.
+fn chafa_output(
+    command: &str,
+    path: &str,
+    size_arg: &str,
+    absent_color: [u8; 3],
+) -> std::io::Result<Output> {
     Command::new(command)
         .arg(path)
         .arg("--size")
@@ -57,7 +69,7 @@ fn chafa_output(command: &str, path: &str, size_arg: &str) -> std::io::Result<Ou
         .arg("--fg-only")
         .arg(format!(
             "--bg=#{:02x}{:02x}{:02x}",
-            HERO_DISPLAY_BG[0], HERO_DISPLAY_BG[1], HERO_DISPLAY_BG[2]
+            absent_color[0], absent_color[1], absent_color[2]
         ))
         .arg("--animate=off")
         .output()
@@ -76,8 +88,15 @@ pub fn hero_frames_from(source: &HeroSource, width: u16, height: u16) -> Vec<Vec
         .into_iter()
         .enumerate()
         .map(|(frame_index, frame)| {
-            render_image_frame(temp_dir.path(), frame_index, &frame, width, height)
-                .unwrap_or_else(|err| vec![format!("hero frame render failed: {err}").into()])
+            render_image_frame(
+                temp_dir.path(),
+                frame_index,
+                &frame,
+                width,
+                height,
+                source.absent_color,
+            )
+            .unwrap_or_else(|err| vec![format!("hero frame render failed: {err}").into()])
         })
         .collect()
 }
@@ -245,6 +264,7 @@ fn render_image_frame(
     image: &DynamicImage,
     width: u16,
     height: u16,
+    absent_color: [u8; 3],
 ) -> Result<Vec<Line<'static>>, String> {
     let temp_path = temp_dir.join(format!("yam_frame_{frame_index:04}.png"));
     image
@@ -253,7 +273,7 @@ fn render_image_frame(
     let temp_path = temp_path
         .to_str()
         .ok_or_else(|| format!("temp path not utf-8: {temp_path:?}"))?;
-    let rendered = render_frame(temp_path, width, height);
+    let rendered = render_frame(temp_path, width, height, absent_color);
     Ok(rendered)
 }
 
@@ -415,6 +435,60 @@ mod tests {
         }
     }
 
+    /// `absent_color` only works if it is genuinely absent.
+    ///
+    /// It is handed to chafa as the colour that is already on screen, so any
+    /// art resembling it is dropped instead of drawn. A source whose palette
+    /// drifts toward its own `absent_color` would lose exactly those regions,
+    /// silently and only in the live render - the failure mode that cost this
+    /// project every dark red, leggings pixel, and outline until 0.4.2. So
+    /// assert the separation rather than trusting the descriptor.
+    ///
+    /// The floor is 128 in Euclidean RGB. Measured visibility needs roughly a
+    /// 64-per-channel separation to clear chafa's drop threshold, which is
+    /// about 111 across three channels; 128 keeps a margin over that without
+    /// pinning the current assets' actual distances (186 for `hero_gif_1`,
+    /// 170 for `hero_gif_2`, both against green).
+    #[test]
+    fn absent_color_is_actually_absent_from_every_source() {
+        const FLOOR: i32 = 128;
+
+        for source in hero_source::ALL {
+            let stem = source.stem;
+            let [ar, ag, ab] = source.absent_color;
+            let frames = decode_gif_frames(source.path)
+                .unwrap_or_else(|err| panic!("decode hero gif {stem}: {err}"));
+
+            let mut closest = i32::MAX;
+            let mut offender = None;
+            for (frame_index, frame) in frames.iter().enumerate() {
+                for pixel in frame.to_rgba8().pixels() {
+                    if pixel[3] == 0 {
+                        continue;
+                    }
+                    let dr = pixel[0] as i32 - ar as i32;
+                    let dg = pixel[1] as i32 - ag as i32;
+                    let db = pixel[2] as i32 - ab as i32;
+                    let squared = dr * dr + dg * dg + db * db;
+                    if squared < closest {
+                        closest = squared;
+                        offender = Some((frame_index, [pixel[0], pixel[1], pixel[2]]));
+                    }
+                }
+            }
+
+            let distance = (closest as f64).sqrt();
+            let (frame_index, colour) = offender.expect("every source has opaque pixels");
+            assert!(
+                closest >= FLOOR * FLOOR,
+                "{stem} art colour {colour:?} (frame {frame_index}) sits {distance:.0} from its \
+                 absent_color {:?} - under the {FLOOR} floor, so chafa will read it as already \
+                 painted and drop it. Pick an absent_color further from this palette.",
+                source.absent_color
+            );
+        }
+    }
+
     /// The alpha contract: subimage frames are expanded onto a transparent
     /// canvas, never flattened onto an opaque matte. Losing this is what cost
     /// the renderer its dark regions before 2026-07-22.
@@ -477,6 +551,7 @@ mod tests {
             DEFAULT_HERO_SOURCE.path,
             4,
             2,
+            DEFAULT_HERO_SOURCE.absent_color,
         );
         assert_eq!(lines.len(), 1);
         let text = lines[0]

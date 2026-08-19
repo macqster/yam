@@ -23,19 +23,23 @@ Runtime cache files live in the user cache directory, one per hero source:
 
 `<stem>` and `<revision>` come from the `HeroSource` descriptor
 (`src/render/hero_source.rs`), so the default `IVY_VECTOR` source resolves to
-`hero_gif_2.r1.96x48.frame_cache.json` and the previous `IVY` default to
-`hero_gif_1.r2.96x48.frame_cache.json`. The per-source key prevents different
+`hero_gif_2.r2.96x48.frame_cache.json` and the previous `IVY` default to
+`hero_gif_1.r4.96x48.frame_cache.json`. The per-source key prevents different
 assets from sharing a cache, while the revision prevents a renderer,
 compiler-preset, or serialized-contract change from silently reusing frames
 produced by older behavior.
 
-An ordinary launch compiles only the default source, so `hero_gif_1.r2.*` is
+An ordinary launch compiles only the default source, so `hero_gif_1.r4.*` is
 written only when something actually renders `IVY` — a test, an explicit
 `Hero::from_source` call, or a launch with `YAM_HERO_SOURCE=hero_gif_1`. Each
 source keeps its own cache, so switching between them with that variable costs
 one cold chafa compile per source and is warm from then on. The first launch
 after upgrading to 0.4.1 pays that cold compile for `hero_gif_2`, because no
-existing cache matches the new default.
+existing cache matches the new default, and 0.4.2 pays it again because the
+`absent_color` fix changes every rendered frame and so bumps both revisions.
+`IVY` skips straight from `r2` to `r4`: an `r3` cache from a 2026-08-17
+experiment can still be sitting in `~/.cache/yam`, and its mtime is newer than
+the GIF, so the freshness rule would accept it and serve pre-fix frames.
 
 ## Runtime Shape
 

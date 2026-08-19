@@ -17,6 +17,13 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- `HeroSource::absent_color`: the colour handed to chafa as `--bg`, now owned
+  per asset. Under `--fg-only` that value is never painted; it is the colour
+  chafa treats as already on screen, so art resembling it is discarded rather
+  than drawn. It must be absent from the asset, and
+  `absent_color_is_actually_absent_from_every_source` enforces that with a 128
+  Euclidean-RGB floor.
+
 - Second registered hero source, `IVY_VECTOR` (`assets/hero_gif_2.gif`,
   `1080x1080`, 48 frames): the same character and pose cycle as `IVY`,
   redrawn as flat vector art in Moho. Registered first as a probe so
@@ -55,6 +62,21 @@ full change history in one running section instead of per-version ones.
   rendered pane).
 
 ### Changed
+
+- Development version bumped to `0.4.2` (from `0.4.1`): the hero renders its
+  dark regions for the first time. `HERO_DISPLAY_BG` (`#100100`, a dark red)
+  was telling chafa that every dark region was already on screen, so the hair
+  shadow, the leggings, and every outline were discarded rather than drawn —
+  a mechanism separate from, and untouched by, the 2026-07-22 matte/extractor
+  fix. Replaced by a per-source `absent_color` of `#00ff00`. Frame-0 coverage
+  roughly doubles on both assets (`hero_gif_1` 932 -> 1923 cells,
+  `hero_gif_2` 706 -> 1725), every solid cell of the hero is now drawn
+  (1468/1468, previously 621), and there is no spill outside the silhouette.
+  `--fg-only` is unchanged: the scene still shows through the unlit dots.
+- Hero cache revisions bumped because every rendered frame changes: `IVY`
+  `r2` -> `r4` and `IVY_VECTOR` `r1` -> `r2`. `IVY` skips `r3` deliberately —
+  a stale `hero_gif_1.r3.*` from a 2026-08-17 experiment can still be present
+  in `~/.cache/yam` and would be accepted as fresh, serving pre-fix frames.
 
 - Development version bumped to `0.4.1` (from `0.4.0`): the rendered hero is
   now `assets/hero_gif_2.gif` (`IVY_VECTOR`) rather than `assets/hero_gif_1.gif`

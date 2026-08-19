@@ -441,27 +441,39 @@ mod tests {
     /// art resembling it is dropped instead of drawn. A source whose palette
     /// drifts toward its own `absent_color` would lose exactly those regions,
     /// silently and only in the live render - the failure mode that cost this
-    /// project every dark red, leggings pixel, and outline until 0.4.2. So
-    /// assert the separation rather than trusting the descriptor.
+    /// project every dark red, leggings pixel, and outline until 0.4.2.
     ///
-    /// The floor is 128 in Euclidean RGB. Measured visibility needs roughly a
-    /// 64-per-channel separation to clear chafa's drop threshold, which is
-    /// about 111 across three channels; 128 keeps a margin over that without
-    /// pinning the current assets' actual distances (186 for `hero_gif_1`,
-    /// 170 for `hero_gif_2`, both against green).
+    /// Two constants, both derived rather than picked:
+    ///
+    /// `DROP_RADIUS` is 128 in Euclidean RGB. Measured visibility needs
+    /// roughly a 64-per-channel separation to clear chafa's drop threshold,
+    /// which is about 111 across three channels; 128 keeps a margin over that.
+    ///
+    /// Significance is half a rendered cell's worth of pixels in a single
+    /// frame. A colour thinner than that cannot fill half a cell, so cell
+    /// averaging discards it whatever `absent_color` is - policing it would be
+    /// policing the GIF exporter's anti-aliasing fringe rather than the art.
+    /// On `hero_gif_1` that fringe is 108 of 249 distinct colours, and it was
+    /// what set this gate's reported clearance before 0.4.3.
     #[test]
     fn absent_color_is_actually_absent_from_every_source() {
-        const FLOOR: i32 = 128;
+        const DROP_RADIUS: i32 = 128;
 
         for source in hero_source::ALL {
             let stem = source.stem;
             let [ar, ag, ab] = source.absent_color;
+            let cell_pixels = (source.canvas_width as f64 / source.render_width as f64)
+                * (source.canvas_height as f64 / source.render_height as f64);
+            let significant = (cell_pixels / 2.0).ceil() as usize;
             let frames = decode_gif_frames(source.path)
                 .unwrap_or_else(|err| panic!("decode hero gif {stem}: {err}"));
 
             let mut closest = i32::MAX;
             let mut offender = None;
+            let mut worst_frame_inside = 0usize;
+
             for (frame_index, frame) in frames.iter().enumerate() {
+                let mut inside_this_frame = 0usize;
                 for pixel in frame.to_rgba8().pixels() {
                     if pixel[3] == 0 {
                         continue;
@@ -470,21 +482,27 @@ mod tests {
                     let dg = pixel[1] as i32 - ag as i32;
                     let db = pixel[2] as i32 - ab as i32;
                     let squared = dr * dr + dg * dg + db * db;
+                    if squared < DROP_RADIUS * DROP_RADIUS {
+                        inside_this_frame += 1;
+                    }
                     if squared < closest {
                         closest = squared;
                         offender = Some((frame_index, [pixel[0], pixel[1], pixel[2]]));
                     }
                 }
+                worst_frame_inside = worst_frame_inside.max(inside_this_frame);
             }
 
-            let distance = (closest as f64).sqrt();
             let (frame_index, colour) = offender.expect("every source has opaque pixels");
             assert!(
-                closest >= FLOOR * FLOOR,
-                "{stem} art colour {colour:?} (frame {frame_index}) sits {distance:.0} from its \
-                 absent_color {:?} - under the {FLOOR} floor, so chafa will read it as already \
-                 painted and drop it. Pick an absent_color further from this palette.",
-                source.absent_color
+                worst_frame_inside < significant,
+                "{stem} has {worst_frame_inside} pixels within {DROP_RADIUS} of its absent_color \
+                 {:?} in a single frame, at or above the {significant}-pixel half-cell threshold, \
+                 so chafa will read that region as already painted and drop it. Nearest art \
+                 colour is {colour:?} in frame {frame_index}, {:.0} away. Pick an absent_color \
+                 further from this palette.",
+                source.absent_color,
+                (closest as f64).sqrt()
             );
         }
     }

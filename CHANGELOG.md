@@ -63,6 +63,21 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.3` (from `0.4.2`): `absent_color`
+  retuned from `#00ff00` to `#00e000` on both sources. Distance from the
+  palette is a trade rather than a maximum — on partially transparent edge
+  cells the value bleeds into chafa's foreground pick, and that bleed grows
+  with distance — so the right value is the least clearance that still clears
+  the drop radius. Off-palette edge cells fall from 15 to 8 across the two
+  assets, with slightly better reconstruction error on both.
+- `absent_color_is_actually_absent_from_every_source` now ignores colours
+  thinner than half a rendered cell, which cell averaging discards anyway.
+  Without that floor the gate was measuring the GIF exporter's anti-aliasing
+  fringe rather than the art: on `hero_gif_1` that fringe is 108 of 249
+  distinct colours, and it was setting the reported clearance.
+- Hero cache revisions bumped again for the retune: `IVY` `r4` -> `r5`,
+  `IVY_VECTOR` `r2` -> `r3`.
+
 - Development version bumped to `0.4.2` (from `0.4.1`): the hero renders its
   dark regions for the first time. `HERO_DISPLAY_BG` (`#100100`, a dark red)
   was telling chafa that every dark region was already on screen, so the hair

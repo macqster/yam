@@ -53,10 +53,14 @@ pub struct HeroSource {
     /// That is why this must be absent from the art. Pointing it at a
     /// scene-like dark colour - as `HERO_DISPLAY_BG` did until 0.4.2 - tells
     /// chafa that every dark region is already painted, which is exactly how
-    /// the hair shadow, the leggings, and every outline went missing. The
-    /// further this sits from the asset's whole palette, the more of that
-    /// palette survives; `absent_color_is_actually_absent_from_every_source`
-    /// keeps the claim honest.
+    /// the hair shadow, the leggings, and every outline went missing.
+    ///
+    /// Distance is a trade rather than something to push as far as possible:
+    /// too close and art is dropped, but on partially transparent edge cells
+    /// this colour also bleeds into chafa's foreground pick, and that bleed
+    /// grows with distance. Aim for the least clearance that still clears the
+    /// drop radius. `absent_color_is_actually_absent_from_every_source` keeps the
+    /// near side honest.
     pub absent_color: [u8; 3],
 }
 
@@ -73,14 +77,14 @@ pub const IVY: HeroSource = HeroSource {
     frame_count: 64,
     render_width: 96,
     render_height: 48,
-    cache_revision: 4,
+    cache_revision: 5,
     // Measured 2026-08-19 against chafa 1.18.2: 932/4608 cells, 20.2%. The
     // floor is left at its original 20% rather than recalibrated here, but note
     // it now sits 0.2 points under the measurement, not the ~2x headroom the
     // gate's original note claimed. See docs/audit.md for the open decision.
     min_frame0_coverage_percent: 20,
-    // Nearest art colour to green is (86, 91, 19), a distance of 186.
-    absent_color: [0, 255, 0],
+    // Nearest renderable art colour is the green eye, (70, 78, 4), at 162.
+    absent_color: [0, 224, 0],
 };
 
 /// The Moho vector rebuild of the same window loop, and the hero since 0.4.1.
@@ -97,13 +101,13 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
     frame_count: 48,
     render_width: 96,
     render_height: 48,
-    cache_revision: 2,
+    cache_revision: 3,
     // Measured 2026-08-19 against chafa 1.18.2: 706/4608 cells, 15.3%. Lower
     // than IVY by art style, not by fault - flat fills and clean line work
     // simply light fewer dots than cel shading.
     min_frame0_coverage_percent: 10,
-    // Nearest art colour to green is the iris, (57, 95, 11), a distance of 170.
-    absent_color: [0, 255, 0],
+    // Nearest renderable art colour is the iris, (57, 95, 11), at 141.
+    absent_color: [0, 224, 0],
 };
 
 /// Every hero source the runtime knows about.
@@ -203,7 +207,7 @@ mod tests {
     fn ivy_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY.cache_file_name(),
-            "hero_gif_1.r4.96x48.frame_cache.json"
+            "hero_gif_1.r5.96x48.frame_cache.json"
         );
     }
 
@@ -211,7 +215,7 @@ mod tests {
     fn ivy_vector_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY_VECTOR.cache_file_name(),
-            "hero_gif_2.r2.96x48.frame_cache.json"
+            "hero_gif_2.r3.96x48.frame_cache.json"
         );
     }
 

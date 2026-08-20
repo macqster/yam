@@ -1006,3 +1006,12 @@ Logging rule:
 - landed `--color-extractor=average`, reversing the 2026-07-22 switch to `median` now that the flattened opaque canvas it originally failed against is gone. Verified it is not a regression rather than assuming: coverage is identical cell for cell (`hero_gif_1` 1918/4608, `hero_gif_2` 923/4608, unchanged), reconstruction error drops (122 to 112 and 125 to 96), and the darkest-survivable tables are identical under both extractors, so the change cannot cost a colour
 - bumped cache revisions for the render change: `IVY` r5 -> r6, `IVY_VECTOR` r4 -> r5
 - corrected the historical prose in `docs/rendering.md` so the 2026-07-22 `median` note reads as history rather than current configuration, and updated the extractor in `docs/architecture.md` and in the preview command in `docs/chafa-drop-rule.md`
+
+## 2026-08-20 07:05 CEST
+
+- closed out the chafa option space against `chafa --help` rather than memory, and extended `docs/chafa-drop-rule.md` with the two live options it had omitted
+- `--fill` is fully inert, not just at `none` as previously recorded: byte-identical at `none`, `braille`, `solid`, `stipple`, `space` and `all`, because it only supplements a symbol set that does not need supplementing
+- `--font-ratio` is live and changes the rendered extent (`1/2` gives 94x44, `2/3` gives 96x33, `1/1` gives 95x22), so it is a correctness setting tied to the terminal's cell aspect rather than a tuning knob; the runtime leaves it at chafa's default `1/2`
+- `--glyph-file` is live and moves against the openness goal: real fonts increase solid cells (527 to 573 for Agave, 583 for Cascadia) because their braille dots cover less of the cell than chafa's built-in model assumes. Recorded that Menlo returned byte-identical output without concluding why, since a silent `.ttc` load failure would look the same as a match
+- noted that both remaining options are machine-specific and should not enter the descriptor before the terminal's font and cell aspect are established
+- every other option in `chafa --help` is now either measured inert, already landed, or irrelevant to offline single-frame conversion

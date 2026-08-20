@@ -187,6 +187,45 @@ alpha in the source art took a leggings patch from 8.0 to 1.5 dots per cell
 with no solid cells and colors untouched, and it is per-region so the artist
 chooses what breathes.
 
+## Terminal-Dependent Settings
+
+Two options are live but are not tuning knobs. Both describe the terminal, so
+the right value is a fact about the display rather than a preference, and
+neither belongs in the descriptor until that fact is established.
+
+`--font-ratio=W/H` sets the assumed character cell aspect, which changes how
+source pixels map into cells and therefore the hero's rendered shape:
+
+| ratio | rendered extent | lit cells |
+| --- | --- | --- |
+| `1/2` (default) | 94x44 | 923 |
+| `3/5` | 96x37 | 750 |
+| `2/3` | 96x33 | 697 |
+| `1/1` | 95x22 | 475 |
+
+The runtime leaves this at chafa's default `1/2`, the standard monospace
+assumption. If the terminal font is not 1:2, the hero renders at a subtly
+wrong aspect and this is the setting that corrects it.
+
+`--glyph-file=FILE` loads real glyph coverage from a font file instead of
+chafa's built-in model. Measured against installed monospace faces:
+
+| glyph source | lit | solid | mean dots/cell |
+| --- | --- | --- | --- |
+| built-in model | 923 | 527 | 6.58 |
+| Agave-Regular | 900 | 573 | 6.81 |
+| CascadiaMonoPL | 895 | 583 | 6.80 |
+| Apple Braille | 931 | 520 | 6.56 |
+
+Real fonts *increase* solid cells: their braille dots cover less of the cell
+than the built-in model assumes, so chafa lights more of them to compensate.
+That is the wrong direction if openness is wanted, and the right direction if
+the goal is matching what the terminal actually paints.
+
+Menlo returned byte-identical output. That may mean the built-in model matches
+it, or that the `.ttc` failed to load and chafa fell back silently - not
+verified, so do not rely on it either way.
+
 ## Settings With No Effect
 
 Measured inert at `--colors=full`, which is what the runtime uses. Recorded so
@@ -197,7 +236,8 @@ they are not re-tested or tuned in the expectation of an effect.
 | `--dither`, `--dither-grain`, `--dither-intensity` | 72 of 72 mode/grain/intensity combinations byte-identical; chafa documents "No effect with 24-bit color" |
 | `--color-space` | byte-identical across 288 colors and 4 backgrounds |
 | `--fg` | identical output at white, black and red |
-| `--fill`, `--preprocess`, `--optimize`, `--work`, `--threshold` | no measurable change |
+| `--fill` | byte-identical at `none`, `braille`, `solid`, `stipple`, `space` and `all`; it only applies when the chosen symbol set needs supplementing, which `braille` does not |
+| `--preprocess`, `--optimize`, `--work`, `--threshold` | no measurable change |
 | `--symbols=braille-solid` | byte-identical to `braille`; chafa's "solid" class means the block glyph, not the full braille cell |
 
 Reduced color depth is not a usable escape from any of this. At

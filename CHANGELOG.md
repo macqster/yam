@@ -17,6 +17,15 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- Runtime package loading, completing the offline-compiler path started in
+  0.4.8: `hero_frames_cached_from` now prefers a validated `HeroPackage` over
+  the frame cache and the live chafa path, in that order. A package is used
+  only when its schema revision, `preset_id`, render geometry, and the source
+  file's SHA-256 digest all match, and `validate()` reports no issues; any
+  failure falls through silently. `--compile-hero` writes to where the runtime
+  looks, `<cache dir>/<stem>.hero_package.json`, so compile-then-run works
+  without arguments.
+
 - Phase 1 offline hero compiler, landed from `agent/hero-revision-contract`
   where it had been unmerged since 2026-07-27. `render::hero_package` is the
   validated, versioned artifact; `render::hero_manifest` records provenance
@@ -88,6 +97,11 @@ full change history in one running section instead of per-version ones.
   test`/`cargo clippy` before it can be trusted.
 
 ### Changed
+
+- Development version bumped to `0.4.9` (from `0.4.8`). The digest check is
+  what makes a package safer than the frame cache it takes precedence over:
+  the cache can only compare mtimes, so art swapped in with an older timestamp
+  is served as trusted, while a package is validated on content.
 
 - Development version bumped to `0.4.8` (from `0.4.7`). The compiler was
   adapted on landing rather than merged as authored: the branch predated

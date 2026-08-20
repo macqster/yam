@@ -35,7 +35,7 @@ Codex is doing most of the hard work here; life is unfortunately consuming so mu
 
 </div>
 
-current release: `0.4.8`
+current release: `0.4.9`
 
 ## snapshot
 

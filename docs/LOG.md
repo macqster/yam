@@ -1147,3 +1147,13 @@ Logging rule:
 - corrected `docs/hero-revision.md`'s Current Problem section, which still described the dark-color defect as unresolved and predicted the failure was "broader than one Chafa flag". It was one flag. Recorded the wrong prediction rather than deleting it, because the reasoning is the useful part: each listed subsystem was a plausible suspect, and the defect was isolated by measuring them out one at a time
 - verified the compiler end to end, not just by test: `--compile-hero` wrote a 48-frame package for `hero_gif_2` with the correct SHA-256 digest, `1080x1080` canvas, 80ms frame timing, and `compiler_args` recording `--bg=#336699` and `--color-extractor=average`
 - the runtime still loads the disposable frame cache rather than packages; wiring the package into startup is the next slice
+
+## 2026-08-20 15:10 CEST
+
+- wired the compiled package into startup, the slice `docs/hero-package.md` had recorded as outstanding: `hero_frames_cached_from` now prefers a validated `HeroPackage`, then the frame cache, then the live chafa path
+- gated the package on schema revision, `preset_id`, render geometry, and the source file's SHA-256 digest, plus `validate()`. Every check falls through silently rather than erroring, matching the existing degrade-don't-panic rule: a package is an optional acceleration and the live path can always rebuild
+- the digest check is the point. The frame cache can only compare mtimes, so art swapped in with an older timestamp is served as trusted art; a package is validated on content and rejects it
+- split the decision out as a pure `manifest_matches` so it is testable without the filesystem, and covered the four ways a package can be wrong: different art, different preset, different geometry, different schema
+- pointed `--compile-hero` at the directory the runtime reads (`<cache dir>/<stem>.hero_package.json`) so compile-then-run works with no arguments, and dropped the now-unused `default_output_path`
+- verified both directions live rather than by test alone. Compiling into a fresh cache dir and launching against it rendered the scene and wrote *no* frame cache, which is only possible if the package was used. Tampering the manifest's digest then launching wrote `hero_gif_2.r5.96x48.frame_cache.json`, proving the rejection path falls through to chafa rather than failing
+- corrected `docs/hero-package.md`, which still said runtime wiring was not done and that the compiler defaults to `assets/hero_gif_1.gif`; it follows `hero_source::DEFAULT` and `YAM_HERO_SOURCE` now

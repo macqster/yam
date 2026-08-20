@@ -25,13 +25,19 @@ cargo build --release
 target/release/yam-rust --compile-hero [SOURCE_GIF_PATH]
 ```
 
-`SOURCE_GIF_PATH` defaults to the canonical `assets/hero_gif_1.gif` when
-omitted. This never enters the interactive runtime; it decodes the source
-GIF, renders every frame through the same `chafa_preset_args()` the
-ordinary runtime path uses (`render/chafa.rs` is the single source of truth
-for that preset, so runtime and offline compiler cannot silently drift
-apart), builds a manifest, validates the result, and writes
-`target/hero_package.json`.
+`SOURCE_GIF_PATH` defaults to whichever source an ordinary launch would
+render - `hero_source::DEFAULT`, or whatever `YAM_HERO_SOURCE` selects - so
+the compiler and the runtime cannot disagree about which asset they mean. The
+compiler itself never enters the interactive runtime; it decodes the source
+GIF, renders every frame through the same `chafa_preset_args()` the ordinary
+runtime path uses (`render/chafa.rs` is the single source of truth for that
+preset, so runtime and offline compiler cannot silently drift apart), builds a
+manifest, validates the result, and writes the package where the runtime looks
+for it: `<cache dir>/<stem>.hero_package.json`.
+
+Geometry and `absent_color` come from the source's descriptor rather than
+constants, so a package cannot be rendered against a different drop reference
+than the runtime uses for the same asset.
 
 ## Manifest Shape
 
@@ -80,10 +86,22 @@ visible output.
 
 ## Current Status
 
-The compiler and package format are locally compiled, structurally validated,
-and have produced a 64-frame package from the current source. A bounded live
-smoke also reaches the main scene successfully. Runtime wiring (`Hero::new()`
-preferring a validated `HeroPackage` over the live Chafa/cache path) is not
-yet done, and the hero's dark-color fidelity remains below the product
-acceptance bar. See [`hero-revision.md`](hero-revision.md)'s roadmap and
-[`LOG.md`](LOG.md)'s 2026-08-01 entry.
+Runtime wiring landed in 0.4.9: `hero_frames_cached_from` prefers a validated
+package over the frame cache and the live Chafa path, in that order. A package
+is used only when all of these hold, and any failure falls through silently
+rather than erroring, because a package is an optional acceleration and the
+live path can always rebuild:
+
+- schema revision matches `HERO_PACKAGE_SCHEMA_REVISION`
+- `preset_id` matches the runtime's current `HERO_PRESET_ID`
+- render geometry matches what the caller asked for
+- the source file's SHA-256 digest matches the manifest's `asset_digest`
+- `validate()` reports no issues
+
+That digest check is what makes a package safer than the frame cache it
+supersedes. The cache can only compare mtimes, so art swapped in with an older
+timestamp is served as trusted; a package is validated on content.
+
+The hero's dark-color defect was fixed separately on 2026-08-19 - see
+[`chafa-drop-rule.md`](chafa-drop-rule.md). Structural validation still cannot
+judge color, so the real-terminal review above remains required.

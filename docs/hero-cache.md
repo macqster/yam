@@ -16,6 +16,8 @@ The intended direction is:
 2. persist them as a runtime-owned cache
 3. let normal startup load that cache directly
 
+As of 0.4.9 this cache is the *second* choice, not the first: `hero_frames_cached_from` prefers a validated `HeroPackage` when one is present, then this cache, then the live chafa path. See [hero-package.md](hero-package.md). The distinction matters because a package is validated on the source's SHA-256 digest and its preset id, while this cache can only compare mtimes - art swapped in with an older timestamp defeats the cache but not a package.
+
 Runtime cache files live in the user cache directory, one per hero source:
 
 - `$XDG_CACHE_HOME/yam/<stem>.r<revision>.<width>x<height>.frame_cache.json` when `XDG_CACHE_HOME` is set

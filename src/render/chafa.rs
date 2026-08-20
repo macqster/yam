@@ -13,13 +13,59 @@ use ratatui::text::{Line, Text};
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
 use crate::render::hero_source::HeroSource;
 
-pub fn render_frame(
-    path: &str,
-    width: u16,
-    height: u16,
-    absent_color: [u8; 3],
-) -> Vec<Line<'static>> {
-    render_frame_with_command("chafa", path, width, height, absent_color)
+/// Human-readable name for the exact chafa preset below. Bump whenever
+/// `chafa_preset_args` changes in a way that affects visible output - it is
+/// recorded verbatim in every compiled `HeroManifest`
+/// (`render::hero_manifest`) so a package's rendering intent is legible
+/// without cross-referencing this file.
+///
+/// v2: the extractor moved from `median` to `average`, and `--bg` became
+/// per-source rather than a global constant.
+pub(crate) const HERO_PRESET_ID: &str = "rgb-average-fgonly-braille-v2";
+
+/// The single authoritative chafa preset, shared by ordinary runtime
+/// rendering (`chafa_output`) and the offline compiler
+/// (`render::hero_compiler`), so the two paths cannot silently drift apart.
+/// Excludes the input path and `--size`, which callers supply per frame.
+///
+/// `absent_color` is per-source rather than a constant: it is the colour chafa
+/// treats as already on screen, so it decides which art is drawn at all. See
+/// `HeroSource::absent_color` and `docs/chafa-drop-rule.md`.
+pub(crate) fn chafa_preset_args(absent_color: [u8; 3]) -> Vec<String> {
+    vec![
+        "--format=symbols".to_string(),
+        "--symbols=braille".to_string(),
+        "--colors=full".to_string(),
+        // Inert at `--colors=full`: with no quantization there is no
+        // nearest-match for a colour space to affect. Kept explicit so the
+        // invocation stays self-describing; see docs/chafa-drop-rule.md.
+        "--color-space=rgb".to_string(),
+        "--color-extractor=average".to_string(),
+        // Also inert here - chafa documents "No effect with 24-bit color".
+        "--dither=none".to_string(),
+        "--fg-only".to_string(),
+        format!(
+            "--bg=#{:02x}{:02x}{:02x}",
+            absent_color[0], absent_color[1], absent_color[2]
+        ),
+        "--animate=off".to_string(),
+    ]
+}
+
+/// Best-effort captured compiler version string for manifest provenance.
+/// Returns `"unknown"` rather than failing when the binary is missing or
+/// `--version` cannot be parsed; version capture should never be the reason
+/// an offline compile run fails.
+pub(crate) fn chafa_version(command: &str) -> String {
+    match Command::new(command).arg("--version").output() {
+        Ok(output) if output.status.success() => String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .next()
+            .unwrap_or("unknown")
+            .trim()
+            .to_string(),
+        _ => "unknown".to_string(),
+    }
 }
 
 fn render_frame_with_command(
@@ -50,39 +96,21 @@ fn render_frame_with_command(
 /// `--bg` is not a fill colour and is never painted under `--fg-only`. It is
 /// the colour chafa treats as already on screen, so it must be one the art
 /// does not contain - see `HeroSource::absent_color`.
+///
+/// The flag list itself lives in `chafa_preset_args` so this path and the
+/// offline compiler cannot drift apart.
 fn chafa_output(
     command: &str,
     path: &str,
     size_arg: &str,
     absent_color: [u8; 3],
 ) -> std::io::Result<Output> {
-    Command::new(command)
-        .arg(path)
-        .arg("--size")
-        .arg(size_arg)
-        .arg("--format=symbols")
-        .arg("--symbols=braille")
-        .arg("--colors=full")
-        // Inert at `--colors=full`: with no quantization there is no
-        // nearest-match for a color space to affect. Measured byte-identical
-        // against din99d. Kept explicit rather than dropped so the invocation
-        // stays self-describing; see docs/chafa-drop-rule.md before tuning it.
-        .arg("--color-space=rgb")
-        // `average` over `median`: measured lower reconstruction error on both
-        // sources at identical coverage, cell for cell. The 2026-07-22 switch
-        // away from `average` was against the then-flattened opaque canvas,
-        // which no longer exists - see docs/chafa-drop-rule.md.
-        .arg("--color-extractor=average")
-        // Also inert here - chafa documents "No effect with 24-bit color",
-        // and 72 of 72 mode/grain/intensity combinations measured identical.
-        .arg("--dither=none")
-        .arg("--fg-only")
-        .arg(format!(
-            "--bg=#{:02x}{:02x}{:02x}",
-            absent_color[0], absent_color[1], absent_color[2]
-        ))
-        .arg("--animate=off")
-        .output()
+    let mut cmd = Command::new(command);
+    cmd.arg(path).arg("--size").arg(size_arg);
+    for arg in chafa_preset_args(absent_color) {
+        cmd.arg(arg);
+    }
+    cmd.output()
 }
 
 pub fn hero_frames_from(source: &HeroSource, width: u16, height: u16) -> Vec<Vec<Line<'static>>> {
@@ -129,7 +157,7 @@ pub fn hero_frames_cached_from(
     frames
 }
 
-fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
+fn decode_gif_raw(path: &str) -> Result<(Vec<image::Frame>, (u32, u32)), String> {
     let file = fs::File::open(path).map_err(|err| format!("failed to open gif {path}: {err}"))?;
     let reader = std::io::BufReader::new(file);
     let decoder =
@@ -139,9 +167,33 @@ fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
         .into_frames()
         .collect_frames()
         .map_err(|err| format!("failed to collect gif frames from {path}: {err}"))?;
+    Ok((frames, canvas))
+}
+
+fn decode_gif_frames(path: &str) -> Result<Vec<DynamicImage>, String> {
+    let (frames, canvas) = decode_gif_raw(path)?;
     Ok(frames
         .into_iter()
         .map(|frame| DynamicImage::ImageRgba8(frame_to_canvas(frame, canvas)))
+        .collect())
+}
+
+/// Like `decode_gif_frames`, but also returns each frame's authored delay
+/// in milliseconds, for `render::hero_compiler` to record in a
+/// `HeroManifest`. The ordinary runtime hero path does not need per-frame
+/// timing today (`Hero::tick()` uses a fixed FPS), so this stays a separate
+/// entry point rather than changing `decode_gif_frames`'s signature.
+pub(crate) fn decode_gif_frames_with_delays(
+    path: &str,
+) -> Result<Vec<(DynamicImage, u32)>, String> {
+    let (frames, canvas) = decode_gif_raw(path)?;
+    Ok(frames
+        .into_iter()
+        .map(|frame| {
+            let delay_ms = std::time::Duration::from(frame.delay()).as_millis() as u32;
+            let image = DynamicImage::ImageRgba8(frame_to_canvas(frame, canvas));
+            (image, delay_ms)
+        })
         .collect())
 }
 
@@ -224,6 +276,15 @@ fn hero_cache_dir() -> PathBuf {
 }
 
 fn frame_to_canvas(frame: image::Frame, canvas: (u32, u32)) -> RgbaImage {
+    // No pixel-side color correction happens here by design: dark-color
+    // fidelity is owned by the source art and the chafa preset (see
+    // docs/hero-revision.md), not by a code-side tone lift. A prior
+    // hue/saturation/value dark-red lift lived here and was removed 2026-07-27
+    // ahead of the vector-redrawn source it anticipates, on the bet that a
+    // clean source needs no per-pixel compensation. That source has NOT landed
+    // yet -- `assets/hero_gif_1.gif` is still the 2026-07-22 raster original --
+    // so the removal is currently unverified against rendered output. Confirm
+    // with a live `scripts/tmux-smoke.sh` A/B before treating it as settled.
     let mut image = RgbaImage::from_pixel(canvas.0, canvas.1, Rgba([0, 0, 0, 0]));
     let left = frame.left();
     let top = frame.top();
@@ -248,16 +309,16 @@ fn prepare_temp_frame_dir() -> std::io::Result<PathBuf> {
     Ok(temp_dir)
 }
 
-struct TempFrameDir {
+pub(crate) struct TempFrameDir {
     path: PathBuf,
 }
 
 impl TempFrameDir {
-    fn new() -> std::io::Result<Self> {
+    pub(crate) fn new() -> std::io::Result<Self> {
         prepare_temp_frame_dir().map(|path| Self { path })
     }
 
-    fn path(&self) -> &Path {
+    pub(crate) fn path(&self) -> &Path {
         &self.path
     }
 }
@@ -268,7 +329,27 @@ impl Drop for TempFrameDir {
     }
 }
 
-fn render_image_frame(
+pub(crate) fn render_image_frame(
+    temp_dir: &Path,
+    frame_index: usize,
+    image: &DynamicImage,
+    width: u16,
+    height: u16,
+    absent_color: [u8; 3],
+) -> Result<Vec<Line<'static>>, String> {
+    render_image_frame_with_command(
+        "chafa",
+        temp_dir,
+        frame_index,
+        image,
+        width,
+        height,
+        absent_color,
+    )
+}
+
+pub(crate) fn render_image_frame_with_command(
+    command: &str,
     temp_dir: &Path,
     frame_index: usize,
     image: &DynamicImage,
@@ -283,14 +364,15 @@ fn render_image_frame(
     let temp_path = temp_path
         .to_str()
         .ok_or_else(|| format!("temp path not utf-8: {temp_path:?}"))?;
-    let rendered = render_frame(temp_path, width, height, absent_color);
+    let rendered = render_frame_with_command(command, temp_path, width, height, absent_color);
     Ok(rendered)
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        cache_is_fresh_against, decode_gif_frames, hero_frames_from, render_frame_with_command,
+        cache_is_fresh_against, chafa_preset_args, chafa_version, decode_gif_frames,
+        decode_gif_frames_with_delays, hero_frames_from, render_frame_with_command,
     };
     use crate::render::hero_source::{self, HeroSource, DEFAULT as DEFAULT_HERO_SOURCE};
     use ratatui::text::Line;
@@ -657,5 +739,52 @@ mod tests {
         let cache = temp_dir.path().join("missing-cache.json");
 
         assert!(!cache_is_fresh_against(&cache, &source));
+    }
+
+    /// The preset is what keeps the runtime and the offline compiler from
+    /// drifting, so it has to be deterministic and carry the source's own
+    /// `absent_color` rather than a constant.
+    #[test]
+    fn chafa_preset_args_is_stable_and_carries_the_absent_color() {
+        let source = &DEFAULT_HERO_SOURCE;
+        let args = chafa_preset_args(source.absent_color);
+        assert!(!args.is_empty());
+        assert_eq!(
+            args,
+            chafa_preset_args(source.absent_color),
+            "preset must be deterministic"
+        );
+        assert!(args.contains(&"--symbols=braille".to_string()));
+        assert!(args.contains(&"--fg-only".to_string()));
+        let [r, g, b] = source.absent_color;
+        assert!(args.contains(&format!("--bg=#{r:02x}{g:02x}{b:02x}")));
+    }
+
+    /// Two sources with different `absent_color` must not produce the same
+    /// preset - that would mean the compiler rendered one source's art
+    /// against another's drop reference.
+    #[test]
+    fn chafa_preset_args_differ_when_absent_color_differs() {
+        assert_ne!(
+            chafa_preset_args([0, 0, 0]),
+            chafa_preset_args([51, 102, 153])
+        );
+    }
+
+    #[test]
+    fn chafa_version_falls_back_to_unknown_for_missing_binary() {
+        assert_eq!(chafa_version("__yam_missing_chafa_binary__"), "unknown");
+    }
+
+    #[test]
+    fn decode_with_delays_matches_frame_count_of_plain_decode() {
+        let path = DEFAULT_HERO_SOURCE.path;
+        let plain = decode_gif_frames(path).expect("decode hero gif");
+        let with_delays = decode_gif_frames_with_delays(path).expect("decode hero gif");
+        assert_eq!(plain.len(), with_delays.len());
+        assert!(
+            with_delays.iter().all(|(_, delay_ms)| *delay_ms < 10_000),
+            "hero frame delays should be small, not a units mixup"
+        );
     }
 }

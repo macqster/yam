@@ -17,6 +17,20 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- Phase 1 offline hero compiler, landed from `agent/hero-revision-contract`
+  where it had been unmerged since 2026-07-27. `render::hero_package` is the
+  validated, versioned artifact; `render::hero_manifest` records provenance
+  (SHA-256 source digest, geometry, per-frame timing, compiler id/version,
+  preset id, literal chafa args); `render::hero_compiler` is reachable as
+  `yam-rust --compile-hero` and never sits on the ordinary startup path.
+  `render::cell_grid` extracts the shared cell shape so the disposable runtime
+  cache and the package format serialize through one type.
+- `chafa_preset_args`: one authoritative chafa flag list shared by runtime
+  rendering and the offline compiler, so the two cannot drift apart. It carries
+  the source's own `absent_color`, which is what stops an offline package being
+  rendered against a different drop reference than the runtime uses for the
+  same asset. `HERO_PRESET_ID` is recorded verbatim in every manifest.
+
 - `docs/chafa-drop-rule.md`: how `--bg` decides which hero colors are drawn at
   all, the batched patch-grid measurement harness, the procedure for choosing
   `HeroSource::absent_color` when new art is registered, per-family
@@ -66,8 +80,28 @@ full change history in one running section instead of per-version ones.
   verification recipe into a reusable script (boots the release binary,
   waits out the boot animation, sends a key sequence, prints the final
   rendered pane).
+- Offline hero package compiler (`yam-rust --compile-hero [SOURCE]`) and a
+  validated, versioned `HeroPackage`/`HeroManifest` format
+  (`render/hero_package.rs`, `render/hero_manifest.rs`), distinct from the
+  disposable runtime hero cache — see `docs/hero-package.md`. **Unverified**:
+  written without a local Rust toolchain; needs `cargo build`/`cargo
+  test`/`cargo clippy` before it can be trusted.
 
 ### Changed
+
+- Development version bumped to `0.4.8` (from `0.4.7`). The compiler was
+  adapted on landing rather than merged as authored: the branch predated
+  per-source descriptors, so `CompileOptions` takes geometry and `absent_color`
+  from a `HeroSource`, exposes `for_source`, and honors `YAM_HERO_SOURCE`.
+  Four globals the descriptor had superseded are gone (`HERO_GIF_PATH`,
+  `HERO_DISPLAY_BG`, `HERO_CACHE_REVISION`, `HERO_RENDER_WIDTH`/`HEIGHT`).
+  No cache revision bump: the preset refactor is output-neutral, verified by
+  comparing a fresh compile byte-for-byte against a cache written by 0.4.7.
+- `docs/hero-revision.md` no longer describes the dark-color defect as
+  unresolved. It was fixed on 2026-08-19, and that document's prediction that
+  the failure was "broader than one Chafa flag" was wrong — it was one flag.
+  The wrong prediction is recorded rather than deleted, because the reasoning
+  is the useful part.
 
 - Development version bumped to `0.4.7` (from `0.4.6`): consolidation pass, no
   runtime behavior change. `docs/release-model.md` step 2 said maintenance
@@ -170,6 +204,14 @@ full change history in one running section instead of per-version ones.
   which leaves that source's unchanged 20% floor with 0.2 points of headroom
   rather than the roughly 2x the note assumed. The floor is deliberately not
   recalibrated here — see the `medium` item in `docs/audit.md`.
+- Runtime and the new offline hero compiler now share one authoritative
+  chafa preset (`chafa_preset_args()` in `render/chafa.rs`) instead of two
+  independently maintained flag lists.
+- Removed the code-side `tone_lift_dark_reds` hue/saturation/value
+  correction for dark reds from the hero rendering path
+  (`src/render/chafa.rs`), as part of rebuilding the hero source from a
+  vector-redrawn original — see `docs/hero-revision.md`.
+
 - Development version bumped to `0.4.0` (from `0.3.9`) now that the
   Greenhouse world, growth dispatch, and read-only inspection have all
   landed and `bash scripts/verify.sh` is green — see `docs/release-model.md`

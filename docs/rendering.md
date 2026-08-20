@@ -290,6 +290,7 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 
 ## Text And Geometry Caveats
 
+- Hero fidelity direction, the acceptance bar for source or preset changes, and the offline package roadmap live in [hero-revision.md](hero-revision.md); the compiled package contract and its offline compiler in [hero-package.md](hero-package.md).
 - Hero source assets are declared in `src/render/hero_source.rs`, not spread across constants, cache-name literals, and test literals. A `HeroSource` owns the asset path, its logical canvas size, its expected frame count, its requested cell footprint, its cache identity/revision, and its minimum frame-0 coverage. Adding or swapping hero art is a descriptor change; `hero_source::ALL` is the registry every hero source must be listed in.
 - Two sources are registered:
   - `IVY_VECTOR` (`assets/hero_gif_2.gif`, `1080x1080`, 48 frames, requested at `96x48` cells) — the same character and pose cycle redrawn as flat vector art in Moho, added 2026-08-19 and promoted to `hero_source::DEFAULT` in 0.4.1.

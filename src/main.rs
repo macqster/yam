@@ -49,6 +49,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.iter().any(|a| a == "--update") {
         return run("bash", &["scripts/update.sh"]);
     }
+    if let Some(flag_pos) = args.iter().position(|a| a == "--compile-hero") {
+        let mut options = render::hero_compiler::CompileOptions::default();
+        if let Some(source) = args.get(flag_pos + 1) {
+            if !source.starts_with("--") {
+                options.source_path = std::path::PathBuf::from(source);
+            }
+        }
+        return render::hero_compiler::compile(&options)
+            .map(|_| ())
+            .map_err(|err| err.into());
+    }
     let initial_world_kind = if args.iter().any(|a| a == "--sandbox") {
         crate::core::world::WorldKind::Sandbox
     } else {

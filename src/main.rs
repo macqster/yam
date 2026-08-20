@@ -50,12 +50,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return run("bash", &["scripts/update.sh"]);
     }
     if let Some(flag_pos) = args.iter().position(|a| a == "--compile-hero") {
-        let mut options = render::hero_compiler::CompileOptions::default();
-        if let Some(source) = args.get(flag_pos + 1) {
-            if !source.starts_with("--") {
-                options.source_path = std::path::PathBuf::from(source);
-            }
-        }
+        // The argument selects a *registered* source, by stem or path. It
+        // cannot just override `source_path`: geometry and `absent_color` come
+        // from the descriptor, so overriding the path alone would compile one
+        // asset against another's drop reference and file it under the wrong
+        // package name.
+        let options = match args.get(flag_pos + 1).filter(|a| !a.starts_with("--")) {
+            Some(requested) => match render::hero_source::from_stem_or_path(requested) {
+                Some(source) => render::hero_compiler::CompileOptions::for_source(&source),
+                None => {
+                    let known: Vec<&str> =
+                        render::hero_source::ALL.iter().map(|s| s.stem).collect();
+                    return Err(format!(
+                        "unknown hero source {requested:?}; registered sources are: {}",
+                        known.join(", ")
+                    )
+                    .into());
+                }
+            },
+            None => render::hero_compiler::CompileOptions::default(),
+        };
         return render::hero_compiler::compile(&options)
             .map(|_| ())
             .map_err(|err| err.into());

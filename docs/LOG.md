@@ -992,3 +992,17 @@ Logging rule:
 - removed `--clean-launch` from `bin/yam` and `bin/yam-sandbox`. Nothing had ever parsed it, so it was already inert, but leaving it would now read as forcing a reset when `--hard-reset` is the flag that does. `--preserve-ui-state` is gone with it, since preserving is the default
 - caught during wrapper verification that the version bump had left `Cargo.lock` stale, which made `scripts/update.sh` fail its `--locked` check - that would have broken the next `yam` launch, not just a local build
 - documented the rule in `docs/architecture.md` and `README.md`; it had lived only in `docs/LOG.md` despite being user-facing behavior
+
+## 2026-08-20 06:10 CEST
+
+- wrote `docs/chafa-drop-rule.md`, consolidating the chafa colour study into a reference: the mechanism (`--bg` under `--fg-only` is a cull control, never painted), how the defect presented and why the 2026-07-22 pass did not fix it, the batched patch-grid measurement harness, the step-by-step procedure for choosing `absent_color` for new art, per-family darkest-survivable values, and the settings measured to have no effect
+- recorded that the drop boundary is not predictable from any simple metric: from a neutral background it approximates sum-of-channels (1.2x spread over 24 directions), from a chromatic one every metric collapses (L1 5.8x, Euclidean 3.7x, mean-RGB 2.9x). The doc says to measure rather than model, because two of this session's wrong turns came from extrapolating a metric across geometries
+- recorded the inert settings explicitly so they are not re-tuned: dither and its grain/intensity (72 of 72 combinations byte-identical, and chafa's own help says "No effect with 24-bit color"), `--color-space`, `--fg`, `--fill`, `--preprocess`, `--optimize`, `--work`, `--threshold`, and `--symbols=braille-solid`
+- recorded the two harness traps that produced false results during the study: a parser reading only truecolour scores indexed `38;5;N` output as blank, and filtering by colour proximity rather than cell position reads a large colour shift as "fewer cells rendered"
+- indexed the new doc in `docs/README.md` and cross-linked it from the `absent_color` prose in `docs/rendering.md`; added `desaturate`/`desaturated` to `.cspell.json`
+
+## 2026-08-20 06:35 CEST
+
+- landed `--color-extractor=average`, reversing the 2026-07-22 switch to `median` now that the flattened opaque canvas it originally failed against is gone. Verified it is not a regression rather than assuming: coverage is identical cell for cell (`hero_gif_1` 1918/4608, `hero_gif_2` 923/4608, unchanged), reconstruction error drops (122 to 112 and 125 to 96), and the darkest-survivable tables are identical under both extractors, so the change cannot cost a colour
+- bumped cache revisions for the render change: `IVY` r5 -> r6, `IVY_VECTOR` r4 -> r5
+- corrected the historical prose in `docs/rendering.md` so the 2026-07-22 `median` note reads as history rather than current configuration, and updated the extractor in `docs/architecture.md` and in the preview command in `docs/chafa-drop-rule.md`

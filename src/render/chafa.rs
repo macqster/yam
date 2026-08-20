@@ -64,7 +64,11 @@ fn chafa_output(
         .arg("--symbols=braille")
         .arg("--colors=full")
         .arg("--color-space=rgb")
-        .arg("--color-extractor=median")
+        // `average` over `median`: measured lower reconstruction error on both
+        // sources at identical coverage, cell for cell. The 2026-07-22 switch
+        // away from `average` was against the then-flattened opaque canvas,
+        // which no longer exists - see docs/chafa-drop-rule.md.
+        .arg("--color-extractor=average")
         .arg("--dither=none")
         .arg("--fg-only")
         .arg(format!(

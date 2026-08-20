@@ -159,6 +159,16 @@ pub fn resolve_from_env() -> HeroSource {
 }
 
 impl HeroSource {
+    /// Compiled-package filename for this source.
+    ///
+    /// Deliberately carries no revision counter, unlike `cache_file_name`. A
+    /// package records the source's SHA-256 digest and the preset it was built
+    /// with, so it invalidates itself on content: a stale package is detected
+    /// rather than merely out-numbered.
+    pub fn package_file_name(&self) -> String {
+        format!("{}.hero_package.json", self.stem)
+    }
+
     /// Frame-cache filename for this source at its render size.
     pub fn cache_file_name(&self) -> String {
         format!(

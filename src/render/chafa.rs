@@ -10,7 +10,10 @@ use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageDecode
 use image::{Rgba, RgbaImage};
 use ratatui::text::{Line, Text};
 
+use crate::render::cell_grid::CellGrid;
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
+use crate::render::hero_manifest::{HeroManifest, HERO_PACKAGE_SCHEMA_REVISION};
+use crate::render::hero_package::load_hero_package;
 use crate::render::hero_source::HeroSource;
 
 /// Human-readable name for the exact chafa preset below. Bump whenever
@@ -139,11 +142,60 @@ pub fn hero_frames_from(source: &HeroSource, width: u16, height: u16) -> Vec<Vec
         .collect()
 }
 
+/// Path a compiled package for this source is looked for at.
+pub(crate) fn hero_package_path(source: &HeroSource) -> PathBuf {
+    hero_cache_dir().join(source.package_file_name())
+}
+
+/// Whether a package's manifest describes this exact request: same schema,
+/// same preset, same geometry, same source content.
+///
+/// Split out from the loader so it is testable without touching the
+/// filesystem - the loader's other failure modes (missing file, unreadable
+/// source) are IO, but this is the part that decides whether a package is
+/// *the right one*, and it is the part worth pinning.
+fn manifest_matches(manifest: &HeroManifest, width: u16, height: u16, source_digest: &str) -> bool {
+    manifest.schema_revision == HERO_PACKAGE_SCHEMA_REVISION
+        && manifest.preset_id == HERO_PRESET_ID
+        && manifest.render_width == width
+        && manifest.render_height == height
+        && manifest.asset_digest == source_digest
+}
+
+/// Frames from a compiled `HeroPackage`, if one is present and provably built
+/// from this exact source with this exact preset.
+///
+/// Every check is a reason to fall through rather than fail: a package is an
+/// optional acceleration, and the live chafa path is always able to rebuild.
+/// The digest check is what makes this stronger than the frame cache, which
+/// can only compare mtimes - a package built from different art is detected on
+/// content, not on timestamps.
+fn load_packaged_hero_frames(
+    source: &HeroSource,
+    width: u16,
+    height: u16,
+) -> Option<Vec<Vec<Line<'static>>>> {
+    let package = load_hero_package(&hero_package_path(source)).ok()?;
+    let digest = HeroManifest::digest_source_file(Path::new(source.path)).ok()?;
+    if !manifest_matches(&package.manifest, width, height, &digest) {
+        return None;
+    }
+    if !package.validate().is_valid() {
+        return None;
+    }
+
+    Some(package.frames.iter().map(CellGrid::to_lines).collect())
+}
+
 pub fn hero_frames_cached_from(
     source: &HeroSource,
     width: u16,
     height: u16,
 ) -> Vec<Vec<Line<'static>>> {
+    if let Some(frames) = load_packaged_hero_frames(source, width, height) {
+        return frames;
+    }
+
     let cache_path = hero_frame_cache_path(source);
     if let Some(frame_set) = load_cached_hero_frames(&cache_path, source, width, height) {
         return frame_set.to_lines();
@@ -263,7 +315,7 @@ fn hero_frame_cache_path(source: &HeroSource) -> PathBuf {
     hero_cache_dir().join(source.cache_file_name())
 }
 
-fn hero_cache_dir() -> PathBuf {
+pub(crate) fn hero_cache_dir() -> PathBuf {
     if let Some(path) = env::var_os("XDG_CACHE_HOME") {
         return PathBuf::from(path).join("yam");
     }
@@ -374,6 +426,7 @@ mod tests {
         cache_is_fresh_against, chafa_preset_args, chafa_version, decode_gif_frames,
         decode_gif_frames_with_delays, hero_frames_from, render_frame_with_command,
     };
+    use crate::render::hero_manifest::{HeroManifest, HERO_PACKAGE_SCHEMA_REVISION};
     use crate::render::hero_source::{self, HeroSource, DEFAULT as DEFAULT_HERO_SOURCE};
     use ratatui::text::Line;
     use std::{fs, thread, time::Duration};
@@ -769,6 +822,71 @@ mod tests {
             chafa_preset_args([0, 0, 0]),
             chafa_preset_args([51, 102, 153])
         );
+    }
+
+    fn manifest_for_tests(digest: &str) -> HeroManifest {
+        HeroManifest {
+            asset_id: "hero_gif_test".to_string(),
+            asset_digest: digest.to_string(),
+            canvas_width: 1080,
+            canvas_height: 1080,
+            frame_count: 2,
+            frame_durations_ms: vec![80, 80],
+            loop_mode: crate::render::hero_manifest::LoopMode::Infinite,
+            compiler_id: "chafa".to_string(),
+            compiler_version: "test".to_string(),
+            preset_id: super::HERO_PRESET_ID.to_string(),
+            compiler_args: vec![],
+            render_width: 96,
+            render_height: 48,
+            schema_revision: HERO_PACKAGE_SCHEMA_REVISION,
+        }
+    }
+
+    #[test]
+    fn a_matching_manifest_is_accepted() {
+        assert!(super::manifest_matches(
+            &manifest_for_tests("abc"),
+            96,
+            48,
+            "abc"
+        ));
+    }
+
+    /// The digest check is the whole reason a package is safer than the frame
+    /// cache: art swapped in with an older mtime defeats the cache, but not a
+    /// content digest.
+    #[test]
+    fn a_manifest_built_from_different_art_is_rejected() {
+        assert!(!super::manifest_matches(
+            &manifest_for_tests("abc"),
+            96,
+            48,
+            "a-different-digest"
+        ));
+    }
+
+    /// A package compiled under an older preset renders different pixels, so
+    /// serving it would silently undo whatever the preset change fixed.
+    #[test]
+    fn a_manifest_from_another_preset_is_rejected() {
+        let mut manifest = manifest_for_tests("abc");
+        manifest.preset_id = "rgb-median-fgonly-braille-v1".to_string();
+        assert!(!super::manifest_matches(&manifest, 96, 48, "abc"));
+    }
+
+    #[test]
+    fn a_manifest_with_other_geometry_or_schema_is_rejected() {
+        assert!(!super::manifest_matches(
+            &manifest_for_tests("abc"),
+            80,
+            48,
+            "abc"
+        ));
+
+        let mut manifest = manifest_for_tests("abc");
+        manifest.schema_revision = HERO_PACKAGE_SCHEMA_REVISION + 1;
+        assert!(!super::manifest_matches(&manifest, 96, 48, "abc"));
     }
 
     #[test]

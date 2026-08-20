@@ -44,7 +44,7 @@ impl CompileOptions {
     pub fn for_source(source: &HeroSource) -> Self {
         Self {
             source_path: PathBuf::from(source.path),
-            output_path: default_output_path(),
+            output_path: chafa::hero_package_path(source),
             render_width: source.render_width,
             render_height: source.render_height,
             chafa_command: "chafa".to_string(),
@@ -59,10 +59,6 @@ impl Default for CompileOptions {
     fn default() -> Self {
         Self::for_source(&hero_source::resolve_from_env())
     }
-}
-
-pub fn default_output_path() -> PathBuf {
-    PathBuf::from("target/hero_package.json")
 }
 
 /// Runs the full compile: decode -> per-frame chafa render -> manifest ->

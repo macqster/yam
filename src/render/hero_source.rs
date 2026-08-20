@@ -77,7 +77,7 @@ pub const IVY: HeroSource = HeroSource {
     frame_count: 64,
     render_width: 96,
     render_height: 48,
-    cache_revision: 5,
+    cache_revision: 6,
     // Measured 2026-08-19 against chafa 1.18.2: 932/4608 cells, 20.2%. The
     // floor is left at its original 20% rather than recalibrated here, but note
     // it now sits 0.2 points under the measurement, not the ~2x headroom the
@@ -101,7 +101,7 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
     frame_count: 48,
     render_width: 96,
     render_height: 48,
-    cache_revision: 4,
+    cache_revision: 5,
     // Measured 2026-08-19 against chafa 1.18.2 at the chosen absent_color:
     // 923/4608 cells, 20.0%.
     min_frame0_coverage_percent: 10,
@@ -212,7 +212,7 @@ mod tests {
     fn ivy_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY.cache_file_name(),
-            "hero_gif_1.r5.96x48.frame_cache.json"
+            "hero_gif_1.r6.96x48.frame_cache.json"
         );
     }
 
@@ -220,7 +220,7 @@ mod tests {
     fn ivy_vector_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY_VECTOR.cache_file_name(),
-            "hero_gif_2.r4.96x48.frame_cache.json"
+            "hero_gif_2.r5.96x48.frame_cache.json"
         );
     }
 

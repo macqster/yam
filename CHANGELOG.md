@@ -17,6 +17,12 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- `docs/chafa-drop-rule.md`: how `--bg` decides which hero colors are drawn at
+  all, the batched patch-grid measurement harness, the procedure for choosing
+  `HeroSource::absent_color` when new art is registered, per-family
+  darkest-survivable values, and the chafa settings measured to have no effect
+  at 24-bit color so they are not re-tuned in the expectation of one.
+
 - `HeroSource::absent_color`: the colour handed to chafa as `--bg`, now owned
   per asset. Under `--fg-only` that value is never painted; it is the colour
   chafa treats as already on screen, so art resembling it is discarded rather
@@ -62,6 +68,16 @@ full change history in one running section instead of per-version ones.
   rendered pane).
 
 ### Changed
+
+- Development version bumped to `0.4.6` (from `0.4.5`): hero rendering uses
+  `--color-extractor=average` instead of `median`. Measured at the shipped
+  backgrounds it renders exactly the same cells, frame for frame, at lower
+  reconstruction error (`hero_gif_2` 122 to 112, `hero_gif_1` 125 to 96), and
+  it does not move any drop boundary — `median` and `average` produce identical
+  darkest-survivable tables, so the change cannot cost a color. The 2026-07-22
+  switch away from `average` was against the then-flattened opaque canvas,
+  which no longer exists. Cache revisions bumped: `IVY` `r5` -> `r6`,
+  `IVY_VECTOR` `r4` -> `r5`.
 
 - Development version bumped to `0.4.5` (from `0.4.4`): **dev-mode positions
   now persist across launches.** Saved offsets are reseeded only on an

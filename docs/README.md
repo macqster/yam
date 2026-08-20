@@ -34,6 +34,7 @@ The repo front door is [../README.md](../README.md).
 - [vines.md](vines.md) - vine ownership/readiness contract
 - [config.md](config.md) - config ownership and boot-frame note
 - [hero-cache.md](hero-cache.md) - hero-frame cache design/runtime path
+- [chafa-drop-rule.md](chafa-drop-rule.md) - how `--bg` decides which hero colors render, and how to choose `absent_color`
 - [soft-line-atlas.md](soft-line-atlas.md) - linework glyph grammar for guides and future mask edges
 
 ## Research And Policy
@@ -71,6 +72,7 @@ The repo front door is [../README.md](../README.md).
 | Vine ownership and staged readiness | [vines.md](vines.md) |
 | Weather widget ownership | [weather-widget.md](weather-widget.md) |
 | Hero cache design/runtime path | [hero-cache.md](hero-cache.md) |
+| Which hero colors chafa renders, and choosing `absent_color` | [chafa-drop-rule.md](chafa-drop-rule.md) |
 | Config ownership and boot-frame note | [config.md](config.md) |
 
 ## Role Rules

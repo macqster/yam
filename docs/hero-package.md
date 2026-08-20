@@ -22,12 +22,20 @@ format so neither has to redefine cell/style serialization independently.
 
 ```bash
 cargo build --release
-target/release/yam-rust --compile-hero [SOURCE_GIF_PATH]
+target/release/yam-rust --compile-hero [STEM_OR_PATH]
 ```
 
-`SOURCE_GIF_PATH` defaults to whichever source an ordinary launch would
-render - `hero_source::DEFAULT`, or whatever `YAM_HERO_SOURCE` selects - so
-the compiler and the runtime cannot disagree about which asset they mean. The
+`STEM_OR_PATH` names a *registered* source, by stem (`hero_gif_1`), by full
+path, or by bare filename. Omitted, it is whichever source an ordinary launch
+would render - `hero_source::DEFAULT`, or whatever `YAM_HERO_SOURCE` selects -
+so the compiler and the runtime cannot disagree about which asset they mean.
+
+Unregistered art is refused rather than compiled. Its `absent_color`, render
+geometry and coverage floor are exactly what the descriptor owns, so there is
+nothing to compile it correctly against; the error lists the registered stems.
+Until 0.4.10 the argument overrode only the source path, which compiled the
+named GIF against the *default* source's drop reference and filed it under the
+default source's package name - a package that could then never validate. The
 compiler itself never enters the interactive runtime; it decodes the source
 GIF, renders every frame through the same `chafa_preset_args()` the ordinary
 runtime path uses (`render/chafa.rs` is the single source of truth for that

@@ -142,6 +142,23 @@ pub fn from_stem(stem: &str) -> Option<HeroSource> {
     ALL.iter().copied().find(|source| source.stem == stem)
 }
 
+/// Resolve a CLI argument naming a source, by stem or by path.
+///
+/// Returns `None` for anything not registered. Compiling art that has no
+/// descriptor cannot be done correctly - its `absent_color`, render geometry
+/// and coverage floor are exactly what the descriptor owns - so an
+/// unrecognised argument is an error for the caller to report, not something
+/// to guess at.
+pub fn from_stem_or_path(arg: &str) -> Option<HeroSource> {
+    if let Some(source) = from_stem(arg) {
+        return Some(source);
+    }
+    let name = std::path::Path::new(arg).file_name()?;
+    ALL.iter()
+        .copied()
+        .find(|source| std::path::Path::new(source.path).file_name() == Some(name))
+}
+
 /// Resolve a requested `stem` to a source, falling back to `DEFAULT`.
 ///
 /// An unknown stem falls back rather than failing: a typo in an env var should
@@ -266,6 +283,27 @@ mod tests {
             .expect("registry needs a non-default source for this to prove anything");
         assert_eq!(super::resolve(Some(other.stem)), *other);
         assert_ne!(super::resolve(Some(other.stem)), DEFAULT);
+    }
+
+    #[test]
+    fn from_stem_or_path_accepts_a_stem_a_full_path_and_a_bare_filename() {
+        for source in ALL {
+            let name = std::path::Path::new(source.path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .expect("source path has a file name");
+            assert_eq!(super::from_stem_or_path(source.stem), Some(*source));
+            assert_eq!(super::from_stem_or_path(source.path), Some(*source));
+            assert_eq!(super::from_stem_or_path(name), Some(*source));
+        }
+    }
+
+    /// Unregistered art has no `absent_color`, geometry or coverage floor, so
+    /// there is nothing to compile it correctly against.
+    #[test]
+    fn from_stem_or_path_rejects_unregistered_art() {
+        assert_eq!(super::from_stem_or_path("/tmp/some_other.gif"), None);
+        assert_eq!(super::from_stem_or_path("hero_gif_99"), None);
     }
 
     /// The probe only proves the seam if it is genuinely a different asset:

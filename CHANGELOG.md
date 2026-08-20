@@ -98,6 +98,15 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.10` (from `0.4.9`). `--compile-hero`'s
+  optional argument now selects a registered source by stem, full path, or
+  bare filename, instead of overriding only the source path. Overriding the
+  path alone compiled the named GIF against the *default* source's
+  `absent_color` and geometry and wrote it under the default source's package
+  filename — a package the runtime could then never validate. Unregistered art
+  is refused with an error listing the registered stems, because its
+  `absent_color` and geometry are what the descriptor owns.
+
 - Development version bumped to `0.4.9` (from `0.4.8`). The digest check is
   what makes a package safer than the frame cache it takes precedence over:
   the cache can only compare mtimes, so art swapped in with an older timestamp

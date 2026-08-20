@@ -3,7 +3,7 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-08-07 (full repository and branch reconciliation; hero cache/runtime identity gaps repaired and current validation green)
+Last reviewed: 2026-08-20 (hero art swap to `hero_gif_2`, chafa drop-rule investigation and `absent_color` fix, dev-position persistence, branch protection actually enforced; full validation green)
 
 ## Unresolved Risks
 

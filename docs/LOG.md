@@ -1015,3 +1015,11 @@ Logging rule:
 - `--glyph-file` is live and moves against the openness goal: real fonts increase solid cells (527 to 573 for Agave, 583 for Cascadia) because their braille dots cover less of the cell than chafa's built-in model assumes. Recorded that Menlo returned byte-identical output without concluding why, since a silent `.ttc` load failure would look the same as a match
 - noted that both remaining options are machine-specific and should not enter the descriptor before the terminal's font and cell aspect are established
 - every other option in `chafa --help` is now either measured inert, already landed, or irrelevant to offline single-frame conversion
+
+## 2026-08-20 08:20 CEST
+
+- merged PR #11 (`eedd21a`), the first change this cycle to satisfy branch protection rather than bypass it, and synced local `main`
+- corrected `docs/release-model.md` step 2, which still offered landing maintenance batches directly on `main`. That has been impossible since admin bypass was disabled on 2026-08-20: the required `verify` check only runs once a commit is pushed, so a first-time direct push can never satisfy it. Recorded why the step was written that way - the required check had been configured all along, but admins were exempt, so pushes reported `Bypassed rule violations` and the protection gated nothing
+- annotated `--color-space=rgb` and `--dither=none` in `src/render/chafa.rs` as measured-inert at 24-bit colour, pointing at `docs/chafa-drop-rule.md`. Both are kept explicit rather than dropped so the invocation stays self-describing, but an unmarked no-op invites exactly the tuning the study was meant to prevent
+- refreshed the `docs/audit.md` review date to cover the hero swap, the drop-rule investigation, dev-position persistence, and the protection change
+- no runtime behavior change in this version, so no cache revision bump

@@ -63,12 +63,18 @@ fn chafa_output(
         .arg("--format=symbols")
         .arg("--symbols=braille")
         .arg("--colors=full")
+        // Inert at `--colors=full`: with no quantization there is no
+        // nearest-match for a color space to affect. Measured byte-identical
+        // against din99d. Kept explicit rather than dropped so the invocation
+        // stays self-describing; see docs/chafa-drop-rule.md before tuning it.
         .arg("--color-space=rgb")
         // `average` over `median`: measured lower reconstruction error on both
         // sources at identical coverage, cell for cell. The 2026-07-22 switch
         // away from `average` was against the then-flattened opaque canvas,
         // which no longer exists - see docs/chafa-drop-rule.md.
         .arg("--color-extractor=average")
+        // Also inert here - chafa documents "No effect with 24-bit color",
+        // and 72 of 72 mode/grain/intensity combinations measured identical.
         .arg("--dither=none")
         .arg("--fg-only")
         .arg(format!(

@@ -35,7 +35,7 @@ Codex is doing most of the hard work here; life is unfortunately consuming so mu
 
 </div>
 
-current release: `0.4.7`
+current release: `0.4.8`
 
 ## snapshot
 
@@ -180,6 +180,8 @@ active surface docs:
 - [docs/vines.md](docs/vines.md) - vine ownership and readiness
 - [docs/weather-widget.md](docs/weather-widget.md) - weather ownership contract
 - [docs/hero-cache.md](docs/hero-cache.md) - hero cache/runtime path
+- [docs/hero-package.md](docs/hero-package.md) - compiled hero package contract and offline compiler
+- [docs/hero-revision.md](docs/hero-revision.md) - hero color-fidelity revision north star and roadmap
 
 <div align="center">
 

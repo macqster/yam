@@ -69,6 +69,14 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.7` (from `0.4.6`): consolidation pass, no
+  runtime behavior change. `docs/release-model.md` step 2 said maintenance
+  batches could land directly on `main`; that stopped being true on 2026-08-20
+  when admin bypass was disabled, so it now describes the PR-only workflow and
+  records why. `docs/audit.md` review date refreshed. The two chafa flags
+  measured inert at 24-bit color (`--color-space`, `--dither`) carry comments
+  saying so, so they are not tuned in the expectation of an effect.
+
 - Development version bumped to `0.4.6` (from `0.4.5`): hero rendering uses
   `--color-extractor=average` instead of `median`. Measured at the shipped
   backgrounds it renders exactly the same cells, frame for frame, at lower

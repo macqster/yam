@@ -87,36 +87,30 @@ Issue link rule:
 
 ## 5. Rendering And Hero Pipeline
 
-- `priority` treat the unresolved dark-color fidelity failure (dark reds,
-  browns, greens, and blacks) as the next product-critical hero tranche; use
-  `docs/hero-revision.md` as the north star and do not call the 2026-07-22
-  alpha/coverage repair a complete color fix.
-- `priority` the hero source is being rebuilt from a fully vector-redrawn
-  original (2026-07-27 decision); the manifest/package schema and offline
-  compiler landed ahead of that asset (`docs/hero-package.md`), and is locally
-  compiled, structurally validated, and exercised through a bounded live
-  main-scene smoke, but the new source GIF has not arrived. Do not swap
-  `assets/hero_gif_1.gif` or retune the chafa preset until the new asset is in
-  hand; do not consider the hero fixed until the full dark-color acceptance
-  bar passes.
-- `verify` run `cargo build`, `cargo test`, `cargo fmt`, and
-  `cargo clippy --all-targets -- -D warnings` locally on the 2026-07-27
-  hero-package/cell_grid/hero_compiler batch before trusting it or treating
-  `scripts/verify.sh` as green; the offline compiler still requires a real
-  package compile and terminal review before visual claims are accepted.
-- `docs` establish the hero revision reference set and canonical anchor
-  semantic before replacing the source GIF or promoting another renderer;
-  the manifest/package schema and explicit compiler preset are now landed
-  (`docs/hero-package.md`).
+- `priority` keep the hero visual-acceptance bar explicit for future source,
+  compiler, preset, color, timing, and correction changes. The 2026-08-19
+  dark-color defect is resolved, but no structural test or package compile
+  substitutes for supported-terminal review.
+- `verify` keep `hero_source::IVY_VECTOR` / `assets/hero_gif_2.gif` as the
+  current default and retain `IVY` / `assets/hero_gif_1.gif` as a registered
+  comparison source; any source swap must remain explicit and reversible.
+- `verify` runtime startup remains package-first, then disposable cache, then
+  live Chafa fallback; preserve fixed geometry, provenance checks, graceful
+  fallback, and renderer ownership.
 - `verify` require real-terminal review of representative frames and motion
   after every source, color, braille, compiler, timing, or cache-identity
   change; ANSI-code presence and non-placeholder frame counts are insufficient.
-- `verify` hero rendering stays renderer-owned and cache-first on the common path.
+- `verify` hero rendering stays renderer-owned and prepared-artifact-first on
+  the common path.
 - `verify` the live Chafa compiler path degrades to placeholder frames instead of panicking when the GIF, temp directory, temp image write, or `chafa` command fails.
-- `inspect` define the future `HeroFrameSet` offline compiler contract before replacing or bypassing the active Chafa-backed path.
-- `inspect` define the intermediate `CellGrid` correction format with glyph, foreground color, optional background color, and mask/style metadata before building manual editor tooling.
-- `inspect` prototype `.xp` export/import only after `CellGrid` exists, with explicit braille font/tile mapping and round-trip validation for glyph/color fidelity.
-- `verify` cached frames, Chafa output, and any future manual corrections preserve fixed hero frame geometry across resize and scene stabilization checks.
+- `inspect` continue `CellGrid` correction or custom-braille/backend experiments
+  only as separately scoped, measured work against the existing package and
+  terminal-review acceptance bar.
+- `inspect` keep any future settings- or world-owned hero-source selector
+  separate from the current one-launch `YAM_HERO_SOURCE` environment override.
+- `verify` packages, cached frames, Chafa output, and future manual corrections
+  preserve fixed hero frame geometry across resize and scene-stabilization
+  checks.
 - `inspect` continue render-loop optimization only when live-loop profiling points at a real remaining hot path; do not restart broad startup optimization from wall-clock boot timing alone.
 
 ## 6. UI, Dev Surfaces, And Workflow

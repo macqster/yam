@@ -1165,3 +1165,21 @@ Logging rule:
 - found and fixed a real defect in `--compile-hero`'s optional argument while testing it: it overrode only `source_path`, leaving output path, geometry and `absent_color` from the default source. Compiling `assets/hero_gif_1.gif` wrote 64 correct frames into `hero_gif_2.hero_package.json` against `#336699` rather than `#00e000`. The digest check meant the runtime rejected it rather than rendering wrong art, so the symptom was a package that silently never applied
 - the argument now selects a registered source by stem, full path, or bare filename, and refuses unregistered art with an error listing the registered stems. Compiling art with no descriptor cannot be correct: `absent_color`, geometry and the coverage floor are exactly what the descriptor owns
 - verified all three forms write the right package with the right drop reference: `hero_gif_1` at `#00e000` with 64 frames, `hero_gif_2` at `#336699` with 48
+
+## 2026-08-22 22:14 CEST
+
+- completed a post-cleanup sweep of maintained docs, backlog, scripts,
+  configuration, and repository topology after YAM worktree/ref reconciliation;
+  removed branch and worktree names no longer appear in current operational
+  guidance, while the former `project-synoptic-review` reference remains in its
+  original historical entry under this append-only log contract
+- reconciled hero status against current source evidence: startup selects a
+  validated package, then the disposable frame cache, then live Chafa, with
+  schema, preset, geometry, source-digest, and structural checks before package
+  use
+- replaced pre-landing cache/compiler tasks with the remaining work: visual
+  acceptance on future visible changes, explicit source-selection policy, and
+  separately scoped `CellGrid`, correction, or custom-backend experiments
+- preserved the acceptance boundary: package validation, placeholder checks,
+  full automated verification, and bounded smoke evidence do not themselves
+  prove supported-terminal visual acceptance or gameplay behavior

@@ -34,40 +34,37 @@ The 2026-07-22 alpha and `median` changes did repair a real and separate
 coverage-loss failure. They were necessary; they were just never sufficient,
 which is what this section correctly warned about.
 
-What remains open is the offline package direction below, not the color
-defect. The acceptance bar still stands for any future source or preset
-change: structural checks cannot judge color, so a real-terminal review is
-still required.
+The offline package direction below is now implemented through package-first
+startup. What remains open is future art or renderer revision work and any
+curated cell-editing workflow. The acceptance bar still stands for every
+source, preset, timing, or cell-content change: structural checks cannot judge
+color, so a real-terminal review is still required.
 
-## Status (2026-07-27)
+## Status (2026-08-22)
 
-Decision: rebuild the hero source from a fully vector-redrawn original
-instead of continuing to patch the existing raster GIF, specifically so
-color fidelity is controlled at the source rather than compensated for in
-code. As part of that decision, the one piece of code-side pixel correction
-that existed (`tone_lift_dark_reds`, a narrow HSV lift for dark-red hues
-only) was removed from `src/render/chafa.rs`; it is not being replaced by an
-equivalent, on the bet that a clean vector source should not need it. This
-is unconfirmed until real frames from the new source are reviewed.
+The vector source is registered as `IVY_VECTOR` and has been the default since
+0.4.1. The dark-color defect was isolated and fixed through the per-source
+`absent_color` contract rather than by restoring the removed
+`tone_lift_dark_reds` correction. Both registered sources remain independently
+selectable and covered by source-geometry, coverage, palette-overlap, and
+runtime-fallback tests.
 
-The Phase 1 infrastructure below (manifest, package, offline compiler) has
-landed as asset-independent groundwork and has now passed local compilation,
-structural package validation, and a bounded live main-scene smoke -- see
-[`hero-package.md`](hero-package.md) for the contract and
-[`LOG.md`](LOG.md)'s 2026-08-01 entry for the verification. It has not been
-reviewed against the full dark-color acceptance bar, and the new source asset
-itself plus the preset retune against that source (Phase 2) are still
-outstanding. Do not treat any part of this as fixing the dark-color problem
-until a package compiled from the new source passes `scripts/tmux-smoke.sh`
-review against the acceptance bar below.
+The manifest, package, shared `CellGrid`, and offline compiler are landed.
+Runtime startup prefers a package only when schema, preset, geometry, source
+digest, and package validation all agree; it then falls back to the disposable
+frame cache and finally live Chafa compilation. This closes the original
+package-wiring roadmap, but it does not turn machine checks into visual
+approval. See [`hero-package.md`](hero-package.md) for the current contract.
 
 ## Product Goals
 
 1. Preserve the intended silhouette and transparent surround without using a
    matte or background-colored substitute for alpha.
-2. Render dark red, brown, green, and black regions as distinct visible color
-   families; black costume/detail must not disappear into transparency or be
-   mistaken for the scene background.
+2. Preserve each approved source's intentional dark-color composition without
+   accidental loss into transparency or the scene background. The vector
+   source may deliberately cull named dark tiers through its documented
+   `absent_color` policy; unapproved loss of red, brown, green, or black detail
+   remains a defect.
 3. Keep face and hand readability, hair/leaf edges, and motion continuity at
    the fixed terminal footprint.
 4. Make a hero revision reproducible: an approved source asset and explicit
@@ -92,10 +89,10 @@ A candidate is acceptable only when all of the following hold:
 
 - It uses real alpha through source decode, compilation, and scene rendering.
 - All frames have the declared fixed cell geometry and no placeholder frame.
-- The approved representative-frame set visibly retains the four dark-color
-  families: red, brown, green, and black.
-- The face, hands, foliage/hair edges, and black costume regions remain
-  legible without matte fill or background leakage.
+- The approved representative-frame set retains every dark-color region not
+  explicitly culled by that source's documented `absent_color` policy.
+- The face, hands, foliage/hair edges, and retained costume/detail regions
+  remain legible without matte fill or background leakage.
 - The animation loop has intentional timing; source frame durations are
   retained or an explicit authored playback timeline replaces them.
 - The main-scene result is reviewed in a real supported terminal after a
@@ -109,7 +106,7 @@ The end-state pipeline is:
 
 ```text
 versioned source GIF -> explicit compiler preset -> CellGrid corrections
--> validated HeroFrameSet package -> runtime playback -> HeroLayer scene grid
+-> validated HeroPackage -> runtime playback -> HeroLayer scene grid
 ```
 
 Chafa remains a useful baseline compiler while it earns that role. It must not
@@ -134,53 +131,65 @@ The source GIF and the compiled terminal package are different owner layers:
 
 - Freeze a small representative-frame set covering face, hands, dark red,
   brown, green, black, alpha edges, and fast motion.
-- Record the current source asset digest, `820x820` canvas, 64-frame sequence,
-  and source timing as facts, not as the target design.
+- Record each registered source's digest, declared canvas and frame count, and
+  source timing as facts, not as the target design. The current pair is
+  `IVY_VECTOR` at `1080x1080` / 48 frames and `IVY` at `820x820` / 64 frames.
 - Write down one canonical hero anchor semantic (`top-left`, `center`, or
   `baseline`) before changing dimensions or offsets.
 - Treat current output as a comparison baseline, not as approval.
 
 ### Phase 1 — Make compilation explicit
 
-- `landed 2026-07-27` Defined a manifest and package schema
+- `implemented on branch 2026-07-27; landed on main 2026-08-20` Defined a
+  manifest and package schema
   (`HeroManifest`/`HeroPackage` in `render/hero_manifest.rs` and
   `render/hero_package.rs`) carrying asset id/digest, dimensions, frame
   durations, loop mode, compiler id/version, the literal preset args, and a
   package schema revision. See [`hero-package.md`](hero-package.md).
-- `landed 2026-07-27` Added an explicit offline compiler
+- `implemented on branch 2026-07-27; landed on main 2026-08-20` Added an
+  explicit offline compiler
   (`render/hero_compiler.rs`, invoked via `yam-rust --compile-hero`) and a
   validation report (`HeroPackage::validate()` / `PackageValidation`). Uses
   Chafa, and emits a reviewable package without entering the interactive
   runtime.
-- `landed 2026-07-27` Added fixture tests for fixed geometry, placeholder
+- `implemented on branch 2026-07-27; landed on main 2026-08-20` Added fixture
+  tests for fixed geometry, placeholder
   (blank-frame) rejection, and package provenance, using synthetic frames
   rather than the real hero asset. Not yet covered: alpha and partial-frame
   disposal semantics at the manifest/package level (the existing
   `decoded_hero_frames_keep_full_canvas_geometry` chafa-level test covers
   alpha/geometry for the decode step, but nothing yet asserts on it through
   the compiled package).
-- `verified locally 2026-08-01` The package/compiler batch passes the full
-  repository gate, produces a valid current-source package, and reaches the
-  main scene in a bounded live smoke. This does not close the dark-color
-  fidelity acceptance bar or runtime package wiring.
+- `verified locally 2026-08-20` The package/compiler batch passes the full
+  repository gate, produces valid packages for registered sources, and reaches
+  the main scene in bounded live use. Package-first startup is wired; visual
+  acceptance remains change-specific rather than implied by this structural
+  gate.
 
 ### Phase 2 — Revise the source art and renderer together
 
-- Create candidate GIF revisions only against the frozen frame set and
-  compiler manifest.
-- Compare Chafa presets and, if necessary, a true `2x4` braille backend using
-  the same source frames and color acceptance bar.
-- Keep dark-color policy explicit. Region-specific correction is acceptable
-  only when named, reproducible, and validated across the animation.
+- `landed 2026-08-19` Registered `IVY_VECTOR` beside `IVY`, promoted it to the
+  default source, and kept source selection reversible through
+  `YAM_HERO_SOURCE`.
+- `landed through 2026-08-20` Made the Chafa preset and per-source
+  `absent_color` policy explicit, measured their visible effects, and covered
+  both registered sources with geometry, alpha, content, and palette guards.
+- `ongoing` Create any future GIF revision against the frozen frame set and
+  compiler manifest; compare preset or backend candidates under the same
+  color acceptance bar.
+- `ongoing` Keep region-specific correction named, reproducible, and validated
+  across the animation rather than embedding an undocumented shared transform.
 
 ### Phase 3 — Promote a stable runtime artifact
 
-- Make runtime load the validated package first, with source timing and fixed
-  geometry intact.
-- Keep live compilation as an explicit developer rebuild/fallback operation,
-  not the normal launch path.
-- Verify the main scene in a supported terminal and retain compact, meaningful
-  regression fixtures rather than generated cache files.
+- `landed 2026-08-20` Runtime loads a matching validated package first, with
+  fixed geometry and provenance checks intact, then falls through to the frame
+  cache and live compiler.
+- `landed 2026-08-20` Live compilation is the final rebuild/fallback seam, not
+  the normal launch path when a valid package or cache exists.
+- `ongoing` Verify the main scene in a supported terminal after every visible
+  source, preset, timing, or cell-content change, and retain compact regression
+  fixtures rather than generated cache files.
 
 ## Always-When-In-Doubt Rules
 

@@ -56,7 +56,7 @@ Rules:
 - the current scaffold visibility contract is scene-conscious: the main scene owns its own scaffold visibility policy, while sandbox prototype toggles may expose hero, companions, and scaffold there for comparison without creating a second scaffold owner or a render-owned truth
 - weather visuals should remain YAM-owned Ratatui rendering fed by normalized weather state; provider contracts and sprite-atlas rules live in [`weather-widget.md`](weather-widget.md)
 - sandbox: sparse world-space drawing, guide, and pointer-authoring trials should render here when comparative spatial review is needed, without reintroducing dedicated palette or weather inspection packets into world-space
-- greenhouse: a minimal read-only room render (bounds outline plus fixture-anchor markers only, `scene/layers/greenhouse_layer.rs`), gated on `WorldKind::Greenhouse`; no hero, companions, scaffold, or flora runtime render in this world yet
+- greenhouse: a minimal read-only room render (bounds outline plus fixture-anchor markers only, `scene/layers/greenhouse_layer.rs`), gated on `WorldKind::Greenhouse`; seedling simulation state and deterministic growth dispatch are live, while hero, companions, scaffold, and flora geometry/detail rendering remain absent from this world
 - hud/footer: compact mode hint, version stamp, and one-line runtime reminders only
 - debug/inspect: coordinate readouts, camera/world position, probe state, entity detail, and other readable diagnostics; it may show numbers and labels, but not the main command vocabulary
 - modal overlay: help, move, settings, palette inspection, weather atlas inspection, quit-confirm, and other temporary control surfaces that are opened intentionally
@@ -316,27 +316,34 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Chafa conversion writes each decoded image frame into a run-isolated temporary PNG batch directory, and that directory is removed when the batch finishes.
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
-- Hero rendering uses the chafa-backed frame conversion path; cached-frame ownership remains a future migration option if measurable instability returns.
-- Desired hero-rendering direction: keep the active Chafa path as the production baseline while moving future experiments toward an offline hero-frame compiler that emits a stable internal frame cache for runtime use.
-- The first runtime-efficiency slice should make that direction concrete without changing visible hero output: treat the live `chafa` path as an offline compiler/refresh step, and aim for runtime startup to load a previously prepared `HeroFrameSet` cache instead of decoding the GIF, writing temp frame PNGs, and spawning `chafa` per frame inside `Hero::new()`.
-- The safest migration order for that cache path is:
-  1. define the serialized `HeroFrameSet` / `CellGrid` runtime shape
-  2. add a cache loader that can hydrate hero frames without shelling out to `chafa`
-  3. keep the current live `chafa` path as the cache builder / fallback while the cache format stabilizes
-  4. only then flip normal runtime startup to prefer cached hero frames by default
-- The acceptance bar for that first hero-cache migration should stay conservative:
-  - startup should avoid the current GIF decode + temp-file + per-frame process-spawn cost on the common path
-  - visible hero geometry, frame count, and color stability should match the current Chafa baseline closely enough that the existing hero/render tests still describe the expected output
-  - the cache should stay runtime-local and deterministic rather than introducing a second live rendering authority
-- The missing tooling layer is a structured per-cell `CellGrid`, not a raw ANSI editor: ANSI snapshots can be imported and exported, but manual and scripted corrections should operate on cells containing glyph, foreground color, optional background color, and mask/style metadata.
-- The future compiler should evaluate hero rendering from two deliberately separate directions: a monochrome `2x4` braille shape pass that controls thresholding, dot packing, and optional error diffusion; and an independent color pass that controls source sampling, palette quantization, red-family protection, and frame-to-frame color stability.
+- Hero startup now prefers a validated `HeroPackage`, then the disposable
+  per-source `HeroFrameSet` cache, then live Chafa compilation. Package and
+  cache ownership remain separate: the package is intentional,
+  provenance-bound compiled output, while the cache is runtime acceleration.
+- The package/cache startup migration is landed. Future work should focus on
+  source and preset visual acceptance, supported-terminal review, and any
+  explicitly scoped `CellGrid` or custom-backend experiment; it should not
+  reopen the basic startup order without new evidence.
+- A valid package or cache is an acceleration artifact, not visual approval.
+  Schema, provenance, geometry, and placeholder checks remain necessary but do
+  not replace real-terminal review of visible output.
+- The remaining tooling layer is a `CellGrid`-based correction/editor workflow,
+  not a raw ANSI editor: the structured per-cell representation already exists,
+  and ANSI snapshots can be imported and exported, but manual and scripted
+  corrections should operate on cells containing glyph, foreground color,
+  optional background color, and mask/style metadata.
+- Any future custom compiler backend should evaluate hero rendering from two
+  deliberately separate directions: a monochrome `2x4` braille shape pass that
+  controls thresholding, dot packing, and optional error diffusion; and an
+  independent color pass that controls source sampling, palette quantization,
+  red-family protection, and frame-to-frame color stability.
 - Pre-generated hero art should be treated as asset authoring, not as runtime terminal capture: cached frames may include semi-manual correction overlays, region-specific lifts, and per-frame/cell stabilization where that improves face readability, red retention, silhouette stability, or animation consistency.
 - The preferred eventual workflow is `Chafa/custom backend -> ANSI or direct cells -> CellGrid -> scripted/manual patches -> HeroFrameSet -> scene grid`, with Chafa and custom braille experiments acting as compiler backends rather than live scene dependencies.
 - The first render-loop allocation cleanup slices are now live: runtime keeps one long-lived `Scene`, reuses the boxed layer stack across frames, skips obviously closed modal/help/quit layers before asking them to allocate grids at all, reuses the final composed `Grid` across frames in the live runtime loop, and now has a reusable per-layer scratch-grid seam adopted by the simple always-active layers, the lightweight companion projection layers (`clock`, `weather`, `date`), the always-active hero layer, the debug overlay, and the vine layer. The next conservative step on that path is no longer “take another obvious layer,” but deciding whether any of those remaining draw paths should move to even cheaper specialized helpers without destabilizing the current layer contract.
 - There is now also a narrow fast ASCII-only compositor write path for plain UI chrome. It preserves the existing “spaces style but do not overwrite symbols” contract, falls back to the general grapheme-aware writer for non-ASCII text, and is currently used only by obviously ASCII-bound always-on chrome such as the footer, world label, and debug-panel/tab labels.
-- The first concrete runtime cache shape and migration note now live in [`docs/hero-cache.md`](hero-cache.md); that note should be kept narrow and runtime-facing, while broader renderer strategy still belongs here.
-- The common hero startup path now prefers a prepared `HeroFrameSet` cache in the user runtime cache directory (`$XDG_CACHE_HOME/yam/` when available, otherwise `~/.cache/yam/`), and only falls back to the live GIF-decode + temp-frame + `chafa` compilation path when that cache is missing, stale, or invalid. That keeps the current Chafa baseline as the visual authority while finally moving ordinary startup onto the cheaper load-first path without dirtying the repo checkout.
-- That fallback path is now intentionally non-fatal when `chafa` is unavailable: if no valid cache exists and the compiler backend cannot be spawned, the renderer returns an explicit placeholder frame instead of panicking, which keeps YAM alive on a fresh machine while still making the missing backend visible.
+- The concrete disposable-cache contract lives in [`docs/hero-cache.md`](hero-cache.md), and the validated package contract lives in [`docs/hero-package.md`](hero-package.md); broader renderer strategy remains here.
+- Prepared artifacts live in the user runtime cache directory (`$XDG_CACHE_HOME/yam/` when available, otherwise `~/.cache/yam/`). A matching package is checked first; if it is absent or invalid, startup checks the revision-keyed frame cache before falling back to GIF decode, temporary frames, and live Chafa.
+- The final fallback is intentionally non-fatal when `chafa` is unavailable: if neither prepared artifact is usable and the compiler backend cannot be spawned, the renderer returns an explicit placeholder frame instead of panicking.
 - Third-party ANSI editors are useful references, but current tools tend to split between CP437/limited-color manual editing, destructive image conversion, and non-editable terminal replay; none should be treated as the primary YAM editing surface unless it proves Unicode braille, truecolor, animation, and lossless cell round-tripping.
 - REXPaint is viable through CrossOver as an optional manual editing node, but `.xp` should stay an interchange/export target rather than the YAM source of truth: REXPaint is CP437/font-atlas oriented, so braille glyphs require a controlled tile/font mapping and round-trip validation before edited frames can feed `HeroFrameSet`.
 - The REXPaint experiment path is `decoded frame -> custom braille renderer or Chafa import -> CellGrid -> .xp export -> REXPaint edits -> .xp import -> CellGrid patches -> HeroFrameSet`; existing PNG-to-XP converters are useful references but should not define final braille or color fidelity.

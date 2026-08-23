@@ -16,7 +16,8 @@ description: Use when doing maintenance work in the YAM repository, including cl
 
 1. Inspect `git status --short --branch` before editing.
 2. Read the narrow code/docs surface affected by the request.
-3. Keep changes scoped to the maintenance goal.
+3. Keep changes scoped to the maintenance goal and preserve the branch-authority
+   and Mac reassessment rules in [../../AGENTS.md](../../AGENTS.md).
 4. Update owning docs and append [../../docs/LOG.md](../../docs/LOG.md) when behavior, contracts, tooling, or workflow changes.
 5. Keep [../../known_issues.md](../../known_issues.md) empty unless there is a concrete unresolved issue.
 6. Run the smallest useful checks while iterating.
@@ -28,3 +29,5 @@ description: Use when doing maintenance work in the YAM repository, including cl
 - Do not duplicate architecture facts in `TODO.md`, this skill, or logs; point to the owning docs.
 - Do not revert unrelated dirty worktree changes.
 - Prefer existing scripts and local patterns over new tooling.
+- For the optional pre-push gate, use `bash scripts/install-hooks.sh`; it is
+  clone-local and refuses to overwrite a conflicting local hook path.

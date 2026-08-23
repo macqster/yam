@@ -15,6 +15,19 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-08-23 - Agent and hook governance
+
+- reviewed `AGENTS.md`, both repo-local skills, the tracked pre-push hook, and
+  docs tooling; clarified that device-origin work stays on its review branch
+  until an approved `mbp` or `imac` host independently reassesses it for
+  `main`, with CI retained as a source backstop
+- added `scripts/install-hooks.sh`, a clone-local, fail-closed installer and
+  checker for the tracked pre-push hook; it refuses to overwrite a conflicting
+  local `core.hooksPath` and never changes global Git configuration
+- kept the skills pointer-based and left the architecture skill unchanged to
+  avoid duplicating the branch-authority contract; no `.claude` settings were
+  read or changed
+
 ## 2026-08-01 - Docs gate repair on `experimental`
 
 - `10:25 CEST` finished the job rather than leaving the gate permanently skipping: installed both linters on this workstation from inside the agent sandbox, which had looked impossible an hour earlier. The blocker was never the npm registry (reachable — `npx --yes` had already worked) but the two denied paths `npm` touches by default: `~/.npmrc` for `npm config set prefix` and `~/.npm` for the cache. Passing both explicitly avoids them entirely — `npm install -g --prefix ~/.local --cache <writable-dir> markdownlint-cli2 cspell` — and `~/.local/bin` was already on `PATH`, so `command -v` picks both up with no further wiring. `markdownlint-cli2 v0.23.2` and `cspell 10.0.1` now run for real in `scripts/check-docs.sh`, which reports an honest "All docs checks passed" across 38 markdown files and 40 spell-checked files.

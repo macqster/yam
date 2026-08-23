@@ -18,6 +18,11 @@ It describes how to work here, not the full YAM architecture.
 
 - Inspect the current tree before editing.
 - Treat an already-dirty worktree as user-owned context; do not revert unrelated changes.
+- Device-origin experiments stay on their review branch. Reconciliation into `main`
+  is reserved for an independently reassessed candidate on an approved Mac
+  reconciliation host (`mbp` or `imac`); do not treat a device-local pass as
+  shared-policy acceptance. The current remote branch and complete candidate
+  diff must be rechecked before integration.
 - Keep edits narrow and consistent with existing Rust/Ratatui patterns.
 - Do not add main-scene enrichment, greenhouse worlds, plant families, or large mechanics during prep work unless the request explicitly asks for implementation.
 - Even after that request, discuss scope in narrow slices rather than the whole feature at once: propose the smallest next slice, confirm it, build it, then propose the next. This surfaces design questions (naming, ownership, UX) before code exists instead of after.
@@ -57,6 +62,11 @@ cargo test --quiet
 
 `.github/workflows/verify.yml` runs the same `scripts/verify.sh` gate in CI on every push and pull request targeting `main`, and `main` requires it to pass before merging (branch protection). Treat that as a backstop, not a substitute for running it locally first.
 
+CI is a source and reproducibility backstop, not proof that a device-origin
+candidate received the required Mac reassessment. Use the approved Mac host as
+the independent integration authority and record the disposition in the owning
+docs/log.
+
 The docs half of that gate needs `markdownlint-cli2` and `cspell` (`npm install -g markdownlint-cli2 cspell`). Without them `scripts/check-docs.sh` still runs every structural check, but prints an explicit `SKIPPED` summary rather than reporting a clean pass — read that line before treating a local run as green. `YAM_DOCS_STRICT=1` makes a missing linter fail instead, and CI sets it.
 
 If a command cannot be run, record that clearly in the handoff.
@@ -77,3 +87,11 @@ Good candidates are maintenance, architecture review, docs hygiene, flora prep, 
 The first repo-local skill drafts live in [skills/yam-maintenance/SKILL.md](skills/yam-maintenance/SKILL.md) and [skills/yam-architecture-review/SKILL.md](skills/yam-architecture-review/SKILL.md).
 Each repo-local skill should keep matching `agents/openai.yaml` UI metadata, including a short description and a default prompt that explicitly names the skill.
 `scripts/check-docs.sh` validates skill names, frontmatter descriptions, and required `agents/openai.yaml` interface fields.
+
+When a maintenance or review pass changes agent-facing tooling, keep the
+workflow in this file and the owning hygiene doc; skills should point here
+instead of becoming a second policy source. Install the repository pre-push
+hook only through `bash scripts/install-hooks.sh`, which changes this clone's
+local `core.hooksPath` only and verifies the resulting setting. Never use the
+installer to alter global Git configuration, and do not claim the hook proves
+Mac-only merge authority.

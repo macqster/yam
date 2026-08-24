@@ -15,6 +15,44 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-08-24 - Runtime render-FPS settings surface
+
+- `10:07 CEST` added a persisted dev-settings `runtime` tab with a unified
+  selected-row control for the render-FPS ceiling; the supported presets are
+  15, 30, 60, and 120 FPS, the default remains 120, Left/Right adjusts the
+  selected preset, and Enter cycles it. Wired the live runtime sleep period to
+  read the setting each loop, while leaving hero animation, world ticks,
+  input, resize handling, DPMS, and thermal policy unchanged. Added state,
+  persistence, settings-layer, and legacy-snapshot coverage and aligned the
+  scene/render contracts and README.
+- `10:49 CEST` ran the release binary through the repository's detached tmux
+  smoke workflow: opened `dev -> settings`, reached the new `[runtime]` tab,
+  confirmed the shared modal shell and selected-row styling, and changed the
+  live value from `render fps: 120` to `render fps: 60` with Left. No system,
+  DPMS, fan, thermal, package, or service state was changed.
+- `11:08 CEST` ran the repository's offline-first update script after the
+  runtime settings change. The user-local `yam-rust` installation and launcher
+  wrappers now resolve to build `260824-0848 (4046975)`; no system package,
+  service, DPMS, fan, thermal, or firmware state was changed.
+- `12:05 CEST` reconciled the live Duo installation after the runtime tab was
+  initially absent: remote `main` did not contain the three uncommitted
+  runtime-FPS files, so the candidate was backed up on Duo and deployed as a
+  narrow three-file runtime overlay. Focused settings/runtime tests passed,
+  offline cargo checking passed, and the live popup showed the shared
+  `positions`, `ui`, `runtime`, `features`, `gif`, and `theme` tab shell.
+- `14:54 CEST` reinstalled YAM through `scripts/update.sh` and diagnosed the
+  first-run cache miss as an ownership problem in the runtime state layer:
+  `/home/mcq/.cache` was root-owned and not writable by `mcq`. A narrow
+  `/home/mcq/.cache/yam` directory was created with `mcq:mcq` ownership; no
+  broader cache tree or system policy was changed. A bounded run then produced
+  `hero_gif_2.r5.96x48.frame_cache.json` at approximately 20 MB.
+- `14:59 CEST` confirmed cache reuse during a live 15-FPS run: YAM remained
+  around 7.9% host CPU, no Chafa child was present, and the cache file was
+  readable and owned by `mcq`. The FPS setting controls redraw cadence only;
+  it does not add DPMS awareness or fan control. The cache contract now records
+  package-digest validation first, mtime-based disposable-cache validation
+  second, and one live Chafa rebuild on a source change or cache miss.
+
 ## 2026-08-23 - Agent and hook governance
 
 - reviewed `AGENTS.md`, both repo-local skills, the tracked pre-push hook, and

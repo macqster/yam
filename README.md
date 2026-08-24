@@ -60,6 +60,7 @@ current release: `0.4.10`
 - `companions`: `clock`, `weather`, `Polish date`
 - `framing`: `scaffold` plus `vine` prototype
 - `dev_surfaces`: `help`, `move`, `settings`, `palette`, `weather`, `quit confirm`
+- `settings`: the dev-only popup includes a persisted `runtime` tab for the render-FPS ceiling alongside positions, UI, features, GIF, and theme controls
 - `future_surfaces`:
   - `calendar companion seam`
   - `greenhouse growth dispatch, inspection UI, and multi-room/lab expansion`

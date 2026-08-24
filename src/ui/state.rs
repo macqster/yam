@@ -388,6 +388,7 @@ pub enum SettingsTab {
     Positions,
     #[serde(alias = "Widgets")]
     Ui,
+    Runtime,
     Features,
     Gif,
     Theme,
@@ -397,7 +398,8 @@ impl SettingsTab {
     pub fn next(self) -> Self {
         match self {
             SettingsTab::Positions => SettingsTab::Ui,
-            SettingsTab::Ui => SettingsTab::Features,
+            SettingsTab::Ui => SettingsTab::Runtime,
+            SettingsTab::Runtime => SettingsTab::Features,
             SettingsTab::Features => SettingsTab::Gif,
             SettingsTab::Gif => SettingsTab::Theme,
             SettingsTab::Theme => SettingsTab::Positions,
@@ -408,7 +410,8 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => SettingsTab::Theme,
             SettingsTab::Ui => SettingsTab::Positions,
-            SettingsTab::Features => SettingsTab::Ui,
+            SettingsTab::Runtime => SettingsTab::Ui,
+            SettingsTab::Features => SettingsTab::Runtime,
             SettingsTab::Gif => SettingsTab::Features,
             SettingsTab::Theme => SettingsTab::Gif,
         }
@@ -418,6 +421,7 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => "positions",
             SettingsTab::Ui => "ui",
+            SettingsTab::Runtime => "runtime",
             SettingsTab::Features => "features",
             SettingsTab::Gif => "gif",
             SettingsTab::Theme => "theme",
@@ -428,6 +432,7 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => 6,
             SettingsTab::Ui => 5,
+            SettingsTab::Runtime => 1,
             SettingsTab::Features => 4,
             SettingsTab::Gif => 3,
             SettingsTab::Theme => 3,
@@ -474,6 +479,7 @@ pub struct SettingsCursor {
     pub positions: u16,
     #[serde(alias = "widgets")]
     pub ui: u16,
+    pub runtime: u16,
     pub features: u16,
     pub gif: u16,
     pub theme: u16,
@@ -484,6 +490,7 @@ impl SettingsCursor {
         match tab {
             SettingsTab::Positions => self.positions,
             SettingsTab::Ui => self.ui,
+            SettingsTab::Runtime => self.runtime,
             SettingsTab::Features => self.features,
             SettingsTab::Gif => self.gif,
             SettingsTab::Theme => self.theme,
@@ -494,6 +501,7 @@ impl SettingsCursor {
         match tab {
             SettingsTab::Positions => self.positions = row,
             SettingsTab::Ui => self.ui = row,
+            SettingsTab::Runtime => self.runtime = row,
             SettingsTab::Features => self.features = row,
             SettingsTab::Gif => self.gif = row,
             SettingsTab::Theme => self.theme = row,
@@ -629,12 +637,63 @@ impl LoadingState {
 struct UiStateSnapshot {
     offsets: UiOffsets,
     meta: MetaState,
+    #[serde(default)]
+    runtime: RuntimeSettings,
     /// Crate version that wrote this file. Absent in files written before
     /// 0.4.5, which is why it defaults rather than failing the whole load -
     /// an older file is simply treated as written by an older version, which
     /// is exactly the stale case.
     #[serde(default)]
     version: String,
+}
+
+pub const RENDER_FPS_PRESETS: &[u16] = &[15, 30, 60, 120];
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct RuntimeSettings {
+    pub render_fps: u16,
+}
+
+impl Default for RuntimeSettings {
+    fn default() -> Self {
+        Self { render_fps: 120 }
+    }
+}
+
+impl RuntimeSettings {
+    pub fn render_period(self) -> Duration {
+        Duration::from_secs_f64(1.0 / f64::from(self.render_fps.max(1)))
+    }
+
+    fn preset_index(self) -> usize {
+        RENDER_FPS_PRESETS
+            .iter()
+            .position(|fps| *fps == self.render_fps)
+            .unwrap_or_else(|| {
+                RENDER_FPS_PRESETS
+                    .iter()
+                    .enumerate()
+                    .min_by_key(|(_, fps)| fps.abs_diff(self.render_fps))
+                    .map(|(index, _)| index)
+                    .unwrap_or(0)
+            })
+    }
+
+    pub fn decrease_render_fps(&mut self) {
+        let index = self.preset_index();
+        self.render_fps = RENDER_FPS_PRESETS[index.saturating_sub(1)];
+    }
+
+    pub fn increase_render_fps(&mut self) {
+        let index = self.preset_index();
+        self.render_fps = RENDER_FPS_PRESETS[(index + 1).min(RENDER_FPS_PRESETS.len() - 1)];
+    }
+
+    pub fn cycle_render_fps(&mut self) {
+        let index = self.preset_index();
+        self.render_fps = RENDER_FPS_PRESETS[(index + 1) % RENDER_FPS_PRESETS.len()];
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -689,6 +748,7 @@ pub struct UiState {
     pub fps: f64,
     pub clock_font: ClockFont,
     pub meta: MetaState,
+    pub runtime: RuntimeSettings,
     pub offsets: UiOffsets,
     pub camera: Camera,
     pub hero: Hero,
@@ -723,6 +783,7 @@ impl UiState {
             fps: 0.0,
             clock_font: ClockFont::Gothic,
             meta: MetaState::new(),
+            runtime: RuntimeSettings::default(),
             offsets,
             camera,
             hero,
@@ -754,6 +815,7 @@ impl UiState {
             state.clock_font = ClockFont::from_name(&snapshot.offsets.clock_font);
             state.offsets = snapshot.offsets;
             state.meta = snapshot.meta;
+            state.runtime = snapshot.runtime;
         }
         state.camera.x = state.offsets.camera_x;
         state.camera.y = state.offsets.camera_y;
@@ -765,6 +827,7 @@ impl UiState {
     }
 
     pub fn reset_for_clean_launch(&mut self, world_kind: WorldKind) {
+        let runtime = self.runtime;
         let vines_visibility_mode = self.meta.vines_visibility_mode;
         let last_vines_visible = self.meta.vines_visible;
         let main_scene_scaffold_visibility_mode = self.meta.main_scene_scaffold_visibility_mode;
@@ -803,6 +866,7 @@ impl UiState {
         self.meta.sliders_visible = sliders_visible;
         self.meta.debug_info_panel_visible = debug_info_panel_visible;
         self.offsets = offsets;
+        self.runtime = runtime;
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
         self.camera.follow_hero = false;
@@ -1251,6 +1315,13 @@ impl UiState {
         viewport_height: u16,
     ) -> io::Result<()> {
         match self.meta.settings_tab {
+            SettingsTab::Runtime => {
+                if self.meta.selected_settings_row() == 0 {
+                    self.runtime.cycle_render_fps();
+                    self.mark_persisted_state_dirty();
+                }
+                Ok(())
+            }
             SettingsTab::Positions => {
                 if self.settings_edit.active {
                     self.commit_settings_edit()
@@ -1301,6 +1372,22 @@ impl UiState {
     pub fn toggle_settings_edit_field(&mut self) {
         if self.settings_edit.active {
             self.settings_edit.field = self.settings_edit.field.other();
+        }
+    }
+
+    pub fn decrease_selected_setting(&mut self) {
+        if self.meta.settings_tab == SettingsTab::Runtime && self.meta.selected_settings_row() == 0
+        {
+            self.runtime.decrease_render_fps();
+            self.mark_persisted_state_dirty();
+        }
+    }
+
+    pub fn increase_selected_setting(&mut self) {
+        if self.meta.settings_tab == SettingsTab::Runtime && self.meta.selected_settings_row() == 0
+        {
+            self.runtime.increase_render_fps();
+            self.mark_persisted_state_dirty();
         }
     }
 
@@ -1534,6 +1621,7 @@ impl UiState {
         for tab in [
             SettingsTab::Positions,
             SettingsTab::Ui,
+            SettingsTab::Runtime,
             SettingsTab::Features,
             SettingsTab::Gif,
             SettingsTab::Theme,
@@ -1782,6 +1870,7 @@ impl UiState {
         Ok(UiStateSnapshot {
             offsets,
             meta: MetaState::default(),
+            runtime: RuntimeSettings::default(),
             // Pre-snapshot bare-offsets file: no version to trust, so leave it
             // empty and let the mismatch reseed it.
             version: String::new(),
@@ -1803,6 +1892,7 @@ impl UiState {
         let snapshot = UiStateSnapshot {
             offsets: self.offsets.clone(),
             meta: self.meta.clone(),
+            runtime: self.runtime,
             version: Self::current_version().to_string(),
         };
         match serde_json::to_string_pretty(&snapshot) {
@@ -1843,8 +1933,8 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 mod tests {
     use super::{
         BootLoadingPhase, DebugPanelTab, FeatureVisibilityMode, LoadingMode, LoadingState,
-        MetaState, MoveTarget, SettingsAxisField, SettingsCursor, SettingsTab, UiOffsets, UiState,
-        UiStateSnapshot, WorldKindSnapshot,
+        MetaState, MoveTarget, RuntimeSettings, SettingsAxisField, SettingsCursor, SettingsTab,
+        UiOffsets, UiState, UiStateSnapshot, WorldKindSnapshot,
     };
     use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldKind;
@@ -2456,12 +2546,14 @@ mod tests {
                 settings_cursor: SettingsCursor {
                     positions: 1,
                     ui: 2,
+                    runtime: 0,
                     features: 0,
                     gif: 0,
                     theme: 1,
                 },
                 move_target: MoveTarget::Hero,
             },
+            runtime: RuntimeSettings { render_fps: 30 },
             version: "9.9.9".to_string(),
         };
 
@@ -2487,6 +2579,7 @@ mod tests {
         assert_eq!(round_trip.offsets.calendar_dy, 9);
         assert_eq!(round_trip.offsets.clock_font, "fender");
         assert_eq!(round_trip.offsets.hero_fps, 4.5);
+        assert_eq!(round_trip.runtime.render_fps, 30);
         assert!(round_trip.meta.dev_mode);
         assert!(!round_trip.meta.vines_visible);
         assert_eq!(
@@ -2855,9 +2948,67 @@ mod tests {
 
         assert_eq!(ui.settings_item_count(SettingsTab::Positions), 6);
         assert_eq!(ui.settings_item_count(SettingsTab::Ui), 5);
+        assert_eq!(ui.settings_item_count(SettingsTab::Runtime), 1);
         assert_eq!(ui.settings_item_count(SettingsTab::Features), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Gif), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Theme), 3);
+    }
+
+    #[test]
+    fn runtime_settings_default_to_120_fps_and_use_supported_periods() {
+        let settings = RuntimeSettings::default();
+
+        assert_eq!(settings.render_fps, 120);
+        assert_eq!(
+            settings.render_period(),
+            Duration::from_secs_f64(1.0 / 120.0)
+        );
+    }
+
+    #[test]
+    fn runtime_settings_adjust_through_ordered_presets() {
+        let mut settings = RuntimeSettings::default();
+
+        settings.decrease_render_fps();
+        assert_eq!(settings.render_fps, 60);
+        settings.decrease_render_fps();
+        assert_eq!(settings.render_fps, 30);
+        settings.increase_render_fps();
+        assert_eq!(settings.render_fps, 60);
+        settings.cycle_render_fps();
+        assert_eq!(settings.render_fps, 120);
+        settings.cycle_render_fps();
+        assert_eq!(settings.render_fps, 15);
+    }
+
+    #[test]
+    fn runtime_settings_controls_use_the_settings_surface_and_mark_dirty() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Runtime;
+
+        ui.decrease_selected_setting();
+        assert_eq!(ui.runtime.render_fps, 60);
+        assert!(ui.persisted_state_dirty);
+
+        ui.persisted_state_dirty = false;
+        ui.activate_selected_setting_with_viewport(124, 32)
+            .expect("runtime setting activation should succeed");
+        assert_eq!(ui.runtime.render_fps, 120);
+        assert!(ui.persisted_state_dirty);
+    }
+
+    #[test]
+    fn legacy_snapshot_without_runtime_uses_default_render_fps() {
+        let json = serde_json::json!({
+            "offsets": {},
+            "meta": {},
+            "version": env!("CARGO_PKG_VERSION"),
+        })
+        .to_string();
+
+        let snapshot = UiState::snapshot_from_json(&json).expect("legacy snapshot should load");
+
+        assert_eq!(snapshot.runtime, RuntimeSettings::default());
     }
 
     #[test]

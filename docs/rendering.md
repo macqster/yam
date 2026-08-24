@@ -67,7 +67,7 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 
 - `help` - the discoverability sheet for the current dev controls
 - `move` - target selection and movement for world-attached entities
-- `settings` - tabbed presentation/state inspection for positions, ui overlays, features, gif, and theme values
+- `settings` - tabbed presentation/state inspection for positions, ui overlays, runtime, features, gif, and theme values
 - `palette` - curated plus extracted BTAS/TNBA swatch inspection in a dedicated dev modal
 - `weather` - comparative weather atlas inspection in a dedicated dev modal
 - `pointer` - dev-only probe state, shown through the debug surface rather than as a standalone modal
@@ -78,6 +78,8 @@ Rules:
 - help should describe the currently implemented dev controls, not a hypothetical full command catalog
 - move should stay focused on target choice and explicit motion
 - settings should stay tabbed and presentation-oriented
+- the runtime settings tab exposes one persisted render-FPS ceiling through the same selected-row control used by the other settings tabs; its supported values are `15`, `30`, `60`, and `120`, with `120` as the default
+- changing the runtime value with Left/Right or Enter updates the live loop period without changing hero animation timing, world simulation cadence, input behavior, resize handling, DPMS state, or thermal policy
 - palette and weather inspection should stay comparative and read-only, rather than turning those modals into editing surfaces
 - the pointer probe and camera-home actions are dev-only helpers, not always-on HUD content
 
@@ -183,6 +185,9 @@ Rules:
 ## Pipeline
 
 - `runtime` receives input and ticks state
+- the dev settings `runtime` tab owns a persisted render-FPS ceiling with `15`, `30`, `60`, and `120` FPS presets; it controls the loop's sleep period without changing hero animation cadence, world tick cadence, input handling, resize handling, or DPMS state
+- the runtime FPS control is a cadence ceiling, not a promise that every frame will be materially different: the immediate-mode scene is still recomputed and emitted at the selected cadence
+- `120` preserves the historical animation target; `60` is the normal interactive compromise; `30` and `15` are lower-power options for deployments where animation smoothness is less important than reducing redraw frequency
 - all scene rendering passes through `render_scene`
 - the common runtime path keeps one long-lived `Scene`; the plain `render_scene(...)` helper still exists as a compatibility seam for direct callers and tests
 - `Scene::render` uses the full terminal area for viewport and viewport rect values
@@ -256,7 +261,7 @@ The active implementation treats camera as a viewport crop helper:
 - `[p]` toggles the dev-only pointer probe, and its arrow-key motion is a probe/debug aid rather than a world or camera mode
 - dev mode and settings-style presentation flags are metamechanics inputs; they are consumed by the scene layers, not rendered outside the pipeline
 - the runtime input loop already enforces the current modal gating in code: `dev_mode` is the master switch, help/move/settings/palette/weather/quit-confirm are dev-facing modal surfaces with shared close behavior, pointer probe motion is only active in dev mode, and camera-home/pointer actions are blocked unless their dev state is open
-- the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, ui, features, gif, and theme values
+- the settings popup is a modal overlay rendered in the overlay layer; it uses the shared modal shell with tabbed sections for positions, ui, runtime, features, gif, and theme values
 - modal help/move/settings/quit-confirm overlays all share one centered shell that paints an opaque BTAS-style backdrop before text is written, so their controls stay readable over the scene and the popup family stays visually consistent
 - compositor cells with a background color and a space glyph are treated as opaque backdrop writes, so modal overlays clear the GIF beneath them instead of tinting it through
 - the help popup is a modal overlay rendered between debug and move/settings; it uses the shared modal shell to list the current developer controls without adding footer clutter, and when it is already open it should not spend body rows repeating the trivial “open help” affordance

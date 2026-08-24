@@ -88,7 +88,6 @@ pub fn run(
     let scene = Scene::new(build_ui_layers());
     let mut final_grid = Grid::new(0, 0);
     let world_tick = Duration::from_millis(250);
-    let frame_time = Duration::from_secs_f64(1.0 / 120.0);
     let pointer_blink = Duration::from_millis(420);
     let mut last_terminal_size = terminal.size()?;
     let mut last_world_tick = Instant::now();
@@ -233,6 +232,9 @@ pub fn run(
                     KeyCode::Left if ui_state.settings_edit_active() => {
                         ui_state.toggle_settings_edit_field();
                     }
+                    KeyCode::Left if ui_state.settings_navigation_active() => {
+                        ui_state.decrease_selected_setting();
+                    }
                     KeyCode::Left if ui_state.move_mode_active() => {
                         ui_state.move_selected_target_left()?;
                     }
@@ -245,6 +247,9 @@ pub fn run(
                     }
                     KeyCode::Right if ui_state.settings_edit_active() => {
                         ui_state.toggle_settings_edit_field();
+                    }
+                    KeyCode::Right if ui_state.settings_navigation_active() => {
+                        ui_state.increase_selected_setting();
                     }
                     KeyCode::Right if ui_state.move_mode_active() => {
                         ui_state.move_selected_target_right()?;
@@ -415,6 +420,7 @@ pub fn run(
             break 'run;
         }
 
+        let frame_time = ui_state.runtime.render_period();
         let elapsed = frame_start.elapsed();
         if elapsed < frame_time {
             std::thread::sleep(frame_time - elapsed);

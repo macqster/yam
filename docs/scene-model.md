@@ -206,7 +206,7 @@ The currently implemented modal vocabulary is intentionally small and grouped:
 
 - `hotkeys` - discoverability for the current dev controls
 - `move` - target selection and movement for world-attached entities
-- `settings` - tabbed presentation/state inspection for positions, ui, features, gif, and theme values
+- `settings` - tabbed presentation/state inspection for positions, ui, runtime, features, gif, and theme values; the runtime tab exposes the persisted render-FPS ceiling through the same selected-row controls
 - `palette` - curated plus extracted BTAS/TNBA swatch inspection in a dedicated dev modal
 - `weather` - comparative weather atlas inspection in a dedicated dev modal
 - `pointer` - dev-only probe state, shown through the debug surface rather than as a standalone modal
@@ -217,6 +217,7 @@ Rules:
 - hotkeys should describe the current dev controls that are actually implemented
 - move should stay focused on target choice and explicit motion
 - settings should stay tabbed and presentation-oriented
+- runtime settings should remain an internal control surface: render FPS is a cadence ceiling, not hero-animation timing, DPMS state, or thermal policy
 - palette and weather inspection should stay comparative and read-only rather than turning those modals into editing surfaces
 - the pointer probe and camera-home actions are dev-only helpers, not always-on HUD content
 

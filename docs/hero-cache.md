@@ -41,6 +41,21 @@ between sources never reuses another source's frames. Old revision-keyed files
 may remain in the user cache directory, but the current descriptor will not
 select them.
 
+The cache is runtime-owned state, not repository state. The selected runtime
+user must be able to create `$XDG_CACHE_HOME/yam` (or `~/.cache/yam`) and write
+the source-specific cache file. A missing cache or a permission failure is not fatal: the
+runtime continues through the live Chafa path, but it will pay the decode and
+per-frame process cost again on a later launch because the result could not be
+persisted. A narrow cache-directory repair is therefore preferable to changing
+ownership of a broader cache tree.
+
+When the source is changed, package validation checks the source digest first.
+If no package is selected, the disposable cache is considered fresh when its
+mtime is at least as new as the source mtime; a newer source causes one live
+rebuild. A successful rebuild renders the complete frame set once, writes the
+cache when possible, and returns those same in-memory frames immediately. A
+future launch can then load the serialized frame grid without invoking Chafa.
+
 ## Runtime Shape
 
 The initial runtime cache contract is:
@@ -84,4 +99,7 @@ second, and live Chafa third. The package contract belongs in
 - Visible hero geometry, frame count, and color stability should stay aligned with the current Chafa baseline.
 - The cache should remain a runtime-owned representation, not a second independent rendering authority.
 - The cache freshness rule should stay simple and explicit: cached hero frames are reusable when the cache file is at least as new as the source GIF. If the compile-time source path is no longer reachable after a build tree is moved or removed, an existing revision-matched cache remains reusable because it is the only path to real art.
+- Source changes are therefore expected to produce one rebuild, not a Chafa
+  invocation on every animation frame; after the rebuild, animation reads the
+  cached cell grids in memory.
 - On a fresh machine without `chafa`, startup should degrade explicitly rather than panic: the uncached path may fall back to a visible placeholder frame, but the runtime should remain alive and the cache loader should still be preferred whenever a valid cache already exists.

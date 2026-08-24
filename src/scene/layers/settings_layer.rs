@@ -53,6 +53,7 @@ fn draw_tabs(grid: &mut Grid, x: u16, y: u16, active: SettingsTab) {
     let tabs = [
         SettingsTab::Positions,
         SettingsTab::Ui,
+        SettingsTab::Runtime,
         SettingsTab::Features,
         SettingsTab::Gif,
         SettingsTab::Theme,
@@ -80,6 +81,7 @@ fn draw_tab_body(grid: &mut Grid, x: u16, y: u16, width: u16, ui: &UiState, ctx:
     let lines = match ui.meta.settings_tab {
         SettingsTab::Positions => position_lines(ui, camera_locked),
         SettingsTab::Ui => ui_lines(ui),
+        SettingsTab::Runtime => runtime_lines(ui),
         SettingsTab::Features => feature_lines(ui),
         SettingsTab::Gif => gif_lines(ui),
         SettingsTab::Theme => vec![
@@ -209,6 +211,10 @@ fn ui_lines(ui: &UiState) -> Vec<String> {
             }
         ),
     ]
+}
+
+fn runtime_lines(ui: &UiState) -> Vec<String> {
+    vec![format!("render fps: {}", ui.runtime.render_fps)]
 }
 
 fn gif_lines(ui: &UiState) -> Vec<String> {
@@ -466,6 +472,28 @@ mod tests {
 
         assert_eq!(selected_bg, Some(crate::theme::palette::CAMERA_TRACK));
         assert_eq!(unselected_bg, Some(crate::theme::palette::MODAL_BG));
+    }
+
+    #[test]
+    fn runtime_tab_exposes_render_fps_with_the_shared_settings_row() {
+        let layer = SettingsLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = render_state(30, 10, 124, 32, 30, 10, false);
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+        ui.meta.settings_tab = crate::ui::state::SettingsTab::Runtime;
+
+        let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
+        let text: String = open.grid.cells.iter().map(|cell| cell.symbol).collect();
+
+        assert!(text.contains("runtime"));
+        assert!(text.contains("render fps: 120"));
+        assert_eq!(
+            open.grid.cells[open.grid.index(30, 12)].style.bg,
+            Some(crate::theme::palette::CAMERA_TRACK)
+        );
     }
 
     #[test]

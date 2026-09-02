@@ -443,10 +443,14 @@ mod tests {
 
     /// Is a real `chafa` available to this process?
     ///
-    /// Content-level hero assertions are only meaningful when it is. CI does
-    /// not install `chafa`, so every live-path render there legitimately
-    /// yields placeholder frames; a content test that ignored this would fail
-    /// in CI permanently rather than catch anything.
+    /// Content-level hero assertions are only meaningful when it is, so the
+    /// callers skip rather than fail when it is missing and a developer without
+    /// `chafa` still gets a green suite.
+    ///
+    /// This guard used to say CI does not install `chafa`. It does -
+    /// `.github/workflows/verify.yml` installs it before running the gate - so
+    /// these assertions do run there and the skip is a local-developer
+    /// affordance, not a permanent CI exemption.
     fn chafa_is_available() -> bool {
         std::process::Command::new("chafa")
             .arg("--version")

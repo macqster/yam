@@ -288,6 +288,21 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- The test suite runs in about 10 seconds instead of about 111. The cause was
+  not what it looked like: the two slowest tests shell out to `chafa` once per
+  GIF frame, but one `chafa` spawn costs ~48 ms, and the real bottleneck was
+  decoding the two large hero GIFs at the default `opt-level = 0` — roughly
+  20 s per decode of the 1080x1080 48-frame source, in `GifDecoder` plus
+  `frame_to_canvas`'s per-pixel loop. Those sources are decoded eleven times
+  across the file, so nearly the whole suite was unoptimized pixel work. A
+  `[profile.test] opt-level = 2` trades a slower cold compile for an 11x faster
+  suite, which is what makes `scripts/verify.sh` runnable on every batch as the
+  workflow asks.
+
+- A stale claim in `chafa_is_available`'s doc comment, which said CI does not
+  install `chafa`. It does, so those content assertions do run in CI and the
+  skip is a local-developer affordance rather than a permanent CI exemption.
+
 - `--compile-hero` and the `chafa` runtime requirement are now in the README.
   The validated hero-package layer — compiler, manifest, provenance and schema
   validation, and a package-first startup path — was fully built and wired, but

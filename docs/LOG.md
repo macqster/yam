@@ -1434,3 +1434,33 @@ Logging rule:
   which it owns, so it uses a narrower pattern than core/systems
 - net: `#[allow(dead_code)]` sites 144 -> 135, and one fewer module in `render/`
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 12:55 CEST
+
+- fixed the eighth finding from the 2026-09-02 assessment, and the diagnosis in
+  that finding was wrong. The report blamed the two hero tests that shell out to
+  `chafa` once per frame. Measured: one `chafa` spawn costs about 48 ms, so all
+  112 spawns in the slower test account for a few seconds
+- the actual cost is decoding the hero GIFs at the default `opt-level = 0` -
+  about 20 s for the 1080x1080 48-frame source and 15 s for the 820x820
+  64-frame one, inside `GifDecoder::collect_frames` plus `frame_to_canvas`'s
+  per-pixel loop. `hero_gif_2` is decoded seven times and `hero_gif_1` four
+  times across the file, so roughly 200 s of unoptimized pixel work was the
+  suite
+- added `[profile.test] opt-level = 2`. Full suite went from 111 s to 10.3 s
+  measured warm, an 11x improvement; the chafa module alone went 117.2 s to
+  10.3 s. The trade is a slower cold compile, which is the right way round when
+  the workflow asks for the full gate on every maintenance batch and
+  `docs/hygiene.md` already concedes the pre-push hook is off by default because
+  of wall-clock cost
+- left the redundant `hero_frame_buffer_has_multiple_frames` in place. Its
+  assertion is a strict subset of `every_hero_source_matches_its_declared_geometry`
+  (which checks exact frame counts and needs no `chafa`) and of the frame-count
+  assertion inside `rendered_hero_frames_contain_real_content_not_placeholders`,
+  so it is genuinely redundant - but with the suite at 10 s the only argument
+  for removing it was speed, and removing tests for tidiness alone is not worth
+  the risk. Recorded here rather than acted on
+- corrected `chafa_is_available`'s doc comment, which claimed CI does not
+  install `chafa`. `.github/workflows/verify.yml` installs it, so those content
+  assertions do run in CI; the skip is a local-developer affordance
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

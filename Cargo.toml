@@ -24,3 +24,12 @@ tachyonfx = { version = "0.25", features = ["std-duration"] }
 
 [build-dependencies]
 chrono = "0.4"
+
+# The hero tests decode two large GIFs several times each. At the default
+# opt-level 0 that decode plus `frame_to_canvas`'s per-pixel loop dominates the
+# whole suite - roughly 20s per decode of a 1080x1080 48-frame source, against
+# 48ms for one `chafa` spawn. Optimizing the test profile trades a slower cold
+# compile for a suite that finishes fast enough to actually run on every batch,
+# which is what `scripts/verify.sh` asks of it.
+[profile.test]
+opt-level = 2

@@ -1522,3 +1522,31 @@ Logging rule:
   a target that does not exist anywhere in this repo, so that path always fails
   into a silent `except` fallback
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:52 CEST
+
+- closed out the assessment batch: all ten findings landed on
+  `claude/0.4.11-tweaks-20260902`, each its own commit with the full gate green
+- updated `docs/hygiene.md`'s pre-push-hook rationale, which said the hook is
+  off by default because it "adds real wall-clock time to every push". That was
+  true at 2m28s and is much weaker at about 17s. Left the default alone - that
+  is a maintainer decision - but the note no longer argues from a stale number
+- checked the repo-local skills for stale references to anything this batch
+  changed (`scripts/check.sh`'s boundaries, `render_state`'s home,
+  `render/clock.rs`, `scene_config.json`, suite timing) and found none, so
+  neither `skills/yam-maintenance` nor `skills/yam-architecture-review` needed
+  edits. Recorded here so the check is not repeated blind
+- corrected three factual errors in the external assessment report itself rather
+  than leaving them to propagate: it claimed zero production panic sites when
+  there are nineteen (`docs/audit.md` already had the right number and had
+  traced each); it claimed more test code than production, which is inverted -
+  the real split is 14,359 production against 8,490 test; and it estimated the
+  cold-boot hero cost at 20s when it is about 3s. The first two shared one root
+  cause, a scan that treated the first `#[cfg(test)]` in a file as the start of
+  the test module, so `#[cfg(test)]`-gated helper functions made it skip the
+  remainder of those files
+- the report's diagnosis of the slow suite was also wrong, and worth recording
+  because the wrong fix would have been plausible: it blamed the per-frame
+  `chafa` subprocesses, but a spawn costs 48ms and the cost was
+  unoptimized GIF decoding. A shared test fixture would have bought a fraction
+  of what a one-line profile change did

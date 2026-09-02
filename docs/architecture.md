@@ -11,7 +11,7 @@
 
 ## Core Rules
 
-- `core/` - data only, no UI, no terminal, no rendering, and no imports from `scene/`; `scripts/check.sh` guards this boundary
+- `core/` - data only, no UI, no terminal, no rendering, and no imports from `scene/`, `render/`, `ui/`, ratatui, or crossterm; `scripts/check.sh` guards this whole boundary, not just the `scene/` half of it
 - `core/guide.rs` - world-space guide primitives and query helpers; guides are semantic data, not raster masks
 - `core/greenhouse.rs` - greenhouse room/state vocabulary: stable ids, nursery-room functional-space data, symbolic environment profiles, and read-only inspection references. Attached to `WorldState` (`Option<GreenhouseState>`, populated only for `WorldKind::Greenhouse`) with seedling state, deterministic growth dispatch, a minimal read-only `GreenhouseLayer`, and read-only inspection UI; curation and transfer writes remain deferred
 - `core/scaffold.rs` - world-owned main-scene hero-support scaffold data; the current first pass is a static rear cradle/back-brace/leg-brace segment set for the main scene only, with render layers remaining read-only visualizers of that support geometry

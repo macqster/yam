@@ -148,7 +148,7 @@ Last reviewed: 2026-08-22 (post-cleanup hero package/cache/runtime reconciliatio
   - evidence: `src/ui/state.rs`, `docs/weather-widget.md`
 - `low` `systems::fields::update_fields()` skips out-of-bounds entities and repairs all three field buffers to the exact grid area before indexing/clearing, closing the same invariant-drift shape as the earlier `GreenhouseState::active_room()` fix (construction-only invariant, mutable public fields). A repo-wide sweep for the same shape (`.unwrap()`/`panic!()` in production code, find-by-id resolvers, direct grid/array indexing) came back clean elsewhere.
   - evidence: `src/systems/fields.rs`
-- `low` `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, and `cargo check --all-targets` are clean; the ownership boundary guard in `scripts/check.sh` (`core` must not import `scene`; `systems` must not import scene/render/UI/terminal) is unchanged.
+- `low` `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, and `cargo check --all-targets` are clean. The ownership boundary guard in `scripts/check.sh` was strengthened on 2026-09-02: it had been able to pass without running (a missing `rg` exits 127, which the old `if rg …; then` form read as "no matches"), and it enforced only `core` must-not-import-`scene` against an architecture contract that also forbids `core -> ui` and `core -> render`. Both halves are fixed; `core` and `systems` now share one upward-dependency pattern, and each check reports the file count it inspected so a check that scanned nothing cannot read as a pass.
   - evidence: `scripts/check.sh`, `src/render/chafa.rs`, `src/render/hero.rs`, `src/scene/layers/hero_layer.rs`, `src/runtime.rs`
 
 ## Priority Order

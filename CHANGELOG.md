@@ -98,6 +98,22 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- `scripts/check.sh`'s architecture boundary checks can no longer pass without
+  running, and now enforce the whole contract rather than a third of it. They
+  were written as `if rg …; then fail; fi`, which reads a missing ripgrep
+  (exit 127) as "no matches" and reports success having inspected no files; a
+  wrong working directory passed the same way. CI only escaped because
+  `ubuntu-latest` happens to ship ripgrep. They use `grep` now, which is in
+  POSIX and needs no guard, and each check counts the `.rs` files it scanned
+  and refuses to pass on zero — necessary because BSD grep, the macOS default,
+  returns the same exit code for a missing directory as for a clean one. A
+  passing run reports the file count it checked.
+  `core/` is also held to the same rule as `systems/` now: `docs/architecture.md`
+  forbids `core -> ui` and `core -> render` alongside `core -> scene`, and
+  `src/core/mod.rs` claims no ratatui/crossterm usage, but only the `scene`
+  half was ever enforced. No violation existed — the tree was already clean —
+  so this closes an unguarded invariant rather than fixing a broken boundary.
+
 - Development version bumped to `0.4.11` (from `0.4.10`). Opens a maintenance
   cycle for the follow-ups from the 2026-09-02 repository assessment. The bump
   itself changes no runtime behavior; each finding lands as its own entry as it

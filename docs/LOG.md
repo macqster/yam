@@ -1248,3 +1248,48 @@ Logging rule:
   failure is attributable to a tweak rather than to the base it started from
 - the assessment's own findings are not applied here; this entry records only
   the cycle opening
+
+## 2026-09-02 09:12 CEST
+
+- fixed the first two findings from the 2026-09-02 repository assessment, both
+  in `scripts/check.sh`, as one change: they are the same concern, and the
+  architecture gate is what every later boundary claim rests on
+- the gate could report success without running. `if rg …; then fail; fi` treats
+  a missing ripgrep (exit 127) as "no matches", so any machine without `rg` got
+  no boundary checking at all while still being told "All checks passed"; a
+  wrong working directory (exit 2) passed identically. Demonstrated before
+  fixing: `PATH=/usr/bin:/bin` with the old form exits 0 having read no files.
+  This is the same silent-pass shape `scripts/check-docs.sh` was already
+  repaired for, applied there and not here
+- moved to `grep`, which is in POSIX and so needs no availability guard at all,
+  rather than guarding `rg`'s presence — a gate with no optional dependency
+  cannot skip
+- while testing, found that exit status alone cannot carry the "could not run"
+  case: BSD grep, the macOS default and so the one this repo is developed
+  against, exits 1 for a missing directory, the same code it uses for a clean
+  pass. GNU grep and ugrep exit 2. Each check therefore counts the `.rs` files
+  it is about to scan and fails on zero, which is grep-independent, and a
+  passing run now prints that count so a silent skip is visually impossible
+- the first version of the count guard was itself silent: `find` at the head of
+  a `set -o pipefail` pipeline made the assignment fail and `set -e` killed the
+  script before its own error message. Caught by testing the failure path
+  rather than the success path; the directory test is now separate
+- extended the `core` check from `crate::scene::` only to the same
+  upward-dependency pattern `systems` already used. `docs/architecture.md`
+  forbids `core -> ui` and `core -> render` too, and `src/core/mod.rs` claims no
+  ratatui/crossterm usage, but neither was enforced. The tree was already clean,
+  so nothing had to change in `src/`
+- ratatui/crossterm are matched through `::` or a `use` statement rather than
+  bare, so the "No ratatui/crossterm usage" comment in `src/core/mod.rs` is not
+  itself reported as a violation
+- proved the gate in both directions rather than trusting a green run, per this
+  file's own rule: all five forbidden import forms (`crate::scene::`,
+  `crate::render::`, `crate::ui::`, `use ratatui::`, `use crossterm::`) injected
+  into `src/core/grid.rs` one at a time were each caught and named with
+  file:line; legitimate `crate::core::`/`super::` imports and the mod.rs comment
+  were not. Missing directory, empty directory, and absent-ripgrep cases were
+  each checked under both BSD grep and ugrep
+- updated `docs/architecture.md`, `docs/hygiene.md`, and `docs/audit.md`, each
+  of which stated the narrower guard as current fact; hygiene now also records
+  why the checks use `grep` so the `rg` form is not reintroduced as a tidy-up
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

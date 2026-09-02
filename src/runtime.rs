@@ -143,6 +143,22 @@ pub fn run(options: RuntimeOptions) -> Result<(), Box<dyn std::error::Error>> {
     );
     if let Some(phase) = last_boot_phase {
         append_event("boot_phase", &[("phase", json!(format!("{phase:?}")))]);
+    } else {
+        // Every timed boot phase is switched off, so `start_loading_boot`
+        // already finished and the loop below will never see the
+        // `Some -> None` phase change it normally reports readiness on.
+        // Without this, an instant boot logs no `world_ready` at all and
+        // `runtime_exit` then claims `boot_completed: false` for a run that
+        // booted fine. This was unreachable until boot phases became
+        // toggleable, since the sequence had a 4.5s floor.
+        append_event(
+            "world_ready",
+            &[
+                ("boot_ms", json!(runtime_start.elapsed().as_millis() as u64)),
+                ("world", json!(ui_state.active_world_kind().title())),
+            ],
+        );
+        logged_world_ready = true;
     }
 
     'run: loop {

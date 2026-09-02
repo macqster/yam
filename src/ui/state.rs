@@ -435,7 +435,7 @@ impl SettingsTab {
         match self {
             SettingsTab::Positions => 6,
             SettingsTab::Ui => 5,
-            SettingsTab::Runtime => 1,
+            SettingsTab::Runtime => 1 + TOGGLEABLE_BOOT_PHASES.len(),
             SettingsTab::Features => 4,
             SettingsTab::Gif => 3,
             SettingsTab::Theme => 3,
@@ -550,6 +550,44 @@ pub enum BootLoadingPhase {
     AwaitStart,
     Dissolve,
     Hold,
+}
+
+impl BootLoadingPhase {
+    /// The phase that follows this one, or `None` when boot is complete.
+    ///
+    /// Boot order lives here rather than being spelled out again in each
+    /// `update_loading` arm, so skipping a disabled phase cannot disagree with
+    /// the ordinary progression.
+    fn next(self) -> Option<Self> {
+        match self {
+            BootLoadingPhase::Coalesce => Some(BootLoadingPhase::Bar),
+            BootLoadingPhase::Bar => Some(BootLoadingPhase::AwaitStart),
+            BootLoadingPhase::AwaitStart => Some(BootLoadingPhase::Dissolve),
+            BootLoadingPhase::Dissolve => Some(BootLoadingPhase::Hold),
+            BootLoadingPhase::Hold => None,
+        }
+    }
+
+    fn duration(self) -> Duration {
+        match self {
+            BootLoadingPhase::Coalesce => LoadingState::BOOT_COALESCE,
+            BootLoadingPhase::Bar => LoadingState::BOOT_BAR,
+            BootLoadingPhase::Dissolve => LoadingState::BOOT_DISSOLVE,
+            BootLoadingPhase::Hold => LoadingState::BOOT_HOLD,
+            BootLoadingPhase::AwaitStart => Duration::from_millis(0),
+        }
+    }
+
+    /// Row label in the settings popup.
+    pub fn label(self) -> &'static str {
+        match self {
+            BootLoadingPhase::Coalesce => "coalesce",
+            BootLoadingPhase::Bar => "bar",
+            BootLoadingPhase::AwaitStart => "await start",
+            BootLoadingPhase::Dissolve => "dissolve",
+            BootLoadingPhase::Hold => "hold",
+        }
+    }
 }
 
 /// Whether the boot screen waits for a real keypress before continuing.
@@ -694,19 +732,86 @@ struct UiStateSnapshot {
 
 pub const RENDER_FPS_PRESETS: &[u16] = &[15, 30, 60, 120];
 
+/// Which timed boot phases actually play.
+///
+/// These are presentation switches, not launch policy: a disabled phase is
+/// skipped, the rest keep their normal timings, and the boot still ends in the
+/// first world through the same path. `AwaitStart` is deliberately absent - it
+/// is not a timed animation but the wait for a person, and it is owned by
+/// `BootStartPolicy` / `--auto-start` instead. Keeping the two separate means a
+/// short boot and an unattended boot stay independently selectable.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct BootPhaseSettings {
+    pub coalesce: bool,
+    pub bar: bool,
+    pub dissolve: bool,
+    pub hold: bool,
+}
+
+impl Default for BootPhaseSettings {
+    fn default() -> Self {
+        Self {
+            coalesce: true,
+            bar: true,
+            dissolve: true,
+            hold: true,
+        }
+    }
+}
+
+impl BootPhaseSettings {
+    fn enabled(self, phase: BootLoadingPhase) -> bool {
+        match phase {
+            BootLoadingPhase::Coalesce => self.coalesce,
+            BootLoadingPhase::Bar => self.bar,
+            BootLoadingPhase::Dissolve => self.dissolve,
+            BootLoadingPhase::Hold => self.hold,
+            // Not a timed phase; see the type comment.
+            BootLoadingPhase::AwaitStart => true,
+        }
+    }
+
+    fn set(&mut self, phase: BootLoadingPhase, on: bool) {
+        match phase {
+            BootLoadingPhase::Coalesce => self.coalesce = on,
+            BootLoadingPhase::Bar => self.bar = on,
+            BootLoadingPhase::Dissolve => self.dissolve = on,
+            BootLoadingPhase::Hold => self.hold = on,
+            BootLoadingPhase::AwaitStart => {}
+        }
+    }
+}
+
+/// The four boot phases the settings popup exposes, in play order.
+pub const TOGGLEABLE_BOOT_PHASES: [BootLoadingPhase; 4] = [
+    BootLoadingPhase::Coalesce,
+    BootLoadingPhase::Bar,
+    BootLoadingPhase::Dissolve,
+    BootLoadingPhase::Hold,
+];
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct RuntimeSettings {
     pub render_fps: u16,
+    pub boot_phases: BootPhaseSettings,
 }
 
 impl Default for RuntimeSettings {
     fn default() -> Self {
-        Self { render_fps: 120 }
+        Self {
+            render_fps: 120,
+            boot_phases: BootPhaseSettings::default(),
+        }
     }
 }
 
 impl RuntimeSettings {
+    pub fn boot_phase_enabled(self, phase: BootLoadingPhase) -> bool {
+        self.boot_phases.enabled(phase)
+    }
+
     pub fn render_period(self) -> Duration {
         Duration::from_secs_f64(1.0 / f64::from(self.render_fps.max(1)))
     }
@@ -1421,17 +1526,35 @@ impl UiState {
     }
 
     pub fn decrease_selected_setting(&mut self) {
-        if self.meta.settings_tab == SettingsTab::Runtime && self.meta.selected_settings_row() == 0
-        {
-            self.runtime.decrease_render_fps();
-            self.mark_persisted_state_dirty();
-        }
+        self.adjust_selected_setting(false);
     }
 
     pub fn increase_selected_setting(&mut self) {
-        if self.meta.settings_tab == SettingsTab::Runtime && self.meta.selected_settings_row() == 0
-        {
-            self.runtime.increase_render_fps();
+        self.adjust_selected_setting(true);
+    }
+
+    /// Left/Right on the runtime tab.
+    ///
+    /// Row 0 steps the render-FPS presets. The boot-phase rows below it are
+    /// booleans, and Left means off while Right means on rather than either key
+    /// flipping the value: that keeps a keypress idempotent, so holding an
+    /// arrow settles on a state instead of oscillating.
+    fn adjust_selected_setting(&mut self, increase: bool) {
+        if self.meta.settings_tab != SettingsTab::Runtime {
+            return;
+        }
+        let row = self.meta.selected_settings_row() as usize;
+        if row == 0 {
+            if increase {
+                self.runtime.increase_render_fps();
+            } else {
+                self.runtime.decrease_render_fps();
+            }
+            self.mark_persisted_state_dirty();
+            return;
+        }
+        if let Some(phase) = TOGGLEABLE_BOOT_PHASES.get(row - 1).copied() {
+            self.runtime.boot_phases.set(phase, increase);
             self.mark_persisted_state_dirty();
         }
     }
@@ -1448,10 +1571,44 @@ impl UiState {
     pub fn start_loading_boot(&mut self, policy: BootStartPolicy) {
         self.loading.active = true;
         self.loading.label = "loading...".to_string();
-        self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Coalesce);
-        self.loading.started_at = Some(Instant::now());
-        self.loading.duration = LoadingState::BOOT_COALESCE;
         self.loading.boot_start_policy = policy;
+        self.enter_boot_phase(BootLoadingPhase::Coalesce, Instant::now());
+    }
+
+    /// Enters `phase`, skipping any phases switched off in settings.
+    ///
+    /// Every boot transition routes through here - start, ordinary
+    /// progression, and the spacebar acknowledgement alike - so a disabled
+    /// phase is skipped on all of them rather than only where someone
+    /// remembered to check. If every remaining phase is disabled the boot
+    /// completes here, which is the same end state as running them all.
+    fn enter_boot_phase(&mut self, phase: BootLoadingPhase, now: Instant) {
+        let mut phase = phase;
+        while !self.runtime.boot_phases.enabled(phase) {
+            match phase.next() {
+                Some(next) => phase = next,
+                None => {
+                    self.loading = LoadingState::default();
+                    return;
+                }
+            }
+        }
+
+        self.loading.mode = LoadingMode::Boot(phase);
+        self.loading.duration = phase.duration();
+        self.loading.started_at = if phase == BootLoadingPhase::AwaitStart {
+            None
+        } else {
+            Some(now)
+        };
+
+        // Automatic mode leaves AwaitStart through the same transition the
+        // spacebar uses, so that phase keeps exactly one exit.
+        if phase == BootLoadingPhase::AwaitStart
+            && self.loading.boot_start_policy == BootStartPolicy::Automatic
+        {
+            self.acknowledge_loading_start();
+        }
     }
 
     pub fn start_loading_transition(&mut self, label: &str, duration: Duration) {
@@ -1466,9 +1623,7 @@ impl UiState {
         if !self.loading.awaiting_start_confirmation() {
             return;
         }
-        self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Dissolve);
-        self.loading.started_at = Some(Instant::now());
-        self.loading.duration = LoadingState::BOOT_DISSOLVE;
+        self.enter_boot_phase(BootLoadingPhase::Dissolve, Instant::now());
     }
 
     pub fn update_loading(&mut self) {
@@ -1482,40 +1637,15 @@ impl UiState {
                     self.loading = LoadingState::default();
                 }
             }
-            LoadingMode::Boot(BootLoadingPhase::Coalesce) => {
-                if self.loading.progress(now) >= 1.0 {
-                    self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Bar);
-                    self.loading.started_at = Some(now);
-                    self.loading.duration = LoadingState::BOOT_BAR;
-                }
-            }
-            LoadingMode::Boot(BootLoadingPhase::Bar) => {
-                if self.loading.progress(now) >= 1.0 {
-                    self.loading.mode = LoadingMode::Boot(BootLoadingPhase::AwaitStart);
-                    self.loading.started_at = None;
-                    self.loading.duration = Duration::from_millis(0);
-
-                    // Automatic mode acknowledges through the same transition
-                    // the spacebar uses rather than reproducing its internals,
-                    // so there stays exactly one way out of AwaitStart. The
-                    // coalesce and bar phases above ran in full; only the wait
-                    // for a human is skipped.
-                    if self.loading.boot_start_policy == BootStartPolicy::Automatic {
-                        self.acknowledge_loading_start();
-                    }
-                }
-            }
+            // AwaitStart has no timer: it ends on the spacebar, or immediately
+            // under an automatic policy when it is entered.
             LoadingMode::Boot(BootLoadingPhase::AwaitStart) => {}
-            LoadingMode::Boot(BootLoadingPhase::Dissolve) => {
+            LoadingMode::Boot(phase) => {
                 if self.loading.progress(now) >= 1.0 {
-                    self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Hold);
-                    self.loading.started_at = Some(now);
-                    self.loading.duration = LoadingState::BOOT_HOLD;
-                }
-            }
-            LoadingMode::Boot(BootLoadingPhase::Hold) => {
-                if self.loading.progress(now) >= 1.0 {
-                    self.loading = LoadingState::default();
+                    match phase.next() {
+                        Some(next) => self.enter_boot_phase(next, now),
+                        None => self.loading = LoadingState::default(),
+                    }
                 }
             }
         }
@@ -2031,7 +2161,7 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::BootStartPolicy;
+    use super::{BootPhaseSettings, BootStartPolicy, TOGGLEABLE_BOOT_PHASES};
 
     use std::ffi::OsString;
     use std::path::PathBuf;
@@ -2723,7 +2853,10 @@ mod tests {
                 },
                 move_target: MoveTarget::Hero,
             },
-            runtime: RuntimeSettings { render_fps: 30 },
+            runtime: RuntimeSettings {
+                render_fps: 30,
+                ..RuntimeSettings::default()
+            },
             version: "9.9.9".to_string(),
         };
 
@@ -3118,7 +3251,13 @@ mod tests {
 
         assert_eq!(ui.settings_item_count(SettingsTab::Positions), 6);
         assert_eq!(ui.settings_item_count(SettingsTab::Ui), 5);
-        assert_eq!(ui.settings_item_count(SettingsTab::Runtime), 1);
+        // Render FPS plus one row per toggleable boot phase. Tied to the
+        // constant rather than a literal so adding a phase cannot leave this
+        // asserting a stale shape.
+        assert_eq!(
+            ui.settings_item_count(SettingsTab::Runtime),
+            1 + TOGGLEABLE_BOOT_PHASES.len()
+        );
         assert_eq!(ui.settings_item_count(SettingsTab::Features), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Gif), 3);
         assert_eq!(ui.settings_item_count(SettingsTab::Theme), 3);
@@ -3335,6 +3474,148 @@ mod tests {
 
         assert!(!ui.loading.active);
         assert!(ui.loading.label.is_empty());
+    }
+
+    /// Drives boot forward by pretending the current phase's timer expired.
+    fn expire_current_phase(ui: &mut UiState) {
+        if let Some(duration) = Some(ui.loading.duration) {
+            ui.loading.started_at = Instant::now().checked_sub(duration + Duration::from_millis(1));
+        }
+        ui.update_loading();
+    }
+
+    #[test]
+    fn all_boot_phases_are_on_by_default() {
+        let ui = UiState::new();
+        for phase in TOGGLEABLE_BOOT_PHASES {
+            assert!(
+                ui.runtime.boot_phase_enabled(phase),
+                "{phase:?} should ship enabled"
+            );
+        }
+    }
+
+    #[test]
+    fn disabling_coalesce_starts_boot_at_the_bar() {
+        let mut ui = UiState::new();
+        ui.runtime.boot_phases.coalesce = false;
+        ui.start_loading_boot(BootStartPolicy::Manual);
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Bar));
+    }
+
+    #[test]
+    fn disabling_bar_skips_it_but_still_waits_for_space() {
+        let mut ui = UiState::new();
+        ui.runtime.boot_phases.bar = false;
+        ui.start_loading_boot(BootStartPolicy::Manual);
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Coalesce));
+        expire_current_phase(&mut ui);
+        // Bar is skipped, so coalesce hands straight to the prompt.
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::AwaitStart));
+        assert!(ui.loading.showing_start_prompt());
+    }
+
+    #[test]
+    fn disabling_dissolve_is_honored_on_the_spacebar_path() {
+        // The acknowledgement enters Dissolve directly, so it has to respect
+        // the toggle too - not just the ordinary progression.
+        let mut ui = UiState::new();
+        ui.runtime.boot_phases.dissolve = false;
+        ui.start_loading_boot(BootStartPolicy::Manual);
+        ui.loading.mode = LoadingMode::Boot(BootLoadingPhase::AwaitStart);
+        ui.acknowledge_loading_start();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Hold));
+    }
+
+    #[test]
+    fn disabling_every_phase_still_waits_for_space_in_manual_mode() {
+        // Turning off the animation must not turn off the interactive
+        // contract: AwaitStart is owned by boot-start policy, not by these.
+        let mut ui = UiState::new();
+        ui.runtime.boot_phases = BootPhaseSettings {
+            coalesce: false,
+            bar: false,
+            dissolve: false,
+            hold: false,
+        };
+        ui.start_loading_boot(BootStartPolicy::Manual);
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::AwaitStart));
+        assert!(ui.loading.awaiting_start_confirmation());
+
+        ui.acknowledge_loading_start();
+        assert_eq!(
+            ui.loading.boot_phase(),
+            None,
+            "boot completes with no phases left"
+        );
+    }
+
+    #[test]
+    fn disabling_every_phase_with_auto_start_boots_immediately() {
+        let mut ui = UiState::new();
+        ui.runtime.boot_phases = BootPhaseSettings {
+            coalesce: false,
+            bar: false,
+            dissolve: false,
+            hold: false,
+        };
+        ui.start_loading_boot(BootStartPolicy::Automatic);
+        assert_eq!(
+            ui.loading.boot_phase(),
+            None,
+            "nothing to play and nobody to wait for"
+        );
+    }
+
+    #[test]
+    fn runtime_rows_toggle_phases_with_left_and_right() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Runtime;
+        for (index, phase) in TOGGLEABLE_BOOT_PHASES.iter().enumerate() {
+            ui.meta
+                .settings_cursor
+                .set_row(SettingsTab::Runtime, index as u16 + 1);
+            ui.decrease_selected_setting();
+            assert!(
+                !ui.runtime.boot_phase_enabled(*phase),
+                "left turns {phase:?} off"
+            );
+            // Idempotent: pressing left again must not flip it back on.
+            ui.decrease_selected_setting();
+            assert!(!ui.runtime.boot_phase_enabled(*phase), "left is idempotent");
+            ui.increase_selected_setting();
+            assert!(
+                ui.runtime.boot_phase_enabled(*phase),
+                "right turns {phase:?} on"
+            );
+        }
+    }
+
+    #[test]
+    fn toggling_a_phase_marks_state_dirty_for_persistence() {
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Runtime;
+        ui.meta.settings_cursor.set_row(SettingsTab::Runtime, 1);
+        ui.persisted_state_dirty = false;
+        ui.decrease_selected_setting();
+        assert!(ui.persisted_state_dirty);
+    }
+
+    #[test]
+    fn boot_phase_row_zero_still_steps_render_fps() {
+        // Row 0 must keep its old meaning now that rows share one handler.
+        let mut ui = UiState::new();
+        ui.meta.settings_tab = SettingsTab::Runtime;
+        ui.meta.settings_cursor.set_row(SettingsTab::Runtime, 0);
+        let before = ui.runtime.render_fps;
+        ui.decrease_selected_setting();
+        assert_ne!(ui.runtime.render_fps, before);
+        for phase in TOGGLEABLE_BOOT_PHASES {
+            assert!(
+                ui.runtime.boot_phase_enabled(phase),
+                "fps row must not touch phases"
+            );
+        }
     }
 
     #[test]

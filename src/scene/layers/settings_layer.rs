@@ -214,7 +214,19 @@ fn ui_lines(ui: &UiState) -> Vec<String> {
 }
 
 fn runtime_lines(ui: &UiState) -> Vec<String> {
-    vec![format!("render fps: {}", ui.runtime.render_fps)]
+    let mut lines = vec![format!("render fps: {}", ui.runtime.render_fps)];
+    for phase in crate::ui::state::TOGGLEABLE_BOOT_PHASES {
+        lines.push(format!(
+            "boot {}: {}",
+            phase.label(),
+            if ui.runtime.boot_phase_enabled(phase) {
+                "on"
+            } else {
+                "off"
+            }
+        ));
+    }
+    lines
 }
 
 fn gif_lines(ui: &UiState) -> Vec<String> {

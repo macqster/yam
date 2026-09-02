@@ -1464,3 +1464,33 @@ Logging rule:
   install `chafa`. `.github/workflows/verify.yml` installs it, so those content
   assertions do run in CI; the skip is a local-developer affordance
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:20 CEST
+
+- fixed the ninth finding from the 2026-09-02 assessment: non-atomic state
+  writes and inconsistent XDG handling
+- `persist_state_now` used `fs::write`, which truncates before writing, so an
+  interrupted save left a partial `state.json`. `load_or_new` swallows a parse
+  failure and falls back to defaults, so the user silently lost their saved
+  composition with no message. Writes now go to a `NamedTempFile` in the same
+  directory and are renamed over the target - same directory because a rename
+  is only atomic within one filesystem. `tempfile` was already a dependency
+- `state_path` ignored `XDG_CONFIG_HOME` while diagnostics honors
+  `XDG_STATE_HOME` and the hero cache honors `XDG_CACHE_HOME`, and it resolved
+  `HOME` through `unwrap_or_default()`, so an unset `HOME` produced a relative
+  path and wrote state into the launch directory. Resolution now mirrors
+  `render::chafa::hero_cache_dir`'s shape, with a temp-dir floor so the result
+  is never relative, and treats an empty variable as unset
+- split the resolution into `state_dir_from(config_home, home)` so precedence is
+  testable without mutating the process environment, which is racy under the
+  parallel test harness
+- six tests added, and proved to fail against the previous behavior: reverting
+  the path logic fails `state_dir_prefers_xdg_config_home` and
+  `state_dir_never_returns_a_relative_path`, and reverting to an in-place
+  truncating write fails `atomic_write_replaces_existing_content_completely`.
+  The first attempt at the write revert did not compile (unused imports under
+  `-D warnings`) and so produced no test output at all rather than a failure -
+  the same trap hit earlier in this batch; redone until it genuinely ran
+- noted but not changed: `hero_cache_dir` and the diagnostics path have the same
+  latent empty-variable gap. Left alone to keep this commit focused
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

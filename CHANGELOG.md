@@ -288,6 +288,16 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Saved UI state is written atomically and honors `XDG_CONFIG_HOME`. The write
+  was a plain `fs::write`, which truncates in place, so a crash or kill
+  mid-write left a half-written `state.json` that `load_or_new` then discarded
+  silently — losing saved positions with no message. It now writes a sibling
+  temp file and renames over the target. The path also ignored
+  `XDG_CONFIG_HOME` and hard-coded `~/.config`, unlike diagnostics
+  (`XDG_STATE_HOME`) and the hero cache (`XDG_CACHE_HOME`); and it resolved
+  `HOME` with `unwrap_or_default()`, so with `HOME` unset the whole path went
+  relative and state landed in whatever directory the app was launched from.
+
 - The test suite runs in about 10 seconds instead of about 111. The cause was
   not what it looked like: the two slowest tests shell out to `chafa` once per
   GIF frame, but one `chafa` spawn costs ~48 ms, and the real bottleneck was

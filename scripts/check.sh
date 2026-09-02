@@ -74,7 +74,14 @@ check_boundary() {
 # ratatui/crossterm are matched through `::` or a `use` statement rather than
 # bare, so the "No ratatui/crossterm usage" note in `src/core/mod.rs` is not
 # itself reported as a violation.
-forbidden_upward='crate::(scene|render|ui)::|(^|[^[:alnum:]_])(ratatui|crossterm)::|use[[:space:]]+(ratatui|crossterm)[[:space:]]*[;{]'
+#
+# Crate paths match on a trailing `::`, a statement terminator, or a braced
+# group. Requiring `::` alone was a real hole: `use crate::ui;` passed the gate,
+# and code after it says `ui::state::UiState`, which contains no `crate::ui::`
+# either - so the dependency was invisible on every line. `use crate::{scene,
+# core};` slipped through the same way. The trailing-character requirement is
+# what keeps `crate::render_state` from matching `crate::render`.
+forbidden_upward='crate::(scene|render|ui)(::|[[:space:]]*[;,}])|crate::\{[^}]*(scene|render|ui)|(^|[^[:alnum:]_])(ratatui|crossterm)::|use[[:space:]]+(ratatui|crossterm)[[:space:]]*[;{]'
 
 check_boundary src/core "$forbidden_upward" \
   "core must not depend on scene, render, UI, or terminal modules"
@@ -86,7 +93,7 @@ check_boundary src/systems "$forbidden_upward" \
 # into them. That edge existed until 2026-09-02 (`render/clock.rs` imported
 # `UiState`, and `render/render_state.rs` imported scene's `Camera`/`Viewport`)
 # and is guarded here so it cannot come back unnoticed.
-check_boundary src/render 'crate::(scene|ui)::' \
+check_boundary src/render 'crate::(scene|ui)(::|[[:space:]]*[;,}])|crate::\{[^}]*(scene|ui)' \
   "render must not depend on scene or UI modules"
 
 cargo fmt --check

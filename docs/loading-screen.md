@@ -75,6 +75,20 @@ Boot currently follows this staged path:
 6. empty-screen hold for `0.5s`
 7. handoff into the first real world
 
+Each timed phase above can be switched off individually from the dev settings
+popup's `runtime` tab, and the choice persists. A disabled phase is skipped and
+the rest keep their normal timings, so the sequence shortens rather than
+changing shape. Every transition - start, ordinary progression, and the spacebar
+acknowledgement - routes through one entry point, so a phase cannot be skipped
+on some paths and played on others.
+
+`AwaitStart` is deliberately not toggleable. It is not an animation but the wait
+for a person, and it belongs to `--auto-start` / `BootStartPolicy`. Keeping them
+separate means a short boot and an unattended boot stay independently
+selectable: switching every phase off in manual mode still shows the prompt and
+waits, while doing the same under `--auto-start` reached the first world in
+136ms against 5661ms with every phase on.
+
 This richer sequence is for startup boot only. World switching keeps a shorter transition path and should not inherit the same blocking ceremony by default.
 
 ## Current Implementation

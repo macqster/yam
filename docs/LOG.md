@@ -1607,3 +1607,67 @@ Logging rule:
   duplicating it would conflict on `Cargo.toml` and `README.md`
 - the Duo launcher half of the handoff lives in a different repository
   (`~/_git/home/machines/dell-duo-home/...`) and is not part of this change
+
+## 2026-09-02 16:40 CEST
+
+- made the four timed boot phases individually toggleable from the dev settings
+  popup's `runtime` tab, persisted alongside the render-FPS ceiling
+- centralized every boot transition through one `enter_boot_phase` entry point
+  rather than adding a skip check to each `update_loading` arm. Start, ordinary
+  progression, and `acknowledge_loading_start` all go through it, so a disabled
+  phase cannot be skipped on one path and played on another - proved by
+  reverting the acknowledgement to set `Dissolve` directly, which fails three
+  tests. Boot order now lives on `BootLoadingPhase::next` instead of being
+  restated in each arm
+- left `AwaitStart` off the toggle list on purpose. It is the wait for a person,
+  not an animation, and it is owned by `--auto-start`/`BootStartPolicy`. Keeping
+  them independent means a short boot and an unattended boot are separately
+  selectable; every phase off in manual mode still shows the prompt and waits
+- chose Left = off and Right = on over flip-on-either-key, so a repeated
+  keypress is idempotent and holding an arrow settles rather than oscillating
+- found and fixed a real defect the feature introduced: with every phase
+  disabled the boot completes inside `start_loading_boot`, so the runtime never
+  observes the `Some -> None` phase change it reports readiness on. No
+  `world_ready` was logged and `runtime_exit` claimed `boot_completed: false`
+  for a run that booted fine. This was unreachable before, since the sequence
+  had a 4.5s floor. Found by measuring the live trace rather than by the unit
+  tests, which cover the state machine but not the runtime's logging
+- updated the existing sandbox row-count assertion to the new shape rather than
+  weakening it, and tied it to `TOGGLEABLE_BOOT_PHASES.len()` so adding a phase
+  cannot leave it asserting a stale count
+- 9 tests added, each proved able to fail; verified in the real binary that the
+  rows render, that Left/Right toggle them, and that the persisted setting takes
+  effect: 5661ms with all phases on against 136ms with all four off, both under
+  `--auto-start` and an isolated `XDG_CONFIG_HOME`
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 17:20 CEST
+
+- reviewed this session's own changes before pushing and fixed the three
+  findings that survived verification
+- the significant one was in already-merged code: the boundary guards added in
+  PR #20 only matched crate paths with a trailing `::`, so `use crate::ui;` in
+  `src/render/` passed cleanly, as did `use crate::{scene, core};` in
+  `src/core/`. Because later references read `ui::state::UiState`, the
+  dependency was invisible to the guard on every line rather than just the
+  import - the same silent-pass class the guard exists to prevent, one layer
+  down. Widened the patterns to accept a terminator or braced group, verified
+  against seven import shapes plus five that must not match, and confirmed
+  `crate::render_state` still does not match `crate::render`
+- disabling `boot bar` left an empty 16-cell track on screen through the
+  coalesce phase, because `bar_progress` returns 0.0 there and the layer drew
+  the row unconditionally. The bar row is now gated on the phase being enabled,
+  with a control run confirming the bar still renders when it is on
+- added a round-trip test over `TOGGLEABLE_BOOT_PHASES`. `BootPhaseSettings::set`
+  silently ignores phases it does not handle while `enabled` hard-codes true for
+  `AwaitStart`, so exposing a phase that `set` ignores would ship a settings row
+  that always reads "on" and whose Left/Right do nothing, with nothing failing
+  to compile. Simulating that by making `set` ignore `Bar` fails two tests
+- cleared several suspicions by testing rather than reasoning: the production
+  `unreachable!()` in `build_loading_effect` stays unreachable because
+  `effect_phase` only ever returns Coalesce or Dissolve; a pre-feature
+  `state.json` with `render_fps` and no `boot_phases` still loads with the FPS
+  preserved and phases defaulting on; and on the Duo the `/proc` fallback still
+  recognizes and quits a YAM terminal launched with `--auto-start` after a
+  bridge restart, leaving unrelated terminals alone
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

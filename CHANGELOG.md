@@ -17,6 +17,25 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- Per-phase boot toggles on the dev settings popup's `runtime` tab: `coalesce`,
+  `bar`, `dissolve`, and `hold` each switch on and off independently, and the
+  choice persists. Left means off and Right means on rather than either key
+  flipping the value, so a repeated keypress settles on a state instead of
+  oscillating.
+
+  A disabled phase is skipped while the rest keep their normal timings, so the
+  sequence shortens rather than changing shape. Every boot transition — start,
+  ordinary progression, and the spacebar acknowledgement — now routes through
+  one `enter_boot_phase` entry point, so a phase cannot be skipped on some paths
+  and played on others; boot order lives on `BootLoadingPhase::next` instead of
+  being restated in each `update_loading` arm.
+
+  `AwaitStart` is deliberately not toggleable: it is the wait for a person, not
+  an animation, and belongs to `--auto-start`. The two stay independent —
+  switching every phase off in manual mode still shows the prompt and waits,
+  while the same settings under `--auto-start` reached the first world in 136ms
+  against 5661ms with all phases on.
+
 - `--auto-start`, which lets a launch advance through the boot screen without
   someone pressing `[space]`. Manual remains the default and the interactive
   contract. `YAM_AUTO_START=1` is an environment fallback for launchers that
@@ -311,6 +330,27 @@ full change history in one running section instead of per-version ones.
   change (it is machine-only, so the indentation was pure overhead).
 
 ### Fixed
+
+- The architecture boundary guards in `scripts/check.sh` missed any crate path
+  written without a trailing `::`. `use crate::ui;` inside `src/render/` passed
+  the gate, and code after such an import says `ui::state::UiState`, which
+  contains no `crate::ui::` either — so the forbidden dependency was invisible
+  on every line, not just the import. `use crate::{scene, core};` slipped
+  through the same way. The patterns now also accept a statement terminator or
+  a braced group; the trailing-character requirement is what still keeps
+  `crate::render_state` from matching `crate::render`.
+
+- Switching `boot bar` off left a permanently-empty progress track on the boot
+  screen. `bar_progress` reports `0.0` during coalesce and the loading layer
+  drew the bar row unconditionally, so a user who turned the bar off still saw
+  a bar for the full coalesce phase.
+
+- An instant boot recorded no `world_ready` event, and `runtime_exit` then
+  reported `boot_completed: false` for a run that had booted correctly. The
+  runtime reports readiness on a `Some -> None` boot-phase change, which never
+  happens when every phase is disabled because the boot finishes inside
+  `start_loading_boot`. Unreachable until boot phases became toggleable, since
+  the sequence previously had a 4.5s floor.
 
 - Saved UI state is written atomically and honors `XDG_CONFIG_HOME`. The write
   was a plain `fs::write`, which truncates in place, so a crash or kill

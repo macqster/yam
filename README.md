@@ -60,7 +60,7 @@ current release: `0.4.11`
 - `companions`: `clock`, `weather`, `Polish date`
 - `framing`: `scaffold` plus `vine` prototype
 - `dev_surfaces`: `help`, `move`, `settings`, `palette`, `weather`, `quit confirm`
-- `settings`: the dev-only popup includes a persisted `runtime` tab for the render-FPS ceiling alongside positions, UI, features, GIF, and theme controls
+- `settings`: the dev-only popup includes a persisted `runtime` tab for the render-FPS ceiling and per-phase boot toggles (`coalesce`, `bar`, `dissolve`, `hold`), alongside positions, UI, features, GIF, and theme controls
 - `future_surfaces`:
   - `calendar companion seam`
   - `greenhouse curation/transfer write-path, richer per-fixture inspection detail, and multi-room/lab expansion`

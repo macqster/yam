@@ -1322,3 +1322,43 @@ Logging rule:
 - README edits kept to factual corrections under `AGENTS.md`'s mostly-settled
   front-door rule; tone, GIF, and orientation-sheet structure untouched
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 10:24 CEST
+
+- fixed the fourth finding from the 2026-09-02 repository assessment: no
+  interrupt path, and three unreachable branches in the same key handler
+- `KeyModifiers::CONTROL` appeared nowhere in the codebase; the only modifier
+  ever tested was SHIFT. With raw mode on for the whole run the terminal never
+  raises SIGINT, so Ctrl+C was just an unhandled `Char('c')` — and in dev
+  free-roam it reached the character catch-all and called
+  `recall_camera_home()`. The only real exit was `q`, which is gated behind mode
+  checks and a confirmation modal, so a wedged overlay had no escape
+- added `is_interrupt(code, modifiers)` as a small pure predicate rather than
+  inlining the test, so the behavior is unit-testable without a terminal; the
+  loop checks it before any mode dispatch, ahead of the loading-screen branch,
+  and breaks immediately without saving or playing the quit dissolve
+- removed the dead branches. `c == 'd'` was shadowed by the unguarded
+  `Char('d')` arm above it. The shift-variants on the font and FPS chords tested
+  `'='`/`'-'` together with SHIFT, but the app pushes no keyboard enhancement
+  flags, so crossterm reports the shifted character (`'+'`, `'_'`) and the base
+  key never arrives with a SHIFT modifier — confirmed by grepping for
+  `KeyboardEnhancementFlags` before touching anything. One of those dead tests
+  also claimed `'=' + SHIFT` for `increase_hero_fps` when the font arm above had
+  already claimed the same chord, so the two disagreed while both were dead
+- simplified `base == 'c'` to `c == 'c'`: uppercase `'C'` is claimed by an
+  earlier arm under the same `dev_free_roam` guard, so only lowercase ever
+  reached the catch-all. Behavior-preserving
+- proved the new tests can fail before trusting them, per this file's rule.
+  Dropping the CONTROL requirement fails `plain_c_is_not_the_interrupt`;
+  restoring the original never-interrupt behavior fails both
+  `ctrl_c_is_the_interrupt` and `ctrl_shift_c_is_the_interrupt`. A first attempt
+  at the former revert did not compile (unused `modifiers` under
+  `-D warnings`), which produced no test output at all rather than a failure —
+  redone so it actually exercised the assertion
+- verified against the real release binary under tmux, not just the unit tests:
+  Ctrl+C exits from the main scene, from dev mode (where it previously recalled
+  the camera), and from the loading screen; plain `c` in dev mode still recalls
+  camera home and leaves the app running; `q` still exits gracefully
+- recorded the interrupt and the corrected chord set in `docs/rendering.md`,
+  which owns the input contract
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

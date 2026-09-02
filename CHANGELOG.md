@@ -288,6 +288,25 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- `Ctrl+C` now exits. Raw mode is enabled for the whole run, so the terminal
+  never turns it into SIGINT — it arrived as an ordinary key event that nothing
+  handled, because `KeyModifiers::CONTROL` was not tested anywhere in the
+  codebase. `q` was the only way out, and `q` is gated behind mode checks and a
+  confirmation modal, so a wedged overlay had no escape at all; in dev free-roam
+  `Ctrl+C` fell through to the character catch-all and recalled the camera home.
+  It is checked before any mode dispatch, so it works from the loading screen, a
+  modal, and settings edit alike, and it exits without saving or playing the
+  quit dissolve. `q` is unchanged as the graceful path.
+
+- Three dead branches in the dev-mode character handler. A `c == 'd'` arm was
+  shadowed by the unguarded `Char('d')` arm above it, and the shift-qualified
+  variants on the font and FPS chords tested for `'='`/`'-'` *with* SHIFT — but
+  no keyboard enhancement flags are pushed, so crossterm reports the resulting
+  character (`'+'`, `'_'`), and none of them could ever match. One of those dead
+  tests also duplicated a chord the font arm above had already claimed, so two
+  arms disagreed about the same keypress while both were unreachable. The
+  literal `{`/`}` and `-`/`+` chords that actually worked are unchanged.
+
 - Three README claims that contradicted the runtime, and the gap in
   `scripts/check-docs.sh` that let one of them drift. The version badge sat at
   `0.4.0` while the canonical `current release` line four lines below it

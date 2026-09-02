@@ -1550,3 +1550,60 @@ Logging rule:
   `chafa` subprocesses, but a spawn costs 48ms and the cost was
   unoptimized GIF decoding. A shared test fixture would have bought a fraction
   of what a one-line profile change did
+
+## 2026-09-02 15:10 CEST
+
+- implemented YAM-native automatic boot continuation from an external handoff,
+  on `claude/0.4.11-auto-start-20260902` branched from `main` so it stays
+  separate from the assessment-cleanup branch in PR #20
+- assessed the handoff against the tree before building. Its state-machine
+  description, its choice to reuse `acknowledge_loading_start` rather than
+  duplicate the transition, and its refusal to synthesize input were all
+  correct. Four of its claims were not
+- the largest correction was to its own recommendation. It proposed Variant A -
+  transition automatically at `AwaitStart` - on the grounds that the prompt
+  would show "for one frame or a very short interval". It would have shown for a
+  full second: `showing_start_prompt()` covers `Dissolve` as well as
+  `AwaitStart`, so the prompt renders for the entire dissolve. Implemented
+  Variant A plus policy-aware prompt suppression, which keeps the single
+  transition the handoff wanted without a second of stale instruction on screen
+- its recommended event sequence is unachievable as written. `runtime.rs`
+  samples `boot_phase()` once per frame after `update_loading()` and logs only
+  on change, so an `AwaitStart` that is entered and left inside one call is
+  never observed; the loop sees `Bar -> Dissolve`. `append_event` is also called
+  only from `runtime.rs`, so emitting an ack event from `ui/state.rs` would push
+  diagnostics into the UI-state layer. Recorded `boot_start_policy` on the
+  existing `boot_start` event instead, which the handoff also proposed and which
+  is sufficient to disambiguate a trace
+- its instruction to preserve rejection of unknown arguments describes behavior
+  that does not exist: argument handling is a series of `args.iter().any(...)`
+  scans and unknown flags are silently ignored. Verified
+  (`yam-rust --totally-bogus-flag --version` prints the version and exits 0).
+  Left as is; adding rejection is separate work with real blast radius, since
+  the wrappers pass `$@` through and `--compile-hero` takes an optional
+  positional argument
+- its wrapper task was already satisfied: `bin/yam` and `bin/yam-sandbox` both
+  `quote_args "$@"` and append, so the flag forwards with no wrapper edits.
+  Confirmed through `YAM_WRAPPER_DRY_RUN=1` on both
+- extracted `runtime_options(args, auto_start_env)` in `main.rs` because the
+  handoff's CLI tests had nowhere to live: parsing was inline in `main()` and
+  there was no testable surface. Both inputs are parameters so precedence is
+  testable without mutating the process environment, which is racy under the
+  parallel harness. Put the tests in `mod cli_tests` rather than the existing
+  `mod tests`, since that module is removed on the PR #20 branch and this way
+  both land in either order without a conflict
+- `runtime::run` now takes `RuntimeOptions` rather than a third positional bool
+- 18 tests added, each proved able to fail: removing the automatic
+  acknowledgement fails three, and reverting to the handoff's literal Variant A
+  fails `automatic_start_never_shows_the_space_prompt`
+- verified against the real release binary under tmux rather than by unit tests
+  alone: default still waits with the prompt up; `--auto-start`,
+  `YAM_AUTO_START=1`, and `--sandbox --auto-start` all reach the first world
+  with no input and no prompt; `YAM_AUTO_START=0` still waits. A cold hero cache
+  reached the world in 10s against 6-7s warm and did not break progression,
+  because hero decode happens before the loop starts and the acknowledgement is
+  driven by the bar timer
+- did not bump the version here. The `0.4.11` bump lives on the PR #20 branch;
+  duplicating it would conflict on `Cargo.toml` and `README.md`
+- the Duo launcher half of the handoff lives in a different repository
+  (`~/_git/home/machines/dell-duo-home/...`) and is not part of this change

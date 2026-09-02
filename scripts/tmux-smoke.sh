@@ -31,10 +31,18 @@ cd "$repo_root"
 
 boot_wait="4.5"
 delay="1.5"
-if [[ "${1:-}" == "--delay" ]]; then
-  delay="$2"
-  shift 2
-fi
+auto_start=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --delay) delay="$2"; shift 2 ;;
+    # Launch with YAM's own auto-start policy instead of sending a Space.
+    # Nothing is injected: the runtime acknowledges its own boot prompt, so
+    # this path never has to guess when AwaitStart has been reached.
+    --auto-start) auto_start=1; shift ;;
+    --) shift; break ;;
+    *) break ;;
+  esac
+done
 
 # A cold hero cache makes boot far slower than the animation phases alone:
 # the runtime shells out to `chafa` once per source frame (64 for the current
@@ -49,8 +57,10 @@ if ! compgen -G "$hero_cache_dir/*.frame_cache.json" >/dev/null; then
   echo "note: no hero frame cache in $hero_cache_dir; waiting ${boot_wait}s for a cold chafa rebuild" >&2
 fi
 
-if [[ $# -eq 0 ]]; then
-  echo "usage: scripts/tmux-smoke.sh [--delay SECONDS] KEY [KEY...]" >&2
+# Keys are optional under --auto-start: capturing the first world with no
+# input at all is exactly what that mode is for.
+if [[ $# -eq 0 && "$auto_start" -eq 0 ]]; then
+  echo "usage: scripts/tmux-smoke.sh [--delay SECONDS] [--auto-start] KEY [KEY...]" >&2
   exit 1
 fi
 
@@ -61,10 +71,28 @@ if [[ ! -x "$bin" ]]; then
 fi
 
 session="yam-smoke-$$"
-tmux new-session -d -s "$session" -x 200 -y 50 "./$bin"
+launch="./$bin"
+[[ "$auto_start" -eq 1 ]] && launch="./$bin --auto-start"
+tmux new-session -d -s "$session" -x 200 -y 50 "$launch"
 trap 'tmux kill-session -t "$session" 2>/dev/null || true' EXIT
 
-sleep "$boot_wait"
+if [[ "$auto_start" -eq 1 ]]; then
+  # Poll for the footer rather than sleeping a fixed interval. Auto-start
+  # removes the keypress but not the variable part of boot: a cold hero cache
+  # still adds several seconds of chafa work before the phases even begin, so a
+  # hard-coded wait would be either flaky or needlessly slow.
+  deadline=$((SECONDS + 60))
+  until tmux capture-pane -t "$session" -p 2>/dev/null | grep -qF '[q]uit'; do
+    if (( SECONDS >= deadline )); then
+      echo "error: auto-start did not reach the first world within 60s" >&2
+      tmux capture-pane -t "$session" -p >&2
+      exit 1
+    fi
+    sleep 1
+  done
+else
+  sleep "$boot_wait"
+fi
 for key in "$@"; do
   tmux send-keys -t "$session" "$key"
   sleep "$delay"

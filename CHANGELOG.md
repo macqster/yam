@@ -17,6 +17,30 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- `--auto-start`, which lets a launch advance through the boot screen without
+  someone pressing `[space]`. Manual remains the default and the interactive
+  contract. `YAM_AUTO_START=1` is an environment fallback for launchers that
+  find a variable easier to set than an argument vector; the flag wins when both
+  are present, and only `1`/`true`/`yes`/`on` enable it.
+
+  Automatic mode skips the wait for a person, not the animation: coalesce, bar,
+  dissolve, and hold all run at their normal timings, and it reaches `AwaitStart`
+  the ordinary way before calling the same `acknowledge_loading_start`
+  transition the spacebar calls, so that phase keeps exactly one exit. No key
+  event is synthesized, and the chosen policy is recorded in the `boot_start`
+  diagnostics event rather than as a fake keypress.
+
+  The `press [space] to continue` prompt is not drawn under automatic mode.
+  `showing_start_prompt()` deliberately stays true through `Dissolve` so the
+  prompt fades with the rest of the screen — right when a person did press the
+  key, but it would otherwise leave the prompt up for the whole one-second
+  dissolve telling the user to do something already done for them.
+
+  `scripts/tmux-smoke.sh` gained `--auto-start`, which launches with the flag,
+  needs no keys, and polls for the first world instead of sleeping a fixed
+  interval — a cold hero cache still adds several seconds before the phases
+  begin, so a hard-coded wait would be flaky or needlessly slow.
+
 - Runtime package loading, completing the offline-compiler path started in
   0.4.8: `hero_frames_cached_from` now prefers a validated `HeroPackage` over
   the frame cache and the live chafa path, in that order. A package is used

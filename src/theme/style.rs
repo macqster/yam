@@ -135,10 +135,6 @@ pub fn modal_panel() -> Style {
     BTAS.modal_panel()
 }
 
-pub fn hero_overlay() -> Style {
-    BTAS.hero_overlay()
-}
-
 pub fn camera_indicator_track() -> Style {
     BTAS.camera_indicator_track()
 }

@@ -81,6 +81,14 @@ check_boundary src/core "$forbidden_upward" \
 check_boundary src/systems "$forbidden_upward" \
   "systems must not depend on scene, render, UI, or terminal modules"
 
+# `render/` owns terminal primitives, so unlike core/systems it may use ratatui
+# and crossterm freely - but it sits below scene and UI and must not reach up
+# into them. That edge existed until 2026-09-02 (`render/clock.rs` imported
+# `UiState`, and `render/render_state.rs` imported scene's `Camera`/`Viewport`)
+# and is guarded here so it cannot come back unnoticed.
+check_boundary src/render 'crate::(scene|ui)::' \
+  "render must not depend on scene or UI modules"
+
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo check --all-targets

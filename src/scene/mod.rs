@@ -2,7 +2,7 @@ use crate::core::world::WorldState;
 use crate::render::compositor::{grid_to_lines, merge_grid, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::render::mask::Mask;
-use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
+use crate::scene::render_state::{HudFrame, RenderState, WorldFrame};
 use crate::scene::viewport::Viewport;
 use crate::ui::scene::build_ui_layers;
 use crate::ui::state::UiState;
@@ -13,6 +13,7 @@ use std::cell::RefCell;
 pub mod camera;
 pub mod entity;
 pub mod layers;
+pub mod render_state;
 pub mod viewport;
 
 pub const WORLD_WIDTH: i32 = 212;

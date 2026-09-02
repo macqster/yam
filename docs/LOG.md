@@ -1394,3 +1394,43 @@ Logging rule:
   notes. It was in the `Brewfile` but stated nowhere a reader would look, while
   the notes did cover braille and color support
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 12:38 CEST
+
+- fixed findings six and seven from the 2026-09-02 repository assessment
+  together, because the same deletion closed both: the dead code in `render/`
+  *was* the upward coupling
+- deleted `src/render/clock.rs`. Only `clock_lines` was live, and it was a
+  one-line wrapper over `fonts.render`; `draw_clock`, `draw_clock_at` and their
+  `render_lines` helper were a direct-to-`Frame` API the grid/layer pipeline had
+  replaced. `ClockLayer` now calls `fonts.render(ui.clock_font, ..)` directly.
+  That removed both `render -> ui` imports in the repo
+- deleted the matching legacy API in `src/render/hero.rs`: `draw_hero`,
+  `draw_hero_at`, `draw_hero_debug`, `draw_hero_debug_at`, `debug_rect`, and the
+  `render_lines_clipped`/`clip_line` helpers that served only them. The `Hero`
+  struct and its animation methods are untouched and remain the live surface.
+  Removing them also dropped `hero.rs`'s `scene::viewport` import
+- deleted `compositor::merge_grid_legacy` and the `MaskMode` enum that existed
+  only to feed it, and `theme`'s `hero_overlay` style plus the
+  `HERO_CENTER_MARKER` glyph, whose only consumers were the deleted hero debug
+  overlay. `theme` keeps unused palette vocabulary deliberately, but these were
+  bespoke to one removed feature rather than general vocabulary
+- moved `render/render_state.rs` to `scene/render_state.rs`. All eighteen of its
+  consumers were already inside `scene/`, and `docs/architecture.md` already
+  described `Scene` as what computes it, so `render/` was importing scene's
+  `Camera` and `Viewport` to host a type that belonged to scene. That was the
+  last upward edge; `render/` now imports nothing from `scene` or `ui`
+- replaced `hero.rs`'s remaining test, which drove the deleted `draw_hero_at`,
+  with real coverage of the live animation API. `tick`, `toggle_animation` and
+  `step_animation` had no direct tests at all; there are now seven, including
+  the deliberate asymmetry that stepping stops at the last frame while playback
+  wraps. The deleted test's style-preservation claim is already covered on the
+  live path by `render::cell_grid`'s round-trip test
+- added `render/` to `scripts/check.sh`'s boundary guards and to
+  `docs/architecture.md`'s Forbidden Coupling list in the same change. Adding a
+  documented invariant without an executable guard is the exact gap finding two
+  was about; the guard is proved to fire on both an injected `crate::ui::` and
+  an injected `crate::scene::` import. `render/` keeps ratatui and crossterm,
+  which it owns, so it uses a narrower pattern than core/systems
+- net: `#[allow(dead_code)]` sites 144 -> 135, and one fewer module in `render/`
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

@@ -1,8 +1,8 @@
+use super::camera::Camera;
+use super::viewport::Viewport;
 use crate::core::spatial::{
     SpatialPoint as WorldPos, SpatialProjection, SpatialResolver, SpatialScreenPoint as ScreenPos,
 };
-use crate::scene::camera::Camera;
-use crate::scene::viewport::Viewport;
 use ratatui::prelude::Rect;
 
 #[derive(Clone, Copy, Debug)]

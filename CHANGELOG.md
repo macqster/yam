@@ -364,6 +364,16 @@ full change history in one running section instead of per-version ones.
 
 ### Removed
 
+- A legacy direct-to-`Frame` drawing API that the grid/layer pipeline had
+  already replaced: all of `render/clock.rs` (only `clock_lines` was live, and
+  it was a one-line wrapper over `fonts.render`), and `render/hero.rs`'s
+  `draw_hero`, `draw_hero_at`, `draw_hero_debug`, `draw_hero_debug_at`,
+  `debug_rect`, `render_lines_clipped` and `clip_line`. Also
+  `compositor::merge_grid_legacy` with the `MaskMode` enum that only fed it, and
+  `theme`'s `hero_overlay` style and `HERO_CENTER_MARKER` glyph, which existed
+  only for the deleted hero debug overlay. The `Hero` struct and its animation
+  methods are unchanged.
+
 - `src/scene/coords.rs`: the `core::spatial` compatibility shim, retired
   after confirming zero call sites outside its own tests.
 - Dead root `install.sh` and `tools/experiments/check_golden.py`, both

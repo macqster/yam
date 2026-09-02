@@ -29,12 +29,6 @@ pub struct Grid {
     pub cells: Vec<Cell>,
 }
 
-#[allow(dead_code)]
-pub enum MaskMode<'a> {
-    None,
-    Apply(&'a Mask),
-}
-
 impl Grid {
     pub fn new(width: u16, height: u16) -> Self {
         Self {
@@ -265,14 +259,6 @@ pub fn merge_grid(base: &mut Grid, top: &Grid, mask: Option<&Mask>) {
                 merge_cell(base_cell, top_cell);
             }
         }
-    }
-}
-
-#[allow(dead_code)]
-pub fn merge_grid_legacy(base: &mut Grid, top: &Grid, mask: MaskMode<'_>) {
-    match mask {
-        MaskMode::None => merge_grid(base, top, None),
-        MaskMode::Apply(mask) => merge_grid(base, top, Some(mask)),
     }
 }
 

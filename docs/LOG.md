@@ -1362,3 +1362,35 @@ Logging rule:
 - recorded the interrupt and the corrected chord set in `docs/rendering.md`,
   which owns the input contract
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 11:06 CEST
+
+- fixed the fifth finding from the 2026-09-02 repository assessment: the
+  package-first hero path is real, validated, and wired, but unreachable for
+  anyone who has not read `src/main.rs` — the runtime never writes a package,
+  and `--compile-hero` appeared in no user-facing doc
+- measured the options before choosing, and the measurements moved the answer.
+  A package is 19 MB of JSON and compiles in about 4 s. Committing one to the
+  repo would contradict `docs/hygiene.md`'s "keep build output and runtime cache
+  artifacts out of the repo" and would add 19 MB to history on every hero
+  change, so documenting the command is the right fix and shipping an artifact
+  is not
+- corrected an overstatement in the assessment itself while checking it. The
+  report implied a cold clone pays 20+ s of chafa work; measured with an
+  isolated `XDG_CACHE_HOME`, the start prompt appears at 8 s cold versus 5 s
+  warm. Roughly 4.5 s of that floor is the boot animation's own
+  `BOOT_COALESCE` + `BOOT_BAR` + `BOOT_HOLD`, so the cold-cache penalty is about
+  3 s, not 20. `scripts/tmux-smoke.sh`'s 20 s cold allowance is deliberately
+  conservative, not a measurement of user-visible cost
+- established what a package is actually worth, since it is not boot speed: with
+  a package present and `chafa` absent from `PATH` the hero rendered 42 braille
+  rows; with no package and `chafa` absent it rendered 0 and fell back to
+  placeholder frames. Package independence from `chafa` is the reason to run the
+  compiler, and that is how the README now frames it
+- verified the package path is genuinely taken: a run against a cache holding
+  only a package wrote no `frame_cache.json`, which is only possible if the
+  package was used
+- also documented `chafa` as a runtime requirement in the README's environment
+  notes. It was in the `Brewfile` but stated nowhere a reader would look, while
+  the notes did cover braille and color support
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

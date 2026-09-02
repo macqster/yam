@@ -288,6 +288,16 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- `--compile-hero` and the `chafa` runtime requirement are now in the README.
+  The validated hero-package layer — compiler, manifest, provenance and schema
+  validation, and a package-first startup path — was fully built and wired, but
+  no user could ever have a package: the runtime never writes one, and the only
+  command that does appeared in no user-facing doc. The README also never said
+  `chafa` is required at all, though the hero renders from the source GIF
+  through it and degrades to blank placeholder frames without it. Measured
+  rather than assumed: with a package and `chafa` off `PATH` the hero renders;
+  with neither, it renders nothing.
+
 - `Ctrl+C` now exits. Raw mode is enabled for the whole run, so the terminal
   never turns it into SIGINT — it arrived as an ordinary key event that nothing
   handled, because `KeyModifiers::CONTROL` was not tested anywhere in the

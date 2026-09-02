@@ -93,6 +93,13 @@ check runtime identity:
 cargo run --release -- --identity
 ```
 
+compile a hero package (optional, and the only way to get one — the runtime
+never writes one on its own):
+
+```bash
+cargo run --release -- --compile-hero
+```
+
 run the full maintenance gate:
 
 ```bash
@@ -229,6 +236,10 @@ active surface docs:
 </div>
 
 - UTF-8 braille support is required for hero rendering
+- `chafa` must be on `PATH`: the hero is rendered from the source GIF through
+  it, and without it the hero falls back to blank placeholder frames. A
+  compiled hero package is the way to drop that runtime dependency — it stores
+  the rendered cells, so a package-first launch needs no `chafa` at all
 - full-color terminal output is recommended
 - tested mostly in Kitty-family and Ghostty-like terminals
 - local reference window: Ghostty `120x31`, roughly `124x32` usable cells on

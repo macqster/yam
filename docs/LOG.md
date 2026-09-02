@@ -1234,3 +1234,17 @@ Logging rule:
 - preserved the acceptance boundary: package validation, placeholder checks,
   full automated verification, and bounded smoke evidence do not themselves
   prove supported-terminal visual acceptance or gameplay behavior
+
+## 2026-09-02 08:34 CEST
+
+- opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,
+  branched from `main` at `66de0f0`, so the follow-ups from the 2026-09-02
+  repository assessment land through a short-lived branch and PR rather than
+  against `main` directly
+- bumped `Cargo.toml` and `README.md`'s canonical current-release line in the
+  same change, since `scripts/check-docs.sh` enforces that pair and a
+  one-sided bump fails the docs gate
+- ran the full gate on the branch before any finding-driven edit, so a later
+  failure is attributable to a tweak rather than to the base it started from
+- the assessment's own findings are not applied here; this entry records only
+  the cycle opening

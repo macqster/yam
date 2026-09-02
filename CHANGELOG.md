@@ -98,6 +98,11 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- Development version bumped to `0.4.11` (from `0.4.10`). Opens a maintenance
+  cycle for the follow-ups from the 2026-09-02 repository assessment. The bump
+  itself changes no runtime behavior; each finding lands as its own entry as it
+  is addressed.
+
 - Development version bumped to `0.4.10` (from `0.4.9`). `--compile-hero`'s
   optional argument now selects a registered source by stem, full path, or
   bare filename, instead of overriding only the source path. Overriding the

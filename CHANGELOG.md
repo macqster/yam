@@ -389,6 +389,15 @@ full change history in one running section instead of per-version ones.
 
 ### Removed
 
+- `scene_config.json`'s cross-language coupling. A `#[cfg(test)]` test in
+  `src/main.rs` pinned ten of its field values, so changing a Python tooling
+  preset meant editing a Rust test — for a file `docs/config.md` says twice is
+  not authoritative for the Rust runtime, and which no non-test Rust code reads
+  or embeds. `bin/yam` and `bin/yam-sandbox` also listed it among the mtime
+  inputs that trigger a full Rust reinstall, a rebuild that could not change the
+  binary's behavior. The file itself stays: `tools/experiments/config.py` still
+  reads it, so the tooling that uses it now owns it alone.
+
 - A legacy direct-to-`Frame` drawing API that the grid/layer pipeline had
   already replaced: all of `render/clock.rs` (only `clock_lines` was live, and
   it was a one-line wrapper over `fonts.render`), and `render/hero.rs`'s

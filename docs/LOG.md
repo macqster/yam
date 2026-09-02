@@ -1494,3 +1494,31 @@ Logging rule:
 - noted but not changed: `hero_cache_dir` and the diagnostics path have the same
   latent empty-variable gap. Left alone to keep this commit focused
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:34 CEST
+
+- fixed the tenth finding from the 2026-09-02 assessment: `scene_config.json`'s
+  cross-language residue. Surveyed the whole dependency graph first rather than
+  assuming the file was dead
+- it is not dead. `tools/experiments/config.py` genuinely reads it at runtime,
+  so `docs/config.md`'s own exit condition ("if the tooling ever stops using
+  it...") has not been met and the file stays
+- what was wrong was the direction of the coupling. A `#[cfg(test)]` test in
+  `src/main.rs` asserted ten of its field values, so changing a Python tooling
+  preset required editing a Rust test - for a file the same docs say twice is
+  not authoritative for the Rust runtime. Removed
+- `bin/yam` and `bin/yam-sandbox` listed it among the mtime inputs that trigger
+  `scripts/update.sh`, so touching a Python preset forced a full Rust reinstall
+  that could not change the binary's behavior, since no non-test Rust code reads
+  or embeds the file. Removed from both
+- confirmed by exhaustive search that no non-test Rust path reads it: the only
+  reference was the `include_str!` inside that test module, and the crate has a
+  single `[[bin]]` with no `tests/`, `benches/`, or `examples/` directories
+- recorded two things found but deliberately not repaired, since the frozen
+  legacy tree is out of scope for a stabilization batch: the config's `gif_path`
+  (`hero/assets/hero_go.gif`) resolves only when the process CWD is
+  `tools/legacy-python/`, not from the run directory its own README documents;
+  and `tools/legacy-python/runtime/system.py` shells out to `go run ./cmd/yamv2`,
+  a target that does not exist anywhere in this repo, so that path always fails
+  into a silent `except` fallback
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

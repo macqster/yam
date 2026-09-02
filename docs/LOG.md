@@ -1293,3 +1293,32 @@ Logging rule:
   of which stated the narrower guard as current fact; hygiene now also records
   why the checks use `grep` so the `rg` form is not reintroduced as a tidy-up
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 09:41 CEST
+
+- fixed the third finding from the 2026-09-02 repository assessment: three
+  README claims that runtime evidence contradicts, plus the gate gap behind one
+  of them
+- the version badge read `0.4.0` against a crate at `0.4.10`. `scripts/check-docs.sh`
+  already compared `Cargo.toml` to README's canonical `current release` line, so
+  that line had tracked every bump while the badge four lines above it — the
+  first version a reader sees — drifted ten patch releases. Extended the gate to
+  the badge, in both places it carries the version: the shields.io URL and the
+  `alt` text, which can drift independently of each other
+- corrected the greenhouse snapshot line. It said "not yet growth-dispatched"
+  while `systems::tick::tick` has called `run_greenhouse_growth` on every tick
+  since 2026-07-22, with a seedling advancing `Dormant -> Growing -> Mature`;
+  and `future_surfaces` still listed "greenhouse growth dispatch, inspection UI"
+  although `GreenhouseInspectLayer` exists and is bound to `i`. `TODO.md` and
+  `docs/architecture.md` both recorded the landing correctly at the time — this
+  was a front-door-only miss, and the stale entry sat directly under a
+  `next_track` line that was already current
+- rewrote the `future_surfaces` entry as the curation/transfer write-path and
+  richer per-fixture inspection, which is what actually remains and which now
+  agrees with `next_track` instead of contradicting it
+- proved the new gate rather than trusting a green run: badge URL drift, alt-text
+  drift, a deleted badge, and canonical-line drift each fail with their own
+  message, and the unmodified tree passes
+- README edits kept to factual corrections under `AGENTS.md`'s mostly-settled
+  front-door rule; tone, GIF, and orientation-sheet structure untouched
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`

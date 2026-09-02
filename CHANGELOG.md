@@ -288,6 +288,20 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Three README claims that contradicted the runtime, and the gap in
+  `scripts/check-docs.sh` that let one of them drift. The version badge sat at
+  `0.4.0` while the canonical `current release` line four lines below it
+  tracked every bump through `0.4.10`, because the gate checked the line and
+  not the badge; the badge carries the version in both its shields.io URL and
+  its alt text, and both are gated now. The snapshot also described the
+  greenhouse as "not yet growth-dispatched" and listed "greenhouse growth
+  dispatch, inspection UI" under `future_surfaces`, though both landed on
+  2026-07-22: `systems::tick` calls `run_greenhouse_growth` every tick and the
+  read-only `GreenhouseInspectLayer` is bound to `i`. `TODO.md` and
+  `docs/architecture.md` already recorded the landing; only the front door
+  missed it. What actually remains — the curation/transfer write-path and
+  richer per-fixture inspection — now matches the `next_track` line above it.
+
 - The real root cause of an intermittently-failing weather test: it was
   making live network calls to `wttr.in` from the test suite.
 - Two panic-safety gaps following the same shape (an invariant enforced only

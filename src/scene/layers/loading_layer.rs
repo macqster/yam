@@ -46,6 +46,13 @@ impl Layer for LoadingLayer {
         let label_segments = loading_label_segments(&ui.loading.label, now);
         let bar_segments = progress_bar_segments(ui.loading.bar_progress(now), 16);
         let showing_start_prompt = ui.loading.showing_start_prompt();
+        // Switching the bar phase off has to remove the bar, not just stop it
+        // filling. `bar_progress` reports 0.0 during coalesce, so without this
+        // the boot screen drew a 16-cell empty track that never advanced -
+        // a bar the user had explicitly turned off.
+        let showing_bar = ui
+            .runtime
+            .boot_phase_enabled(crate::ui::state::BootLoadingPhase::Bar);
         let tail_rows = 5;
 
         let center_x = width / 2;
@@ -97,7 +104,9 @@ impl Layer for LoadingLayer {
             );
         } else {
             write_centered_segments(&mut grid, lower_text_center_x, prompt_y, &label_segments);
-            write_centered_segments(&mut grid, center_x, bar_y, &bar_segments);
+            if showing_bar {
+                write_centered_segments(&mut grid, center_x, bar_y, &bar_segments);
+            }
         }
 
         LayerOutput { grid, mask: None }
@@ -553,5 +562,34 @@ mod tests {
             .expect("loading art should include a visible glyph");
 
         assert_eq!(glyph_cell.style.bg, None);
+    }
+    #[test]
+    fn disabling_the_bar_phase_removes_the_bar_from_the_boot_screen() {
+        // Turning "boot bar" off must remove the bar, not merely freeze it at
+        // zero: `bar_progress` reports 0.0 during coalesce, so the row would
+        // otherwise render as a permanently-empty track.
+        let layer = LoadingLayer;
+        let world = WorldState::for_boot();
+        let fonts = FontRegistry::new();
+
+        let mut ui = UiState::new();
+        ui.start_loading_boot(BootStartPolicy::Manual);
+        ui.runtime.boot_phases.bar = false;
+        let off = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
+        let off_text = grid_text(&off.grid);
+
+        let mut ui_on = UiState::new();
+        ui_on.start_loading_boot(BootStartPolicy::Manual);
+        let on = layer.render_to_grid(124, 32, &world, &ui_on, &fonts, &render_state());
+        let on_text = grid_text(&on.grid);
+
+        assert!(
+            on_text.contains('\u{2504}') || on_text.contains('\u{2501}'),
+            "the bar should be drawn while the phase is enabled"
+        );
+        assert!(
+            !off_text.contains('\u{2504}') && !off_text.contains('\u{2501}'),
+            "no bar glyphs should remain once the phase is disabled"
+        );
     }
 }

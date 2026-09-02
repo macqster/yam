@@ -3485,6 +3485,28 @@ mod tests {
     }
 
     #[test]
+    fn every_exposed_phase_round_trips_through_set_and_enabled() {
+        // Guards a silent mismatch: `set` no-ops for phases it does not know
+        // and `enabled` hard-codes true for AwaitStart, so adding a phase to
+        // TOGGLEABLE_BOOT_PHASES that `set` ignores would render a settings row
+        // that always reads "on" and whose Left/Right do nothing. Nothing about
+        // that fails to compile, so it has to fail here instead.
+        for phase in TOGGLEABLE_BOOT_PHASES {
+            let mut settings = BootPhaseSettings::default();
+            settings.set(phase, false);
+            assert!(
+                !settings.enabled(phase),
+                "{phase:?} is exposed as a row but `set` does not turn it off"
+            );
+            settings.set(phase, true);
+            assert!(
+                settings.enabled(phase),
+                "{phase:?} is exposed as a row but `set` does not turn it on"
+            );
+        }
+    }
+
+    #[test]
     fn all_boot_phases_are_on_by_default() {
         let ui = UiState::new();
         for phase in TOGGLEABLE_BOOT_PHASES {

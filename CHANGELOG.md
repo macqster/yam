@@ -331,6 +331,20 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- The architecture boundary guards in `scripts/check.sh` missed any crate path
+  written without a trailing `::`. `use crate::ui;` inside `src/render/` passed
+  the gate, and code after such an import says `ui::state::UiState`, which
+  contains no `crate::ui::` either — so the forbidden dependency was invisible
+  on every line, not just the import. `use crate::{scene, core};` slipped
+  through the same way. The patterns now also accept a statement terminator or
+  a braced group; the trailing-character requirement is what still keeps
+  `crate::render_state` from matching `crate::render`.
+
+- Switching `boot bar` off left a permanently-empty progress track on the boot
+  screen. `bar_progress` reports `0.0` during coalesce and the loading layer
+  drew the bar row unconditionally, so a user who turned the bar off still saw
+  a bar for the full coalesce phase.
+
 - An instant boot recorded no `world_ready` event, and `runtime_exit` then
   reported `boot_completed: false` for a run that had booted correctly. The
   runtime reports readiness on a `Some -> None` boot-phase change, which never

@@ -38,6 +38,20 @@ Once the bar phase completes, the loading label and bar are replaced with:
 
 This state is intentionally quiet. It is meant to communicate that boot work is complete and the app is now waiting on the user, not hung.
 
+Waiting here is the default and is the interactive contract. A launch started
+with `--auto-start` (or `YAM_AUTO_START=1`) reaches this same phase through the
+same coalesce and bar timings and then calls the same
+`acknowledge_loading_start` transition the spacebar calls, so there is exactly
+one way out of `AwaitStart`. Nothing is skipped or shortened, and no key event
+is synthesized.
+
+Automatic mode does not draw the prompt at all. `showing_start_prompt()`
+deliberately stays true through `Dissolve` so the prompt fades with the rest of
+the screen rather than vanishing a frame early — correct when a person really
+did press the key, but under automatic mode that same rule would display
+`press [space] to continue` for the whole one-second dissolve, instructing the
+user to do something the runtime already did on their behalf.
+
 ### 3. Dissolve + Hold
 
 When `[space]` is pressed:
@@ -55,7 +69,8 @@ Boot currently follows this staged path:
 1. frame `0`: empty/near-empty boot world
 2. `tachyonfx` coalesce for `1s`
 3. loading-bar animation for `3s`
-4. silent wait for `[space]`
+4. silent wait for `[space]` — unless the launch is automatic, in which case
+   the runtime acknowledges here itself and the prompt is never drawn
 5. dissolve the visible `press [space] to continue` state for `1s`
 6. empty-screen hold for `0.5s`
 7. handoff into the first real world

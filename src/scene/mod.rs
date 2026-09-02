@@ -269,6 +269,7 @@ mod tests {
     use crate::render::compositor::Grid;
     use crate::render::fonts::FontRegistry;
     use crate::render::mask::Mask;
+    use crate::ui::state::BootStartPolicy;
     use crate::ui::state::UiState;
     use ratatui::backend::TestBackend;
     use ratatui::prelude::Rect;
@@ -668,7 +669,7 @@ mod tests {
         let mut terminal = Terminal::new(backend).expect("terminal should initialize");
         let world = crate::core::world::WorldState::for_boot();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
         let fonts = crate::render::fonts::FontRegistry::new();

@@ -220,7 +220,7 @@ mod tests {
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::theme::{palette, style as theme_style};
-    use crate::ui::state::UiState;
+    use crate::ui::state::{BootStartPolicy, UiState};
     use ratatui::prelude::Rect;
     use std::time::{Duration, Instant};
 
@@ -297,7 +297,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::Bar);
         ui.loading.started_at = Some(Instant::now() - Duration::from_millis(1500));
@@ -319,7 +319,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
 
@@ -339,7 +339,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
 
@@ -358,7 +358,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::Dissolve);
         ui.loading.started_at = Some(Instant::now());
@@ -377,7 +377,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::Hold);
         ui.loading.started_at = Some(Instant::now());
@@ -400,7 +400,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode =
             crate::ui::state::LoadingMode::Boot(crate::ui::state::BootLoadingPhase::AwaitStart);
 
@@ -457,7 +457,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
 
@@ -527,7 +527,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
         let corner = &open.grid.cells[open.grid.index(0, 0)];
@@ -542,7 +542,7 @@ mod tests {
         let world = WorldState::for_boot();
         let fonts = FontRegistry::new();
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
 
         let open = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state());
         let glyph_cell = open

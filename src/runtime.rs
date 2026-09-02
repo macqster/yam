@@ -20,7 +20,7 @@ use crate::render::fonts::FontRegistry;
 use crate::scene::{render_scene_with_scene_and_grid, Scene};
 use crate::systems::tick::tick;
 use crate::ui::scene::build_ui_layers;
-use crate::ui::state::UiState;
+use crate::ui::state::{BootStartPolicy, UiState};
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
@@ -75,10 +75,24 @@ fn build_quit_effect() -> Effect {
         .with_rng(SimpleRng::new(0x59414d))
 }
 
-pub fn run(
-    initial_world_kind: WorldKind,
-    hard_reset: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+/// Everything the runtime needs from the command line.
+///
+/// A struct rather than more positional parameters: `run` already took two
+/// bare values whose meaning was only clear from the call site, and launch
+/// policy is the kind of thing that accretes.
+#[derive(Clone, Copy, Debug)]
+pub struct RuntimeOptions {
+    pub initial_world_kind: WorldKind,
+    pub hard_reset: bool,
+    pub boot_start_policy: BootStartPolicy,
+}
+
+pub fn run(options: RuntimeOptions) -> Result<(), Box<dyn std::error::Error>> {
+    let RuntimeOptions {
+        initial_world_kind,
+        hard_reset,
+        boot_start_policy,
+    } = options;
     let runtime_start = Instant::now();
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -96,7 +110,7 @@ pub fn run(
         ui_state.force_initial_world_kind(initial_world_kind);
     }
     ui_state.refresh_weather_if_due();
-    ui_state.start_loading_boot();
+    ui_state.start_loading_boot(boot_start_policy);
     let mut world = WorldState::for_kind(ui_state.active_world_kind());
     let boot_world = WorldState::for_boot();
     let fonts = FontRegistry::new();
@@ -122,6 +136,7 @@ pub fn run(
             ("initial_world", json!(initial_world_kind.title())),
             ("hard_reset", json!(hard_reset)),
             ("reseeded_on_version_change", json!(version_changed)),
+            ("boot_start_policy", json!(boot_start_policy.label())),
             ("version", json!(crate::build_info::VERSION)),
             ("build", json!(crate::build_info::build_hash())),
         ],

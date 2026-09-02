@@ -552,6 +552,34 @@ pub enum BootLoadingPhase {
     Hold,
 }
 
+/// Whether the boot screen waits for a real keypress before continuing.
+///
+/// `Manual` is the default and the interactive contract: the boot screen stops
+/// at `AwaitStart` and shows `press [space] to continue` until a person presses
+/// it. `Automatic` is for launches with nobody at the keyboard - a managed
+/// launcher, a remote session, an unattended smoke test.
+///
+/// Automatic mode does not synthesize a key event and does not skip or shorten
+/// any phase. It reaches `AwaitStart` through the ordinary coalesce and bar
+/// timings and then calls the same `acknowledge_loading_start` transition the
+/// spacebar calls, so there is exactly one path out of `AwaitStart`.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum BootStartPolicy {
+    #[default]
+    Manual,
+    Automatic,
+}
+
+impl BootStartPolicy {
+    /// The label recorded in the `boot_start` diagnostics event.
+    pub fn label(self) -> &'static str {
+        match self {
+            BootStartPolicy::Manual => "manual",
+            BootStartPolicy::Automatic => "automatic",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LoadingMode {
     Boot(BootLoadingPhase),
@@ -565,6 +593,7 @@ pub struct LoadingState {
     pub mode: LoadingMode,
     pub started_at: Option<Instant>,
     pub duration: Duration,
+    pub boot_start_policy: BootStartPolicy,
 }
 
 impl Default for LoadingState {
@@ -575,6 +604,7 @@ impl Default for LoadingState {
             mode: LoadingMode::Transition,
             started_at: None,
             duration: Duration::from_millis(0),
+            boot_start_policy: BootStartPolicy::Manual,
         }
     }
 }
@@ -615,7 +645,19 @@ impl LoadingState {
         self.active && matches!(self.mode, LoadingMode::Boot(BootLoadingPhase::AwaitStart))
     }
 
+    /// Whether the `press [space] to continue` prompt should be drawn.
+    ///
+    /// This covers `Dissolve` as well as `AwaitStart` so the prompt fades out
+    /// with the rest of the boot screen rather than vanishing a frame early.
+    /// That is right for manual mode, where a person did press the key.
+    ///
+    /// Automatic mode never shows it. Without this the prompt would sit on
+    /// screen for the whole dissolve - a full second of instructing the user to
+    /// press a key the runtime already acknowledged on their behalf.
     pub fn showing_start_prompt(&self) -> bool {
+        if self.boot_start_policy == BootStartPolicy::Automatic {
+            return false;
+        }
         self.active
             && matches!(
                 self.mode,
@@ -1403,12 +1445,13 @@ impl UiState {
         self.settings_edit.clear();
     }
 
-    pub fn start_loading_boot(&mut self) {
+    pub fn start_loading_boot(&mut self, policy: BootStartPolicy) {
         self.loading.active = true;
         self.loading.label = "loading...".to_string();
         self.loading.mode = LoadingMode::Boot(BootLoadingPhase::Coalesce);
         self.loading.started_at = Some(Instant::now());
         self.loading.duration = LoadingState::BOOT_COALESCE;
+        self.loading.boot_start_policy = policy;
     }
 
     pub fn start_loading_transition(&mut self, label: &str, duration: Duration) {
@@ -1451,6 +1494,15 @@ impl UiState {
                     self.loading.mode = LoadingMode::Boot(BootLoadingPhase::AwaitStart);
                     self.loading.started_at = None;
                     self.loading.duration = Duration::from_millis(0);
+
+                    // Automatic mode acknowledges through the same transition
+                    // the spacebar uses rather than reproducing its internals,
+                    // so there stays exactly one way out of AwaitStart. The
+                    // coalesce and bar phases above ran in full; only the wait
+                    // for a human is skipped.
+                    if self.loading.boot_start_policy == BootStartPolicy::Automatic {
+                        self.acknowledge_loading_start();
+                    }
                 }
             }
             LoadingMode::Boot(BootLoadingPhase::AwaitStart) => {}
@@ -1979,6 +2031,7 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    use super::BootStartPolicy;
 
     use std::ffi::OsString;
     use std::path::PathBuf;
@@ -3285,10 +3338,147 @@ mod tests {
     }
 
     #[test]
+    fn boot_loading_defaults_to_manual() {
+        let ui = UiState::new();
+        assert_eq!(ui.loading.boot_start_policy, BootStartPolicy::Manual);
+    }
+
+    /// Drives the boot state to the end of the bar phase, the way the real
+    /// runtime does, and returns the state that results.
+    fn boot_to_end_of_bar(policy: BootStartPolicy) -> UiState {
+        let mut ui = UiState::new();
+        ui.start_loading_boot(policy);
+        ui.loading.mode = LoadingMode::Boot(BootLoadingPhase::Bar);
+        ui.loading.duration = LoadingState::BOOT_BAR;
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_COALESCE + LoadingState::BOOT_BAR)
+                .expect("boot phase start should support subtraction"),
+        );
+        ui.update_loading();
+        ui
+    }
+
+    #[test]
+    fn automatic_start_leaves_await_start_without_a_keypress() {
+        let ui = boot_to_end_of_bar(BootStartPolicy::Automatic);
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Dissolve));
+        assert!(!ui.loading.awaiting_start_confirmation());
+    }
+
+    #[test]
+    fn manual_start_still_waits_at_await_start() {
+        // The counterpart to the test above: same drive, opposite outcome.
+        let ui = boot_to_end_of_bar(BootStartPolicy::Manual);
+        assert!(ui.loading.awaiting_start_confirmation());
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::AwaitStart));
+    }
+
+    #[test]
+    fn automatic_start_runs_the_full_coalesce_and_bar_phases() {
+        // Automatic mode skips the wait for a human, not the animation. A boot
+        // that has only just started must still be in Coalesce.
+        let mut ui = UiState::new();
+        ui.start_loading_boot(BootStartPolicy::Automatic);
+        ui.update_loading();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Coalesce));
+
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_COALESCE)
+                .expect("coalesce start should support subtraction"),
+        );
+        ui.update_loading();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Bar));
+    }
+
+    #[test]
+    fn automatic_start_still_dissolves_and_holds() {
+        let mut ui = boot_to_end_of_bar(BootStartPolicy::Automatic);
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Dissolve));
+
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_DISSOLVE)
+                .expect("dissolve start should support subtraction"),
+        );
+        ui.update_loading();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Hold));
+
+        ui.loading.started_at = Some(
+            Instant::now()
+                .checked_sub(LoadingState::BOOT_HOLD)
+                .expect("hold start should support subtraction"),
+        );
+        ui.update_loading();
+        assert_eq!(
+            ui.loading.boot_phase(),
+            None,
+            "boot completes into the world"
+        );
+    }
+
+    #[test]
+    fn automatic_start_never_shows_the_space_prompt() {
+        // Without the policy check in `showing_start_prompt`, this would be
+        // true for the whole one-second dissolve.
+        let ui = boot_to_end_of_bar(BootStartPolicy::Automatic);
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Dissolve));
+        assert!(!ui.loading.showing_start_prompt());
+    }
+
+    #[test]
+    fn manual_start_shows_the_prompt_through_the_dissolve() {
+        // The manual contract this feature must not disturb: the prompt stays
+        // up while the screen dissolves rather than vanishing a frame early.
+        let mut ui = boot_to_end_of_bar(BootStartPolicy::Manual);
+        assert!(ui.loading.showing_start_prompt());
+        ui.acknowledge_loading_start();
+        assert_eq!(ui.loading.boot_phase(), Some(BootLoadingPhase::Dissolve));
+        assert!(ui.loading.showing_start_prompt());
+    }
+
+    #[test]
+    fn acknowledging_before_await_start_is_ignored_in_both_policies() {
+        // Space is dropped during Coalesce and Bar. That is what makes a
+        // sleep-then-send-space wrapper timing-sensitive, and the reason this
+        // feature exists; it must stay true.
+        for policy in [BootStartPolicy::Manual, BootStartPolicy::Automatic] {
+            let mut ui = UiState::new();
+            ui.start_loading_boot(policy);
+            ui.acknowledge_loading_start();
+            assert_eq!(
+                ui.loading.boot_phase(),
+                Some(BootLoadingPhase::Coalesce),
+                "{policy:?} should ignore an acknowledgement during Coalesce"
+            );
+
+            ui.loading.mode = LoadingMode::Boot(BootLoadingPhase::Bar);
+            ui.acknowledge_loading_start();
+            assert_eq!(
+                ui.loading.boot_phase(),
+                Some(BootLoadingPhase::Bar),
+                "{policy:?} should ignore an acknowledgement during Bar"
+            );
+        }
+    }
+
+    #[test]
+    fn boot_start_policy_does_not_touch_persisted_state() {
+        // The policy is a launch input, not a preference: it must never make
+        // the runtime think there is something to save.
+        let mut ui = UiState::new();
+        ui.start_loading_boot(BootStartPolicy::Automatic);
+        assert!(!ui.persisted_state_dirty);
+        let _ = boot_to_end_of_bar(BootStartPolicy::Automatic);
+        assert!(!ui.persisted_state_dirty);
+    }
+
+    #[test]
     fn boot_loading_waits_for_space_before_dissolve() {
         let mut ui = UiState::new();
 
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.started_at = Some(
             Instant::now()
                 .checked_sub(LoadingState::BOOT_COALESCE + LoadingState::BOOT_BAR)
@@ -3308,7 +3498,7 @@ mod tests {
     fn boot_loading_holds_briefly_after_dissolve() {
         let mut ui = UiState::new();
 
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         ui.loading.mode = LoadingMode::Boot(BootLoadingPhase::Dissolve);
         ui.loading.started_at = Some(
             Instant::now()

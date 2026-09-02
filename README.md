@@ -87,6 +87,13 @@ run the sandbox world:
 cargo run --release -- --sandbox
 ```
 
+boot straight into the world without pressing space (for managed launchers,
+remote sessions, and unattended smoke tests):
+
+```bash
+cargo run --release -- --auto-start
+```
+
 check runtime identity:
 
 ```bash
@@ -134,6 +141,13 @@ wrapper behavior that matters:
 - if repo runtime inputs are newer, wrappers refresh through `scripts/update.sh`
 - `YAM_USE_REPO_RUN=1` forces the older direct `cargo run --release` path
 - `YAM_DIAGNOSTICS=1` writes local NDJSON diagnostics
+- `--auto-start` advances the boot screen itself once the loading bar finishes,
+  instead of waiting for `[space]`; both wrappers forward it unchanged, and
+  `YAM_AUTO_START=1` is the environment fallback for launchers that find a
+  variable easier to set than an argument vector. Manual `[space]` remains the
+  default. The coalesce, bar, dissolve, and hold phases all still run in full —
+  automatic mode skips the wait for a person, not the animation, and never
+  synthesizes a key event
 - `YAM_HERO_SOURCE=<stem>` renders a registered hero source other than the default (`hero_gif_1`, `hero_gif_2`); an unset or unknown stem falls back to the default
 - dev-mode positions saved through move mode persist across launches; `yam --hard-reset` reseeds them to the shipped composition, and a version change reseeds them automatically
 

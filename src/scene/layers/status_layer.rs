@@ -86,6 +86,7 @@ mod tests {
     use crate::scene::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
+    use crate::ui::state::BootStartPolicy;
     use crate::ui::state::UiState;
     use ratatui::prelude::Rect;
 
@@ -215,7 +216,7 @@ mod tests {
             },
         };
         let mut ui = UiState::new();
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
 
         let output = layer.render_to_grid(124, 32, &world, &ui, &fonts, &render_state);
         let text: String = output.grid.cells.iter().map(|cell| cell.symbol).collect();
@@ -297,7 +298,7 @@ mod tests {
         assert_eq!(footer_hint(&ui), " [q]uit  •  [d]ev");
         assert_eq!(footer_stamp(&WorldState::new(), &ui), build_status_label());
 
-        ui.start_loading_boot();
+        ui.start_loading_boot(BootStartPolicy::Manual);
         assert_eq!(footer_hint(&ui), "");
         assert_eq!(footer_stamp(&WorldState::for_boot(), &ui), "");
 

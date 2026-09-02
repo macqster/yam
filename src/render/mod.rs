@@ -7,7 +7,6 @@
 
 pub mod cell_grid;
 pub mod chafa;
-pub mod clock;
 pub mod compositor;
 pub mod drawing;
 pub mod figlet;
@@ -20,4 +19,3 @@ pub mod hero_manifest;
 pub mod hero_package;
 pub mod hero_source;
 pub mod mask;
-pub mod render_state;

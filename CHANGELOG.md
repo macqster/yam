@@ -98,6 +98,27 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- `scripts/check.sh`'s architecture boundary checks can no longer pass without
+  running, and now enforce the whole contract rather than a third of it. They
+  were written as `if rg …; then fail; fi`, which reads a missing ripgrep
+  (exit 127) as "no matches" and reports success having inspected no files; a
+  wrong working directory passed the same way. CI only escaped because
+  `ubuntu-latest` happens to ship ripgrep. They use `grep` now, which is in
+  POSIX and needs no guard, and each check counts the `.rs` files it scanned
+  and refuses to pass on zero — necessary because BSD grep, the macOS default,
+  returns the same exit code for a missing directory as for a clean one. A
+  passing run reports the file count it checked.
+  `core/` is also held to the same rule as `systems/` now: `docs/architecture.md`
+  forbids `core -> ui` and `core -> render` alongside `core -> scene`, and
+  `src/core/mod.rs` claims no ratatui/crossterm usage, but only the `scene`
+  half was ever enforced. No violation existed — the tree was already clean —
+  so this closes an unguarded invariant rather than fixing a broken boundary.
+
+- Development version bumped to `0.4.11` (from `0.4.10`). Opens a maintenance
+  cycle for the follow-ups from the 2026-09-02 repository assessment. The bump
+  itself changes no runtime behavior; each finding lands as its own entry as it
+  is addressed.
+
 - Development version bumped to `0.4.10` (from `0.4.9`). `--compile-hero`'s
   optional argument now selects a registered source by stem, full path, or
   bare filename, instead of overriding only the source path. Overriding the
@@ -267,6 +288,74 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Saved UI state is written atomically and honors `XDG_CONFIG_HOME`. The write
+  was a plain `fs::write`, which truncates in place, so a crash or kill
+  mid-write left a half-written `state.json` that `load_or_new` then discarded
+  silently — losing saved positions with no message. It now writes a sibling
+  temp file and renames over the target. The path also ignored
+  `XDG_CONFIG_HOME` and hard-coded `~/.config`, unlike diagnostics
+  (`XDG_STATE_HOME`) and the hero cache (`XDG_CACHE_HOME`); and it resolved
+  `HOME` with `unwrap_or_default()`, so with `HOME` unset the whole path went
+  relative and state landed in whatever directory the app was launched from.
+
+- The test suite runs in about 10 seconds instead of about 111. The cause was
+  not what it looked like: the two slowest tests shell out to `chafa` once per
+  GIF frame, but one `chafa` spawn costs ~48 ms, and the real bottleneck was
+  decoding the two large hero GIFs at the default `opt-level = 0` — roughly
+  20 s per decode of the 1080x1080 48-frame source, in `GifDecoder` plus
+  `frame_to_canvas`'s per-pixel loop. Those sources are decoded eleven times
+  across the file, so nearly the whole suite was unoptimized pixel work. A
+  `[profile.test] opt-level = 2` trades a slower cold compile for an 11x faster
+  suite, which is what makes `scripts/verify.sh` runnable on every batch as the
+  workflow asks.
+
+- A stale claim in `chafa_is_available`'s doc comment, which said CI does not
+  install `chafa`. It does, so those content assertions do run in CI and the
+  skip is a local-developer affordance rather than a permanent CI exemption.
+
+- `--compile-hero` and the `chafa` runtime requirement are now in the README.
+  The validated hero-package layer — compiler, manifest, provenance and schema
+  validation, and a package-first startup path — was fully built and wired, but
+  no user could ever have a package: the runtime never writes one, and the only
+  command that does appeared in no user-facing doc. The README also never said
+  `chafa` is required at all, though the hero renders from the source GIF
+  through it and degrades to blank placeholder frames without it. Measured
+  rather than assumed: with a package and `chafa` off `PATH` the hero renders;
+  with neither, it renders nothing.
+
+- `Ctrl+C` now exits. Raw mode is enabled for the whole run, so the terminal
+  never turns it into SIGINT — it arrived as an ordinary key event that nothing
+  handled, because `KeyModifiers::CONTROL` was not tested anywhere in the
+  codebase. `q` was the only way out, and `q` is gated behind mode checks and a
+  confirmation modal, so a wedged overlay had no escape at all; in dev free-roam
+  `Ctrl+C` fell through to the character catch-all and recalled the camera home.
+  It is checked before any mode dispatch, so it works from the loading screen, a
+  modal, and settings edit alike, and it exits without saving or playing the
+  quit dissolve. `q` is unchanged as the graceful path.
+
+- Three dead branches in the dev-mode character handler. A `c == 'd'` arm was
+  shadowed by the unguarded `Char('d')` arm above it, and the shift-qualified
+  variants on the font and FPS chords tested for `'='`/`'-'` *with* SHIFT — but
+  no keyboard enhancement flags are pushed, so crossterm reports the resulting
+  character (`'+'`, `'_'`), and none of them could ever match. One of those dead
+  tests also duplicated a chord the font arm above had already claimed, so two
+  arms disagreed about the same keypress while both were unreachable. The
+  literal `{`/`}` and `-`/`+` chords that actually worked are unchanged.
+
+- Three README claims that contradicted the runtime, and the gap in
+  `scripts/check-docs.sh` that let one of them drift. The version badge sat at
+  `0.4.0` while the canonical `current release` line four lines below it
+  tracked every bump through `0.4.10`, because the gate checked the line and
+  not the badge; the badge carries the version in both its shields.io URL and
+  its alt text, and both are gated now. The snapshot also described the
+  greenhouse as "not yet growth-dispatched" and listed "greenhouse growth
+  dispatch, inspection UI" under `future_surfaces`, though both landed on
+  2026-07-22: `systems::tick` calls `run_greenhouse_growth` every tick and the
+  read-only `GreenhouseInspectLayer` is bound to `i`. `TODO.md` and
+  `docs/architecture.md` already recorded the landing; only the front door
+  missed it. What actually remains — the curation/transfer write-path and
+  richer per-fixture inspection — now matches the `next_track` line above it.
+
 - The real root cause of an intermittently-failing weather test: it was
   making live network calls to `wttr.in` from the test suite.
 - Two panic-safety gaps following the same shape (an invariant enforced only
@@ -299,6 +388,25 @@ full change history in one running section instead of per-version ones.
 - GitHub Dependabot security updates enabled.
 
 ### Removed
+
+- `scene_config.json`'s cross-language coupling. A `#[cfg(test)]` test in
+  `src/main.rs` pinned ten of its field values, so changing a Python tooling
+  preset meant editing a Rust test — for a file `docs/config.md` says twice is
+  not authoritative for the Rust runtime, and which no non-test Rust code reads
+  or embeds. `bin/yam` and `bin/yam-sandbox` also listed it among the mtime
+  inputs that trigger a full Rust reinstall, a rebuild that could not change the
+  binary's behavior. The file itself stays: `tools/experiments/config.py` still
+  reads it, so the tooling that uses it now owns it alone.
+
+- A legacy direct-to-`Frame` drawing API that the grid/layer pipeline had
+  already replaced: all of `render/clock.rs` (only `clock_lines` was live, and
+  it was a one-line wrapper over `fonts.render`), and `render/hero.rs`'s
+  `draw_hero`, `draw_hero_at`, `draw_hero_debug`, `draw_hero_debug_at`,
+  `debug_rect`, `render_lines_clipped` and `clip_line`. Also
+  `compositor::merge_grid_legacy` with the `MaskMode` enum that only fed it, and
+  `theme`'s `hero_overlay` style and `HERO_CENTER_MARKER` glyph, which existed
+  only for the deleted hero debug overlay. The `Hero` struct and its animation
+  methods are unchanged.
 
 - `src/scene/coords.rs`: the `core::spatial` compatibility shim, retired
   after confirming zero call sites outside its own tests.

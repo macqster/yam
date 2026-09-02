@@ -1234,3 +1234,319 @@ Logging rule:
 - preserved the acceptance boundary: package validation, placeholder checks,
   full automated verification, and bounded smoke evidence do not themselves
   prove supported-terminal visual acceptance or gameplay behavior
+
+## 2026-09-02 08:34 CEST
+
+- opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,
+  branched from `main` at `66de0f0`, so the follow-ups from the 2026-09-02
+  repository assessment land through a short-lived branch and PR rather than
+  against `main` directly
+- bumped `Cargo.toml` and `README.md`'s canonical current-release line in the
+  same change, since `scripts/check-docs.sh` enforces that pair and a
+  one-sided bump fails the docs gate
+- ran the full gate on the branch before any finding-driven edit, so a later
+  failure is attributable to a tweak rather than to the base it started from
+- the assessment's own findings are not applied here; this entry records only
+  the cycle opening
+
+## 2026-09-02 09:12 CEST
+
+- fixed the first two findings from the 2026-09-02 repository assessment, both
+  in `scripts/check.sh`, as one change: they are the same concern, and the
+  architecture gate is what every later boundary claim rests on
+- the gate could report success without running. `if rg …; then fail; fi` treats
+  a missing ripgrep (exit 127) as "no matches", so any machine without `rg` got
+  no boundary checking at all while still being told "All checks passed"; a
+  wrong working directory (exit 2) passed identically. Demonstrated before
+  fixing: `PATH=/usr/bin:/bin` with the old form exits 0 having read no files.
+  This is the same silent-pass shape `scripts/check-docs.sh` was already
+  repaired for, applied there and not here
+- moved to `grep`, which is in POSIX and so needs no availability guard at all,
+  rather than guarding `rg`'s presence — a gate with no optional dependency
+  cannot skip
+- while testing, found that exit status alone cannot carry the "could not run"
+  case: BSD grep, the macOS default and so the one this repo is developed
+  against, exits 1 for a missing directory, the same code it uses for a clean
+  pass. GNU grep and ugrep exit 2. Each check therefore counts the `.rs` files
+  it is about to scan and fails on zero, which is grep-independent, and a
+  passing run now prints that count so a silent skip is visually impossible
+- the first version of the count guard was itself silent: `find` at the head of
+  a `set -o pipefail` pipeline made the assignment fail and `set -e` killed the
+  script before its own error message. Caught by testing the failure path
+  rather than the success path; the directory test is now separate
+- extended the `core` check from `crate::scene::` only to the same
+  upward-dependency pattern `systems` already used. `docs/architecture.md`
+  forbids `core -> ui` and `core -> render` too, and `src/core/mod.rs` claims no
+  ratatui/crossterm usage, but neither was enforced. The tree was already clean,
+  so nothing had to change in `src/`
+- ratatui/crossterm are matched through `::` or a `use` statement rather than
+  bare, so the "No ratatui/crossterm usage" comment in `src/core/mod.rs` is not
+  itself reported as a violation
+- proved the gate in both directions rather than trusting a green run, per this
+  file's own rule: all five forbidden import forms (`crate::scene::`,
+  `crate::render::`, `crate::ui::`, `use ratatui::`, `use crossterm::`) injected
+  into `src/core/grid.rs` one at a time were each caught and named with
+  file:line; legitimate `crate::core::`/`super::` imports and the mod.rs comment
+  were not. Missing directory, empty directory, and absent-ripgrep cases were
+  each checked under both BSD grep and ugrep
+- updated `docs/architecture.md`, `docs/hygiene.md`, and `docs/audit.md`, each
+  of which stated the narrower guard as current fact; hygiene now also records
+  why the checks use `grep` so the `rg` form is not reintroduced as a tidy-up
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 09:41 CEST
+
+- fixed the third finding from the 2026-09-02 repository assessment: three
+  README claims that runtime evidence contradicts, plus the gate gap behind one
+  of them
+- the version badge read `0.4.0` against a crate at `0.4.10`. `scripts/check-docs.sh`
+  already compared `Cargo.toml` to README's canonical `current release` line, so
+  that line had tracked every bump while the badge four lines above it — the
+  first version a reader sees — drifted ten patch releases. Extended the gate to
+  the badge, in both places it carries the version: the shields.io URL and the
+  `alt` text, which can drift independently of each other
+- corrected the greenhouse snapshot line. It said "not yet growth-dispatched"
+  while `systems::tick::tick` has called `run_greenhouse_growth` on every tick
+  since 2026-07-22, with a seedling advancing `Dormant -> Growing -> Mature`;
+  and `future_surfaces` still listed "greenhouse growth dispatch, inspection UI"
+  although `GreenhouseInspectLayer` exists and is bound to `i`. `TODO.md` and
+  `docs/architecture.md` both recorded the landing correctly at the time — this
+  was a front-door-only miss, and the stale entry sat directly under a
+  `next_track` line that was already current
+- rewrote the `future_surfaces` entry as the curation/transfer write-path and
+  richer per-fixture inspection, which is what actually remains and which now
+  agrees with `next_track` instead of contradicting it
+- proved the new gate rather than trusting a green run: badge URL drift, alt-text
+  drift, a deleted badge, and canonical-line drift each fail with their own
+  message, and the unmodified tree passes
+- README edits kept to factual corrections under `AGENTS.md`'s mostly-settled
+  front-door rule; tone, GIF, and orientation-sheet structure untouched
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 10:24 CEST
+
+- fixed the fourth finding from the 2026-09-02 repository assessment: no
+  interrupt path, and three unreachable branches in the same key handler
+- `KeyModifiers::CONTROL` appeared nowhere in the codebase; the only modifier
+  ever tested was SHIFT. With raw mode on for the whole run the terminal never
+  raises SIGINT, so Ctrl+C was just an unhandled `Char('c')` — and in dev
+  free-roam it reached the character catch-all and called
+  `recall_camera_home()`. The only real exit was `q`, which is gated behind mode
+  checks and a confirmation modal, so a wedged overlay had no escape
+- added `is_interrupt(code, modifiers)` as a small pure predicate rather than
+  inlining the test, so the behavior is unit-testable without a terminal; the
+  loop checks it before any mode dispatch, ahead of the loading-screen branch,
+  and breaks immediately without saving or playing the quit dissolve
+- removed the dead branches. `c == 'd'` was shadowed by the unguarded
+  `Char('d')` arm above it. The shift-variants on the font and FPS chords tested
+  `'='`/`'-'` together with SHIFT, but the app pushes no keyboard enhancement
+  flags, so crossterm reports the shifted character (`'+'`, `'_'`) and the base
+  key never arrives with a SHIFT modifier — confirmed by grepping for
+  `KeyboardEnhancementFlags` before touching anything. One of those dead tests
+  also claimed `'=' + SHIFT` for `increase_hero_fps` when the font arm above had
+  already claimed the same chord, so the two disagreed while both were dead
+- simplified `base == 'c'` to `c == 'c'`: uppercase `'C'` is claimed by an
+  earlier arm under the same `dev_free_roam` guard, so only lowercase ever
+  reached the catch-all. Behavior-preserving
+- proved the new tests can fail before trusting them, per this file's rule.
+  Dropping the CONTROL requirement fails `plain_c_is_not_the_interrupt`;
+  restoring the original never-interrupt behavior fails both
+  `ctrl_c_is_the_interrupt` and `ctrl_shift_c_is_the_interrupt`. A first attempt
+  at the former revert did not compile (unused `modifiers` under
+  `-D warnings`), which produced no test output at all rather than a failure —
+  redone so it actually exercised the assertion
+- verified against the real release binary under tmux, not just the unit tests:
+  Ctrl+C exits from the main scene, from dev mode (where it previously recalled
+  the camera), and from the loading screen; plain `c` in dev mode still recalls
+  camera home and leaves the app running; `q` still exits gracefully
+- recorded the interrupt and the corrected chord set in `docs/rendering.md`,
+  which owns the input contract
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 11:06 CEST
+
+- fixed the fifth finding from the 2026-09-02 repository assessment: the
+  package-first hero path is real, validated, and wired, but unreachable for
+  anyone who has not read `src/main.rs` — the runtime never writes a package,
+  and `--compile-hero` appeared in no user-facing doc
+- measured the options before choosing, and the measurements moved the answer.
+  A package is 19 MB of JSON and compiles in about 4 s. Committing one to the
+  repo would contradict `docs/hygiene.md`'s "keep build output and runtime cache
+  artifacts out of the repo" and would add 19 MB to history on every hero
+  change, so documenting the command is the right fix and shipping an artifact
+  is not
+- corrected an overstatement in the assessment itself while checking it. The
+  report implied a cold clone pays 20+ s of chafa work; measured with an
+  isolated `XDG_CACHE_HOME`, the start prompt appears at 8 s cold versus 5 s
+  warm. Roughly 4.5 s of that floor is the boot animation's own
+  `BOOT_COALESCE` + `BOOT_BAR` + `BOOT_HOLD`, so the cold-cache penalty is about
+  3 s, not 20. `scripts/tmux-smoke.sh`'s 20 s cold allowance is deliberately
+  conservative, not a measurement of user-visible cost
+- established what a package is actually worth, since it is not boot speed: with
+  a package present and `chafa` absent from `PATH` the hero rendered 42 braille
+  rows; with no package and `chafa` absent it rendered 0 and fell back to
+  placeholder frames. Package independence from `chafa` is the reason to run the
+  compiler, and that is how the README now frames it
+- verified the package path is genuinely taken: a run against a cache holding
+  only a package wrote no `frame_cache.json`, which is only possible if the
+  package was used
+- also documented `chafa` as a runtime requirement in the README's environment
+  notes. It was in the `Brewfile` but stated nowhere a reader would look, while
+  the notes did cover braille and color support
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 12:38 CEST
+
+- fixed findings six and seven from the 2026-09-02 repository assessment
+  together, because the same deletion closed both: the dead code in `render/`
+  *was* the upward coupling
+- deleted `src/render/clock.rs`. Only `clock_lines` was live, and it was a
+  one-line wrapper over `fonts.render`; `draw_clock`, `draw_clock_at` and their
+  `render_lines` helper were a direct-to-`Frame` API the grid/layer pipeline had
+  replaced. `ClockLayer` now calls `fonts.render(ui.clock_font, ..)` directly.
+  That removed both `render -> ui` imports in the repo
+- deleted the matching legacy API in `src/render/hero.rs`: `draw_hero`,
+  `draw_hero_at`, `draw_hero_debug`, `draw_hero_debug_at`, `debug_rect`, and the
+  `render_lines_clipped`/`clip_line` helpers that served only them. The `Hero`
+  struct and its animation methods are untouched and remain the live surface.
+  Removing them also dropped `hero.rs`'s `scene::viewport` import
+- deleted `compositor::merge_grid_legacy` and the `MaskMode` enum that existed
+  only to feed it, and `theme`'s `hero_overlay` style plus the
+  `HERO_CENTER_MARKER` glyph, whose only consumers were the deleted hero debug
+  overlay. `theme` keeps unused palette vocabulary deliberately, but these were
+  bespoke to one removed feature rather than general vocabulary
+- moved `render/render_state.rs` to `scene/render_state.rs`. All eighteen of its
+  consumers were already inside `scene/`, and `docs/architecture.md` already
+  described `Scene` as what computes it, so `render/` was importing scene's
+  `Camera` and `Viewport` to host a type that belonged to scene. That was the
+  last upward edge; `render/` now imports nothing from `scene` or `ui`
+- replaced `hero.rs`'s remaining test, which drove the deleted `draw_hero_at`,
+  with real coverage of the live animation API. `tick`, `toggle_animation` and
+  `step_animation` had no direct tests at all; there are now seven, including
+  the deliberate asymmetry that stepping stops at the last frame while playback
+  wraps. The deleted test's style-preservation claim is already covered on the
+  live path by `render::cell_grid`'s round-trip test
+- added `render/` to `scripts/check.sh`'s boundary guards and to
+  `docs/architecture.md`'s Forbidden Coupling list in the same change. Adding a
+  documented invariant without an executable guard is the exact gap finding two
+  was about; the guard is proved to fire on both an injected `crate::ui::` and
+  an injected `crate::scene::` import. `render/` keeps ratatui and crossterm,
+  which it owns, so it uses a narrower pattern than core/systems
+- net: `#[allow(dead_code)]` sites 144 -> 135, and one fewer module in `render/`
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 12:55 CEST
+
+- fixed the eighth finding from the 2026-09-02 assessment, and the diagnosis in
+  that finding was wrong. The report blamed the two hero tests that shell out to
+  `chafa` once per frame. Measured: one `chafa` spawn costs about 48 ms, so all
+  112 spawns in the slower test account for a few seconds
+- the actual cost is decoding the hero GIFs at the default `opt-level = 0` -
+  about 20 s for the 1080x1080 48-frame source and 15 s for the 820x820
+  64-frame one, inside `GifDecoder::collect_frames` plus `frame_to_canvas`'s
+  per-pixel loop. `hero_gif_2` is decoded seven times and `hero_gif_1` four
+  times across the file, so roughly 200 s of unoptimized pixel work was the
+  suite
+- added `[profile.test] opt-level = 2`. Full suite went from 111 s to 10.3 s
+  measured warm, an 11x improvement; the chafa module alone went 117.2 s to
+  10.3 s. The trade is a slower cold compile, which is the right way round when
+  the workflow asks for the full gate on every maintenance batch and
+  `docs/hygiene.md` already concedes the pre-push hook is off by default because
+  of wall-clock cost
+- left the redundant `hero_frame_buffer_has_multiple_frames` in place. Its
+  assertion is a strict subset of `every_hero_source_matches_its_declared_geometry`
+  (which checks exact frame counts and needs no `chafa`) and of the frame-count
+  assertion inside `rendered_hero_frames_contain_real_content_not_placeholders`,
+  so it is genuinely redundant - but with the suite at 10 s the only argument
+  for removing it was speed, and removing tests for tidiness alone is not worth
+  the risk. Recorded here rather than acted on
+- corrected `chafa_is_available`'s doc comment, which claimed CI does not
+  install `chafa`. `.github/workflows/verify.yml` installs it, so those content
+  assertions do run in CI; the skip is a local-developer affordance
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:20 CEST
+
+- fixed the ninth finding from the 2026-09-02 assessment: non-atomic state
+  writes and inconsistent XDG handling
+- `persist_state_now` used `fs::write`, which truncates before writing, so an
+  interrupted save left a partial `state.json`. `load_or_new` swallows a parse
+  failure and falls back to defaults, so the user silently lost their saved
+  composition with no message. Writes now go to a `NamedTempFile` in the same
+  directory and are renamed over the target - same directory because a rename
+  is only atomic within one filesystem. `tempfile` was already a dependency
+- `state_path` ignored `XDG_CONFIG_HOME` while diagnostics honors
+  `XDG_STATE_HOME` and the hero cache honors `XDG_CACHE_HOME`, and it resolved
+  `HOME` through `unwrap_or_default()`, so an unset `HOME` produced a relative
+  path and wrote state into the launch directory. Resolution now mirrors
+  `render::chafa::hero_cache_dir`'s shape, with a temp-dir floor so the result
+  is never relative, and treats an empty variable as unset
+- split the resolution into `state_dir_from(config_home, home)` so precedence is
+  testable without mutating the process environment, which is racy under the
+  parallel test harness
+- six tests added, and proved to fail against the previous behavior: reverting
+  the path logic fails `state_dir_prefers_xdg_config_home` and
+  `state_dir_never_returns_a_relative_path`, and reverting to an in-place
+  truncating write fails `atomic_write_replaces_existing_content_completely`.
+  The first attempt at the write revert did not compile (unused imports under
+  `-D warnings`) and so produced no test output at all rather than a failure -
+  the same trap hit earlier in this batch; redone until it genuinely ran
+- noted but not changed: `hero_cache_dir` and the diagnostics path have the same
+  latent empty-variable gap. Left alone to keep this commit focused
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:34 CEST
+
+- fixed the tenth finding from the 2026-09-02 assessment: `scene_config.json`'s
+  cross-language residue. Surveyed the whole dependency graph first rather than
+  assuming the file was dead
+- it is not dead. `tools/experiments/config.py` genuinely reads it at runtime,
+  so `docs/config.md`'s own exit condition ("if the tooling ever stops using
+  it...") has not been met and the file stays
+- what was wrong was the direction of the coupling. A `#[cfg(test)]` test in
+  `src/main.rs` asserted ten of its field values, so changing a Python tooling
+  preset required editing a Rust test - for a file the same docs say twice is
+  not authoritative for the Rust runtime. Removed
+- `bin/yam` and `bin/yam-sandbox` listed it among the mtime inputs that trigger
+  `scripts/update.sh`, so touching a Python preset forced a full Rust reinstall
+  that could not change the binary's behavior, since no non-test Rust code reads
+  or embeds the file. Removed from both
+- confirmed by exhaustive search that no non-test Rust path reads it: the only
+  reference was the `include_str!` inside that test module, and the crate has a
+  single `[[bin]]` with no `tests/`, `benches/`, or `examples/` directories
+- recorded two things found but deliberately not repaired, since the frozen
+  legacy tree is out of scope for a stabilization batch: the config's `gif_path`
+  (`hero/assets/hero_go.gif`) resolves only when the process CWD is
+  `tools/legacy-python/`, not from the run directory its own README documents;
+  and `tools/legacy-python/runtime/system.py` shells out to `go run ./cmd/yamv2`,
+  a target that does not exist anywhere in this repo, so that path always fails
+  into a silent `except` fallback
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:52 CEST
+
+- closed out the assessment batch: all ten findings landed on
+  `claude/0.4.11-tweaks-20260902`, each its own commit with the full gate green
+- updated `docs/hygiene.md`'s pre-push-hook rationale, which said the hook is
+  off by default because it "adds real wall-clock time to every push". That was
+  true at 2m28s and is much weaker at about 17s. Left the default alone - that
+  is a maintainer decision - but the note no longer argues from a stale number
+- checked the repo-local skills for stale references to anything this batch
+  changed (`scripts/check.sh`'s boundaries, `render_state`'s home,
+  `render/clock.rs`, `scene_config.json`, suite timing) and found none, so
+  neither `skills/yam-maintenance` nor `skills/yam-architecture-review` needed
+  edits. Recorded here so the check is not repeated blind
+- corrected three factual errors in the external assessment report itself rather
+  than leaving them to propagate: it claimed zero production panic sites when
+  there are nineteen (`docs/audit.md` already had the right number and had
+  traced each); it claimed more test code than production, which is inverted -
+  the real split is 14,359 production against 8,490 test; and it estimated the
+  cold-boot hero cost at 20s when it is about 3s. The first two shared one root
+  cause, a scan that treated the first `#[cfg(test)]` in a file as the start of
+  the test module, so `#[cfg(test)]`-gated helper functions made it skip the
+  remainder of those files
+- the report's diagnosis of the slow suite was also wrong, and worth recording
+  because the wrong fix would have been plausible: it blamed the per-frame
+  `chafa` subprocesses, but a spawn costs 48ms and the cost was
+  unoptimized GIF decoding. A shared test fixture would have bought a fraction
+  of what a one-line profile change did

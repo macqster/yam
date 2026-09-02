@@ -114,6 +114,27 @@ if [[ "$crate_version" != "$readme_version" ]]; then
   exit 1
 fi
 
+# The badge carries the version twice, in the shields.io URL and in its alt
+# text, and neither was checked - which is how it sat at 0.4.0 while the
+# canonical line below it tracked every bump up to 0.4.10. Both are gated now,
+# because a reader sees the badge before the line.
+readme_badge_version="$(sed -n 's|.*img\.shields\.io/badge/version-\([^-]*\)-.*|\1|p' README.md | head -n 1)"
+if [[ -z "$readme_badge_version" ]]; then
+  echo "README.md is missing the version badge." >&2
+  exit 1
+fi
+
+if [[ "$crate_version" != "$readme_badge_version" ]]; then
+  echo "Version badge mismatch: Cargo.toml=$crate_version README.md badge=$readme_badge_version" >&2
+  exit 1
+fi
+
+readme_badge_alt="$(sed -n 's|.*alt="version \([^"]*\)".*|\1|p' README.md | head -n 1)"
+if [[ "$crate_version" != "$readme_badge_alt" ]]; then
+  echo "Version badge alt-text mismatch: Cargo.toml=$crate_version README.md alt=$readme_badge_alt" >&2
+  exit 1
+fi
+
 while IFS= read -r asset_path; do
   [[ -z "$asset_path" ]] && continue
   if [[ "$asset_path" =~ ^https?:// ]]; then

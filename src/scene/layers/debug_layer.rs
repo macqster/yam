@@ -801,8 +801,8 @@ mod tests {
     };
     use crate::core::guide_line::{soft_line_glyph, LinePoint};
     use crate::core::spatial::{SpatialPoint as WorldPos, SpatialScreenPoint as ScreenPos};
-    use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
+    use crate::scene::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::scene::{WORLD_HALF_H, WORLD_HALF_W};

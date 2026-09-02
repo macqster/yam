@@ -1,11 +1,11 @@
 use crate::core::spatial::SpatialScreenPoint as ScreenPos;
 use crate::core::world::WorldState;
-use crate::render::clock::clock_lines;
 use crate::render::compositor::{write_string, Grid};
 use crate::render::fonts::FontRegistry;
 use crate::scene::{Layer, LayerOutput, RenderState};
 use crate::theme::style as theme_style;
 use crate::ui::state::UiState;
+use crate::ui::widgets::clock::current_time_string;
 
 pub struct ClockLayer;
 
@@ -25,7 +25,7 @@ impl Layer for ClockLayer {
         if !ui.companions_visible_in_active_world() {
             return None;
         }
-        let lines = clock_lines(ui, fonts);
+        let lines = fonts.render(ui.clock_font, &current_time_string());
         let screen_pos = ctx.clock_screen();
         if is_visible(screen_pos, grid.width, grid.height, &lines) {
             for (i, line) in lines.iter().enumerate() {
@@ -75,8 +75,8 @@ mod tests {
     use crate::core::world::WorldState;
     use crate::render::compositor::merge_grid;
     use crate::render::fonts::FontRegistry;
-    use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
+    use crate::scene::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::theme::style as theme_style;

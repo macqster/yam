@@ -7,7 +7,7 @@
   <p>Rust + Ratatui terminal diorama engine</p>
 
   <p>
-    <img src="https://img.shields.io/badge/version-0.4.0-6f89a2" alt="version 0.4.0" />
+    <img src="https://img.shields.io/badge/version-0.4.11-6f89a2" alt="version 0.4.11" />
     <img src="https://img.shields.io/badge/runtime-Rust%20%2B%20Ratatui-8fb8c8" alt="Rust and Ratatui runtime" />
     <img src="https://img.shields.io/badge/posture-personal%20sandbox-879078" alt="personal sandbox posture" />
   </p>
@@ -35,7 +35,7 @@ Codex is doing most of the hard work here; life is unfortunately consuming so mu
 
 </div>
 
-current release: `0.4.10`
+current release: `0.4.11`
 
 ## snapshot
 
@@ -54,7 +54,7 @@ current release: `0.4.10`
 
 </div>
 
-- `worlds`: `boot`, `main`, `sandbox`, `greenhouse` (greenhouse is a minimal read-only room render, not yet growth-dispatched)
+- `worlds`: `boot`, `main`, `sandbox`, `greenhouse` (greenhouse renders a read-only nursery room, dispatches seedling growth on its own tick cadence, and has a read-only inspection surface; curation and transfer write-paths are not built)
 - `hero`: `Chafa-backed animated hero`
 - `scene`: `world-space projection with read-only render layers`
 - `companions`: `clock`, `weather`, `Polish date`
@@ -63,7 +63,7 @@ current release: `0.4.10`
 - `settings`: the dev-only popup includes a persisted `runtime` tab for the render-FPS ceiling alongside positions, UI, features, GIF, and theme controls
 - `future_surfaces`:
   - `calendar companion seam`
-  - `greenhouse growth dispatch, inspection UI, and multi-room/lab expansion`
+  - `greenhouse curation/transfer write-path, richer per-fixture inspection detail, and multi-room/lab expansion`
   - `broader flora beyond current vine/scaffold prototype`
   - `terminal-art asset compilation and inspection workflows`
 
@@ -91,6 +91,13 @@ check runtime identity:
 
 ```bash
 cargo run --release -- --identity
+```
+
+compile a hero package (optional, and the only way to get one — the runtime
+never writes one on its own):
+
+```bash
+cargo run --release -- --compile-hero
 ```
 
 run the full maintenance gate:
@@ -229,6 +236,10 @@ active surface docs:
 </div>
 
 - UTF-8 braille support is required for hero rendering
+- `chafa` must be on `PATH`: the hero is rendered from the source GIF through
+  it, and without it the hero falls back to blank placeholder frames. A
+  compiled hero package is the way to drop that runtime dependency — it stores
+  the rendered cells, so a package-first launch needs no `chafa` at all
 - full-color terminal output is recommended
 - tested mostly in Kitty-family and Ghostty-like terminals
 - local reference window: Ghostty `120x31`, roughly `124x32` usable cells on

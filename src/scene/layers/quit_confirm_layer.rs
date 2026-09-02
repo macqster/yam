@@ -88,8 +88,8 @@ mod tests {
     use crate::core::spatial::SpatialPoint as WorldPos;
     use crate::core::world::WorldState;
     use crate::render::fonts::FontRegistry;
-    use crate::render::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::camera::Camera;
+    use crate::scene::render_state::{HudFrame, RenderState, WorldFrame};
     use crate::scene::viewport::Viewport;
     use crate::scene::Layer;
     use crate::ui::state::UiState;

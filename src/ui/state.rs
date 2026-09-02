@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::{
-    fs, io,
+    ffi::OsString,
+    fs,
+    io::{self, Write},
     path::{Path, PathBuf},
     sync::mpsc::{self, Receiver},
     thread,
     time::{Duration, Instant},
 };
+use tempfile::NamedTempFile;
 
 use crate::core::spatial::SpatialPoint as WorldPos;
 use crate::core::world::WorldKind;
@@ -1847,12 +1850,51 @@ impl UiState {
         self.quit_confirm_open
     }
 
+    fn write_state_atomically(path: &Path, json: &str) -> io::Result<()> {
+        let parent = path.parent().ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidInput, "state path has no parent")
+        })?;
+        // The temp file must share the target's directory: `persist` is a
+        // rename, and renames are only atomic within one filesystem.
+        let mut tmp = NamedTempFile::new_in(parent)?;
+        tmp.write_all(json.as_bytes())?;
+        tmp.as_file().sync_all()?;
+        tmp.persist(path).map_err(|err| err.error)?;
+        Ok(())
+    }
+
+    /// Resolves the state directory from explicit values so the precedence is
+    /// testable without mutating the process environment.
+    ///
+    /// Empty variables are treated as unset. `PathBuf::from("")` is a relative
+    /// path, so honoring an empty `XDG_CONFIG_HOME` would silently place state
+    /// under the working directory.
+    fn state_dir_from(config_home: Option<OsString>, home: Option<OsString>) -> PathBuf {
+        if let Some(path) = config_home.filter(|value| !value.is_empty()) {
+            return PathBuf::from(path).join("yam");
+        }
+        if let Some(home) = home.filter(|value| !value.is_empty()) {
+            return PathBuf::from(home).join(".config").join("yam");
+        }
+        std::env::temp_dir().join("yam")
+    }
+
+    /// The state directory, honoring `XDG_CONFIG_HOME`.
+    ///
+    /// Diagnostics already read `XDG_STATE_HOME` and the hero cache reads
+    /// `XDG_CACHE_HOME`; this path ignored `XDG_CONFIG_HOME` and hard-coded
+    /// `~/.config`. It also resolved `HOME` with `unwrap_or_default()`, so with
+    /// `HOME` unset the whole path became relative and the runtime wrote its
+    /// state into whatever directory it was launched from - the repo included.
+    fn state_dir() -> PathBuf {
+        Self::state_dir_from(
+            std::env::var_os("XDG_CONFIG_HOME"),
+            std::env::var_os("HOME"),
+        )
+    }
+
     fn state_path() -> PathBuf {
-        let home = std::env::var_os("HOME").unwrap_or_default();
-        Path::new(&home)
-            .join(".config")
-            .join("yam")
-            .join("state.json")
+        Self::state_dir().join("state.json")
     }
 
     fn load_snapshot() -> io::Result<UiStateSnapshot> {
@@ -1895,17 +1937,23 @@ impl UiState {
             runtime: self.runtime,
             version: Self::current_version().to_string(),
         };
-        match serde_json::to_string_pretty(&snapshot) {
-            Ok(json) => {
-                if let Err(err) = fs::write(path, json) {
-                    eprintln!("[yam] failed to write state: {err}");
-                    return;
-                }
-            }
+        let json = match serde_json::to_string_pretty(&snapshot) {
+            Ok(json) => json,
             Err(err) => {
                 eprintln!("[yam] failed to encode state: {err}");
                 return;
             }
+        };
+
+        // Write a sibling temp file and rename it over the target rather than
+        // writing in place. `fs::write` truncates first, so a crash or a kill
+        // mid-write left a half-written state.json - which `load_or_new` then
+        // discarded silently, dropping saved positions with no message. A
+        // rename within one directory is atomic, so a reader sees either the
+        // previous file or the complete new one, never a partial.
+        if let Err(err) = Self::write_state_atomically(&path, &json) {
+            eprintln!("[yam] failed to write state: {err}");
+            return;
         }
         self.persisted_state_dirty = false;
     }
@@ -1931,6 +1979,75 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
+
+    use std::ffi::OsString;
+    use std::path::PathBuf;
+
+    #[test]
+    fn state_dir_prefers_xdg_config_home() {
+        let dir = UiState::state_dir_from(
+            Some(OsString::from("/xdg/config")),
+            Some(OsString::from("/home/someone")),
+        );
+        assert_eq!(dir, PathBuf::from("/xdg/config/yam"));
+    }
+
+    #[test]
+    fn state_dir_falls_back_to_home_dot_config() {
+        let dir = UiState::state_dir_from(None, Some(OsString::from("/home/someone")));
+        assert_eq!(dir, PathBuf::from("/home/someone/.config/yam"));
+    }
+
+    #[test]
+    fn state_dir_treats_empty_variables_as_unset() {
+        // `PathBuf::from("")` is relative, so honoring an empty variable would
+        // put state under the working directory.
+        let dir =
+            UiState::state_dir_from(Some(OsString::new()), Some(OsString::from("/home/someone")));
+        assert_eq!(dir, PathBuf::from("/home/someone/.config/yam"));
+    }
+
+    #[test]
+    fn state_dir_never_returns_a_relative_path() {
+        // With neither variable set this used to resolve to `.config/yam/...`,
+        // writing runtime state into the launch directory.
+        let dir = UiState::state_dir_from(None, None);
+        assert!(dir.is_absolute(), "state dir must not be relative: {dir:?}");
+    }
+
+    #[test]
+    fn atomic_write_replaces_existing_content_completely() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let path = dir.path().join("state.json");
+        std::fs::write(
+            &path,
+            "{\"stale\": true, \"padding\": \"xxxxxxxxxxxxxxxx\"}",
+        )
+        .expect("seed");
+        UiState::write_state_atomically(&path, "{\"fresh\":1}").expect("atomic write");
+        let read_back = std::fs::read_to_string(&path).expect("read back");
+        assert_eq!(
+            read_back, "{\"fresh\":1}",
+            "no residue from the longer old file"
+        );
+    }
+
+    #[test]
+    fn atomic_write_leaves_no_temp_files_behind() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let path = dir.path().join("state.json");
+        UiState::write_state_atomically(&path, "{}").expect("atomic write");
+        let entries: Vec<_> = std::fs::read_dir(dir.path())
+            .expect("read dir")
+            .filter_map(Result::ok)
+            .map(|e| e.file_name())
+            .collect();
+        assert_eq!(
+            entries.len(),
+            1,
+            "only the target should remain: {entries:?}"
+        );
+    }
     use super::{
         BootLoadingPhase, DebugPanelTab, FeatureVisibilityMode, LoadingMode, LoadingState,
         MetaState, MoveTarget, RuntimeSettings, SettingsAxisField, SettingsCursor, SettingsTab,

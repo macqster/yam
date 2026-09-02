@@ -54,6 +54,21 @@ fn build_loading_effect(phase: crate::ui::state::BootLoadingPhase) -> Effect {
     effect
 }
 
+/// Whether a key event is the terminal interrupt, Ctrl+C.
+///
+/// Raw mode is enabled for the whole run, so the terminal never turns Ctrl+C
+/// into SIGINT - it arrives as an ordinary key event and nothing stops this
+/// process unless the loop chooses to. Until this existed, `q` was the only
+/// exit, and `q` is gated behind mode checks and a confirmation modal, so
+/// there was no escape from a wedged overlay at all. Worse, in dev free-roam
+/// Ctrl+C fell through to the character catch-all and recalled the camera
+/// home, which is about as far from "stop" as a keypress can get.
+///
+/// Ctrl+Shift+C reports an uppercase `C`, so both cases count.
+fn is_interrupt(code: KeyCode, modifiers: KeyModifiers) -> bool {
+    modifiers.contains(KeyModifiers::CONTROL) && matches!(code, KeyCode::Char('c' | 'C'))
+}
+
 fn build_quit_effect() -> Effect {
     fx::dissolve((1000, Interpolation::Linear))
         .with_filter(CellFilter::Text)
@@ -144,6 +159,15 @@ pub fn run(
                 code, modifiers, ..
             }) = event::read()?
             {
+                // Checked before any mode dispatch, so the interrupt works
+                // from the loading screen, a modal, and settings edit alike.
+                // It exits straight away without saving or playing the quit
+                // dissolve: an escape hatch that opens a confirmation modal
+                // is not an escape hatch. `q` remains the graceful path.
+                if is_interrupt(code, modifiers) {
+                    break 'run;
+                }
+
                 if ui_state.loading.active {
                     match code {
                         KeyCode::Char('q') => break 'run,
@@ -300,18 +324,30 @@ pub fn run(
                         if ui_state.settings_edit_active() {
                             ui_state.settings_edit_insert_char(c);
                         } else if ui_state.dev_free_roam() {
-                            let is_shift = modifiers.contains(KeyModifiers::SHIFT);
-                            let base = c.to_ascii_lowercase();
-                            if base == 'c' {
+                            // Uppercase 'C' is claimed by an earlier arm under
+                            // this same `dev_free_roam` guard, so only the
+                            // lowercase key can reach here.
+                            //
+                            // The shift-variants that used to sit on the font
+                            // and FPS arms are gone. They tested for `'='`
+                            // or `'-'` *with* SHIFT, but no keyboard
+                            // enhancement flags are pushed, so crossterm
+                            // reports the resulting character: shift+`=` is
+                            // `'+'` and shift+`-` is `'_'`, and neither test
+                            // could ever match. One of them also duplicated a
+                            // chord the font arm above had already claimed, so
+                            // the two arms disagreed about the same keypress
+                            // while both were unreachable. A `c == 'd'` branch
+                            // sat here too, shadowed by the unguarded
+                            // `Char('d')` arm further up. The literal chords
+                            // below are the bindings that actually worked.
+                            if c == 'c' {
                                 ui_state.recall_camera_home();
-                            }
-                            if c == 'd' {
-                                ui_state.toggle_dev_mode();
-                            } else if c == '}' || (c == '=' && is_shift) {
+                            } else if c == '}' {
                                 ui_state.next_font();
-                            } else if c == '{' || (c == '-' && is_shift) {
+                            } else if c == '{' {
                                 ui_state.prev_font();
-                            } else if c == '+' || c == '=' && is_shift {
+                            } else if c == '+' {
                                 ui_state.increase_hero_fps();
                             } else if c == '-' {
                                 ui_state.decrease_hero_fps();
@@ -454,7 +490,41 @@ pub fn run(
 
 #[cfg(test)]
 mod tests {
-    use super::build_quit_effect;
+    use super::{build_quit_effect, is_interrupt};
+    use crossterm::event::{KeyCode, KeyModifiers};
+
+    #[test]
+    fn ctrl_c_is_the_interrupt() {
+        assert!(is_interrupt(KeyCode::Char('c'), KeyModifiers::CONTROL));
+    }
+
+    #[test]
+    fn ctrl_shift_c_is_the_interrupt() {
+        // Holding shift reports an uppercase C; it is still Ctrl+C.
+        assert!(is_interrupt(
+            KeyCode::Char('C'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT
+        ));
+    }
+
+    #[test]
+    fn plain_c_is_not_the_interrupt() {
+        // Without this, `c` in dev free-roam would stop recalling the camera
+        // home and start quitting instead.
+        assert!(!is_interrupt(KeyCode::Char('c'), KeyModifiers::NONE));
+        assert!(!is_interrupt(KeyCode::Char('C'), KeyModifiers::SHIFT));
+    }
+
+    #[test]
+    fn other_control_chords_are_not_the_interrupt() {
+        for key in ['d', 'q', 'z', 'v'] {
+            assert!(
+                !is_interrupt(KeyCode::Char(key), KeyModifiers::CONTROL),
+                "ctrl+{key} should not quit"
+            );
+        }
+        assert!(!is_interrupt(KeyCode::Esc, KeyModifiers::CONTROL));
+    }
 
     #[test]
     fn quit_dissolve_uses_one_second_timer() {

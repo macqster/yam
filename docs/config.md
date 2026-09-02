@@ -14,6 +14,7 @@
 
 - `scene_config.json` is authoritative for the visualizer / experimental tooling.
 - `scene_config.json` is not authoritative for the Rust renderer under `src/render/*`.
+- Nothing in the Rust tree reads or validates it. Until 2026-09-02 a `#[cfg(test)]` test in `src/main.rs` pinned its ten field values, so changing a Python tooling preset meant editing a Rust test, and `bin/yam`/`bin/yam-sandbox` listed it among the mtime inputs that trigger a full Rust reinstall - a rebuild that could not change the binary's behavior. Both were removed; the tooling that reads the file owns it.
 - Hero rendering fields in `scene_config.json` are ignored by the Rust renderer and only matter to the tooling path.
 - Detailed boot/loading-screen behavior, staging, and lessons learned live in [`loading-screen.md`](loading-screen.md); this note only carries the small config-facing ownership facts.
 

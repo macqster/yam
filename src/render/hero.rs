@@ -1,11 +1,5 @@
 use crate::render::hero_source::{self, HeroSource};
-use crate::scene::viewport::Viewport;
-use crate::theme::{glyphs, style as theme_style};
-use ratatui::{
-    prelude::*,
-    text::{Line, Span},
-    widgets::Paragraph,
-};
+use ratatui::text::{Line, Span};
 
 pub struct Hero {
     pub x: i32,
@@ -87,10 +81,7 @@ impl Hero {
 
     #[cfg(test)]
     pub fn test_stub(world_width: usize, world_height: usize) -> Self {
-        let frame = vec![Line::from(vec![Span::styled(
-            "stub",
-            theme_style::hero_overlay(),
-        )])];
+        let frame = vec![Line::from(vec![Span::raw("stub")])];
         Self {
             x: (world_width / 2) as i32,
             y: (world_height / 2) as i32,
@@ -136,94 +127,6 @@ impl Hero {
         if !self.playing {
             self.step_once = true;
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn debug_rect(&self) -> (i32, i32, u16, u16) {
-        let x = self.x - (self.width as i32 / 2);
-        let y = self.y - (self.height as i32 / 2);
-        (x, y, self.width, self.height)
-    }
-}
-
-#[allow(dead_code)]
-pub fn draw_hero(
-    frame: &mut Frame,
-    hero: &Hero,
-    viewport: &Viewport,
-    offset_x: i32,
-    offset_y: i32,
-) {
-    let screen_x = hero.x - viewport.x;
-    let screen_y = hero.y - viewport.y;
-    let start_x = screen_x - (hero.width as i32 / 2) + offset_x;
-    let start_y = screen_y - (hero.height as i32 / 2) + offset_y;
-    let area = frame.area();
-
-    if start_x >= area.right() as i32
-        || start_y >= area.bottom() as i32
-        || start_x + hero.width as i32 <= area.x as i32
-        || start_y + hero.height as i32 <= area.y as i32
-    {
-        return;
-    }
-
-    let skip_cols = (area.x as i32 - start_x).max(0) as usize;
-    let skip_rows = (area.y as i32 - start_y).max(0) as usize;
-    let start_x = start_x.max(area.x as i32) as u16;
-    let start_y = start_y.max(area.y as i32) as u16;
-    render_lines_clipped(frame, hero.frame(), start_x, start_y, skip_cols, skip_rows);
-}
-
-#[allow(dead_code)]
-pub fn draw_hero_at(
-    frame: &mut Frame,
-    hero: &Hero,
-    start_x: i32,
-    start_y: i32,
-    offset_x: i32,
-    offset_y: i32,
-) {
-    let start_x = start_x + offset_x;
-    let start_y = start_y + offset_y;
-    let area = frame.area();
-    if start_x >= area.right() as i32
-        || start_y >= area.bottom() as i32
-        || start_x + hero.width as i32 <= area.x as i32
-        || start_y + hero.height as i32 <= area.y as i32
-    {
-        return;
-    }
-
-    let skip_cols = (area.x as i32 - start_x).max(0) as usize;
-    let skip_rows = (area.y as i32 - start_y).max(0) as usize;
-    let start_x = start_x.max(area.x as i32) as u16;
-    let start_y = start_y.max(area.y as i32) as u16;
-    render_lines_clipped(frame, hero.frame(), start_x, start_y, skip_cols, skip_rows);
-}
-
-fn render_lines_clipped(
-    frame: &mut Frame,
-    lines: &[Line<'static>],
-    start_x: u16,
-    start_y: u16,
-    skip_cols: usize,
-    skip_rows: usize,
-) {
-    let max_width = frame.area().right().saturating_sub(start_x);
-    for (i, line) in lines.iter().skip(skip_rows).enumerate() {
-        let clipped = clip_line(line, skip_cols);
-        let text = clipped
-            .spans
-            .iter()
-            .map(|span| span.content.as_ref())
-            .collect::<String>();
-        if text.chars().all(|c| c == ' ') {
-            continue;
-        }
-        frame
-            .buffer_mut()
-            .set_line(start_x, start_y + i as u16, &clipped, max_width);
     }
 }
 
@@ -290,103 +193,100 @@ fn hard_lock_frame(lines: Vec<Line<'static>>, width: u16, height: u16) -> Vec<Li
     normalized
 }
 
-fn clip_line(line: &Line<'static>, skip_cols: usize) -> Line<'static> {
-    let mut remaining = skip_cols;
-    let mut spans = Vec::new();
-
-    for span in &line.spans {
-        let content = span.content.as_ref();
-        let content_width = content.chars().count();
-        if remaining >= content_width {
-            remaining -= content_width;
-            continue;
-        }
-
-        let clipped = content.chars().skip(remaining).collect::<String>();
-        remaining = 0;
-        if !clipped.is_empty() {
-            spans.push(Span::styled(clipped, span.style));
-        }
-    }
-
-    Line::from(spans)
-}
-
-#[allow(dead_code)]
-pub fn draw_hero_debug(
-    frame: &mut Frame,
-    hero: &Hero,
-    viewport: &Viewport,
-    _offset_x: i32,
-    _offset_y: i32,
-) {
-    let center_x = (hero.x - viewport.x).max(0) as u16;
-    let center_y = (hero.y - viewport.y).max(0) as u16;
-    if center_x < frame.area().width && center_y < frame.area().height {
-        if let Some(cell) = frame.buffer_mut().cell_mut((center_x, center_y)) {
-            cell.set_symbol(glyphs::HERO_CENTER_MARKER)
-                .set_fg(crate::theme::palette::MARKER);
-        }
-    }
-
-    let overlay = Paragraph::new(format!(
-        "Frame: {} / {}\nPlaying: {}",
-        hero.current_frame,
-        hero.frames.len(),
-        hero.playing
-    ))
-    .style(theme_style::hero_overlay());
-    frame.render_widget(overlay, Rect::new(0, 0, 28, 2));
-}
-
-#[allow(dead_code)]
-pub fn draw_hero_debug_at(
-    _frame: &mut Frame,
-    _hero: &Hero,
-    _start_x: i32,
-    _start_y: i32,
-    _offset_x: i32,
-    _offset_y: i32,
-) {
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{draw_hero_at, Hero};
-    use ratatui::backend::TestBackend;
-    use ratatui::style::{Color, Style};
-    use ratatui::text::{Line, Span};
-    use ratatui::Terminal;
+    use super::Hero;
+    use ratatui::text::Line;
 
-    #[test]
-    fn hero_rendering_preserves_span_styles_into_the_terminal_buffer() {
-        let backend = TestBackend::new(4, 1);
-        let mut terminal = Terminal::new(backend).expect("terminal should initialize");
-        let mut hero = Hero {
+    /// The previous test here drove `draw_hero_at`, part of a direct-to-`Frame`
+    /// drawing API that the grid/layer pipeline replaced; it was removed with
+    /// that API. Its style-preservation claim is covered on the live path by
+    /// `render::cell_grid`'s round-trip test. Its one assertion about live
+    /// behavior was `step_animation`, so that is what this module now covers
+    /// properly - `tick`, `toggle_animation`, and `step_animation` previously
+    /// had no direct tests at all.
+    fn hero_with_frames(count: usize) -> Hero {
+        Hero {
             x: 0,
             y: 0,
-            width: 4,
+            width: 1,
             height: 1,
-            frames: vec![vec![Line::from(vec![Span::styled(
-                "RGB ",
-                Style::default().fg(Color::Rgb(114, 22, 15)),
-            )])]],
+            frames: (0..count)
+                .map(|i| vec![Line::from(i.to_string())])
+                .collect(),
             current_frame: 0,
             playing: true,
             step_once: false,
-        };
+        }
+    }
 
-        terminal
-            .draw(|frame| draw_hero_at(frame, &hero, 0, 0, 0, 0))
-            .expect("hero line should render");
+    #[test]
+    fn playing_hero_advances_and_wraps_on_tick() {
+        let mut hero = hero_with_frames(3);
+        hero.tick();
+        assert_eq!(hero.current_frame, 1);
+        hero.tick();
+        assert_eq!(hero.current_frame, 2);
+        hero.tick();
+        assert_eq!(hero.current_frame, 0, "playing playback wraps");
+    }
 
-        let buffer = terminal.backend().buffer();
-        assert_eq!(buffer.content[0].symbol(), "R");
-        assert_eq!(buffer.content[1].symbol(), "G");
-        assert_eq!(buffer.content[0].style().fg, Some(Color::Rgb(114, 22, 15)));
-        assert_eq!(buffer.content[1].style().fg, Some(Color::Rgb(114, 22, 15)));
+    #[test]
+    fn paused_hero_holds_its_frame() {
+        let mut hero = hero_with_frames(3);
+        hero.toggle_animation();
+        assert!(!hero.playing);
+        hero.tick();
+        hero.tick();
+        assert_eq!(hero.current_frame, 0);
+    }
 
+    #[test]
+    fn step_advances_exactly_one_frame_while_paused() {
+        let mut hero = hero_with_frames(3);
+        hero.toggle_animation();
         hero.step_animation();
-        assert!(hero.playing);
+        hero.tick();
+        assert_eq!(hero.current_frame, 1);
+        // The step is consumed, so a further tick must not advance again.
+        hero.tick();
+        assert_eq!(hero.current_frame, 1);
+    }
+
+    #[test]
+    fn stepping_does_not_wrap_at_the_last_frame() {
+        // Deliberate asymmetry with playing mode, which does wrap: stepping is
+        // for inspecting frames, so it stops at the end rather than looping.
+        let mut hero = hero_with_frames(2);
+        hero.toggle_animation();
+        for _ in 0..4 {
+            hero.step_animation();
+            hero.tick();
+        }
+        assert_eq!(hero.current_frame, 1);
+    }
+
+    #[test]
+    fn step_is_ignored_while_playing() {
+        let mut hero = hero_with_frames(3);
+        hero.step_animation();
+        assert!(!hero.step_once, "a playing hero has nothing to step");
+    }
+
+    #[test]
+    fn resuming_playback_clears_a_pending_step() {
+        let mut hero = hero_with_frames(3);
+        hero.toggle_animation();
+        hero.step_animation();
+        assert!(hero.step_once);
+        hero.toggle_animation();
+        assert!(!hero.step_once);
+    }
+
+    #[test]
+    fn frame_falls_back_to_the_first_frame_when_the_index_is_stale() {
+        let mut hero = hero_with_frames(2);
+        hero.current_frame = 99;
+        assert_eq!(hero.frame(), &vec![Line::from("0".to_string())]);
     }
 }

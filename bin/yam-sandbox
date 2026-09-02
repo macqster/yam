@@ -38,8 +38,7 @@ repo_inputs_are_newer_than_installed() {
     "$ROOT/Cargo.toml" \
     "$ROOT/Cargo.lock" \
     "$ROOT/build.rs" \
-    "$ROOT/rust-toolchain.toml" \
-    "$ROOT/scene_config.json"; do
+    "$ROOT/rust-toolchain.toml"; do
     [[ -e "$path" && "$path" -nt "$INSTALLED_BIN" ]] && return 0
   done
 

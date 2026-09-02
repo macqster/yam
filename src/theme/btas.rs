@@ -74,10 +74,6 @@ impl BtasTheme {
         Style::default().bg(self.pms_432).fg(self.pms_427)
     }
 
-    pub fn hero_overlay(self) -> Style {
-        Style::default().fg(self.pms_427).bg(self.black)
-    }
-
     pub fn camera_indicator_track(self) -> Style {
         Style::default()
             .fg(self.pms_293)

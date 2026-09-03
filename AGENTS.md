@@ -60,7 +60,7 @@ bash scripts/check.sh
 cargo test --quiet
 ```
 
-`.github/workflows/verify.yml` runs the same `scripts/verify.sh` gate in CI on every push and pull request targeting `main`, and `main` requires it to pass before merging (branch protection). Treat that as a backstop, not a substitute for running it locally first.
+`.github/workflows/verify.yml` runs the same `scripts/verify.sh` gate in CI on pushes to `main` and on pull requests whose base is `main`, and `main` requires it to pass before merging (branch protection). Treat that as a backstop, not a substitute for running it locally first. Pushing a feature branch does not trigger it, so a stacked pull request — one based on another feature branch rather than `main` — runs no checks at all, and merging its base with `--delete-branch` closes it outright; see `docs/hygiene.md` before stacking one.
 
 CI is a source and reproducibility backstop, not proof that a device-origin
 candidate received the required Mac reassessment. Use the approved Mac host as

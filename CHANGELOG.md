@@ -364,6 +364,24 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Three docs stated the CI trigger inaccurately. `docs/hygiene.md`, `AGENTS.md`,
+  and `docs/release-model.md` each said `verify.yml` runs on "every push and
+  pull request", which reads as though pushing a feature branch runs CI. It does
+  not: the workflow is `push: branches: [main]` and
+  `pull_request: branches: [main]`, and every run in the repository's history
+  was raised by one of those two events. `release-model.md` was loosest, omitting
+  the `main` qualifier altogether.
+
+  That misreading is what makes stacked pull requests dangerous, so the
+  consequence is now recorded alongside the corrected claim: a PR based on
+  another feature branch runs no checks and displays as zero checks rather than
+  a pending run, and deleting a base branch closes every PR stacked on it, with
+  GitHub refusing to retarget a closed PR or reopen one whose base is gone — so
+  `gh pr merge <base> --delete-branch` takes the child with it. `docs/hygiene.md`
+  owns the procedure and the recovery path; `AGENTS.md` points at it rather than
+  restating it. Branch protection being `strict` is recorded there too, since it
+  is why a superseding branch needs a rebase and not just a new PR.
+
 - The architecture boundary guards in `scripts/check.sh` missed any crate path
   written without a trailing `::`. `use crate::ui;` inside `src/render/` passed
   the gate, and code after such an import says `ui::state::UiState`, which

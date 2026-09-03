@@ -34,7 +34,7 @@ not use release cuts in the conventional sense — see Distribution below.
 
 ## Workflow
 
-1. Keep `main` green under `bash scripts/verify.sh`. CI (`.github/workflows/verify.yml`) runs the same gate on every push and pull request, and `main` is branch-protected to require `verify` before merging.
+1. Keep `main` green under `bash scripts/verify.sh`. CI (`.github/workflows/verify.yml`) runs the same gate on pushes to `main` and on pull requests based on `main`, and `main` is branch-protected to require `verify` before merging. It does not run on a feature-branch push, nor on a pull request based on anything but `main`.
 2. Land every change through a short-lived branch and PR, with docs/tests/log updates in the same change. Direct pushes to `main` are rejected rather than merely gated: the required check only runs once a commit is pushed, so a first-time direct push can never satisfy it.
    - Admin bypass (`enforce_admins`) was disabled on 2026-08-20. Until then the required check was configured but admins were exempt, so pushes to `main` reported `Bypassed rule violations` and landed without it - the protection existed on paper and gated nothing. This step described direct-to-`main` as an option while that hole was open; it is not one now.
 3. When a branch merges through a PR, use a real merge commit — the repo only allows that merge method (squash and rebase-merge are disabled) so a consolidated pass's individually-verified commits stay visible in `main`'s history rather than collapsing into one blob. Head branches delete automatically on merge.

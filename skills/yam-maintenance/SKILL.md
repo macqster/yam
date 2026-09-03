@@ -29,5 +29,7 @@ description: Use when doing maintenance work in the YAM repository, including cl
 - Do not duplicate architecture facts in `TODO.md`, this skill, or logs; point to the owning docs.
 - Do not revert unrelated dirty worktree changes.
 - Prefer existing scripts and local patterns over new tooling.
-- For the optional pre-push gate, use `bash scripts/install-hooks.sh`; it is
-  clone-local and refuses to overwrite a conflicting local hook path.
+- The pre-push gate is on by default; `scripts/verify.sh` enables it for a clone
+  that has no `core.hooksPath` and reports that it did. Enable it directly with
+  `bash scripts/install-hooks.sh`; it is clone-local and refuses to overwrite a
+  conflicting local hook path. See `docs/hygiene.md` for the rationale.

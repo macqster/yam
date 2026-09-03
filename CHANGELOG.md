@@ -141,6 +141,22 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- The `pre-push` hook that runs the full gate is now on by default.
+  `scripts/verify.sh` enables it when a clone's `core.hooksPath` is unset, so a
+  fresh clone is covered the first time anyone runs the gate rather than
+  depending on a setup step being remembered — Git cannot install hooks on
+  clone, so a documented step alone would have left most clones unhooked.
+
+  Only the cost argument changed, not the consent one. The hook was opt-in
+  because enabling it should be an explicit choice rather than a silent
+  default, and that still holds, so `verify.sh` prints exactly what it changed
+  instead of enabling quietly. A `core.hooksPath` already pointing elsewhere is
+  a deliberate local setup: it is reported and left alone, never overwritten,
+  and does not fail the gate. Enabling is skipped under `CI`, where the
+  checkout is ephemeral and never pushes. What actually moved is wall-clock:
+  `[profile.test] opt-level = 2` took the gate from about 2m28s to about 16s
+  warm and 20s after a source change, so the reason to leave it off went away.
+
 - `docs/LOG.md` restored to the reverse-chronological order its own logging rule
   specifies. The file had drifted into two regimes with a seam: an older
   newest-first region, and — from roughly `2026-08-02` — a newer region appended

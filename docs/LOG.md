@@ -143,6 +143,43 @@ Logging rule:
   rebase moves the baseline it was measured against
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
 
+## 2026-09-03 07:32 CEST
+
+- turned the pre-push hook on by default, which `docs/hygiene.md` had been
+  holding open pending a maintainer decision since 2026-09-02
+- the cost argument behind the old default is what expired, not the consent
+  one. Measured the gate rather than citing the doc's figure: about 16s warm and
+  20s after touching a source file, against the roughly 2m28s that originally
+  justified leaving it off. The hook now costs seconds
+- Git cannot install hooks at clone time - `core.hooksPath` is local config, and
+  that is a deliberate security property, not a gap. So a purely documented
+  default would have meant most clones stayed unhooked. `scripts/verify.sh`
+  enables it instead when `core.hooksPath` is unset, since that script is the one
+  command the workflow already asks for on every batch and so is the earliest
+  point a fresh clone reliably reaches
+- kept the original principle intact while flipping the default it produced.
+  The hook was opt-in because enabling it should be an explicit choice rather
+  than a silent default; that reasoning survives, so the installer announces
+  exactly what it changed instead of mutating config quietly
+- three cases are deliberately not installs: a `core.hooksPath` already pointing
+  elsewhere is a deliberate local setup, so it is reported and left alone rather
+  than overwritten or treated as a gate failure; `CI` is skipped, where the
+  checkout is ephemeral and never pushes; and a tree with no `.git` at all is
+  skipped rather than erroring
+- tested all five paths in a throwaway clone rather than reasoning about them,
+  using a harness cut from the real `verify.sh` so the code under test was the
+  shipped code: unset installs and announces, already-enabled is silent, a
+  conflicting path warns and returns 0, `CI=true` does nothing, and a missing
+  `.git` returns 0. The first harness was itself wrong and silently proved
+  nothing - it lived in `/tmp`, so `verify.sh`'s `BASH_SOURCE`-derived
+  `repo_root` resolved to `/` and the git check correctly bailed. Caught only
+  because the expected install did not happen; a test that cannot fail visibly
+  is worth no more here than the gate that could not fail
+- `skills/yam-maintenance/SKILL.md` now points at `docs/hygiene.md` for the
+  rationale instead of restating the policy, per this repo's rule that skills
+  are not a second authority surface
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
 ## 2026-09-02 08:34 CEST
 
 - opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,

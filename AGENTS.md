@@ -90,8 +90,12 @@ Each repo-local skill should keep matching `agents/openai.yaml` UI metadata, inc
 
 When a maintenance or review pass changes agent-facing tooling, keep the
 workflow in this file and the owning hygiene doc; skills should point here
-instead of becoming a second policy source. Install the repository pre-push
-hook only through `bash scripts/install-hooks.sh`, which changes this clone's
-local `core.hooksPath` only and verifies the resulting setting. Never use the
-installer to alter global Git configuration, and do not claim the hook proves
-Mac-only merge authority.
+instead of becoming a second policy source. The repository pre-push
+hook, which runs the full gate before every push, is on by default as of
+2026-09-03: `scripts/verify.sh` enables it when this clone's `core.hooksPath` is
+unset, and says so when it does. Enable it directly with
+`bash scripts/install-hooks.sh`, which changes this clone's local
+`core.hooksPath` only and verifies the resulting setting; a `core.hooksPath`
+already pointing elsewhere is reported and left alone, never overwritten. Never
+use the installer to alter global Git configuration, and do not claim the hook
+proves Mac-only merge authority.

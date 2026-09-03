@@ -111,6 +111,38 @@ Logging rule:
   mistake is an easy one to repeat
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
 
+## 2026-09-03 07:14 CEST
+
+- recorded the stacked-pull-request behavior that cost a PR earlier today, in
+  `docs/hygiene.md` where the CI trigger is owned, with a pointer from
+  `AGENTS.md` rather than a second copy of the rule
+- two separate failures, both downstream of the same workflow trigger. A PR
+  based on another feature branch never matches
+  `pull_request: branches: [main]`, so it runs no checks — and shows as zero
+  checks rather than as a pending run, which reads like CI has not started yet
+  instead of never will. Deleting a branch then closes every PR stacked on it,
+  and GitHub will neither retarget a closed PR nor reopen one whose base is
+  gone, so `gh pr merge <base> --delete-branch` takes the child PR with it
+- verified the trigger claim rather than restating it from the workflow file:
+  every run in the repository's history was raised by `push` on `main` or by
+  `pull_request`, and none by a feature-branch push. That is what makes the
+  "no CI while stacked" half concrete rather than inferred
+- corrected the same claim in three places while here. `docs/hygiene.md`,
+  `AGENTS.md`, and `docs/release-model.md` each said the gate runs on "every
+  push and pull request", which reads as though pushing a branch runs CI. That
+  phrasing is the misreading the gotcha depends on, so leaving it while
+  documenting the consequence would have been half a fix. `release-model.md`
+  was loosest, omitting the `main` qualifier entirely
+- also recorded that branch protection is `strict`, so a branch must be current
+  with `main` before it can merge; that is why a superseding branch needs a
+  rebase and not only a new PR
+- noted the recovery path, since the failure is survivable and looks worse than
+  it is: the branch and its commits outlive the closed PR, so a rebase onto the
+  new `main` and a fresh PR lose nothing. Added the part that is easy to skip —
+  re-run whatever correctness check justified the original diff, because the
+  rebase moves the baseline it was measured against
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
 ## 2026-09-02 08:34 CEST
 
 - opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,

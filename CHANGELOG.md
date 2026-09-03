@@ -141,6 +141,26 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- `sha2` 0.10 -> 0.11, with `asset_digest`'s hex encoding hand-rolled to survive
+  the move. 0.11 returns a `hybrid_array::Array` where 0.10 returned a
+  `GenericArray`, and the new type does not implement `LowerHex`, so
+  `format!("{:x}", Sha256::digest(..))` stopped compiling — the reason the
+  Dependabot bump had sat red since 2026-08-26. The replacement writes the same
+  lowercase, zero-padded 64 characters, with no separators.
+
+  That equivalence is the whole risk in this change, not a detail. `asset_digest`
+  is stored inside every compiled hero package and compared verbatim on load, and
+  a mismatch there falls through silently by design — so a changed encoding would
+  not have failed, it would have quietly sent every package already on disk back
+  to the frame cache. The test now pins the encoding against canonical SHA-256
+  vectors rather than only asserting its length, and the pin was run against 0.10
+  *before* the bump: it passed unchanged afterwards, which is what makes it
+  evidence that the two encodings agree rather than just a description of the new
+  one. Proved able to fail by injecting an uppercase encoding.
+
+  `generic-array` leaves the dependency tree with this. The two duplicate
+  families `cargo tree -d` reports are unchanged.
+
 - `scripts/check.sh`'s architecture boundary checks can no longer pass without
   running, and now enforce the whole contract rather than a third of it. They
   were written as `if rg …; then fail; fi`, which reads a missing ripgrep

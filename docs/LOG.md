@@ -1671,3 +1671,52 @@ Logging rule:
   recognizes and quits a YAM terminal launched with `--auto-start` after a
   bridge restart, leaving unrelated terminals alone
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-03 06:35 CEST
+
+- took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since
+  2026-08-26. It is not a failure a rerun can clear: 0.11 returns a
+  `hybrid_array::Array` where 0.10 returned a `GenericArray`, and that type does
+  not implement `LowerHex`, so the single call site
+  `format!("{:x}", Sha256::digest(bytes))` in `render/hero_manifest.rs` stopped
+  compiling. Landed as its own branch rather than pushed onto the Dependabot
+  branch, since the fix is repo code and not something Dependabot can carry
+- replaced the formatting with an explicit lowercase, zero-padded hex write
+  with no separators. Deliberately hand-rolled rather than pulling in `hex`
+  or `base16ct`: the encoding is eight lines and the repo's dependency posture
+  favors convergence over another crate for a one-call-site need
+- treated output equivalence as the actual risk. `asset_digest` is persisted in
+  every compiled hero package and compared verbatim in
+  `render::chafa::manifest_matches`, and every package check falls through
+  silently by design, so a changed encoding would not have surfaced as an error
+  — it would have quietly stopped matching and sent every package already on
+  disk back to the frame cache, which is the exact failure mode a content
+  digest exists to prevent
+- ordered the work so the test proves that rather than assumes it: pinned
+  `digest_uses_the_stable_sha256_hex_shape` to three canonical SHA-256 vectors
+  and ran it against the *old* `sha2` 0.10 code first, confirming green, and
+  only then bumped the crate and rewrote the encoder. The same pin passing
+  afterwards is evidence the two encodings agree; had it been written after the
+  bump it would only have described the new behavior. Vectors were generated
+  independently with `shasum -a 256` rather than from the code under test
+- the assertion it replaces checked only `.len() == 64`, which is precisely what
+  would not have caught this class of change. Proved the new pin can fail by
+  injecting an uppercase `{byte:02X}` encoding: it reported the case difference
+  against all three vectors
+- that injection then produced a real trap worth recording. Reverting it with
+  `mv` restored the backup's original mtime, which was *older* than the
+  artifacts built from the injected source, so Cargo's mtime fingerprint
+  concluded nothing had changed and the next full run silently retested the
+  uppercase binary — a genuine-looking failure with correct source on disk.
+  `touch` on the file cleared it. Worth knowing before trusting any
+  `sed -i.bak`-style revert in this repo: it is the same stale-timestamp shape
+  `docs/hero-cache.md` already warns about for art assets
+- `cargo tree -d` after the dependency change reports the same two duplicate
+  families as before (`hashbrown` 0.16.1/0.17.1, `syn` 2/3); no new duplicate
+  was introduced, and `generic-array` and `version_check` leave the tree
+  entirely. `docs/audit.md`'s dependency note stays accurate as written, so it
+  is not edited
+- recorded the encoding as an on-disk format fact in `docs/hero-package.md`,
+  where the manifest shape is owned, rather than only in this log
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1` (368 tests, 41 docs
+  linted, cspell clean)

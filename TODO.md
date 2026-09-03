@@ -48,10 +48,10 @@ Issue link rule:
 
 ## 2. Flora Runtime And Organism Model
 
-- `refactor` split vine-specific types and helpers out of the broad `core::flora` surface once a second organism family is close enough to need shared vocabulary.
+- `refactor` split the vine-specific half of `core::flora` (axes, organs, growth tips, root attachment) out of the broad surface once a family that actually needs that geometry lands. `Seedling` (2026-07-22) is a second family but did not fire this trigger: it shares only the identity core (id, species id, journal id, life state, stats) and carries no geometry. The vine-specific half is still consumed only by vine code — `systems::growth`, `systems::aging`, `scene::layers::vine_layer`, `scene::layers::debug_layer` — so there is no second family's usage to factor a shared vocabulary out of.
 - `verify` preserve the shared organism identity set before new plant families land: organism id, species id, journal id, life state, stats, and the first species-profile shape.
-- `verify` preserve `FloraState` family-count and organism-identity adapters and the locked enum-backed `FloraInstance` family store (`FloraState::organisms: Vec<FloraInstance>`, `vines()`/`vines_mut()`/`push_vine()` accessors); a second family gets a new `FloraInstance` variant, not another top-level ad hoc vector.
-- `verify` `systems::growth::run_growth` iterates every vine in `world.flora` (2026-07-21) rather than finding one hard-coded seed id, matching `systems::aging::run_aging`'s existing all-vines shape; keep this true as families beyond `Vine` are added.
+- `verify` preserve `FloraState` family-count and organism-identity adapters and the locked enum-backed `FloraInstance` family store (`FloraState::organisms: Vec<FloraInstance>`, with `vines()`/`vines_mut()`/`push_vine()` and `seedlings()`/`seedlings_mut()`/`push_seedling()` accessors); `Seedling` took the second variant on 2026-07-22 and every further family gets its own variant, not another top-level ad hoc vector.
+- `verify` `systems::growth::run_growth` iterates every vine in `world.flora` (2026-07-21) rather than finding one hard-coded seed id, matching `systems::aging::run_aging`'s existing all-vines shape; `run_greenhouse_growth` already follows it for seedlings, so keep every family's dispatcher on the same cadence-gate plus all-instances shape as further families are added.
 - `verify` render layers stay read-only and visualize geometry derived from world/flora/spatial state.
 - `verify` `OrganismJournal` remains a per-instance event log; `SpeciesRegistry` must not store runtime life history.
 - `inspect` keep botanical terminology grounded through `docs/glossary.md`; reserve `node` for plant morphology/anatomy unless the spatial terminology contract changes.

@@ -103,7 +103,7 @@ The current repo already has the first seams that greenhouse work should use:
 
 ## 0.4 Readiness Snapshot
 
-Last checked: 2026-07-22. This section intentionally stays a short pointer
+Last checked: 2026-09-03. This section intentionally stays a short pointer
 rather than a restated status list: the 0.4 Gate Checklist immediately below
 is the single source of truth for per-gate status, and `docs/LOG.md` carries
 the full narrative of how each gate got there. Keeping detail in one place
@@ -111,17 +111,22 @@ avoids the two drifting out of sync with each other, which happened twice
 already (a stale test count, a stale "no growth dispatch yet" note) before
 this section was trimmed.
 
-- baseline verification is green: `bash scripts/verify.sh` passed with docs
-  checks, ownership checks, clippy, cargo check, and `273` tests
+- baseline verification is green: `bash scripts/verify.sh` passes with docs
+  checks, ownership checks, clippy, cargo check, and the full test suite. The
+  measured count and the date it was taken live in the Gate Checklist's
+  Verification-green row below, and only there — restating the number here is
+  what drifted the last two times
 - `known_issues.md` has no active tracked issues
-- every row in the Gate Checklist below currently reads Ready or Locked
+- every row in the Gate Checklist below currently reads Ready or Locked,
+  except Hero/render fallback hardened, which has read Prep-ready since
+  2026-05-31 and is not a regression
 
 ## 0.4 Gate Checklist
 
 | Gate | Status | Evidence | Remaining Work |
 | --- | --- | --- | --- |
 | Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
-| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `273` tests (re-verified 2026-07-22 with a working toolchain) | Re-run before each implementation batch |
+| Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `368` tests (re-verified 2026-09-03 under `YAM_DOCS_STRICT=1`) | Re-run before each implementation batch |
 | Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
 | Flora storage decision | Locked | `FloraState` stores an enum-backed `FloraInstance` family store (locked and implemented 2026-07-21); all call sites migrated off the old `vines: Vec<VineInstance>` field | Add a new variant when a second family actually lands; no further shape decision needed |
 | Species-profile data format | Locked | Static Rust fixtures, matching `core::flora::border_vine_species_profile()` (locked 2026-07-21), validated by a `core::organism` test proving `SpeciesRegistry` holds multiple distinct profiles independently | Structured files remain deferred until schema stabilizes and real authoring volume appears |

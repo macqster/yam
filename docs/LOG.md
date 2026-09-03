@@ -180,6 +180,34 @@ Logging rule:
   are not a second authority surface
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
 
+## 2026-09-03 09:13 CEST
+
+- corrected the `273`-test claim in `docs/greenhouse-roadmap.md`, stale since
+  2026-07-22 against a suite that now runs 368
+- the figure was stated twice in the same file - once in the 0.4 Readiness
+  Snapshot and once in the Gate Checklist's Verification-green row - which is
+  the same duplication that produced the `258`/`267` contradiction fixed on
+  2026-07-22. Updating both numbers would have left the mechanism intact, so
+  the snapshot now points at the checklist row instead of restating the
+  figure. One place owns it
+- took the number from a real run rather than from counting `#[test]`
+  attributes: `YAM_DOCS_STRICT=1 bash scripts/verify.sh` on the unmodified tree
+  reported `368 passed; 0 failed; 0 ignored`, 41 docs linted, cspell clean, and
+  boundary guards over 12, 7, and 15 files in `core`, `systems`, and `render`.
+  The attribute count agrees here, but it is not the claim the row makes - it
+  counts what is written, not what ran
+- re-dated the snapshot to today, which meant checking its other two bullets
+  rather than only the one being fixed. `known_issues.md` is empty, and every
+  checklist row reads Ready or Locked except `Hero/render fallback hardened`,
+  which reads `Prep-ready`. That bullet has said "Ready or Locked" since the day
+  it was written (`f4dae93`, 2026-07-22) with the Prep-ready row already in
+  place, so it is loose phrasing from the start rather than drift - recorded the
+  exception inline so a later reader does not mistake it for a regression
+- no `CHANGELOG.md` entry: that file is the curated summary and points here for
+  the full record, and a corrected figure in one gate row is bookkeeping rather
+  than a developer-visible change
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
 ## 2026-09-02 08:34 CEST
 
 - opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,

@@ -6,7 +6,7 @@
 //! exact source asset and compiler invocation that produced it. This type
 //! carries no rendering logic; it is pure provenance data.
 
-use std::{fs, io, path::Path};
+use std::{fmt::Write as _, fs, io, path::Path};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -67,8 +67,25 @@ impl HeroManifest {
     }
 }
 
+/// Hex-encodes a SHA-256 digest as lowercase, zero-padded bytes, no separators.
+///
+/// This is hand-rolled rather than `format!("{:x}", ..)` because `sha2` 0.11
+/// returns a `hybrid_array::Array`, which does not implement `LowerHex` the way
+/// the `GenericArray` returned by 0.10 did. The output shape is deliberately
+/// unchanged: `asset_digest` is persisted in every compiled hero package and
+/// compared verbatim on load (`render::chafa::manifest_matches`), so a
+/// different encoding would not fail loudly - it would quietly stop matching,
+/// and every package already on disk would fall through to the frame cache.
+/// `digest_uses_the_stable_sha256_hex_shape` pins that shape against canonical
+/// vectors, and passed unchanged across the 0.10 -> 0.11 swap.
 fn digest_bytes(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    let digest = Sha256::digest(bytes);
+    let mut hex = String::with_capacity(digest.len() * 2);
+    for byte in &digest {
+        // Writing to a `String` is infallible.
+        let _ = write!(hex, "{byte:02x}");
+    }
+    hex
 }
 
 #[cfg(test)]
@@ -88,8 +105,29 @@ mod tests {
         assert_ne!(digest_bytes(b"frame a"), digest_bytes(b"frame b"));
     }
 
+    /// Pins the exact hex shape rather than only its length.
+    ///
+    /// `asset_digest` is written into every compiled hero package and compared
+    /// verbatim when one is loaded (`render::chafa::manifest_matches`), so this
+    /// encoding is an on-disk format, not a presentation detail: drift in case,
+    /// padding, or separators would silently invalidate every package already
+    /// on disk. The previous length-only assertion could not have caught that,
+    /// which is exactly what the `sha2` 0.11 hex-encoding replacement needed
+    /// checking for. Values are canonical SHA-256 vectors, verified
+    /// independently against `shasum -a 256`.
     #[test]
     fn digest_uses_the_stable_sha256_hex_shape() {
-        assert_eq!(digest_bytes(b"hero frame data").len(), 64);
+        assert_eq!(
+            digest_bytes(b""),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            digest_bytes(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(
+            digest_bytes(b"hero frame data"),
+            "52df6936bc230f62b11ac45b07e0efbb63a6b857364f1f3c6fe1c86ea1e046f9"
+        );
     }
 }

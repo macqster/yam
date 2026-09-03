@@ -53,7 +53,13 @@ than the runtime uses for the same asset.
 
 - `asset_id` - stable logical name derived from the source file stem
 - `asset_digest` - a stable SHA-256 digest of the source file's raw bytes;
-  identifies which exact bytes produced this package
+  identifies which exact bytes produced this package. Hex-encoded lowercase
+  and zero-padded with no separators, so always 64 characters. That encoding is part
+  of the on-disk format rather than a presentation choice: the value is
+  compared verbatim on load, and a mismatch falls through silently, so drift in
+  case or padding would invalidate every existing package without reporting
+  anything. `digest_uses_the_stable_sha256_hex_shape` pins it to canonical
+  vectors for that reason.
 - `canvas_width` / `canvas_height` - decoded GIF canvas size
 - `frame_count` / `frame_durations_ms` - per-frame authored timing
 - `loop_mode`

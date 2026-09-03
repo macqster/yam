@@ -141,6 +141,19 @@ full change history in one running section instead of per-version ones.
 
 ### Changed
 
+- `docs/LOG.md` restored to the reverse-chronological order its own logging rule
+  specifies. The file had drifted into two regimes with a seam: an older
+  newest-first region, and — from roughly `2026-08-02` — a newer region appended
+  oldest-first, which left the entire `0.4.11` batch at the very bottom. All 84
+  day sections were reordered. Verified as a pure permutation rather than by
+  reading the diff: `sort` over the file before and after is byte-identical, so
+  no entry text changed. Sorting is by date with existing order kept inside a
+  date, because `2026-07-21`'s `(continued)` chain crosses midnight and a clock
+  sort would scatter it; `2026-06-05` is an explicit exception where file order
+  genuinely was not chronological. The rule gained the two cases it could not
+  previously express — how sections sharing a date are ordered, and that new
+  entries go at the top.
+
 - `sha2` 0.10 -> 0.11, with `asset_digest`'s hex encoding hand-rolled to survive
   the move. 0.11 returns a `hybrid_array::Array` where 0.10 returned a
   `GenericArray`, and the new type does not implement `LowerHex`, so

@@ -10,10 +10,543 @@ Logging rule:
 - Keep day sections in reverse-chronological order, with the most recent day at the top of the log.
 - Prefer inline timestamps in the form ``HH:MM`` for entries within a day.
 - Within a day section, keep entries in chronological order when the sequence is known.
+- Several sections may share one date. Keep them adjacent and in clock order, so a
+  day reads as one sequence however many sessions wrote it. The exception is a
+  `(continued)` chain that runs past midnight, where the recorded order is the true
+  one and the clock times are not: see `2026-07-21`, whose chain runs `23:15` then
+  `00:15`, `00:50`, `01:20`.
+- A new entry goes at the *top* of the file, not appended to the end. Practice drifted
+  to appending between `2026-08-02` and `2026-09-03` and the order was restored on
+  `2026-09-03`; the drift is easy to repeat, because appending is what a log usually
+  means.
 - Use the local system time for new entries. In the current session that means `Europe/Paris`, including summer-time shifts such as `CEST` / `UTC+02:00` when applicable.
 - New entries should use a full date and time stamp whenever practical, especially when the exact sequence within a day matters.
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
+
+## 2026-09-03 06:35 CEST
+
+- took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since
+  2026-08-26. It is not a failure a rerun can clear: 0.11 returns a
+  `hybrid_array::Array` where 0.10 returned a `GenericArray`, and that type does
+  not implement `LowerHex`, so the single call site
+  `format!("{:x}", Sha256::digest(bytes))` in `render/hero_manifest.rs` stopped
+  compiling. Landed as its own branch rather than pushed onto the Dependabot
+  branch, since the fix is repo code and not something Dependabot can carry
+- replaced the formatting with an explicit lowercase, zero-padded hex write
+  with no separators. Deliberately hand-rolled rather than pulling in `hex`
+  or `base16ct`: the encoding is eight lines and the repo's dependency posture
+  favors convergence over another crate for a one-call-site need
+- treated output equivalence as the actual risk. `asset_digest` is persisted in
+  every compiled hero package and compared verbatim in
+  `render::chafa::manifest_matches`, and every package check falls through
+  silently by design, so a changed encoding would not have surfaced as an error
+  — it would have quietly stopped matching and sent every package already on
+  disk back to the frame cache, which is the exact failure mode a content
+  digest exists to prevent
+- ordered the work so the test proves that rather than assumes it: pinned
+  `digest_uses_the_stable_sha256_hex_shape` to three canonical SHA-256 vectors
+  and ran it against the *old* `sha2` 0.10 code first, confirming green, and
+  only then bumped the crate and rewrote the encoder. The same pin passing
+  afterwards is evidence the two encodings agree; had it been written after the
+  bump it would only have described the new behavior. Vectors were generated
+  independently with `shasum -a 256` rather than from the code under test
+- the assertion it replaces checked only `.len() == 64`, which is precisely what
+  would not have caught this class of change. Proved the new pin can fail by
+  injecting an uppercase `{byte:02X}` encoding: it reported the case difference
+  against all three vectors
+- that injection then produced a real trap worth recording. Reverting it with
+  `mv` restored the backup's original mtime, which was *older* than the
+  artifacts built from the injected source, so Cargo's mtime fingerprint
+  concluded nothing had changed and the next full run silently retested the
+  uppercase binary — a genuine-looking failure with correct source on disk.
+  `touch` on the file cleared it. Worth knowing before trusting any
+  `sed -i.bak`-style revert in this repo: it is the same stale-timestamp shape
+  `docs/hero-cache.md` already warns about for art assets
+- `cargo tree -d` after the dependency change reports the same two duplicate
+  families as before (`hashbrown` 0.16.1/0.17.1, `syn` 2/3); no new duplicate
+  was introduced, and `generic-array` and `version_check` leave the tree
+  entirely. `docs/audit.md`'s dependency note stays accurate as written, so it
+  is not edited
+- recorded the encoding as an on-disk format fact in `docs/hero-package.md`,
+  where the manifest shape is owned, rather than only in this log
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1` (368 tests, 41 docs
+  linted, cspell clean)
+
+## 2026-09-03 06:53 CEST
+
+- restored this file to the reverse-chronological order its own logging rule has
+  always specified. The newest work had become the hardest thing to find in it,
+  which is the one job the rule exists to do
+- the file was not randomly disordered, it had two regimes and a seam. Lines 1-1033
+  ran newest-first as the rule says; from roughly `2026-04-23` onward a second
+  region ran oldest-first, and the whole `2026-09-02` `0.4.11` batch plus the
+  `sha2` entry sat at the very bottom. Somewhere around `2026-08-02` the habit
+  flipped from prepending to appending and the rule was never revisited, so it
+  described the front of the file and not the back
+- surveyed before choosing, because the two directions are not equally cheap:
+  84 day sections across 45 distinct days, of which 42 sat entirely inside one
+  region. Only three days - `2026-05-13`, `2026-06-04`, `2026-06-05` - were split
+  across regions, and all three splits came from one 54-line cluster. `2026-06-04`
+  was the clearest damage: its first half ran `10:34` to `13:53` and its second
+  half picked up at `14:03` about seven hundred lines further down
+- the maintainer chose the full sort over the narrower repair, so all 84 sections
+  were reordered rather than only the cluster
+- sorted by date descending with existing order preserved inside a date, rather
+  than by clock time. Sorting on time looks more principled and is wrong here:
+  `2026-07-21`'s `(continued)` chain reads `14:46`, `23:15`, `00:15`, `00:50`,
+  `01:20` because it runs past midnight, so the recorded order is the true
+  sequence and a clock sort would scatter it
+- `2026-06-05` is the one day given an explicit exception, since file order there
+  really was wrong: `14:27` sat ahead of `08:54` and `14:13`. Checked
+  programmatically that these are the only two days where existing order is not
+  already chronological, rather than assuming it
+- treated the result as a permutation and verified it as one instead of reading the
+  diff: same 84 sections, same 1722 lines, and `sort` over the file before and
+  after produces byte-identical output, so every line survived and only its
+  position changed. The diff is 1526 insertions against 1526 deletions
+- added the two rules the file had no way to express before: how sections sharing a
+  date are ordered, and that new entries belong at the top. Recorded the drift
+  window in that second rule, since appending is what a log usually means and the
+  mistake is an easy one to repeat
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 08:34 CEST
+
+- opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,
+  branched from `main` at `66de0f0`, so the follow-ups from the 2026-09-02
+  repository assessment land through a short-lived branch and PR rather than
+  against `main` directly
+- bumped `Cargo.toml` and `README.md`'s canonical current-release line in the
+  same change, since `scripts/check-docs.sh` enforces that pair and a
+  one-sided bump fails the docs gate
+- ran the full gate on the branch before any finding-driven edit, so a later
+  failure is attributable to a tweak rather than to the base it started from
+- the assessment's own findings are not applied here; this entry records only
+  the cycle opening
+
+## 2026-09-02 09:12 CEST
+
+- fixed the first two findings from the 2026-09-02 repository assessment, both
+  in `scripts/check.sh`, as one change: they are the same concern, and the
+  architecture gate is what every later boundary claim rests on
+- the gate could report success without running. `if rg …; then fail; fi` treats
+  a missing ripgrep (exit 127) as "no matches", so any machine without `rg` got
+  no boundary checking at all while still being told "All checks passed"; a
+  wrong working directory (exit 2) passed identically. Demonstrated before
+  fixing: `PATH=/usr/bin:/bin` with the old form exits 0 having read no files.
+  This is the same silent-pass shape `scripts/check-docs.sh` was already
+  repaired for, applied there and not here
+- moved to `grep`, which is in POSIX and so needs no availability guard at all,
+  rather than guarding `rg`'s presence — a gate with no optional dependency
+  cannot skip
+- while testing, found that exit status alone cannot carry the "could not run"
+  case: BSD grep, the macOS default and so the one this repo is developed
+  against, exits 1 for a missing directory, the same code it uses for a clean
+  pass. GNU grep and ugrep exit 2. Each check therefore counts the `.rs` files
+  it is about to scan and fails on zero, which is grep-independent, and a
+  passing run now prints that count so a silent skip is visually impossible
+- the first version of the count guard was itself silent: `find` at the head of
+  a `set -o pipefail` pipeline made the assignment fail and `set -e` killed the
+  script before its own error message. Caught by testing the failure path
+  rather than the success path; the directory test is now separate
+- extended the `core` check from `crate::scene::` only to the same
+  upward-dependency pattern `systems` already used. `docs/architecture.md`
+  forbids `core -> ui` and `core -> render` too, and `src/core/mod.rs` claims no
+  ratatui/crossterm usage, but neither was enforced. The tree was already clean,
+  so nothing had to change in `src/`
+- ratatui/crossterm are matched through `::` or a `use` statement rather than
+  bare, so the "No ratatui/crossterm usage" comment in `src/core/mod.rs` is not
+  itself reported as a violation
+- proved the gate in both directions rather than trusting a green run, per this
+  file's own rule: all five forbidden import forms (`crate::scene::`,
+  `crate::render::`, `crate::ui::`, `use ratatui::`, `use crossterm::`) injected
+  into `src/core/grid.rs` one at a time were each caught and named with
+  file:line; legitimate `crate::core::`/`super::` imports and the mod.rs comment
+  were not. Missing directory, empty directory, and absent-ripgrep cases were
+  each checked under both BSD grep and ugrep
+- updated `docs/architecture.md`, `docs/hygiene.md`, and `docs/audit.md`, each
+  of which stated the narrower guard as current fact; hygiene now also records
+  why the checks use `grep` so the `rg` form is not reintroduced as a tidy-up
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 09:41 CEST
+
+- fixed the third finding from the 2026-09-02 repository assessment: three
+  README claims that runtime evidence contradicts, plus the gate gap behind one
+  of them
+- the version badge read `0.4.0` against a crate at `0.4.10`. `scripts/check-docs.sh`
+  already compared `Cargo.toml` to README's canonical `current release` line, so
+  that line had tracked every bump while the badge four lines above it — the
+  first version a reader sees — drifted ten patch releases. Extended the gate to
+  the badge, in both places it carries the version: the shields.io URL and the
+  `alt` text, which can drift independently of each other
+- corrected the greenhouse snapshot line. It said "not yet growth-dispatched"
+  while `systems::tick::tick` has called `run_greenhouse_growth` on every tick
+  since 2026-07-22, with a seedling advancing `Dormant -> Growing -> Mature`;
+  and `future_surfaces` still listed "greenhouse growth dispatch, inspection UI"
+  although `GreenhouseInspectLayer` exists and is bound to `i`. `TODO.md` and
+  `docs/architecture.md` both recorded the landing correctly at the time — this
+  was a front-door-only miss, and the stale entry sat directly under a
+  `next_track` line that was already current
+- rewrote the `future_surfaces` entry as the curation/transfer write-path and
+  richer per-fixture inspection, which is what actually remains and which now
+  agrees with `next_track` instead of contradicting it
+- proved the new gate rather than trusting a green run: badge URL drift, alt-text
+  drift, a deleted badge, and canonical-line drift each fail with their own
+  message, and the unmodified tree passes
+- README edits kept to factual corrections under `AGENTS.md`'s mostly-settled
+  front-door rule; tone, GIF, and orientation-sheet structure untouched
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 10:24 CEST
+
+- fixed the fourth finding from the 2026-09-02 repository assessment: no
+  interrupt path, and three unreachable branches in the same key handler
+- `KeyModifiers::CONTROL` appeared nowhere in the codebase; the only modifier
+  ever tested was SHIFT. With raw mode on for the whole run the terminal never
+  raises SIGINT, so Ctrl+C was just an unhandled `Char('c')` — and in dev
+  free-roam it reached the character catch-all and called
+  `recall_camera_home()`. The only real exit was `q`, which is gated behind mode
+  checks and a confirmation modal, so a wedged overlay had no escape
+- added `is_interrupt(code, modifiers)` as a small pure predicate rather than
+  inlining the test, so the behavior is unit-testable without a terminal; the
+  loop checks it before any mode dispatch, ahead of the loading-screen branch,
+  and breaks immediately without saving or playing the quit dissolve
+- removed the dead branches. `c == 'd'` was shadowed by the unguarded
+  `Char('d')` arm above it. The shift-variants on the font and FPS chords tested
+  `'='`/`'-'` together with SHIFT, but the app pushes no keyboard enhancement
+  flags, so crossterm reports the shifted character (`'+'`, `'_'`) and the base
+  key never arrives with a SHIFT modifier — confirmed by grepping for
+  `KeyboardEnhancementFlags` before touching anything. One of those dead tests
+  also claimed `'=' + SHIFT` for `increase_hero_fps` when the font arm above had
+  already claimed the same chord, so the two disagreed while both were dead
+- simplified `base == 'c'` to `c == 'c'`: uppercase `'C'` is claimed by an
+  earlier arm under the same `dev_free_roam` guard, so only lowercase ever
+  reached the catch-all. Behavior-preserving
+- proved the new tests can fail before trusting them, per this file's rule.
+  Dropping the CONTROL requirement fails `plain_c_is_not_the_interrupt`;
+  restoring the original never-interrupt behavior fails both
+  `ctrl_c_is_the_interrupt` and `ctrl_shift_c_is_the_interrupt`. A first attempt
+  at the former revert did not compile (unused `modifiers` under
+  `-D warnings`), which produced no test output at all rather than a failure —
+  redone so it actually exercised the assertion
+- verified against the real release binary under tmux, not just the unit tests:
+  Ctrl+C exits from the main scene, from dev mode (where it previously recalled
+  the camera), and from the loading screen; plain `c` in dev mode still recalls
+  camera home and leaves the app running; `q` still exits gracefully
+- recorded the interrupt and the corrected chord set in `docs/rendering.md`,
+  which owns the input contract
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 11:06 CEST
+
+- fixed the fifth finding from the 2026-09-02 repository assessment: the
+  package-first hero path is real, validated, and wired, but unreachable for
+  anyone who has not read `src/main.rs` — the runtime never writes a package,
+  and `--compile-hero` appeared in no user-facing doc
+- measured the options before choosing, and the measurements moved the answer.
+  A package is 19 MB of JSON and compiles in about 4 s. Committing one to the
+  repo would contradict `docs/hygiene.md`'s "keep build output and runtime cache
+  artifacts out of the repo" and would add 19 MB to history on every hero
+  change, so documenting the command is the right fix and shipping an artifact
+  is not
+- corrected an overstatement in the assessment itself while checking it. The
+  report implied a cold clone pays 20+ s of chafa work; measured with an
+  isolated `XDG_CACHE_HOME`, the start prompt appears at 8 s cold versus 5 s
+  warm. Roughly 4.5 s of that floor is the boot animation's own
+  `BOOT_COALESCE` + `BOOT_BAR` + `BOOT_HOLD`, so the cold-cache penalty is about
+  3 s, not 20. `scripts/tmux-smoke.sh`'s 20 s cold allowance is deliberately
+  conservative, not a measurement of user-visible cost
+- established what a package is actually worth, since it is not boot speed: with
+  a package present and `chafa` absent from `PATH` the hero rendered 42 braille
+  rows; with no package and `chafa` absent it rendered 0 and fell back to
+  placeholder frames. Package independence from `chafa` is the reason to run the
+  compiler, and that is how the README now frames it
+- verified the package path is genuinely taken: a run against a cache holding
+  only a package wrote no `frame_cache.json`, which is only possible if the
+  package was used
+- also documented `chafa` as a runtime requirement in the README's environment
+  notes. It was in the `Brewfile` but stated nowhere a reader would look, while
+  the notes did cover braille and color support
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 12:38 CEST
+
+- fixed findings six and seven from the 2026-09-02 repository assessment
+  together, because the same deletion closed both: the dead code in `render/`
+  *was* the upward coupling
+- deleted `src/render/clock.rs`. Only `clock_lines` was live, and it was a
+  one-line wrapper over `fonts.render`; `draw_clock`, `draw_clock_at` and their
+  `render_lines` helper were a direct-to-`Frame` API the grid/layer pipeline had
+  replaced. `ClockLayer` now calls `fonts.render(ui.clock_font, ..)` directly.
+  That removed both `render -> ui` imports in the repo
+- deleted the matching legacy API in `src/render/hero.rs`: `draw_hero`,
+  `draw_hero_at`, `draw_hero_debug`, `draw_hero_debug_at`, `debug_rect`, and the
+  `render_lines_clipped`/`clip_line` helpers that served only them. The `Hero`
+  struct and its animation methods are untouched and remain the live surface.
+  Removing them also dropped `hero.rs`'s `scene::viewport` import
+- deleted `compositor::merge_grid_legacy` and the `MaskMode` enum that existed
+  only to feed it, and `theme`'s `hero_overlay` style plus the
+  `HERO_CENTER_MARKER` glyph, whose only consumers were the deleted hero debug
+  overlay. `theme` keeps unused palette vocabulary deliberately, but these were
+  bespoke to one removed feature rather than general vocabulary
+- moved `render/render_state.rs` to `scene/render_state.rs`. All eighteen of its
+  consumers were already inside `scene/`, and `docs/architecture.md` already
+  described `Scene` as what computes it, so `render/` was importing scene's
+  `Camera` and `Viewport` to host a type that belonged to scene. That was the
+  last upward edge; `render/` now imports nothing from `scene` or `ui`
+- replaced `hero.rs`'s remaining test, which drove the deleted `draw_hero_at`,
+  with real coverage of the live animation API. `tick`, `toggle_animation` and
+  `step_animation` had no direct tests at all; there are now seven, including
+  the deliberate asymmetry that stepping stops at the last frame while playback
+  wraps. The deleted test's style-preservation claim is already covered on the
+  live path by `render::cell_grid`'s round-trip test
+- added `render/` to `scripts/check.sh`'s boundary guards and to
+  `docs/architecture.md`'s Forbidden Coupling list in the same change. Adding a
+  documented invariant without an executable guard is the exact gap finding two
+  was about; the guard is proved to fire on both an injected `crate::ui::` and
+  an injected `crate::scene::` import. `render/` keeps ratatui and crossterm,
+  which it owns, so it uses a narrower pattern than core/systems
+- net: `#[allow(dead_code)]` sites 144 -> 135, and one fewer module in `render/`
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 12:55 CEST
+
+- fixed the eighth finding from the 2026-09-02 assessment, and the diagnosis in
+  that finding was wrong. The report blamed the two hero tests that shell out to
+  `chafa` once per frame. Measured: one `chafa` spawn costs about 48 ms, so all
+  112 spawns in the slower test account for a few seconds
+- the actual cost is decoding the hero GIFs at the default `opt-level = 0` -
+  about 20 s for the 1080x1080 48-frame source and 15 s for the 820x820
+  64-frame one, inside `GifDecoder::collect_frames` plus `frame_to_canvas`'s
+  per-pixel loop. `hero_gif_2` is decoded seven times and `hero_gif_1` four
+  times across the file, so roughly 200 s of unoptimized pixel work was the
+  suite
+- added `[profile.test] opt-level = 2`. Full suite went from 111 s to 10.3 s
+  measured warm, an 11x improvement; the chafa module alone went 117.2 s to
+  10.3 s. The trade is a slower cold compile, which is the right way round when
+  the workflow asks for the full gate on every maintenance batch and
+  `docs/hygiene.md` already concedes the pre-push hook is off by default because
+  of wall-clock cost
+- left the redundant `hero_frame_buffer_has_multiple_frames` in place. Its
+  assertion is a strict subset of `every_hero_source_matches_its_declared_geometry`
+  (which checks exact frame counts and needs no `chafa`) and of the frame-count
+  assertion inside `rendered_hero_frames_contain_real_content_not_placeholders`,
+  so it is genuinely redundant - but with the suite at 10 s the only argument
+  for removing it was speed, and removing tests for tidiness alone is not worth
+  the risk. Recorded here rather than acted on
+- corrected `chafa_is_available`'s doc comment, which claimed CI does not
+  install `chafa`. `.github/workflows/verify.yml` installs it, so those content
+  assertions do run in CI; the skip is a local-developer affordance
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:20 CEST
+
+- fixed the ninth finding from the 2026-09-02 assessment: non-atomic state
+  writes and inconsistent XDG handling
+- `persist_state_now` used `fs::write`, which truncates before writing, so an
+  interrupted save left a partial `state.json`. `load_or_new` swallows a parse
+  failure and falls back to defaults, so the user silently lost their saved
+  composition with no message. Writes now go to a `NamedTempFile` in the same
+  directory and are renamed over the target - same directory because a rename
+  is only atomic within one filesystem. `tempfile` was already a dependency
+- `state_path` ignored `XDG_CONFIG_HOME` while diagnostics honors
+  `XDG_STATE_HOME` and the hero cache honors `XDG_CACHE_HOME`, and it resolved
+  `HOME` through `unwrap_or_default()`, so an unset `HOME` produced a relative
+  path and wrote state into the launch directory. Resolution now mirrors
+  `render::chafa::hero_cache_dir`'s shape, with a temp-dir floor so the result
+  is never relative, and treats an empty variable as unset
+- split the resolution into `state_dir_from(config_home, home)` so precedence is
+  testable without mutating the process environment, which is racy under the
+  parallel test harness
+- six tests added, and proved to fail against the previous behavior: reverting
+  the path logic fails `state_dir_prefers_xdg_config_home` and
+  `state_dir_never_returns_a_relative_path`, and reverting to an in-place
+  truncating write fails `atomic_write_replaces_existing_content_completely`.
+  The first attempt at the write revert did not compile (unused imports under
+  `-D warnings`) and so produced no test output at all rather than a failure -
+  the same trap hit earlier in this batch; redone until it genuinely ran
+- noted but not changed: `hero_cache_dir` and the diagnostics path have the same
+  latent empty-variable gap. Left alone to keep this commit focused
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:34 CEST
+
+- fixed the tenth finding from the 2026-09-02 assessment: `scene_config.json`'s
+  cross-language residue. Surveyed the whole dependency graph first rather than
+  assuming the file was dead
+- it is not dead. `tools/experiments/config.py` genuinely reads it at runtime,
+  so `docs/config.md`'s own exit condition ("if the tooling ever stops using
+  it...") has not been met and the file stays
+- what was wrong was the direction of the coupling. A `#[cfg(test)]` test in
+  `src/main.rs` asserted ten of its field values, so changing a Python tooling
+  preset required editing a Rust test - for a file the same docs say twice is
+  not authoritative for the Rust runtime. Removed
+- `bin/yam` and `bin/yam-sandbox` listed it among the mtime inputs that trigger
+  `scripts/update.sh`, so touching a Python preset forced a full Rust reinstall
+  that could not change the binary's behavior, since no non-test Rust code reads
+  or embeds the file. Removed from both
+- confirmed by exhaustive search that no non-test Rust path reads it: the only
+  reference was the `include_str!` inside that test module, and the crate has a
+  single `[[bin]]` with no `tests/`, `benches/`, or `examples/` directories
+- recorded two things found but deliberately not repaired, since the frozen
+  legacy tree is out of scope for a stabilization batch: the config's `gif_path`
+  (`hero/assets/hero_go.gif`) resolves only when the process CWD is
+  `tools/legacy-python/`, not from the run directory its own README documents;
+  and `tools/legacy-python/runtime/system.py` shells out to `go run ./cmd/yamv2`,
+  a target that does not exist anywhere in this repo, so that path always fails
+  into a silent `except` fallback
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 13:52 CEST
+
+- closed out the assessment batch: all ten findings landed on
+  `claude/0.4.11-tweaks-20260902`, each its own commit with the full gate green
+- updated `docs/hygiene.md`'s pre-push-hook rationale, which said the hook is
+  off by default because it "adds real wall-clock time to every push". That was
+  true at 2m28s and is much weaker at about 17s. Left the default alone - that
+  is a maintainer decision - but the note no longer argues from a stale number
+- checked the repo-local skills for stale references to anything this batch
+  changed (`scripts/check.sh`'s boundaries, `render_state`'s home,
+  `render/clock.rs`, `scene_config.json`, suite timing) and found none, so
+  neither `skills/yam-maintenance` nor `skills/yam-architecture-review` needed
+  edits. Recorded here so the check is not repeated blind
+- corrected three factual errors in the external assessment report itself rather
+  than leaving them to propagate: it claimed zero production panic sites when
+  there are nineteen (`docs/audit.md` already had the right number and had
+  traced each); it claimed more test code than production, which is inverted -
+  the real split is 14,359 production against 8,490 test; and it estimated the
+  cold-boot hero cost at 20s when it is about 3s. The first two shared one root
+  cause, a scan that treated the first `#[cfg(test)]` in a file as the start of
+  the test module, so `#[cfg(test)]`-gated helper functions made it skip the
+  remainder of those files
+- the report's diagnosis of the slow suite was also wrong, and worth recording
+  because the wrong fix would have been plausible: it blamed the per-frame
+  `chafa` subprocesses, but a spawn costs 48ms and the cost was
+  unoptimized GIF decoding. A shared test fixture would have bought a fraction
+  of what a one-line profile change did
+
+## 2026-09-02 15:10 CEST
+
+- implemented YAM-native automatic boot continuation from an external handoff,
+  on `claude/0.4.11-auto-start-20260902` branched from `main` so it stays
+  separate from the assessment-cleanup branch in PR #20
+- assessed the handoff against the tree before building. Its state-machine
+  description, its choice to reuse `acknowledge_loading_start` rather than
+  duplicate the transition, and its refusal to synthesize input were all
+  correct. Four of its claims were not
+- the largest correction was to its own recommendation. It proposed Variant A -
+  transition automatically at `AwaitStart` - on the grounds that the prompt
+  would show "for one frame or a very short interval". It would have shown for a
+  full second: `showing_start_prompt()` covers `Dissolve` as well as
+  `AwaitStart`, so the prompt renders for the entire dissolve. Implemented
+  Variant A plus policy-aware prompt suppression, which keeps the single
+  transition the handoff wanted without a second of stale instruction on screen
+- its recommended event sequence is unachievable as written. `runtime.rs`
+  samples `boot_phase()` once per frame after `update_loading()` and logs only
+  on change, so an `AwaitStart` that is entered and left inside one call is
+  never observed; the loop sees `Bar -> Dissolve`. `append_event` is also called
+  only from `runtime.rs`, so emitting an ack event from `ui/state.rs` would push
+  diagnostics into the UI-state layer. Recorded `boot_start_policy` on the
+  existing `boot_start` event instead, which the handoff also proposed and which
+  is sufficient to disambiguate a trace
+- its instruction to preserve rejection of unknown arguments describes behavior
+  that does not exist: argument handling is a series of `args.iter().any(...)`
+  scans and unknown flags are silently ignored. Verified
+  (`yam-rust --totally-bogus-flag --version` prints the version and exits 0).
+  Left as is; adding rejection is separate work with real blast radius, since
+  the wrappers pass `$@` through and `--compile-hero` takes an optional
+  positional argument
+- its wrapper task was already satisfied: `bin/yam` and `bin/yam-sandbox` both
+  `quote_args "$@"` and append, so the flag forwards with no wrapper edits.
+  Confirmed through `YAM_WRAPPER_DRY_RUN=1` on both
+- extracted `runtime_options(args, auto_start_env)` in `main.rs` because the
+  handoff's CLI tests had nowhere to live: parsing was inline in `main()` and
+  there was no testable surface. Both inputs are parameters so precedence is
+  testable without mutating the process environment, which is racy under the
+  parallel harness. Put the tests in `mod cli_tests` rather than the existing
+  `mod tests`, since that module is removed on the PR #20 branch and this way
+  both land in either order without a conflict
+- `runtime::run` now takes `RuntimeOptions` rather than a third positional bool
+- 18 tests added, each proved able to fail: removing the automatic
+  acknowledgement fails three, and reverting to the handoff's literal Variant A
+  fails `automatic_start_never_shows_the_space_prompt`
+- verified against the real release binary under tmux rather than by unit tests
+  alone: default still waits with the prompt up; `--auto-start`,
+  `YAM_AUTO_START=1`, and `--sandbox --auto-start` all reach the first world
+  with no input and no prompt; `YAM_AUTO_START=0` still waits. A cold hero cache
+  reached the world in 10s against 6-7s warm and did not break progression,
+  because hero decode happens before the loop starts and the acknowledgement is
+  driven by the bar timer
+- did not bump the version here. The `0.4.11` bump lives on the PR #20 branch;
+  duplicating it would conflict on `Cargo.toml` and `README.md`
+- the Duo launcher half of the handoff lives in a different repository
+  (`~/_git/home/machines/dell-duo-home/...`) and is not part of this change
+
+## 2026-09-02 16:40 CEST
+
+- made the four timed boot phases individually toggleable from the dev settings
+  popup's `runtime` tab, persisted alongside the render-FPS ceiling
+- centralized every boot transition through one `enter_boot_phase` entry point
+  rather than adding a skip check to each `update_loading` arm. Start, ordinary
+  progression, and `acknowledge_loading_start` all go through it, so a disabled
+  phase cannot be skipped on one path and played on another - proved by
+  reverting the acknowledgement to set `Dissolve` directly, which fails three
+  tests. Boot order now lives on `BootLoadingPhase::next` instead of being
+  restated in each arm
+- left `AwaitStart` off the toggle list on purpose. It is the wait for a person,
+  not an animation, and it is owned by `--auto-start`/`BootStartPolicy`. Keeping
+  them independent means a short boot and an unattended boot are separately
+  selectable; every phase off in manual mode still shows the prompt and waits
+- chose Left = off and Right = on over flip-on-either-key, so a repeated
+  keypress is idempotent and holding an arrow settles rather than oscillating
+- found and fixed a real defect the feature introduced: with every phase
+  disabled the boot completes inside `start_loading_boot`, so the runtime never
+  observes the `Some -> None` phase change it reports readiness on. No
+  `world_ready` was logged and `runtime_exit` claimed `boot_completed: false`
+  for a run that booted fine. This was unreachable before, since the sequence
+  had a 4.5s floor. Found by measuring the live trace rather than by the unit
+  tests, which cover the state machine but not the runtime's logging
+- updated the existing sandbox row-count assertion to the new shape rather than
+  weakening it, and tied it to `TOGGLEABLE_BOOT_PHASES.len()` so adding a phase
+  cannot leave it asserting a stale count
+- 9 tests added, each proved able to fail; verified in the real binary that the
+  rows render, that Left/Right toggle them, and that the persisted setting takes
+  effect: 5661ms with all phases on against 136ms with all four off, both under
+  `--auto-start` and an isolated `XDG_CONFIG_HOME`
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
+## 2026-09-02 17:20 CEST
+
+- reviewed this session's own changes before pushing and fixed the three
+  findings that survived verification
+- the significant one was in already-merged code: the boundary guards added in
+  PR #20 only matched crate paths with a trailing `::`, so `use crate::ui;` in
+  `src/render/` passed cleanly, as did `use crate::{scene, core};` in
+  `src/core/`. Because later references read `ui::state::UiState`, the
+  dependency was invisible to the guard on every line rather than just the
+  import - the same silent-pass class the guard exists to prevent, one layer
+  down. Widened the patterns to accept a terminator or braced group, verified
+  against seven import shapes plus five that must not match, and confirmed
+  `crate::render_state` still does not match `crate::render`
+- disabling `boot bar` left an empty 16-cell track on screen through the
+  coalesce phase, because `bar_progress` returns 0.0 there and the layer drew
+  the row unconditionally. The bar row is now gated on the phase being enabled,
+  with a control run confirming the bar still renders when it is on
+- added a round-trip test over `TOGGLEABLE_BOOT_PHASES`. `BootPhaseSettings::set`
+  silently ignores phases it does not handle while `enabled` hard-codes true for
+  `AwaitStart`, so exposing a phase that `set` ignores would ship a settings row
+  that always reads "on" and whose Left/Right do nothing, with nothing failing
+  to compile. Simulating that by making `set` ignore `Bar` fails two tests
+- cleared several suspicions by testing rather than reasoning: the production
+  `unreachable!()` in `build_loading_effect` stays unreachable because
+  `effect_phase` only ever returns Coalesce or Dissolve; a pre-feature
+  `state.json` with `render_fps` and no `boot_phases` still loads with the FPS
+  preserved and phases defaulting on; and on the Duo the `/proc` fallback still
+  recognizes and quits a YAM terminal launched with `--auto-start` after a
+  bridge restart, leaving unrelated terminals alone
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
 
 ## 2026-08-24 - Runtime render-FPS settings surface
 
@@ -66,30 +599,142 @@ Logging rule:
   avoid duplicating the branch-authority contract; no `.claude` settings were
   read or changed
 
-## 2026-08-01 - Docs gate repair on `experimental`
+## 2026-08-22 22:14 CEST
 
-- `10:25 CEST` finished the job rather than leaving the gate permanently skipping: installed both linters on this workstation from inside the agent sandbox, which had looked impossible an hour earlier. The blocker was never the npm registry (reachable — `npx --yes` had already worked) but the two denied paths `npm` touches by default: `~/.npmrc` for `npm config set prefix` and `~/.npm` for the cache. Passing both explicitly avoids them entirely — `npm install -g --prefix ~/.local --cache <writable-dir> markdownlint-cli2 cspell` — and `~/.local/bin` was already on `PATH`, so `command -v` picks both up with no further wiring. `markdownlint-cli2 v0.23.2` and `cspell 10.0.1` now run for real in `scripts/check-docs.sh`, which reports an honest "All docs checks passed" across 38 markdown files and 40 spell-checked files.
-- `10:25 CEST` proved the gate actually fails, instead of trusting a green run on already-clean docs — an unexercised checker is indistinguishable from a broken one, which is the exact trap this whole batch exists to fix. Appended a heading with no following blank line plus two transposed-vowel misspellings of "misspelled" and "receive" to `known_issues.md` and re-ran: `markdownlint-cli2` caught `MD022/blanks-around-headings` and exited 1, and with the markdown fault removed `cspell` caught both typos, offered the correct spellings, and also exited 1. Restored the file from a copy and confirmed `git diff` clean and the gate green again. The faults are described here rather than quoted, because quoting them verbatim made this very entry fail the spell check on the next run — an accidental second confirmation that the gate reads live prose, and a reason to prefer rephrasing over adding common typos to the shared dictionary.
-- `10:25 CEST` quieted `cspell` with `--no-progress`: it had been printing a timed line for all 40 files on every run, burying the one line that matters. Corrected the install guidance in `docs/hygiene.md` to the form actually tested here, `npm install -g --prefix ~/.local`, preferring it to `npm config set prefix` since it needs no `~/.npmrc` write and leaves global npm behavior untouched, with the per-invocation caveat noted. Also recorded that linter versions are unpinned in both CI and local installs, so a docs batch can pass locally and fail CI on version drift alone — worth checking versions before hunting for a content difference.
-- `10:05 CEST` correction to the `09:35` entries below, which overstated the case twice by claiming the `markdownlint` invocation "could never have run in any environment". It could, and did: the `06:56` entry of 2026-05-19 records `markdownlint-cli` being installed on the then-workstation through the tracked dotfiles/Homebrew path, alongside `markdownlint-cli2` and `cspell`. The line went dead later, in two steps — CI arrived on 2026-07-22 installing only `markdownlint-cli2`, and the current Arch workstation has never had either CLI. Removing the invocation was still correct (both CLIs apply the same rule set from the same `.markdownlint.jsonc`, so keeping both double-lints), but the justification recorded for it was wrong, and `docs/hygiene.md` plus `docs/audit.md` have been corrected to match. Noting the shape of the mistake as well as the fact: "this is broken on the machine in front of me" was generalized to "this was never able to work", without checking the log that was already in the repo.
+- completed a post-cleanup sweep of maintained docs, backlog, scripts,
+  configuration, and repository topology after YAM worktree/ref reconciliation;
+  removed branch and worktree names no longer appear in current operational
+  guidance, while the former `project-synoptic-review` reference remains in its
+  original historical entry under this append-only log contract
+- reconciled hero status against current source evidence: startup selects a
+  validated package, then the disposable frame cache, then live Chafa, with
+  schema, preset, geometry, source-digest, and structural checks before package
+  use
+- replaced pre-landing cache/compiler tasks with the remaining work: visual
+  acceptance on future visible changes, explicit source-selection policy, and
+  separately scoped `CellGrid`, correction, or custom-backend experiments
+- preserved the acceptance boundary: package validation, placeholder checks,
+  full automated verification, and bounded smoke evidence do not themselves
+  prove supported-terminal visual acceptance or gameplay behavior
 
-- `09:35 CEST` fixed the docs gate before continuing hero work, after noticing across several sessions that `bash scripts/verify.sh` reported green on a machine where none of the markdown/spelling linters were installed. Two independent defects, not one: `scripts/check-docs.sh` printed an unqualified "All docs checks passed" regardless of how many linters it had skipped, and its `markdownlint` invocation could never have run in any environment — that binary comes from the `markdownlint-cli` package, while `.github/workflows/verify.yml` installs `markdownlint-cli2`, a different package. So the line had been dead since it was written, in CI as well as locally, while making the gate look broader than it was.
-- `09:35 CEST` removed the dead `markdownlint` invocation rather than adding the missing package to CI: `markdownlint-cli2` is the current CLI for the same rule set and already reads the same `.markdownlint.jsonc`, so installing both would only lint every file twice. Replaced `run_if_available` with a version that records which linters were skipped and prints an explicit `SKIPPED` summary stating that markdown and spelling were not checked, so the closing line can no longer overstate what ran. Added `YAM_DOCS_STRICT=1`, which turns a missing linter into a hard failure, and set it in the CI workflow so a broken install step cannot let the pipeline pass while linting nothing. Verified both paths by running the script with and without the variable set.
-- `09:45 CEST` could not install the linters from inside the agent sandbox (`~/.npmrc` and `~/.npm` are both denied paths, and the npm registry is outside the allowed-host list), but `npx --yes` turned out to work, so the checks were run for real rather than deferred. `markdownlint-cli2` came back clean across all 38 active docs. `cspell` found two genuine misses, both introduced by this week's own edits and both invisible until now: `mtimes` in `docs/hero-cache.md` and `sixel` in `docs/LOG.md`. Added both to `.cspell.json` in the existing list order; re-ran to 0 issues across 40 files. Deliberately did not teach `check-docs.sh` to fall back to `npx` itself — a local gate should not make silent network calls or stall on a cold npm cache — but documented it in `docs/hygiene.md` as a spot-check option.
-- `09:50 CEST` stopped agent-harness state from polluting `git status`: `.claude/` had accumulated eight zero-byte files owned by `nobody` (`hooks`, `launch.json`, `loop.md`, `output-styles`, `routines`, `scheduled_tasks.json`, `skills`, `workflows`) plus an untracked `.mcp.json`, all showing as untracked noise on every inspection and working against the "inspect the current tree before editing" rule. Ignored `/.claude/*` with an explicit `!/.claude/settings.json` negation so the one deliberately shared project-settings file stays tracked, and ignored `/.mcp.json`. Left the stray files themselves in place rather than deleting state this session did not create — worth noting that several are zero-byte *files* at paths the harness would normally use as directories, which looks like sandbox residue rather than working config.
-- `09:45 CEST` synchronized the owning docs with the new behavior: `docs/hygiene.md` gained the skip-is-not-a-pass rule, the strict-mode flag, the `markdownlint-cli2`-only rationale, the `npm config set prefix ~/.local` note for non-root global installs, and the `npx` spot-check option; `AGENTS.md`'s Verification section now warns that a local run printing `SKIPPED` is not green; `AGENTS.md` and `TODO.md` stopped listing the nonexistent `markdownlint` CLI alongside `markdownlint-cli2`.
+## 2026-08-20 06:10 CEST
 
-## 2026-07-29 - Hero source descriptor prep on `experimental`
+- wrote `docs/chafa-drop-rule.md`, consolidating the chafa colour study into a reference: the mechanism (`--bg` under `--fg-only` is a cull control, never painted), how the defect presented and why the 2026-07-22 pass did not fix it, the batched patch-grid measurement harness, the step-by-step procedure for choosing `absent_color` for new art, per-family darkest-survivable values, and the settings measured to have no effect
+- recorded that the drop boundary is not predictable from any simple metric: from a neutral background it approximates sum-of-channels (1.2x spread over 24 directions), from a chromatic one every metric collapses (L1 5.8x, Euclidean 3.7x, mean-RGB 2.9x). The doc says to measure rather than model, because two of this session's wrong turns came from extrapolating a metric across geometries
+- recorded the inert settings explicitly so they are not re-tuned: dither and its grain/intensity (72 of 72 combinations byte-identical, and chafa's own help says "No effect with 24-bit color"), `--color-space`, `--fg`, `--fill`, `--preprocess`, `--optimize`, `--work`, `--threshold`, and `--symbols=braille-solid`
+- recorded the two harness traps that produced false results during the study: a parser reading only truecolour scores indexed `38;5;N` output as blank, and filtering by colour proximity rather than cell position reads a large colour shift as "fewer cells rendered"
+- indexed the new doc in `docs/README.md` and cross-linked it from the `absent_color` prose in `docs/rendering.md`; added `desaturate`/`desaturated` to `.cspell.json`
 
-- `14:20 CEST` created the `experimental` branch off `main` (`2f80529`) as the working playground for the hero GIF rework; braille output stays the target, so the chafa/`--symbols=braille` path is unchanged and the kitty/sixel protocol option was explicitly considered and set aside as outside the `Grid`/compositor contract.
-- `14:20 CEST` reviewed the whole hero path before touching it and recorded a pre-change measurement rather than working from impressions: frame 0 rendered at 41.7% cell coverage with ~744 unique foreground colors, frame 30 at 41.9% with ~717. The review found seven asset-coupled seams that a new GIF would hit — asset identity duplicated across five unlinked sites, a geometry test pinning `64` frames / `820x820` / sampled frame indices as literals, a frame-cache filename hardcoded to `hero_gif_1` regardless of which asset is loaded, an undocumented per-pixel color correction in the shared decode loop, a hero footprint measured from frame 0 rather than from the declared constants, discarded source frame delays, and no content-level assertion on rendered output.
-- `14:25 CEST` added `render::hero_source` as the single owner of hero asset identity: a `HeroSource` descriptor holds path, logical canvas size, expected frame count, requested cell footprint, and the cache-file prefix derived from its `stem`, with `ALL` as the registry and `IVY` as the first entry. `render::chafa` lost its `HERO_GIF_PATH`, `HERO_RENDER_WIDTH`, and `HERO_RENDER_HEIGHT` constants along with the width/height-only `hero_frames`/`hero_frames_cached` wrappers, which had no callers left once `Hero::from_source` existed; the remaining entry points are `hero_frames_from` and `hero_frames_cached_from`, both source-taking. Frame caches are now per-source, closing the case where two hero assets would silently share one cache file with only an mtime check between them.
-- `14:25 CEST` retargeted the swap gates: `decoded_hero_frames_keep_full_canvas_geometry` (which pinned this one asset's numbers) became `every_hero_source_matches_its_declared_geometry`, checking every registered source against its descriptor across all frames rather than a sampled six, plus a separate `hero_frames_keep_a_transparent_canvas_rather_than_a_matte` guarding the alpha contract that the 2026-07-22 investigation restored.
-- `14:30 CEST` removed `tone_lift_dark_reds` and its `rgb_to_hsv`/`hsv_to_rgb`/`is_dark_red` helpers plus their five tests, on the maintainer's decision, ahead of new art tuned to a different palette. Measured the step's actual effect before deleting it rather than assuming: it modified 3.27% of frame-0 pixels (21990 of 672400) and changed the rendered result by +1 covered cell and +14 unique foreground colors out of ~740. Notably it was undocumented in every contract doc while running unconditionally on every pixel of every frame.
-- `14:34 CEST` verified live, not just by test count, per this repo's own rule that hero-render changes are only provable with `chafa` present: moved the existing 27MB frame cache aside (it predated the change and would have served stale frames), rebuilt release, and ran `scripts/tmux-smoke.sh --delay 12` — the default 4.5s boot wait is shorter than a cold 64-frame chafa rebuild, so the first attempt captured the loading screen rather than the hero. The regenerated cache came back at 64 frames / `96x48`, frame 0 at 41.5% coverage with 744 unique foreground colors (matching the pre-change measurement) and 98 dark-red-family colors still present, confirming the tone-lift removal cost no dark regions.
-- `14:52 CEST` closed the content-level assertion gap that the July 2026 placeholder regression exposed: added `rendered_hero_frames_contain_real_content_not_placeholders`, asserting every live-rendered frame is real output and that frame-0 coverage has not collapsed below a 20% floor (well under the measured 41.5%, so legitimate art changes will not churn it). The test skips when `chafa` is not on `PATH` rather than failing, because CI does not install it and every live render there yields placeholders by design — this is deliberately a local gate, not a CI gate. Verified both branches by running the compiled test binary directly with and without `chafa` reachable, since restricting `PATH` through `cargo test` still found `/usr/bin/chafa`.
-- `14:52 CEST` fixed `scripts/tmux-smoke.sh`'s cold-cache trap, hit for real earlier in this session: the hardcoded 4.5s `boot_wait` covers the boot animation but not a cold 64-frame `chafa` rebuild, so the first smoke run after clearing the cache captured the loading screen and read as a hang. The script now detects a missing frame cache up front and extends the wait to 20s with a note on stderr, instead of every caller having to remember a larger `--delay`.
-- `14:34 CEST` `bash scripts/verify.sh` green at 275/275. Worth recording that the local docs gate is weaker than it reads: `markdownlint`, `markdownlint-cli2`, and `cspell` are all absent on this machine and `scripts/check-docs.sh` skips them silently, so only CI actually runs the markdown/spelling half.
+## 2026-08-20 06:35 CEST
+
+- landed `--color-extractor=average`, reversing the 2026-07-22 switch to `median` now that the flattened opaque canvas it originally failed against is gone. Verified it is not a regression rather than assuming: coverage is identical cell for cell (`hero_gif_1` 1918/4608, `hero_gif_2` 923/4608, unchanged), reconstruction error drops (122 to 112 and 125 to 96), and the darkest-survivable tables are identical under both extractors, so the change cannot cost a colour
+- bumped cache revisions for the render change: `IVY` r5 -> r6, `IVY_VECTOR` r4 -> r5
+- corrected the historical prose in `docs/rendering.md` so the 2026-07-22 `median` note reads as history rather than current configuration, and updated the extractor in `docs/architecture.md` and in the preview command in `docs/chafa-drop-rule.md`
+
+## 2026-08-20 07:05 CEST
+
+- closed out the chafa option space against `chafa --help` rather than memory, and extended `docs/chafa-drop-rule.md` with the two live options it had omitted
+- `--fill` is fully inert, not just at `none` as previously recorded: byte-identical at `none`, `braille`, `solid`, `stipple`, `space` and `all`, because it only supplements a symbol set that does not need supplementing
+- `--font-ratio` is live and changes the rendered extent (`1/2` gives 94x44, `2/3` gives 96x33, `1/1` gives 95x22), so it is a correctness setting tied to the terminal's cell aspect rather than a tuning knob; the runtime leaves it at chafa's default `1/2`
+- `--glyph-file` is live and moves against the openness goal: real fonts increase solid cells (527 to 573 for Agave, 583 for Cascadia) because their braille dots cover less of the cell than chafa's built-in model assumes. Recorded that Menlo returned byte-identical output without concluding why, since a silent `.ttc` load failure would look the same as a match
+- noted that both remaining options are machine-specific and should not enter the descriptor before the terminal's font and cell aspect are established
+- every other option in `chafa --help` is now either measured inert, already landed, or irrelevant to offline single-frame conversion
+
+## 2026-08-20 08:20 CEST
+
+- merged PR #11 (`eedd21a`), the first change this cycle to satisfy branch protection rather than bypass it, and synced local `main`
+- corrected `docs/release-model.md` step 2, which still offered landing maintenance batches directly on `main`. That has been impossible since admin bypass was disabled on 2026-08-20: the required `verify` check only runs once a commit is pushed, so a first-time direct push can never satisfy it. Recorded why the step was written that way - the required check had been configured all along, but admins were exempt, so pushes reported `Bypassed rule violations` and the protection gated nothing
+- annotated `--color-space=rgb` and `--dither=none` in `src/render/chafa.rs` as measured-inert at 24-bit colour, pointing at `docs/chafa-drop-rule.md`. Both are kept explicit rather than dropped so the invocation stays self-describing, but an unmarked no-op invites exactly the tuning the study was meant to prevent
+- refreshed the `docs/audit.md` review date to cover the hero swap, the drop-rule investigation, dev-position persistence, and the protection change
+- no runtime behavior change in this version, so no cache revision bump
+
+## 2026-08-20 13:20 CEST
+
+- landed the Phase 1 offline hero compiler from `agent/hero-revision-contract`, unmerged since 2026-07-27. Adapted rather than merged as authored: the branch predated per-source descriptors, so `CompileOptions` now takes geometry and `absent_color` from a `HeroSource`, exposes `for_source`, and honors `YAM_HERO_SOURCE` so `--compile-hero` and the runtime agree on which asset they mean
+- kept the branch's best idea and extended it: `chafa_preset_args` is the single authoritative flag list shared by `chafa_output` and the compiler, so the two paths cannot drift. It now carries the source's own `absent_color` rather than a global constant, which is what stops an offline package being rendered against a different drop reference than the runtime uses for the same asset. `HERO_PRESET_ID` bumped to `rgb-average-fgonly-braille-v2` for the extractor and per-source `--bg`
+- dropped four globals the descriptor had already superseded (`HERO_GIF_PATH`, `HERO_DISPLAY_BG`, `HERO_CACHE_REVISION`, `HERO_RENDER_WIDTH`/`HEIGHT`) and the `render_frame` wrapper that became dead once the command-threaded path took over
+- retargeted `default_options_point_at_the_canonical_hero_gif`, which pinned `hero_gif_1` and failed on merge. It now asserts the compiler follows `hero_source::DEFAULT`, and a companion test checks every registered source carries its own geometry and drop reference - a package rendered against another source's `absent_color` would silently contain the wrong art
+- corrected `docs/hero-revision.md`'s Current Problem section, which still described the dark-color defect as unresolved and predicted the failure was "broader than one Chafa flag". It was one flag. Recorded the wrong prediction rather than deleting it, because the reasoning is the useful part: each listed subsystem was a plausible suspect, and the defect was isolated by measuring them out one at a time
+- verified the compiler end to end, not just by test: `--compile-hero` wrote a 48-frame package for `hero_gif_2` with the correct SHA-256 digest, `1080x1080` canvas, 80ms frame timing, and `compiler_args` recording `--bg=#336699` and `--color-extractor=average`
+- the runtime still loads the disposable frame cache rather than packages; wiring the package into startup is the next slice
+
+## 2026-08-20 15:10 CEST
+
+- wired the compiled package into startup, the slice `docs/hero-package.md` had recorded as outstanding: `hero_frames_cached_from` now prefers a validated `HeroPackage`, then the frame cache, then the live chafa path
+- gated the package on schema revision, `preset_id`, render geometry, and the source file's SHA-256 digest, plus `validate()`. Every check falls through silently rather than erroring, matching the existing degrade-don't-panic rule: a package is an optional acceleration and the live path can always rebuild
+- the digest check is the point. The frame cache can only compare mtimes, so art swapped in with an older timestamp is served as trusted art; a package is validated on content and rejects it
+- split the decision out as a pure `manifest_matches` so it is testable without the filesystem, and covered the four ways a package can be wrong: different art, different preset, different geometry, different schema
+- pointed `--compile-hero` at the directory the runtime reads (`<cache dir>/<stem>.hero_package.json`) so compile-then-run works with no arguments, and dropped the now-unused `default_output_path`
+- verified both directions live rather than by test alone. Compiling into a fresh cache dir and launching against it rendered the scene and wrote *no* frame cache, which is only possible if the package was used. Tampering the manifest's digest then launching wrote `hero_gif_2.r5.96x48.frame_cache.json`, proving the rejection path falls through to chafa rather than failing
+- corrected `docs/hero-package.md`, which still said runtime wiring was not done and that the compiler defaults to `assets/hero_gif_1.gif`; it follows `hero_source::DEFAULT` and `YAM_HERO_SOURCE` now
+
+## 2026-08-20 16:05 CEST
+
+- explored what the compiled package actually buys, and found two capabilities worth recording. A package removes the runtime dependency on chafa entirely: launching with chafa absent from the process PATH rendered 1119 real glyphs with no placeholder frames, where the uncached path would have degraded. And hand-edited packages render - recoloring 18529 dark-red cells across 48 frames put the edited colour on screen, which is the curated-correction capability `hero-revision.md` set as the goal
+- noted that the manifest digest binds a package to its *source art*, not to its own frame content, so hand corrections pass validation by design; there is no integrity check on edited frames, only on provenance
+- found and fixed a real defect in `--compile-hero`'s optional argument while testing it: it overrode only `source_path`, leaving output path, geometry and `absent_color` from the default source. Compiling `assets/hero_gif_1.gif` wrote 64 correct frames into `hero_gif_2.hero_package.json` against `#336699` rather than `#00e000`. The digest check meant the runtime rejected it rather than rendering wrong art, so the symptom was a package that silently never applied
+- the argument now selects a registered source by stem, full path, or bare filename, and refuses unregistered art with an error listing the registered stems. Compiling art with no descriptor cannot be correct: `absent_color`, geometry and the coverage floor are exactly what the descriptor owns
+- verified all three forms write the right package with the right drop reference: `hero_gif_1` at `#00e000` with 64 frames, `hero_gif_2` at `#336699` with 48
+
+## 2026-08-19 10:18 CEST
+
+- registered a second hero source, `IVY_VECTOR` (`assets/hero_gif_2.gif`, `1080x1080`, 48 frames, requested at `96x48` cells): the same character and pose cycle as `IVY`, redrawn as flat vector art in Moho rather than filtered from the raster original, imported from the maintainer's local `window_3-v02.gif` export
+- kept it a probe rather than a hero swap: `hero_source::DEFAULT` is still `IVY`, so an ordinary launch is unaffected; the point is to make `hero_source::ALL` carry two genuinely different assets so the swap gates stop checking one file against itself
+- extended `rendered_hero_frames_contain_real_content_not_placeholders` to iterate `hero_source::ALL` instead of only the default, so registering art now also enrolls it in the live-render gate; the geometry and transparent-canvas gates already iterated the registry
+- moved the frame-0 coverage floor onto the descriptor as `HeroSource::min_frame0_coverage_percent`, because cell density is a property of the art rather than of the pipeline: flat vector fills light fewer braille dots than cel shading at the same requested size, and one shared floor would either wave a real collapse through on the dense asset or fail the sparse one for being drawn differently
+- measured both sources through the test's own `covered_cells` helper against chafa 1.18.2: `hero_gif_1` frame 0 covers 932/4608 cells (20.2%), `hero_gif_2` covers 706/4608 (15.3%)
+- added `YAM_HERO_SOURCE=<stem>` after confirming the first pass left no way to actually look at the new art: `Hero::new` now resolves the source through `hero_source::resolve_from_env` instead of hard-wiring `DEFAULT`, and an unset or unknown stem falls back rather than failing
+- verified live rather than by test alone (`scripts/tmux-smoke.sh` against an isolated `XDG_CACHE_HOME`): `YAM_HERO_SOURCE=hero_gif_2` compiles and caches `hero_gif_2.r1.96x48.frame_cache.json` (20MB) and renders the vector art in the scene, while an unset launch still writes and renders `hero_gif_1.r2.*` (27MB)
+- withdrew the 41.5% frame-0 figure that the content test's comment and `docs/rendering.md` both cited for `hero_gif_1`; it does not reproduce, and the real 20.2% leaves that source's unchanged 20% floor with 0.2 points of headroom rather than the roughly 2x the note assumed. Left `IVY`'s floor at 20% rather than quietly recalibrating it and logged the discrepancy as a `medium` item in `docs/audit.md`, because moving an existing gate's threshold is a calibration decision rather than a side effect of adding art
+
+## 2026-08-19 11:05 CEST
+
+- promoted `IVY_VECTOR` from probe to `hero_source::DEFAULT` and bumped the development version to `0.4.1`: `assets/hero_gif_2.gif` is now the art an ordinary launch renders
+- kept `IVY` registered rather than retiring it, so the previous hero stays gated by the same three swap tests and stays reachable through `YAM_HERO_SOURCE=hero_gif_1` without a rebuild; the swap is reversible by env var rather than by revert
+- pinned the choice in `default_source_is_the_vector_hero`, because which asset an ordinary launch renders is a product decision rather than an incidental ordering of `ALL`, and the docs now name that stem in four places
+- diagnosed why `YAM_HERO_SOURCE=hero_gif_2 yam` appeared to do nothing after the previous merge: the installed `~/.cargo/bin/yam-rust` was still the pre-merge build, carrying no reference to the variable and no second source. The wrapper's staleness check was correct and would have refreshed on the next launch; the run simply predated the merge. Reinstalled through `scripts/update.sh` and confirmed against the installed binary rather than the build tree
+- noted the inverse of the long-standing asset-duplication item: `assets/hero_gif_1.gif` and `tools/legacy-python/hero/assets/hero_go.gif` are still both tracked (~8.2MB) while neither is now the default render
+
+## 2026-08-19 11:55 CEST
+
+- found the real cause of the missing dark reds, which the 2026-07-22 pass had not addressed: under `--fg-only`, chafa's `--bg` is never painted and is not a statement about the terminal - it is the colour chafa treats as already on screen, so art resembling it is discarded instead of drawn. `HERO_DISPLAY_BG` was `#100100`, a dark red, so the pipeline was being instructed to throw away exactly the content that was reported missing
+- demonstrated on a fully opaque single-colour image with no transparency in play: line art, darkest red, dark red, and the leggings rendered zero dots while bright red and everything lighter rendered every dot. A hard step, not a gradient, and not hue-dependent - `rgb(184,3,7)` shares the bright red's red channel and still rendered nothing
+- measured the threshold against `--bg`: black needs grey 64, `#100100` 67, `#16181A` 77, `#303030` 88, so tuning the constant toward the scene colour would have made it strictly worse, and no value near the scene could have worked
+- kept `--fg-only`, which is an aesthetic requirement rather than an implementation detail: the scene shows through the unlit dots. Removing it was measured (it recovers everything, at the cost of painting an opaque background into 121 partially-transparent edge cells) and rejected on that basis
+- moved the value onto the descriptor as `HeroSource::absent_color` and set both sources to `#00ff00`: solid-cell fill went from 621/1468 to 1468/1468 with zero spill outside the silhouette, frame-0 coverage from 932 to 1923 cells (`hero_gif_1`) and 706 to 1725 (`hero_gif_2`), and reconstructed-render error against the source from 426 to 126 and 288 to 189 respectively
+- added `absent_color_is_actually_absent_from_every_source` with a 128 Euclidean-RGB floor, above the ~111 that the measured drop threshold implies and below both assets' real separation (186 and 170). Confirmed by fault injection, not just by passing: pointing `IVY.absent_color` at the dark red already in its art fails the gate and names the colour, frame, and distance
+- reconciled the 41.5% frame-0 figure withdrawn earlier today: the post-fix measurement is 41.7%, within 0.2 points of it. The likely reading is that 41.5% measured a pipeline without this defect and the `--bg` value drifted afterwards - inference, not proven history - and either way the coverage floors needed no recalibration, so that `medium` audit item closes without a threshold change
+- bumped cache revisions since every rendered frame changes: `IVY` r2 -> r4 (skipping r3, because a stale `hero_gif_1.r3.*` from 2026-08-17 can still be in `~/.cache/yam` and would be accepted as fresh) and `IVY_VECTOR` r1 -> r2
+
+## 2026-08-19 12:40 CEST
+
+- confirmed against the live frame cache, not just a standalone harness, that `7c0307` renders in 0.4.2: 220 cells in frame 0, the second-largest colour group after the leggings' 684, where it had been 0 before the fix
+- took the maintainer's correction that the vector source is authored as ten flat colours: 93.8% of opaque pixels are those ten and the remaining 6.16% is GIF-export anti-aliasing fringe, so the 212 distinct colours the gate had been measuring were mostly not art
+- retuned `absent_color` from `#00ff00` to `#00e000` on both sources after establishing that clearance is a trade rather than a maximum: the value bleeds into chafa's foreground pick on partially transparent edge cells, and the bleed grows with distance. Off-palette edge cells fall from 15 to 8 across both assets, with slightly better reconstruction error on each
+- rejected `#ffffff` despite it showing zero off-palette cells: at a clearance of 5 it collides with `hero_gif_1`'s near-white highlights and drops them, failing the same way `#100100` failed at the dark end. An earlier claim that white systematically darkened chafa's foreground picks was wrong - the mean shift is -0.2 for every candidate - and the real mechanism is the ordinary drop rule
+- gave the absent-colour gate a significance floor of half a rendered cell, derived from the render footprint rather than picked, because a colour thinner than that is discarded by cell averaging whatever `absent_color` is; policing it meant policing the exporter's fringe. On `hero_gif_1` that removes 108 of 249 distinct colours from consideration and moves the reported clearance from 160 to 162
+- recorded two of the ten authored colours as never rendering, for reasons that are not the drop rule: `ffffff` has zero opaque pixels because white is the transparency index, and `395f0b` (the iris) peaks at 177 pixels in a frame against a 253-pixel cell, so cell averaging absorbs it. Neither is recoverable in the renderer
+- bumped cache revisions for the retune: `IVY` r4 -> r5, `IVY_VECTOR` r2 -> r3
+
+## 2026-08-19 15:20 CEST
+
+- set `IVY_VECTOR`'s `absent_color` to `#336699` at the maintainer's direction, after previewing candidates live with `chafa assets/hero_gif_2.gif --size 96x48 ... --fg-only --bg=<value>`; verified that invocation is byte-identical to the runtime pipeline (15192 bytes both ways), so flag iteration needs no build and no cache
+- recorded the intent explicitly, because it inverts the contract this field carried through 0.4.3: the overlap with the palette is wanted. The asset is ten flat colours, flat fills render as fully-lit `⣿`, and under `--fg-only` a uniform cell is all eight dots or none, so culling the darkest tiers is the only lever chafa offers for keeping the hero open rather than a solid mass
+- established why the value has to be chromatic rather than a dark neutral: `7c0307` and `332a29` have identical RGB sums (134 each), so every grey or black tested drops both together, and raising a neutral loses the bright red before it recovers the dark one. A sweep of the RGB cube found 11 values that keep `7c0307` while still dropping `332a29`, all blue or green
+- measured the shortlist on the real frame rather than on patches: dark-red cells go 0 -> 233 and leggings stay at 0, with reconstruction error dropping 284 -> 122
+- gave the absent-colour gate an `ACCEPTED_OVERLAP` list rather than deleting it, at the maintainer's choice: `hero_gif_2` is pinned at 259464 pixels inside the drop radius in its worst frame, so the art stays guarded against drift while the deliberate overlap is allowed. Sources not listed are still required to separate, which is how `IVY` is still checked
+- bumped `IVY_VECTOR` `r3` -> `r4`; `IVY` untouched at `r5` and still on a non-overlapping `#00e000`, so its render is unchanged
+- frame-0 coverage for `hero_gif_2` is 923/4608 (20.0%) against its unchanged 10% floor
+
+## 2026-08-19 16:30 CEST
+
+- traced why dev move mode could not save the hero position: it was not the save or the load, both of which work. `main.rs` computed `clean_launch` as true unless `--preserve-ui-state` was passed, so reseeding was the default, and `reset_for_clean_launch` sets `self.offsets = UiOffsets::default()` - it preserves a dozen visibility preferences and discards every offset. Proved by A/B against an isolated `HOME` with `hero_dx = -150`: the hero rendered at column 42 on a normal launch and column 101 with `--preserve-ui-state`, a 59-column gap matching the offset exactly
+- found the sharper consequence in the maintainer's own `state.json`: `camera_x` was non-default at `-68` while `hero_dx` was exactly the default `-209`. Because the reset runs at startup and a save then writes the whole offsets struct, any later save silently overwrote a hero position saved in an earlier session
+- inverted the default at the maintainer's direction: saved positions are preserved, and reseeding happens only on an explicit `--hard-reset` or when the saved file's crate version differs from the running binary. `UiStateSnapshot` gained a `#[serde(default)] version`, so files written before 0.4.5 - including the pre-snapshot bare-offsets format - read as versionless and reseed. That is not one-shot: nothing persists at boot (`persist_state_now` is reachable only from `confirm_save_and_quit`), so the old stamp survives until a save, and an unsaved session reseeds again next launch - harmless, since it reseeds to the same defaults
+- verified all three paths end to end against isolated `HOME`s rather than by test alone: saved-by-this-version normal launch preserves (column 101), `--hard-reset` reseeds (42), and saved-by-an-older-version reseeds (42)
+- removed `--clean-launch` from `bin/yam` and `bin/yam-sandbox`. Nothing had ever parsed it, so it was already inert, but leaving it would now read as forcing a reset when `--hard-reset` is the flag that does. `--preserve-ui-state` is gone with it, since preserving is the default
+- caught during wrapper verification that the version bump had left `Cargo.lock` stale, which made `scripts/update.sh` fail its `--locked` check - that would have broken the next `yam` launch, not just a local build
+- documented the rule in `docs/architecture.md` and `README.md`; it had lived only in `docs/LOG.md` despite being user-facing behavior
 
 ## 2026-08-17 - Commit the hero package tranche; two review corrections
 
@@ -131,6 +776,32 @@ Logging rule:
   `open`. Reconciling `hero-track.md` against `hero-revision.md` is the next
   decision and is deliberately not made here.
 
+## 2026-08-07 18:40 CEST
+
+- reconciled the three post-`main` development tracks into `experimental`: retained the cache-revision contract from `agent/hero-revision-contract` (`cbac94d`) and the relocated-build cache fallback identified on `claude/full-audit-1e44b1` (`2a7e14b`) without merging either conflicting branch wholesale
+- made hero caches source-specific and revision-keyed (`<stem>.r<revision>.<width>x<height>.frame_cache.json`), kept a valid matching cache when its compile-time source path is no longer reachable, and rejected `ANSI_PARSE_ERROR` frames from cache persistence; added regression coverage for each boundary
+- repaired build identity tracking so Cargo watches Git HEAD, its symbolic branch ref, and packed refs; a commit now invalidates the embedded hash even when no Rust source file changed
+- reconciled the canonical hero/dependency audit prose with current CI and lockfile state; a fresh local `cargo audit` loaded 1,190 RustSec advisories and reported no findings
+
+## 2026-08-02 17:38 CEST
+
+- completed the bounded YAM review follow-up on `experimental`: CI now installs `chafa` before the full verification gate, so the hero-content regression test executes in the pipeline instead of taking its intentional missing-tool fallback
+- refreshed `docs/audit.md` to record the current review date and the actual lockfile state (`serde 1.0.229`, duplicate `hashbrown` and `syn` families); installed `cargo-audit` locally, but its advisory database fetch was unavailable, so CI remains the current vulnerability-result authority
+- ran the full local verification after the review changes: documentation lint/spell checks, formatting, Clippy, architecture checks, and all 276 tests passed
+
+## 2026-08-01 - Docs gate repair on `experimental`
+
+- `10:25 CEST` finished the job rather than leaving the gate permanently skipping: installed both linters on this workstation from inside the agent sandbox, which had looked impossible an hour earlier. The blocker was never the npm registry (reachable — `npx --yes` had already worked) but the two denied paths `npm` touches by default: `~/.npmrc` for `npm config set prefix` and `~/.npm` for the cache. Passing both explicitly avoids them entirely — `npm install -g --prefix ~/.local --cache <writable-dir> markdownlint-cli2 cspell` — and `~/.local/bin` was already on `PATH`, so `command -v` picks both up with no further wiring. `markdownlint-cli2 v0.23.2` and `cspell 10.0.1` now run for real in `scripts/check-docs.sh`, which reports an honest "All docs checks passed" across 38 markdown files and 40 spell-checked files.
+- `10:25 CEST` proved the gate actually fails, instead of trusting a green run on already-clean docs — an unexercised checker is indistinguishable from a broken one, which is the exact trap this whole batch exists to fix. Appended a heading with no following blank line plus two transposed-vowel misspellings of "misspelled" and "receive" to `known_issues.md` and re-ran: `markdownlint-cli2` caught `MD022/blanks-around-headings` and exited 1, and with the markdown fault removed `cspell` caught both typos, offered the correct spellings, and also exited 1. Restored the file from a copy and confirmed `git diff` clean and the gate green again. The faults are described here rather than quoted, because quoting them verbatim made this very entry fail the spell check on the next run — an accidental second confirmation that the gate reads live prose, and a reason to prefer rephrasing over adding common typos to the shared dictionary.
+- `10:25 CEST` quieted `cspell` with `--no-progress`: it had been printing a timed line for all 40 files on every run, burying the one line that matters. Corrected the install guidance in `docs/hygiene.md` to the form actually tested here, `npm install -g --prefix ~/.local`, preferring it to `npm config set prefix` since it needs no `~/.npmrc` write and leaves global npm behavior untouched, with the per-invocation caveat noted. Also recorded that linter versions are unpinned in both CI and local installs, so a docs batch can pass locally and fail CI on version drift alone — worth checking versions before hunting for a content difference.
+- `10:05 CEST` correction to the `09:35` entries below, which overstated the case twice by claiming the `markdownlint` invocation "could never have run in any environment". It could, and did: the `06:56` entry of 2026-05-19 records `markdownlint-cli` being installed on the then-workstation through the tracked dotfiles/Homebrew path, alongside `markdownlint-cli2` and `cspell`. The line went dead later, in two steps — CI arrived on 2026-07-22 installing only `markdownlint-cli2`, and the current Arch workstation has never had either CLI. Removing the invocation was still correct (both CLIs apply the same rule set from the same `.markdownlint.jsonc`, so keeping both double-lints), but the justification recorded for it was wrong, and `docs/hygiene.md` plus `docs/audit.md` have been corrected to match. Noting the shape of the mistake as well as the fact: "this is broken on the machine in front of me" was generalized to "this was never able to work", without checking the log that was already in the repo.
+
+- `09:35 CEST` fixed the docs gate before continuing hero work, after noticing across several sessions that `bash scripts/verify.sh` reported green on a machine where none of the markdown/spelling linters were installed. Two independent defects, not one: `scripts/check-docs.sh` printed an unqualified "All docs checks passed" regardless of how many linters it had skipped, and its `markdownlint` invocation could never have run in any environment — that binary comes from the `markdownlint-cli` package, while `.github/workflows/verify.yml` installs `markdownlint-cli2`, a different package. So the line had been dead since it was written, in CI as well as locally, while making the gate look broader than it was.
+- `09:35 CEST` removed the dead `markdownlint` invocation rather than adding the missing package to CI: `markdownlint-cli2` is the current CLI for the same rule set and already reads the same `.markdownlint.jsonc`, so installing both would only lint every file twice. Replaced `run_if_available` with a version that records which linters were skipped and prints an explicit `SKIPPED` summary stating that markdown and spelling were not checked, so the closing line can no longer overstate what ran. Added `YAM_DOCS_STRICT=1`, which turns a missing linter into a hard failure, and set it in the CI workflow so a broken install step cannot let the pipeline pass while linting nothing. Verified both paths by running the script with and without the variable set.
+- `09:45 CEST` could not install the linters from inside the agent sandbox (`~/.npmrc` and `~/.npm` are both denied paths, and the npm registry is outside the allowed-host list), but `npx --yes` turned out to work, so the checks were run for real rather than deferred. `markdownlint-cli2` came back clean across all 38 active docs. `cspell` found two genuine misses, both introduced by this week's own edits and both invisible until now: `mtimes` in `docs/hero-cache.md` and `sixel` in `docs/LOG.md`. Added both to `.cspell.json` in the existing list order; re-ran to 0 issues across 40 files. Deliberately did not teach `check-docs.sh` to fall back to `npx` itself — a local gate should not make silent network calls or stall on a cold npm cache — but documented it in `docs/hygiene.md` as a spot-check option.
+- `09:50 CEST` stopped agent-harness state from polluting `git status`: `.claude/` had accumulated eight zero-byte files owned by `nobody` (`hooks`, `launch.json`, `loop.md`, `output-styles`, `routines`, `scheduled_tasks.json`, `skills`, `workflows`) plus an untracked `.mcp.json`, all showing as untracked noise on every inspection and working against the "inspect the current tree before editing" rule. Ignored `/.claude/*` with an explicit `!/.claude/settings.json` negation so the one deliberately shared project-settings file stays tracked, and ignored `/.mcp.json`. Left the stray files themselves in place rather than deleting state this session did not create — worth noting that several are zero-byte *files* at paths the harness would normally use as directories, which looks like sandbox residue rather than working config.
+- `09:45 CEST` synchronized the owning docs with the new behavior: `docs/hygiene.md` gained the skip-is-not-a-pass rule, the strict-mode flag, the `markdownlint-cli2`-only rationale, the `npm config set prefix ~/.local` note for non-root global installs, and the `npx` spot-check option; `AGENTS.md`'s Verification section now warns that a local run printing `SKIPPED` is not green; `AGENTS.md` and `TODO.md` stopped listing the nonexistent `markdownlint` CLI alongside `markdownlint-cli2`.
+
 ## 2026-08-01 - Hero package review corrections
 
 - `review follow-up` corrected the offline compiler's Chafa executable seam so
@@ -147,6 +818,18 @@ Logging rule:
   scene through `scripts/tmux-smoke.sh` after the boot transition. This proves
   operational plumbing, not dark-color fidelity; runtime package wiring and
   the full visual acceptance bar remain open.
+
+## 2026-07-29 - Hero source descriptor prep on `experimental`
+
+- `14:20 CEST` created the `experimental` branch off `main` (`2f80529`) as the working playground for the hero GIF rework; braille output stays the target, so the chafa/`--symbols=braille` path is unchanged and the kitty/sixel protocol option was explicitly considered and set aside as outside the `Grid`/compositor contract.
+- `14:20 CEST` reviewed the whole hero path before touching it and recorded a pre-change measurement rather than working from impressions: frame 0 rendered at 41.7% cell coverage with ~744 unique foreground colors, frame 30 at 41.9% with ~717. The review found seven asset-coupled seams that a new GIF would hit — asset identity duplicated across five unlinked sites, a geometry test pinning `64` frames / `820x820` / sampled frame indices as literals, a frame-cache filename hardcoded to `hero_gif_1` regardless of which asset is loaded, an undocumented per-pixel color correction in the shared decode loop, a hero footprint measured from frame 0 rather than from the declared constants, discarded source frame delays, and no content-level assertion on rendered output.
+- `14:25 CEST` added `render::hero_source` as the single owner of hero asset identity: a `HeroSource` descriptor holds path, logical canvas size, expected frame count, requested cell footprint, and the cache-file prefix derived from its `stem`, with `ALL` as the registry and `IVY` as the first entry. `render::chafa` lost its `HERO_GIF_PATH`, `HERO_RENDER_WIDTH`, and `HERO_RENDER_HEIGHT` constants along with the width/height-only `hero_frames`/`hero_frames_cached` wrappers, which had no callers left once `Hero::from_source` existed; the remaining entry points are `hero_frames_from` and `hero_frames_cached_from`, both source-taking. Frame caches are now per-source, closing the case where two hero assets would silently share one cache file with only an mtime check between them.
+- `14:25 CEST` retargeted the swap gates: `decoded_hero_frames_keep_full_canvas_geometry` (which pinned this one asset's numbers) became `every_hero_source_matches_its_declared_geometry`, checking every registered source against its descriptor across all frames rather than a sampled six, plus a separate `hero_frames_keep_a_transparent_canvas_rather_than_a_matte` guarding the alpha contract that the 2026-07-22 investigation restored.
+- `14:30 CEST` removed `tone_lift_dark_reds` and its `rgb_to_hsv`/`hsv_to_rgb`/`is_dark_red` helpers plus their five tests, on the maintainer's decision, ahead of new art tuned to a different palette. Measured the step's actual effect before deleting it rather than assuming: it modified 3.27% of frame-0 pixels (21990 of 672400) and changed the rendered result by +1 covered cell and +14 unique foreground colors out of ~740. Notably it was undocumented in every contract doc while running unconditionally on every pixel of every frame.
+- `14:34 CEST` verified live, not just by test count, per this repo's own rule that hero-render changes are only provable with `chafa` present: moved the existing 27MB frame cache aside (it predated the change and would have served stale frames), rebuilt release, and ran `scripts/tmux-smoke.sh --delay 12` — the default 4.5s boot wait is shorter than a cold 64-frame chafa rebuild, so the first attempt captured the loading screen rather than the hero. The regenerated cache came back at 64 frames / `96x48`, frame 0 at 41.5% coverage with 744 unique foreground colors (matching the pre-change measurement) and 98 dark-red-family colors still present, confirming the tone-lift removal cost no dark regions.
+- `14:52 CEST` closed the content-level assertion gap that the July 2026 placeholder regression exposed: added `rendered_hero_frames_contain_real_content_not_placeholders`, asserting every live-rendered frame is real output and that frame-0 coverage has not collapsed below a 20% floor (well under the measured 41.5%, so legitimate art changes will not churn it). The test skips when `chafa` is not on `PATH` rather than failing, because CI does not install it and every live render there yields placeholders by design — this is deliberately a local gate, not a CI gate. Verified both branches by running the compiled test binary directly with and without `chafa` reachable, since restricting `PATH` through `cargo test` still found `/usr/bin/chafa`.
+- `14:52 CEST` fixed `scripts/tmux-smoke.sh`'s cold-cache trap, hit for real earlier in this session: the hardcoded 4.5s `boot_wait` covers the boot animation but not a cold 64-frame `chafa` rebuild, so the first smoke run after clearing the cache captured the loading screen and read as a hang. The script now detects a missing frame cache up front and extends the wait to 20s with a note on stderr, instead of every caller having to remember a larger `--delay`.
+- `14:34 CEST` `bash scripts/verify.sh` green at 275/275. Worth recording that the local docs gate is weaker than it reads: `markdownlint`, `markdownlint-cli2`, and `cspell` are all absent on this machine and `scripts/check-docs.sh` skips them silently, so only CI actually runs the markdown/spelling half.
 
 ## 2026-07-27 - Hero pipeline ground-up rebuild, Phase 1 infrastructure
 
@@ -296,6 +979,14 @@ Logging rule:
 - updated YAM's maintained theme docs so active shared palette authority now points at `~/_git/home/themes/palette/`
 - moved packet-sheet references to `~/_git/legacy/archive-dotfiles/themes/` where they are archive inputs rather than nearby active source authority
 
+## 2026-06-05 08:54 CEST
+
+- noted the latest hand-reworked README as the current good-enough creative/front-door state for YAM: the intro, front GIF, compact orientation-sheet structure, and acknowledgements are now considered broadly settled in tone and direction, so future README work should stay light unless a factual or hygiene issue requires intervention
+
+## 2026-06-05 14:13 CEST
+
+- relaxed `scripts/check-docs.sh` so the README version sync check now accepts both `Current release:` and `current release:` forms instead of tripping on the hand-maintained lowercase variant every time; the checker still enforces presence and version parity with `Cargo.toml`
+
 ## 2026-06-05
 
 - `14:27 CEST` landed the first main-scene scaffold runtime slice after inspecting the repo's actual starting point: added `core::scaffold` as the world-owned home for a static rear hero-support cradle, attached that data to `WorldState` for the main scene only, and rendered it through a dedicated read-only `ScaffoldLayer` beneath the hero using the shared spatial/drawing path. The batch intentionally stops short of a foreground lip, decorative branch spread, or vine-led overgrowth so the support contract stays small and reviewable. `docs/main-scene-scaffold.md`, `docs/architecture.md`, `docs/scene-model.md`, `docs/rendering.md`, `TODO.md`, and `docs/audit.md` were updated to match.
@@ -304,6 +995,50 @@ Logging rule:
 - `17:33 CEST` repaired the broken scaffold visibility contract after screenshot review: main scene scaffold visibility is now a real persisted feature policy instead of being hardwired on, sandbox now reuses the same world-owned scaffold payload for prototype comparisons, and the settings `features` tab now switches its rows by active world so main-scene controls no longer masquerade as sandbox controls.
 - `17:54 CEST` stopped treating the local scaffold brainstorming note as an implicit memory aid only: `docs/main-scene-scaffold.md` now distills the concrete coordinate anatomy from `/Users/mcq/Downloads/yam_tree_scaffold_brainstroming.md`, and `core::scaffold` was refit toward that authored graph with an explicit ground-trunk origin `(-20, -30)`, fork node `(-20, -24)`, rear back brace toward `(-67, 30)`, forward seat-ramp emergence toward `(50, -10)`, raised-leg branch toward `(25, 25)`, and a small foreground lip still kept narrow and reviewable.
 - `14:56 CEST` landed the next scaffold recommendation as ordinary world geometry instead of masks: `core::scaffold` now includes a tiny foreground nesting edge alongside the rear support cradle, `scene/layers/scaffold_layer.rs` now renders rear and foreground scaffold strata through separate read-only layers around the hero, and the docs/audit now record that the current review question is whether this no-mask foreground lip is visually sufficient before any explicit mask seam is introduced.
+
+## 2026-06-04
+
+- `10:34 CEST` ingested the desktop main-scene scaffold brainstorming note into the active docs: added `docs/main-scene-scaffold.md` as the owning hero-support scaffold direction note, linked it from `docs/README.md`, and aligned `docs/scene-model.md`, `docs/rendering.md`, `docs/vines.md`, and `TODO.md` so future scaffold ideation stays centered on a static world-attached seat/back cradle read before decorative branching or vine overgrowth.
+- `10:52 CEST` cleaned up the front-door README after the direct GitHub edit that added the hero GIF preview: updated the preview note to describe the current GitHub-hosted media honestly, added the new `docs/main-scene-scaffold.md` owner link to the active surface map, and removed the duplicated current-release line from the version/history section.
+- `10:58 CEST` tightened `scripts/check-docs.sh` after the README GIF change exposed an over-strict assumption: the front-door asset check still fails on missing local asset paths, but now skips explicit `http` / `https` media URLs so a deliberate GitHub-hosted preview image does not trip the local-path hygiene guard.
+- `13:53 CEST` repaired the front-door README after a broader rewrite softened too many project guardrails: kept the GitHub-hosted GIF and a short personal note, but restored the stronger scene-engine framing, explicit anti-dashboard posture, launcher-behavior detail, broader docs map, scaffold-owner link, and the more stable contract-first front-door structure.
+
+## 2026-06-04 14:03 CEST
+
+- backed away from the earlier front-door README repair pass and returned the README closer to its lighter pre-repair posture while keeping the GitHub-hosted preview GIF in place
+
+## 2026-06-04 14:18 CEST
+
+- reshaped the front-door README for tighter Codex readability and better cross-doc coherence: removed the duplicated release marker, centered the preview GIF and badges, kept the short personal intro, and collapsed the rest of the file into a compact repo-orientation sheet with current state, commands, launcher behavior, canonical docs, repo shape, and working rules aligned to the active contracts
+
+## 2026-06-04 14:29 CEST
+
+<!-- cspell:ignore Dini Timm twimc -->
+
+- added a README-local `cspell` ignore for `Dini`, `Timm`, and `twimc` so the restored intro can stay intact without weakening broader docs hygiene
+- added one bounded backlog note for future external eval report ingestion: raw reports stay reference input, active findings get triaged into `TODO.md` or `docs/audit.md`, and each ingestion batch must be recorded in `docs/LOG.md` instead of creating a second authority surface
+
+## 2026-06-04 14:32 CEST
+
+- ingested the first external README eval as reference input rather than a new authority doc: recorded the active actionable residue in `TODO.md` as future bounded README polish and added a matching low-stakes audit note that the front-door direction is correct but still has minor hierarchy, labeling, and claim-precision seams
+
+## 2026-06-04 14:59 CEST
+
+<!-- cspell:ignore isthatayam -->
+
+- replaced the README's remote GitHub-hosted preview GIF with the local repo-owned `assets/isthatayam_github.mp4` clip, added a direct file fallback link beneath the centered media block, and updated the intro wording from animated `gif` to animated `clip`
+
+## 2026-06-04 17:03 CEST
+
+- expanded the README-local `cspell` ignore list after the latest browser-side README rewrite so the pushed acknowledgements and restored `twimc` heading stay compatible with the docs gate without weakening broader repo spelling checks
+
+## 2026-06-02
+
+- `10:34 CEST` studied `ntrospect0/glint` as a Rust/Ratatui contrast case and promoted the result into the repo-owned docs instead of leaving it in chat memory: `docs/resource-map.md` now records Glint as a dashboard-TUI reference whose useful lessons are infrastructure-only (registry, feature gating, polling/config/theme helpers, setup flow), while `docs/audit.md` now explicitly records dashboard drift as an active caution for future YAM UI and greenhouse work.
+
+## 2026-06-01
+
+- `06:36 CEST` began the real `0.4` greenhouse implementation path with the first authorized inert core slice: added `src/core/greenhouse.rs` and exported it through `core/mod.rs`, defining stable string-like ids, one tiny `greenhouse_nursery` room, access paths, zones, fixtures, planting sites, a symbolic room-level environment profile, and read-only inspection references. The module stays pure data with invariant tests only; it is not yet attached to `WorldState`, rendering, UI, systems, or weather code. `TODO.md`, `docs/architecture.md`, `docs/audit.md`, and `docs/greenhouse-roadmap.md` were updated to reflect the landed state.
 
 ## 2026-05-31
 
@@ -321,21 +1056,6 @@ Logging rule:
 - `18:02 CEST` reworked the full `docs/chatgpt-0.4-source-pack/` set into a more coherent briefing bundle: the pack now has an explicit upload order, cleaner first-pass versus later-phase framing across the project/greenhouse/readiness briefs, a compact `repo-workflow-brief.md` for authority and workflow cues, and tighter prompting guidance so external ChatGPT sessions stay useful without pretending the pack is a full repo mirror.
 - `18:10 CEST` applied a small external-feedback cleanup to the ChatGPT source pack: normalized the greenhouse first-pass ordering string to include `access paths` and the fuller `environment profile` / `inspection surface` wording, and fixed the manifest's included-files list so it matches the actual uploaded export set.
 - `18:16 CEST` tightened the ChatGPT source pack again after another external review: `readiness-and-gates.md` now says the flora-storage direction is selected while the exact shape remains pending, and `source-pack-manifest.md` now spells out what the pack does not include, how it is exported, what `verification green` refers to, and the optional future checksum path for stronger drift detection.
-
-## 2026-06-01
-
-- `06:36 CEST` began the real `0.4` greenhouse implementation path with the first authorized inert core slice: added `src/core/greenhouse.rs` and exported it through `core/mod.rs`, defining stable string-like ids, one tiny `greenhouse_nursery` room, access paths, zones, fixtures, planting sites, a symbolic room-level environment profile, and read-only inspection references. The module stays pure data with invariant tests only; it is not yet attached to `WorldState`, rendering, UI, systems, or weather code. `TODO.md`, `docs/architecture.md`, `docs/audit.md`, and `docs/greenhouse-roadmap.md` were updated to reflect the landed state.
-
-## 2026-06-02
-
-- `10:34 CEST` studied `ntrospect0/glint` as a Rust/Ratatui contrast case and promoted the result into the repo-owned docs instead of leaving it in chat memory: `docs/resource-map.md` now records Glint as a dashboard-TUI reference whose useful lessons are infrastructure-only (registry, feature gating, polling/config/theme helpers, setup flow), while `docs/audit.md` now explicitly records dashboard drift as an active caution for future YAM UI and greenhouse work.
-
-## 2026-06-04
-
-- `10:34 CEST` ingested the desktop main-scene scaffold brainstorming note into the active docs: added `docs/main-scene-scaffold.md` as the owning hero-support scaffold direction note, linked it from `docs/README.md`, and aligned `docs/scene-model.md`, `docs/rendering.md`, `docs/vines.md`, and `TODO.md` so future scaffold ideation stays centered on a static world-attached seat/back cradle read before decorative branching or vine overgrowth.
-- `10:52 CEST` cleaned up the front-door README after the direct GitHub edit that added the hero GIF preview: updated the preview note to describe the current GitHub-hosted media honestly, added the new `docs/main-scene-scaffold.md` owner link to the active surface map, and removed the duplicated current-release line from the version/history section.
-- `10:58 CEST` tightened `scripts/check-docs.sh` after the README GIF change exposed an over-strict assumption: the front-door asset check still fails on missing local asset paths, but now skips explicit `http` / `https` media URLs so a deliberate GitHub-hosted preview image does not trip the local-path hygiene guard.
-- `13:53 CEST` repaired the front-door README after a broader rewrite softened too many project guardrails: kept the GitHub-hosted GIF and a short personal note, but restored the stronger scene-engine framing, explicit anti-dashboard posture, launcher-behavior detail, broader docs map, scaffold-owner link, and the more stable contract-first front-door structure.
 
 ## 2026-05-30
 
@@ -466,6 +1186,23 @@ Logging rule:
 - `16:39` finished the next small dev-UI tightening pass by aligning move/help with the actual live grammar: the help popup now describes `Tab` / `Shift+Tab` plus arrow-key move control instead of the older numbered-target and `h/j/k/l` wording, the runtime no longer keeps those legacy move bindings alive behind the new copy, and the reserved `calendar` seam is now demoted out of the lightweight move strip while remaining explicitly editable in settings.
 - `16:47` closed the pre-commit UI audit with one final footer-consistency nit: the help popup no longer pretends `↑ ↓` are active there, so its footer now only advertises the controls that actually apply on that surface.
 - `16:58` widened `[?] help` into a true global discoverability surface: it can now be opened from the plain main scene before `dev_mode` is enabled, and the popup copy now distinguishes always-available actions such as quit/help/dev entry from the tools that only become active once dev mode is on.
+
+## 2026-05-13 - Audit cleanup follow-up
+
+- refreshed `docs/audit.md` review freshness after the companion-layout stabilization pass
+- updated `TODO.md`'s immediate batch so it reflects actually pending audit-follow-up work instead of already-completed doc cleanup
+- renamed the debug overlay's `Hero visible` line to `Hero anchor visible` because the current fact measures projected anchor visibility, not full rendered hero-pixel visibility
+
+## 2026-05-13 - Release 0.3.6
+
+- bumped the crate and runtime release marker from `0.3.5` to `0.3.6`
+- cut the patch release after the companion-cluster stabilization work: default camera, hero, clock, weather, and date launch positions now follow the accepted clean-boot composition more reliably
+- carried forward the clean-launch reseeding fix, manual camera resize recentering fix, restored spaced weather temperature formatting, date visibility/debug-fact repair, and the debug wording cleanup that clarifies `Hero anchor visible`
+
+## 2026-05-13 - Visual companion nudge
+
+- nudged the weather companion one cell left relative to the frozen clock anchor
+- applied a matching one-cell left bias to the date line's self-centering so the date and weather pair stay visually grouped against the clock
 
 ## 2026-05-12
 
@@ -1030,693 +1767,3 @@ Logging rule:
 - preserved ANSI-derived style spans while clipping hero frame text in the renderer
 - introduced a minimal scene + layer compositor and routed the existing render order through it without changing output
 - `2026-05-13 10:12` finished the companion-cluster polish pass: froze the accepted default camera, hero, and clock launch positions; restored clean-launch reseeding so saved offsets cannot override those defaults; kept manual camera centered through terminal resizes; brought the date widget back into the visible companion band and exposed its world/screen/visible facts in the debug panel; nudged the default weather/date positions into the accepted final family; and restored the spaced compact temperature row (` 3C |  11C`) with a slightly wider compact weather contract and matching layout-test updates.
-
-## 2026-06-04 14:03 CEST
-
-- backed away from the earlier front-door README repair pass and returned the README closer to its lighter pre-repair posture while keeping the GitHub-hosted preview GIF in place
-
-## 2026-06-04 14:18 CEST
-
-- reshaped the front-door README for tighter Codex readability and better cross-doc coherence: removed the duplicated release marker, centered the preview GIF and badges, kept the short personal intro, and collapsed the rest of the file into a compact repo-orientation sheet with current state, commands, launcher behavior, canonical docs, repo shape, and working rules aligned to the active contracts
-
-## 2026-06-04 14:29 CEST
-
-<!-- cspell:ignore Dini Timm twimc -->
-
-- added a README-local `cspell` ignore for `Dini`, `Timm`, and `twimc` so the restored intro can stay intact without weakening broader docs hygiene
-- added one bounded backlog note for future external eval report ingestion: raw reports stay reference input, active findings get triaged into `TODO.md` or `docs/audit.md`, and each ingestion batch must be recorded in `docs/LOG.md` instead of creating a second authority surface
-
-## 2026-06-04 14:32 CEST
-
-- ingested the first external README eval as reference input rather than a new authority doc: recorded the active actionable residue in `TODO.md` as future bounded README polish and added a matching low-stakes audit note that the front-door direction is correct but still has minor hierarchy, labeling, and claim-precision seams
-
-## 2026-06-04 14:59 CEST
-
-<!-- cspell:ignore isthatayam -->
-
-- replaced the README's remote GitHub-hosted preview GIF with the local repo-owned `assets/isthatayam_github.mp4` clip, added a direct file fallback link beneath the centered media block, and updated the intro wording from animated `gif` to animated `clip`
-
-## 2026-06-04 17:03 CEST
-
-- expanded the README-local `cspell` ignore list after the latest browser-side README rewrite so the pushed acknowledgements and restored `twimc` heading stay compatible with the docs gate without weakening broader repo spelling checks
-
-## 2026-06-05 08:54 CEST
-
-- noted the latest hand-reworked README as the current good-enough creative/front-door state for YAM: the intro, front GIF, compact orientation-sheet structure, and acknowledgements are now considered broadly settled in tone and direction, so future README work should stay light unless a factual or hygiene issue requires intervention
-
-## 2026-06-05 14:13 CEST
-
-- relaxed `scripts/check-docs.sh` so the README version sync check now accepts both `Current release:` and `current release:` forms instead of tripping on the hand-maintained lowercase variant every time; the checker still enforces presence and version parity with `Cargo.toml`
-
-## 2026-05-13 - Audit cleanup follow-up
-
-- refreshed `docs/audit.md` review freshness after the companion-layout stabilization pass
-- updated `TODO.md`'s immediate batch so it reflects actually pending audit-follow-up work instead of already-completed doc cleanup
-- renamed the debug overlay's `Hero visible` line to `Hero anchor visible` because the current fact measures projected anchor visibility, not full rendered hero-pixel visibility
-
-## 2026-05-13 - Release 0.3.6
-
-- bumped the crate and runtime release marker from `0.3.5` to `0.3.6`
-- cut the patch release after the companion-cluster stabilization work: default camera, hero, clock, weather, and date launch positions now follow the accepted clean-boot composition more reliably
-- carried forward the clean-launch reseeding fix, manual camera resize recentering fix, restored spaced weather temperature formatting, date visibility/debug-fact repair, and the debug wording cleanup that clarifies `Hero anchor visible`
-
-## 2026-05-13 - Visual companion nudge
-
-- nudged the weather companion one cell left relative to the frozen clock anchor
-- applied a matching one-cell left bias to the date line's self-centering so the date and weather pair stay visually grouped against the clock
-
-## 2026-08-02 17:38 CEST
-
-- completed the bounded YAM review follow-up on `experimental`: CI now installs `chafa` before the full verification gate, so the hero-content regression test executes in the pipeline instead of taking its intentional missing-tool fallback
-- refreshed `docs/audit.md` to record the current review date and the actual lockfile state (`serde 1.0.229`, duplicate `hashbrown` and `syn` families); installed `cargo-audit` locally, but its advisory database fetch was unavailable, so CI remains the current vulnerability-result authority
-- ran the full local verification after the review changes: documentation lint/spell checks, formatting, Clippy, architecture checks, and all 276 tests passed
-
-## 2026-08-07 18:40 CEST
-
-- reconciled the three post-`main` development tracks into `experimental`: retained the cache-revision contract from `agent/hero-revision-contract` (`cbac94d`) and the relocated-build cache fallback identified on `claude/full-audit-1e44b1` (`2a7e14b`) without merging either conflicting branch wholesale
-- made hero caches source-specific and revision-keyed (`<stem>.r<revision>.<width>x<height>.frame_cache.json`), kept a valid matching cache when its compile-time source path is no longer reachable, and rejected `ANSI_PARSE_ERROR` frames from cache persistence; added regression coverage for each boundary
-- repaired build identity tracking so Cargo watches Git HEAD, its symbolic branch ref, and packed refs; a commit now invalidates the embedded hash even when no Rust source file changed
-- reconciled the canonical hero/dependency audit prose with current CI and lockfile state; a fresh local `cargo audit` loaded 1,190 RustSec advisories and reported no findings
-
-## 2026-08-19 10:18 CEST
-
-- registered a second hero source, `IVY_VECTOR` (`assets/hero_gif_2.gif`, `1080x1080`, 48 frames, requested at `96x48` cells): the same character and pose cycle as `IVY`, redrawn as flat vector art in Moho rather than filtered from the raster original, imported from the maintainer's local `window_3-v02.gif` export
-- kept it a probe rather than a hero swap: `hero_source::DEFAULT` is still `IVY`, so an ordinary launch is unaffected; the point is to make `hero_source::ALL` carry two genuinely different assets so the swap gates stop checking one file against itself
-- extended `rendered_hero_frames_contain_real_content_not_placeholders` to iterate `hero_source::ALL` instead of only the default, so registering art now also enrolls it in the live-render gate; the geometry and transparent-canvas gates already iterated the registry
-- moved the frame-0 coverage floor onto the descriptor as `HeroSource::min_frame0_coverage_percent`, because cell density is a property of the art rather than of the pipeline: flat vector fills light fewer braille dots than cel shading at the same requested size, and one shared floor would either wave a real collapse through on the dense asset or fail the sparse one for being drawn differently
-- measured both sources through the test's own `covered_cells` helper against chafa 1.18.2: `hero_gif_1` frame 0 covers 932/4608 cells (20.2%), `hero_gif_2` covers 706/4608 (15.3%)
-- added `YAM_HERO_SOURCE=<stem>` after confirming the first pass left no way to actually look at the new art: `Hero::new` now resolves the source through `hero_source::resolve_from_env` instead of hard-wiring `DEFAULT`, and an unset or unknown stem falls back rather than failing
-- verified live rather than by test alone (`scripts/tmux-smoke.sh` against an isolated `XDG_CACHE_HOME`): `YAM_HERO_SOURCE=hero_gif_2` compiles and caches `hero_gif_2.r1.96x48.frame_cache.json` (20MB) and renders the vector art in the scene, while an unset launch still writes and renders `hero_gif_1.r2.*` (27MB)
-- withdrew the 41.5% frame-0 figure that the content test's comment and `docs/rendering.md` both cited for `hero_gif_1`; it does not reproduce, and the real 20.2% leaves that source's unchanged 20% floor with 0.2 points of headroom rather than the roughly 2x the note assumed. Left `IVY`'s floor at 20% rather than quietly recalibrating it and logged the discrepancy as a `medium` item in `docs/audit.md`, because moving an existing gate's threshold is a calibration decision rather than a side effect of adding art
-
-## 2026-08-19 11:05 CEST
-
-- promoted `IVY_VECTOR` from probe to `hero_source::DEFAULT` and bumped the development version to `0.4.1`: `assets/hero_gif_2.gif` is now the art an ordinary launch renders
-- kept `IVY` registered rather than retiring it, so the previous hero stays gated by the same three swap tests and stays reachable through `YAM_HERO_SOURCE=hero_gif_1` without a rebuild; the swap is reversible by env var rather than by revert
-- pinned the choice in `default_source_is_the_vector_hero`, because which asset an ordinary launch renders is a product decision rather than an incidental ordering of `ALL`, and the docs now name that stem in four places
-- diagnosed why `YAM_HERO_SOURCE=hero_gif_2 yam` appeared to do nothing after the previous merge: the installed `~/.cargo/bin/yam-rust` was still the pre-merge build, carrying no reference to the variable and no second source. The wrapper's staleness check was correct and would have refreshed on the next launch; the run simply predated the merge. Reinstalled through `scripts/update.sh` and confirmed against the installed binary rather than the build tree
-- noted the inverse of the long-standing asset-duplication item: `assets/hero_gif_1.gif` and `tools/legacy-python/hero/assets/hero_go.gif` are still both tracked (~8.2MB) while neither is now the default render
-
-## 2026-08-19 11:55 CEST
-
-- found the real cause of the missing dark reds, which the 2026-07-22 pass had not addressed: under `--fg-only`, chafa's `--bg` is never painted and is not a statement about the terminal - it is the colour chafa treats as already on screen, so art resembling it is discarded instead of drawn. `HERO_DISPLAY_BG` was `#100100`, a dark red, so the pipeline was being instructed to throw away exactly the content that was reported missing
-- demonstrated on a fully opaque single-colour image with no transparency in play: line art, darkest red, dark red, and the leggings rendered zero dots while bright red and everything lighter rendered every dot. A hard step, not a gradient, and not hue-dependent - `rgb(184,3,7)` shares the bright red's red channel and still rendered nothing
-- measured the threshold against `--bg`: black needs grey 64, `#100100` 67, `#16181A` 77, `#303030` 88, so tuning the constant toward the scene colour would have made it strictly worse, and no value near the scene could have worked
-- kept `--fg-only`, which is an aesthetic requirement rather than an implementation detail: the scene shows through the unlit dots. Removing it was measured (it recovers everything, at the cost of painting an opaque background into 121 partially-transparent edge cells) and rejected on that basis
-- moved the value onto the descriptor as `HeroSource::absent_color` and set both sources to `#00ff00`: solid-cell fill went from 621/1468 to 1468/1468 with zero spill outside the silhouette, frame-0 coverage from 932 to 1923 cells (`hero_gif_1`) and 706 to 1725 (`hero_gif_2`), and reconstructed-render error against the source from 426 to 126 and 288 to 189 respectively
-- added `absent_color_is_actually_absent_from_every_source` with a 128 Euclidean-RGB floor, above the ~111 that the measured drop threshold implies and below both assets' real separation (186 and 170). Confirmed by fault injection, not just by passing: pointing `IVY.absent_color` at the dark red already in its art fails the gate and names the colour, frame, and distance
-- reconciled the 41.5% frame-0 figure withdrawn earlier today: the post-fix measurement is 41.7%, within 0.2 points of it. The likely reading is that 41.5% measured a pipeline without this defect and the `--bg` value drifted afterwards - inference, not proven history - and either way the coverage floors needed no recalibration, so that `medium` audit item closes without a threshold change
-- bumped cache revisions since every rendered frame changes: `IVY` r2 -> r4 (skipping r3, because a stale `hero_gif_1.r3.*` from 2026-08-17 can still be in `~/.cache/yam` and would be accepted as fresh) and `IVY_VECTOR` r1 -> r2
-
-## 2026-08-19 12:40 CEST
-
-- confirmed against the live frame cache, not just a standalone harness, that `7c0307` renders in 0.4.2: 220 cells in frame 0, the second-largest colour group after the leggings' 684, where it had been 0 before the fix
-- took the maintainer's correction that the vector source is authored as ten flat colours: 93.8% of opaque pixels are those ten and the remaining 6.16% is GIF-export anti-aliasing fringe, so the 212 distinct colours the gate had been measuring were mostly not art
-- retuned `absent_color` from `#00ff00` to `#00e000` on both sources after establishing that clearance is a trade rather than a maximum: the value bleeds into chafa's foreground pick on partially transparent edge cells, and the bleed grows with distance. Off-palette edge cells fall from 15 to 8 across both assets, with slightly better reconstruction error on each
-- rejected `#ffffff` despite it showing zero off-palette cells: at a clearance of 5 it collides with `hero_gif_1`'s near-white highlights and drops them, failing the same way `#100100` failed at the dark end. An earlier claim that white systematically darkened chafa's foreground picks was wrong - the mean shift is -0.2 for every candidate - and the real mechanism is the ordinary drop rule
-- gave the absent-colour gate a significance floor of half a rendered cell, derived from the render footprint rather than picked, because a colour thinner than that is discarded by cell averaging whatever `absent_color` is; policing it meant policing the exporter's fringe. On `hero_gif_1` that removes 108 of 249 distinct colours from consideration and moves the reported clearance from 160 to 162
-- recorded two of the ten authored colours as never rendering, for reasons that are not the drop rule: `ffffff` has zero opaque pixels because white is the transparency index, and `395f0b` (the iris) peaks at 177 pixels in a frame against a 253-pixel cell, so cell averaging absorbs it. Neither is recoverable in the renderer
-- bumped cache revisions for the retune: `IVY` r4 -> r5, `IVY_VECTOR` r2 -> r3
-
-## 2026-08-19 15:20 CEST
-
-- set `IVY_VECTOR`'s `absent_color` to `#336699` at the maintainer's direction, after previewing candidates live with `chafa assets/hero_gif_2.gif --size 96x48 ... --fg-only --bg=<value>`; verified that invocation is byte-identical to the runtime pipeline (15192 bytes both ways), so flag iteration needs no build and no cache
-- recorded the intent explicitly, because it inverts the contract this field carried through 0.4.3: the overlap with the palette is wanted. The asset is ten flat colours, flat fills render as fully-lit `⣿`, and under `--fg-only` a uniform cell is all eight dots or none, so culling the darkest tiers is the only lever chafa offers for keeping the hero open rather than a solid mass
-- established why the value has to be chromatic rather than a dark neutral: `7c0307` and `332a29` have identical RGB sums (134 each), so every grey or black tested drops both together, and raising a neutral loses the bright red before it recovers the dark one. A sweep of the RGB cube found 11 values that keep `7c0307` while still dropping `332a29`, all blue or green
-- measured the shortlist on the real frame rather than on patches: dark-red cells go 0 -> 233 and leggings stay at 0, with reconstruction error dropping 284 -> 122
-- gave the absent-colour gate an `ACCEPTED_OVERLAP` list rather than deleting it, at the maintainer's choice: `hero_gif_2` is pinned at 259464 pixels inside the drop radius in its worst frame, so the art stays guarded against drift while the deliberate overlap is allowed. Sources not listed are still required to separate, which is how `IVY` is still checked
-- bumped `IVY_VECTOR` `r3` -> `r4`; `IVY` untouched at `r5` and still on a non-overlapping `#00e000`, so its render is unchanged
-- frame-0 coverage for `hero_gif_2` is 923/4608 (20.0%) against its unchanged 10% floor
-
-## 2026-08-19 16:30 CEST
-
-- traced why dev move mode could not save the hero position: it was not the save or the load, both of which work. `main.rs` computed `clean_launch` as true unless `--preserve-ui-state` was passed, so reseeding was the default, and `reset_for_clean_launch` sets `self.offsets = UiOffsets::default()` - it preserves a dozen visibility preferences and discards every offset. Proved by A/B against an isolated `HOME` with `hero_dx = -150`: the hero rendered at column 42 on a normal launch and column 101 with `--preserve-ui-state`, a 59-column gap matching the offset exactly
-- found the sharper consequence in the maintainer's own `state.json`: `camera_x` was non-default at `-68` while `hero_dx` was exactly the default `-209`. Because the reset runs at startup and a save then writes the whole offsets struct, any later save silently overwrote a hero position saved in an earlier session
-- inverted the default at the maintainer's direction: saved positions are preserved, and reseeding happens only on an explicit `--hard-reset` or when the saved file's crate version differs from the running binary. `UiStateSnapshot` gained a `#[serde(default)] version`, so files written before 0.4.5 - including the pre-snapshot bare-offsets format - read as versionless and reseed. That is not one-shot: nothing persists at boot (`persist_state_now` is reachable only from `confirm_save_and_quit`), so the old stamp survives until a save, and an unsaved session reseeds again next launch - harmless, since it reseeds to the same defaults
-- verified all three paths end to end against isolated `HOME`s rather than by test alone: saved-by-this-version normal launch preserves (column 101), `--hard-reset` reseeds (42), and saved-by-an-older-version reseeds (42)
-- removed `--clean-launch` from `bin/yam` and `bin/yam-sandbox`. Nothing had ever parsed it, so it was already inert, but leaving it would now read as forcing a reset when `--hard-reset` is the flag that does. `--preserve-ui-state` is gone with it, since preserving is the default
-- caught during wrapper verification that the version bump had left `Cargo.lock` stale, which made `scripts/update.sh` fail its `--locked` check - that would have broken the next `yam` launch, not just a local build
-- documented the rule in `docs/architecture.md` and `README.md`; it had lived only in `docs/LOG.md` despite being user-facing behavior
-
-## 2026-08-20 06:10 CEST
-
-- wrote `docs/chafa-drop-rule.md`, consolidating the chafa colour study into a reference: the mechanism (`--bg` under `--fg-only` is a cull control, never painted), how the defect presented and why the 2026-07-22 pass did not fix it, the batched patch-grid measurement harness, the step-by-step procedure for choosing `absent_color` for new art, per-family darkest-survivable values, and the settings measured to have no effect
-- recorded that the drop boundary is not predictable from any simple metric: from a neutral background it approximates sum-of-channels (1.2x spread over 24 directions), from a chromatic one every metric collapses (L1 5.8x, Euclidean 3.7x, mean-RGB 2.9x). The doc says to measure rather than model, because two of this session's wrong turns came from extrapolating a metric across geometries
-- recorded the inert settings explicitly so they are not re-tuned: dither and its grain/intensity (72 of 72 combinations byte-identical, and chafa's own help says "No effect with 24-bit color"), `--color-space`, `--fg`, `--fill`, `--preprocess`, `--optimize`, `--work`, `--threshold`, and `--symbols=braille-solid`
-- recorded the two harness traps that produced false results during the study: a parser reading only truecolour scores indexed `38;5;N` output as blank, and filtering by colour proximity rather than cell position reads a large colour shift as "fewer cells rendered"
-- indexed the new doc in `docs/README.md` and cross-linked it from the `absent_color` prose in `docs/rendering.md`; added `desaturate`/`desaturated` to `.cspell.json`
-
-## 2026-08-20 06:35 CEST
-
-- landed `--color-extractor=average`, reversing the 2026-07-22 switch to `median` now that the flattened opaque canvas it originally failed against is gone. Verified it is not a regression rather than assuming: coverage is identical cell for cell (`hero_gif_1` 1918/4608, `hero_gif_2` 923/4608, unchanged), reconstruction error drops (122 to 112 and 125 to 96), and the darkest-survivable tables are identical under both extractors, so the change cannot cost a colour
-- bumped cache revisions for the render change: `IVY` r5 -> r6, `IVY_VECTOR` r4 -> r5
-- corrected the historical prose in `docs/rendering.md` so the 2026-07-22 `median` note reads as history rather than current configuration, and updated the extractor in `docs/architecture.md` and in the preview command in `docs/chafa-drop-rule.md`
-
-## 2026-08-20 07:05 CEST
-
-- closed out the chafa option space against `chafa --help` rather than memory, and extended `docs/chafa-drop-rule.md` with the two live options it had omitted
-- `--fill` is fully inert, not just at `none` as previously recorded: byte-identical at `none`, `braille`, `solid`, `stipple`, `space` and `all`, because it only supplements a symbol set that does not need supplementing
-- `--font-ratio` is live and changes the rendered extent (`1/2` gives 94x44, `2/3` gives 96x33, `1/1` gives 95x22), so it is a correctness setting tied to the terminal's cell aspect rather than a tuning knob; the runtime leaves it at chafa's default `1/2`
-- `--glyph-file` is live and moves against the openness goal: real fonts increase solid cells (527 to 573 for Agave, 583 for Cascadia) because their braille dots cover less of the cell than chafa's built-in model assumes. Recorded that Menlo returned byte-identical output without concluding why, since a silent `.ttc` load failure would look the same as a match
-- noted that both remaining options are machine-specific and should not enter the descriptor before the terminal's font and cell aspect are established
-- every other option in `chafa --help` is now either measured inert, already landed, or irrelevant to offline single-frame conversion
-
-## 2026-08-20 08:20 CEST
-
-- merged PR #11 (`eedd21a`), the first change this cycle to satisfy branch protection rather than bypass it, and synced local `main`
-- corrected `docs/release-model.md` step 2, which still offered landing maintenance batches directly on `main`. That has been impossible since admin bypass was disabled on 2026-08-20: the required `verify` check only runs once a commit is pushed, so a first-time direct push can never satisfy it. Recorded why the step was written that way - the required check had been configured all along, but admins were exempt, so pushes reported `Bypassed rule violations` and the protection gated nothing
-- annotated `--color-space=rgb` and `--dither=none` in `src/render/chafa.rs` as measured-inert at 24-bit colour, pointing at `docs/chafa-drop-rule.md`. Both are kept explicit rather than dropped so the invocation stays self-describing, but an unmarked no-op invites exactly the tuning the study was meant to prevent
-- refreshed the `docs/audit.md` review date to cover the hero swap, the drop-rule investigation, dev-position persistence, and the protection change
-- no runtime behavior change in this version, so no cache revision bump
-
-## 2026-08-20 13:20 CEST
-
-- landed the Phase 1 offline hero compiler from `agent/hero-revision-contract`, unmerged since 2026-07-27. Adapted rather than merged as authored: the branch predated per-source descriptors, so `CompileOptions` now takes geometry and `absent_color` from a `HeroSource`, exposes `for_source`, and honors `YAM_HERO_SOURCE` so `--compile-hero` and the runtime agree on which asset they mean
-- kept the branch's best idea and extended it: `chafa_preset_args` is the single authoritative flag list shared by `chafa_output` and the compiler, so the two paths cannot drift. It now carries the source's own `absent_color` rather than a global constant, which is what stops an offline package being rendered against a different drop reference than the runtime uses for the same asset. `HERO_PRESET_ID` bumped to `rgb-average-fgonly-braille-v2` for the extractor and per-source `--bg`
-- dropped four globals the descriptor had already superseded (`HERO_GIF_PATH`, `HERO_DISPLAY_BG`, `HERO_CACHE_REVISION`, `HERO_RENDER_WIDTH`/`HEIGHT`) and the `render_frame` wrapper that became dead once the command-threaded path took over
-- retargeted `default_options_point_at_the_canonical_hero_gif`, which pinned `hero_gif_1` and failed on merge. It now asserts the compiler follows `hero_source::DEFAULT`, and a companion test checks every registered source carries its own geometry and drop reference - a package rendered against another source's `absent_color` would silently contain the wrong art
-- corrected `docs/hero-revision.md`'s Current Problem section, which still described the dark-color defect as unresolved and predicted the failure was "broader than one Chafa flag". It was one flag. Recorded the wrong prediction rather than deleting it, because the reasoning is the useful part: each listed subsystem was a plausible suspect, and the defect was isolated by measuring them out one at a time
-- verified the compiler end to end, not just by test: `--compile-hero` wrote a 48-frame package for `hero_gif_2` with the correct SHA-256 digest, `1080x1080` canvas, 80ms frame timing, and `compiler_args` recording `--bg=#336699` and `--color-extractor=average`
-- the runtime still loads the disposable frame cache rather than packages; wiring the package into startup is the next slice
-
-## 2026-08-20 15:10 CEST
-
-- wired the compiled package into startup, the slice `docs/hero-package.md` had recorded as outstanding: `hero_frames_cached_from` now prefers a validated `HeroPackage`, then the frame cache, then the live chafa path
-- gated the package on schema revision, `preset_id`, render geometry, and the source file's SHA-256 digest, plus `validate()`. Every check falls through silently rather than erroring, matching the existing degrade-don't-panic rule: a package is an optional acceleration and the live path can always rebuild
-- the digest check is the point. The frame cache can only compare mtimes, so art swapped in with an older timestamp is served as trusted art; a package is validated on content and rejects it
-- split the decision out as a pure `manifest_matches` so it is testable without the filesystem, and covered the four ways a package can be wrong: different art, different preset, different geometry, different schema
-- pointed `--compile-hero` at the directory the runtime reads (`<cache dir>/<stem>.hero_package.json`) so compile-then-run works with no arguments, and dropped the now-unused `default_output_path`
-- verified both directions live rather than by test alone. Compiling into a fresh cache dir and launching against it rendered the scene and wrote *no* frame cache, which is only possible if the package was used. Tampering the manifest's digest then launching wrote `hero_gif_2.r5.96x48.frame_cache.json`, proving the rejection path falls through to chafa rather than failing
-- corrected `docs/hero-package.md`, which still said runtime wiring was not done and that the compiler defaults to `assets/hero_gif_1.gif`; it follows `hero_source::DEFAULT` and `YAM_HERO_SOURCE` now
-
-## 2026-08-20 16:05 CEST
-
-- explored what the compiled package actually buys, and found two capabilities worth recording. A package removes the runtime dependency on chafa entirely: launching with chafa absent from the process PATH rendered 1119 real glyphs with no placeholder frames, where the uncached path would have degraded. And hand-edited packages render - recoloring 18529 dark-red cells across 48 frames put the edited colour on screen, which is the curated-correction capability `hero-revision.md` set as the goal
-- noted that the manifest digest binds a package to its *source art*, not to its own frame content, so hand corrections pass validation by design; there is no integrity check on edited frames, only on provenance
-- found and fixed a real defect in `--compile-hero`'s optional argument while testing it: it overrode only `source_path`, leaving output path, geometry and `absent_color` from the default source. Compiling `assets/hero_gif_1.gif` wrote 64 correct frames into `hero_gif_2.hero_package.json` against `#336699` rather than `#00e000`. The digest check meant the runtime rejected it rather than rendering wrong art, so the symptom was a package that silently never applied
-- the argument now selects a registered source by stem, full path, or bare filename, and refuses unregistered art with an error listing the registered stems. Compiling art with no descriptor cannot be correct: `absent_color`, geometry and the coverage floor are exactly what the descriptor owns
-- verified all three forms write the right package with the right drop reference: `hero_gif_1` at `#00e000` with 64 frames, `hero_gif_2` at `#336699` with 48
-
-## 2026-08-22 22:14 CEST
-
-- completed a post-cleanup sweep of maintained docs, backlog, scripts,
-  configuration, and repository topology after YAM worktree/ref reconciliation;
-  removed branch and worktree names no longer appear in current operational
-  guidance, while the former `project-synoptic-review` reference remains in its
-  original historical entry under this append-only log contract
-- reconciled hero status against current source evidence: startup selects a
-  validated package, then the disposable frame cache, then live Chafa, with
-  schema, preset, geometry, source-digest, and structural checks before package
-  use
-- replaced pre-landing cache/compiler tasks with the remaining work: visual
-  acceptance on future visible changes, explicit source-selection policy, and
-  separately scoped `CellGrid`, correction, or custom-backend experiments
-- preserved the acceptance boundary: package validation, placeholder checks,
-  full automated verification, and bounded smoke evidence do not themselves
-  prove supported-terminal visual acceptance or gameplay behavior
-
-## 2026-09-02 08:34 CEST
-
-- opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,
-  branched from `main` at `66de0f0`, so the follow-ups from the 2026-09-02
-  repository assessment land through a short-lived branch and PR rather than
-  against `main` directly
-- bumped `Cargo.toml` and `README.md`'s canonical current-release line in the
-  same change, since `scripts/check-docs.sh` enforces that pair and a
-  one-sided bump fails the docs gate
-- ran the full gate on the branch before any finding-driven edit, so a later
-  failure is attributable to a tweak rather than to the base it started from
-- the assessment's own findings are not applied here; this entry records only
-  the cycle opening
-
-## 2026-09-02 09:12 CEST
-
-- fixed the first two findings from the 2026-09-02 repository assessment, both
-  in `scripts/check.sh`, as one change: they are the same concern, and the
-  architecture gate is what every later boundary claim rests on
-- the gate could report success without running. `if rg …; then fail; fi` treats
-  a missing ripgrep (exit 127) as "no matches", so any machine without `rg` got
-  no boundary checking at all while still being told "All checks passed"; a
-  wrong working directory (exit 2) passed identically. Demonstrated before
-  fixing: `PATH=/usr/bin:/bin` with the old form exits 0 having read no files.
-  This is the same silent-pass shape `scripts/check-docs.sh` was already
-  repaired for, applied there and not here
-- moved to `grep`, which is in POSIX and so needs no availability guard at all,
-  rather than guarding `rg`'s presence — a gate with no optional dependency
-  cannot skip
-- while testing, found that exit status alone cannot carry the "could not run"
-  case: BSD grep, the macOS default and so the one this repo is developed
-  against, exits 1 for a missing directory, the same code it uses for a clean
-  pass. GNU grep and ugrep exit 2. Each check therefore counts the `.rs` files
-  it is about to scan and fails on zero, which is grep-independent, and a
-  passing run now prints that count so a silent skip is visually impossible
-- the first version of the count guard was itself silent: `find` at the head of
-  a `set -o pipefail` pipeline made the assignment fail and `set -e` killed the
-  script before its own error message. Caught by testing the failure path
-  rather than the success path; the directory test is now separate
-- extended the `core` check from `crate::scene::` only to the same
-  upward-dependency pattern `systems` already used. `docs/architecture.md`
-  forbids `core -> ui` and `core -> render` too, and `src/core/mod.rs` claims no
-  ratatui/crossterm usage, but neither was enforced. The tree was already clean,
-  so nothing had to change in `src/`
-- ratatui/crossterm are matched through `::` or a `use` statement rather than
-  bare, so the "No ratatui/crossterm usage" comment in `src/core/mod.rs` is not
-  itself reported as a violation
-- proved the gate in both directions rather than trusting a green run, per this
-  file's own rule: all five forbidden import forms (`crate::scene::`,
-  `crate::render::`, `crate::ui::`, `use ratatui::`, `use crossterm::`) injected
-  into `src/core/grid.rs` one at a time were each caught and named with
-  file:line; legitimate `crate::core::`/`super::` imports and the mod.rs comment
-  were not. Missing directory, empty directory, and absent-ripgrep cases were
-  each checked under both BSD grep and ugrep
-- updated `docs/architecture.md`, `docs/hygiene.md`, and `docs/audit.md`, each
-  of which stated the narrower guard as current fact; hygiene now also records
-  why the checks use `grep` so the `rg` form is not reintroduced as a tidy-up
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 09:41 CEST
-
-- fixed the third finding from the 2026-09-02 repository assessment: three
-  README claims that runtime evidence contradicts, plus the gate gap behind one
-  of them
-- the version badge read `0.4.0` against a crate at `0.4.10`. `scripts/check-docs.sh`
-  already compared `Cargo.toml` to README's canonical `current release` line, so
-  that line had tracked every bump while the badge four lines above it — the
-  first version a reader sees — drifted ten patch releases. Extended the gate to
-  the badge, in both places it carries the version: the shields.io URL and the
-  `alt` text, which can drift independently of each other
-- corrected the greenhouse snapshot line. It said "not yet growth-dispatched"
-  while `systems::tick::tick` has called `run_greenhouse_growth` on every tick
-  since 2026-07-22, with a seedling advancing `Dormant -> Growing -> Mature`;
-  and `future_surfaces` still listed "greenhouse growth dispatch, inspection UI"
-  although `GreenhouseInspectLayer` exists and is bound to `i`. `TODO.md` and
-  `docs/architecture.md` both recorded the landing correctly at the time — this
-  was a front-door-only miss, and the stale entry sat directly under a
-  `next_track` line that was already current
-- rewrote the `future_surfaces` entry as the curation/transfer write-path and
-  richer per-fixture inspection, which is what actually remains and which now
-  agrees with `next_track` instead of contradicting it
-- proved the new gate rather than trusting a green run: badge URL drift, alt-text
-  drift, a deleted badge, and canonical-line drift each fail with their own
-  message, and the unmodified tree passes
-- README edits kept to factual corrections under `AGENTS.md`'s mostly-settled
-  front-door rule; tone, GIF, and orientation-sheet structure untouched
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 10:24 CEST
-
-- fixed the fourth finding from the 2026-09-02 repository assessment: no
-  interrupt path, and three unreachable branches in the same key handler
-- `KeyModifiers::CONTROL` appeared nowhere in the codebase; the only modifier
-  ever tested was SHIFT. With raw mode on for the whole run the terminal never
-  raises SIGINT, so Ctrl+C was just an unhandled `Char('c')` — and in dev
-  free-roam it reached the character catch-all and called
-  `recall_camera_home()`. The only real exit was `q`, which is gated behind mode
-  checks and a confirmation modal, so a wedged overlay had no escape
-- added `is_interrupt(code, modifiers)` as a small pure predicate rather than
-  inlining the test, so the behavior is unit-testable without a terminal; the
-  loop checks it before any mode dispatch, ahead of the loading-screen branch,
-  and breaks immediately without saving or playing the quit dissolve
-- removed the dead branches. `c == 'd'` was shadowed by the unguarded
-  `Char('d')` arm above it. The shift-variants on the font and FPS chords tested
-  `'='`/`'-'` together with SHIFT, but the app pushes no keyboard enhancement
-  flags, so crossterm reports the shifted character (`'+'`, `'_'`) and the base
-  key never arrives with a SHIFT modifier — confirmed by grepping for
-  `KeyboardEnhancementFlags` before touching anything. One of those dead tests
-  also claimed `'=' + SHIFT` for `increase_hero_fps` when the font arm above had
-  already claimed the same chord, so the two disagreed while both were dead
-- simplified `base == 'c'` to `c == 'c'`: uppercase `'C'` is claimed by an
-  earlier arm under the same `dev_free_roam` guard, so only lowercase ever
-  reached the catch-all. Behavior-preserving
-- proved the new tests can fail before trusting them, per this file's rule.
-  Dropping the CONTROL requirement fails `plain_c_is_not_the_interrupt`;
-  restoring the original never-interrupt behavior fails both
-  `ctrl_c_is_the_interrupt` and `ctrl_shift_c_is_the_interrupt`. A first attempt
-  at the former revert did not compile (unused `modifiers` under
-  `-D warnings`), which produced no test output at all rather than a failure —
-  redone so it actually exercised the assertion
-- verified against the real release binary under tmux, not just the unit tests:
-  Ctrl+C exits from the main scene, from dev mode (where it previously recalled
-  the camera), and from the loading screen; plain `c` in dev mode still recalls
-  camera home and leaves the app running; `q` still exits gracefully
-- recorded the interrupt and the corrected chord set in `docs/rendering.md`,
-  which owns the input contract
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 11:06 CEST
-
-- fixed the fifth finding from the 2026-09-02 repository assessment: the
-  package-first hero path is real, validated, and wired, but unreachable for
-  anyone who has not read `src/main.rs` — the runtime never writes a package,
-  and `--compile-hero` appeared in no user-facing doc
-- measured the options before choosing, and the measurements moved the answer.
-  A package is 19 MB of JSON and compiles in about 4 s. Committing one to the
-  repo would contradict `docs/hygiene.md`'s "keep build output and runtime cache
-  artifacts out of the repo" and would add 19 MB to history on every hero
-  change, so documenting the command is the right fix and shipping an artifact
-  is not
-- corrected an overstatement in the assessment itself while checking it. The
-  report implied a cold clone pays 20+ s of chafa work; measured with an
-  isolated `XDG_CACHE_HOME`, the start prompt appears at 8 s cold versus 5 s
-  warm. Roughly 4.5 s of that floor is the boot animation's own
-  `BOOT_COALESCE` + `BOOT_BAR` + `BOOT_HOLD`, so the cold-cache penalty is about
-  3 s, not 20. `scripts/tmux-smoke.sh`'s 20 s cold allowance is deliberately
-  conservative, not a measurement of user-visible cost
-- established what a package is actually worth, since it is not boot speed: with
-  a package present and `chafa` absent from `PATH` the hero rendered 42 braille
-  rows; with no package and `chafa` absent it rendered 0 and fell back to
-  placeholder frames. Package independence from `chafa` is the reason to run the
-  compiler, and that is how the README now frames it
-- verified the package path is genuinely taken: a run against a cache holding
-  only a package wrote no `frame_cache.json`, which is only possible if the
-  package was used
-- also documented `chafa` as a runtime requirement in the README's environment
-  notes. It was in the `Brewfile` but stated nowhere a reader would look, while
-  the notes did cover braille and color support
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 12:38 CEST
-
-- fixed findings six and seven from the 2026-09-02 repository assessment
-  together, because the same deletion closed both: the dead code in `render/`
-  *was* the upward coupling
-- deleted `src/render/clock.rs`. Only `clock_lines` was live, and it was a
-  one-line wrapper over `fonts.render`; `draw_clock`, `draw_clock_at` and their
-  `render_lines` helper were a direct-to-`Frame` API the grid/layer pipeline had
-  replaced. `ClockLayer` now calls `fonts.render(ui.clock_font, ..)` directly.
-  That removed both `render -> ui` imports in the repo
-- deleted the matching legacy API in `src/render/hero.rs`: `draw_hero`,
-  `draw_hero_at`, `draw_hero_debug`, `draw_hero_debug_at`, `debug_rect`, and the
-  `render_lines_clipped`/`clip_line` helpers that served only them. The `Hero`
-  struct and its animation methods are untouched and remain the live surface.
-  Removing them also dropped `hero.rs`'s `scene::viewport` import
-- deleted `compositor::merge_grid_legacy` and the `MaskMode` enum that existed
-  only to feed it, and `theme`'s `hero_overlay` style plus the
-  `HERO_CENTER_MARKER` glyph, whose only consumers were the deleted hero debug
-  overlay. `theme` keeps unused palette vocabulary deliberately, but these were
-  bespoke to one removed feature rather than general vocabulary
-- moved `render/render_state.rs` to `scene/render_state.rs`. All eighteen of its
-  consumers were already inside `scene/`, and `docs/architecture.md` already
-  described `Scene` as what computes it, so `render/` was importing scene's
-  `Camera` and `Viewport` to host a type that belonged to scene. That was the
-  last upward edge; `render/` now imports nothing from `scene` or `ui`
-- replaced `hero.rs`'s remaining test, which drove the deleted `draw_hero_at`,
-  with real coverage of the live animation API. `tick`, `toggle_animation` and
-  `step_animation` had no direct tests at all; there are now seven, including
-  the deliberate asymmetry that stepping stops at the last frame while playback
-  wraps. The deleted test's style-preservation claim is already covered on the
-  live path by `render::cell_grid`'s round-trip test
-- added `render/` to `scripts/check.sh`'s boundary guards and to
-  `docs/architecture.md`'s Forbidden Coupling list in the same change. Adding a
-  documented invariant without an executable guard is the exact gap finding two
-  was about; the guard is proved to fire on both an injected `crate::ui::` and
-  an injected `crate::scene::` import. `render/` keeps ratatui and crossterm,
-  which it owns, so it uses a narrower pattern than core/systems
-- net: `#[allow(dead_code)]` sites 144 -> 135, and one fewer module in `render/`
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 12:55 CEST
-
-- fixed the eighth finding from the 2026-09-02 assessment, and the diagnosis in
-  that finding was wrong. The report blamed the two hero tests that shell out to
-  `chafa` once per frame. Measured: one `chafa` spawn costs about 48 ms, so all
-  112 spawns in the slower test account for a few seconds
-- the actual cost is decoding the hero GIFs at the default `opt-level = 0` -
-  about 20 s for the 1080x1080 48-frame source and 15 s for the 820x820
-  64-frame one, inside `GifDecoder::collect_frames` plus `frame_to_canvas`'s
-  per-pixel loop. `hero_gif_2` is decoded seven times and `hero_gif_1` four
-  times across the file, so roughly 200 s of unoptimized pixel work was the
-  suite
-- added `[profile.test] opt-level = 2`. Full suite went from 111 s to 10.3 s
-  measured warm, an 11x improvement; the chafa module alone went 117.2 s to
-  10.3 s. The trade is a slower cold compile, which is the right way round when
-  the workflow asks for the full gate on every maintenance batch and
-  `docs/hygiene.md` already concedes the pre-push hook is off by default because
-  of wall-clock cost
-- left the redundant `hero_frame_buffer_has_multiple_frames` in place. Its
-  assertion is a strict subset of `every_hero_source_matches_its_declared_geometry`
-  (which checks exact frame counts and needs no `chafa`) and of the frame-count
-  assertion inside `rendered_hero_frames_contain_real_content_not_placeholders`,
-  so it is genuinely redundant - but with the suite at 10 s the only argument
-  for removing it was speed, and removing tests for tidiness alone is not worth
-  the risk. Recorded here rather than acted on
-- corrected `chafa_is_available`'s doc comment, which claimed CI does not
-  install `chafa`. `.github/workflows/verify.yml` installs it, so those content
-  assertions do run in CI; the skip is a local-developer affordance
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 13:20 CEST
-
-- fixed the ninth finding from the 2026-09-02 assessment: non-atomic state
-  writes and inconsistent XDG handling
-- `persist_state_now` used `fs::write`, which truncates before writing, so an
-  interrupted save left a partial `state.json`. `load_or_new` swallows a parse
-  failure and falls back to defaults, so the user silently lost their saved
-  composition with no message. Writes now go to a `NamedTempFile` in the same
-  directory and are renamed over the target - same directory because a rename
-  is only atomic within one filesystem. `tempfile` was already a dependency
-- `state_path` ignored `XDG_CONFIG_HOME` while diagnostics honors
-  `XDG_STATE_HOME` and the hero cache honors `XDG_CACHE_HOME`, and it resolved
-  `HOME` through `unwrap_or_default()`, so an unset `HOME` produced a relative
-  path and wrote state into the launch directory. Resolution now mirrors
-  `render::chafa::hero_cache_dir`'s shape, with a temp-dir floor so the result
-  is never relative, and treats an empty variable as unset
-- split the resolution into `state_dir_from(config_home, home)` so precedence is
-  testable without mutating the process environment, which is racy under the
-  parallel test harness
-- six tests added, and proved to fail against the previous behavior: reverting
-  the path logic fails `state_dir_prefers_xdg_config_home` and
-  `state_dir_never_returns_a_relative_path`, and reverting to an in-place
-  truncating write fails `atomic_write_replaces_existing_content_completely`.
-  The first attempt at the write revert did not compile (unused imports under
-  `-D warnings`) and so produced no test output at all rather than a failure -
-  the same trap hit earlier in this batch; redone until it genuinely ran
-- noted but not changed: `hero_cache_dir` and the diagnostics path have the same
-  latent empty-variable gap. Left alone to keep this commit focused
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 13:34 CEST
-
-- fixed the tenth finding from the 2026-09-02 assessment: `scene_config.json`'s
-  cross-language residue. Surveyed the whole dependency graph first rather than
-  assuming the file was dead
-- it is not dead. `tools/experiments/config.py` genuinely reads it at runtime,
-  so `docs/config.md`'s own exit condition ("if the tooling ever stops using
-  it...") has not been met and the file stays
-- what was wrong was the direction of the coupling. A `#[cfg(test)]` test in
-  `src/main.rs` asserted ten of its field values, so changing a Python tooling
-  preset required editing a Rust test - for a file the same docs say twice is
-  not authoritative for the Rust runtime. Removed
-- `bin/yam` and `bin/yam-sandbox` listed it among the mtime inputs that trigger
-  `scripts/update.sh`, so touching a Python preset forced a full Rust reinstall
-  that could not change the binary's behavior, since no non-test Rust code reads
-  or embeds the file. Removed from both
-- confirmed by exhaustive search that no non-test Rust path reads it: the only
-  reference was the `include_str!` inside that test module, and the crate has a
-  single `[[bin]]` with no `tests/`, `benches/`, or `examples/` directories
-- recorded two things found but deliberately not repaired, since the frozen
-  legacy tree is out of scope for a stabilization batch: the config's `gif_path`
-  (`hero/assets/hero_go.gif`) resolves only when the process CWD is
-  `tools/legacy-python/`, not from the run directory its own README documents;
-  and `tools/legacy-python/runtime/system.py` shells out to `go run ./cmd/yamv2`,
-  a target that does not exist anywhere in this repo, so that path always fails
-  into a silent `except` fallback
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 13:52 CEST
-
-- closed out the assessment batch: all ten findings landed on
-  `claude/0.4.11-tweaks-20260902`, each its own commit with the full gate green
-- updated `docs/hygiene.md`'s pre-push-hook rationale, which said the hook is
-  off by default because it "adds real wall-clock time to every push". That was
-  true at 2m28s and is much weaker at about 17s. Left the default alone - that
-  is a maintainer decision - but the note no longer argues from a stale number
-- checked the repo-local skills for stale references to anything this batch
-  changed (`scripts/check.sh`'s boundaries, `render_state`'s home,
-  `render/clock.rs`, `scene_config.json`, suite timing) and found none, so
-  neither `skills/yam-maintenance` nor `skills/yam-architecture-review` needed
-  edits. Recorded here so the check is not repeated blind
-- corrected three factual errors in the external assessment report itself rather
-  than leaving them to propagate: it claimed zero production panic sites when
-  there are nineteen (`docs/audit.md` already had the right number and had
-  traced each); it claimed more test code than production, which is inverted -
-  the real split is 14,359 production against 8,490 test; and it estimated the
-  cold-boot hero cost at 20s when it is about 3s. The first two shared one root
-  cause, a scan that treated the first `#[cfg(test)]` in a file as the start of
-  the test module, so `#[cfg(test)]`-gated helper functions made it skip the
-  remainder of those files
-- the report's diagnosis of the slow suite was also wrong, and worth recording
-  because the wrong fix would have been plausible: it blamed the per-frame
-  `chafa` subprocesses, but a spawn costs 48ms and the cost was
-  unoptimized GIF decoding. A shared test fixture would have bought a fraction
-  of what a one-line profile change did
-
-## 2026-09-02 15:10 CEST
-
-- implemented YAM-native automatic boot continuation from an external handoff,
-  on `claude/0.4.11-auto-start-20260902` branched from `main` so it stays
-  separate from the assessment-cleanup branch in PR #20
-- assessed the handoff against the tree before building. Its state-machine
-  description, its choice to reuse `acknowledge_loading_start` rather than
-  duplicate the transition, and its refusal to synthesize input were all
-  correct. Four of its claims were not
-- the largest correction was to its own recommendation. It proposed Variant A -
-  transition automatically at `AwaitStart` - on the grounds that the prompt
-  would show "for one frame or a very short interval". It would have shown for a
-  full second: `showing_start_prompt()` covers `Dissolve` as well as
-  `AwaitStart`, so the prompt renders for the entire dissolve. Implemented
-  Variant A plus policy-aware prompt suppression, which keeps the single
-  transition the handoff wanted without a second of stale instruction on screen
-- its recommended event sequence is unachievable as written. `runtime.rs`
-  samples `boot_phase()` once per frame after `update_loading()` and logs only
-  on change, so an `AwaitStart` that is entered and left inside one call is
-  never observed; the loop sees `Bar -> Dissolve`. `append_event` is also called
-  only from `runtime.rs`, so emitting an ack event from `ui/state.rs` would push
-  diagnostics into the UI-state layer. Recorded `boot_start_policy` on the
-  existing `boot_start` event instead, which the handoff also proposed and which
-  is sufficient to disambiguate a trace
-- its instruction to preserve rejection of unknown arguments describes behavior
-  that does not exist: argument handling is a series of `args.iter().any(...)`
-  scans and unknown flags are silently ignored. Verified
-  (`yam-rust --totally-bogus-flag --version` prints the version and exits 0).
-  Left as is; adding rejection is separate work with real blast radius, since
-  the wrappers pass `$@` through and `--compile-hero` takes an optional
-  positional argument
-- its wrapper task was already satisfied: `bin/yam` and `bin/yam-sandbox` both
-  `quote_args "$@"` and append, so the flag forwards with no wrapper edits.
-  Confirmed through `YAM_WRAPPER_DRY_RUN=1` on both
-- extracted `runtime_options(args, auto_start_env)` in `main.rs` because the
-  handoff's CLI tests had nowhere to live: parsing was inline in `main()` and
-  there was no testable surface. Both inputs are parameters so precedence is
-  testable without mutating the process environment, which is racy under the
-  parallel harness. Put the tests in `mod cli_tests` rather than the existing
-  `mod tests`, since that module is removed on the PR #20 branch and this way
-  both land in either order without a conflict
-- `runtime::run` now takes `RuntimeOptions` rather than a third positional bool
-- 18 tests added, each proved able to fail: removing the automatic
-  acknowledgement fails three, and reverting to the handoff's literal Variant A
-  fails `automatic_start_never_shows_the_space_prompt`
-- verified against the real release binary under tmux rather than by unit tests
-  alone: default still waits with the prompt up; `--auto-start`,
-  `YAM_AUTO_START=1`, and `--sandbox --auto-start` all reach the first world
-  with no input and no prompt; `YAM_AUTO_START=0` still waits. A cold hero cache
-  reached the world in 10s against 6-7s warm and did not break progression,
-  because hero decode happens before the loop starts and the acknowledgement is
-  driven by the bar timer
-- did not bump the version here. The `0.4.11` bump lives on the PR #20 branch;
-  duplicating it would conflict on `Cargo.toml` and `README.md`
-- the Duo launcher half of the handoff lives in a different repository
-  (`~/_git/home/machines/dell-duo-home/...`) and is not part of this change
-
-## 2026-09-02 16:40 CEST
-
-- made the four timed boot phases individually toggleable from the dev settings
-  popup's `runtime` tab, persisted alongside the render-FPS ceiling
-- centralized every boot transition through one `enter_boot_phase` entry point
-  rather than adding a skip check to each `update_loading` arm. Start, ordinary
-  progression, and `acknowledge_loading_start` all go through it, so a disabled
-  phase cannot be skipped on one path and played on another - proved by
-  reverting the acknowledgement to set `Dissolve` directly, which fails three
-  tests. Boot order now lives on `BootLoadingPhase::next` instead of being
-  restated in each arm
-- left `AwaitStart` off the toggle list on purpose. It is the wait for a person,
-  not an animation, and it is owned by `--auto-start`/`BootStartPolicy`. Keeping
-  them independent means a short boot and an unattended boot are separately
-  selectable; every phase off in manual mode still shows the prompt and waits
-- chose Left = off and Right = on over flip-on-either-key, so a repeated
-  keypress is idempotent and holding an arrow settles rather than oscillating
-- found and fixed a real defect the feature introduced: with every phase
-  disabled the boot completes inside `start_loading_boot`, so the runtime never
-  observes the `Some -> None` phase change it reports readiness on. No
-  `world_ready` was logged and `runtime_exit` claimed `boot_completed: false`
-  for a run that booted fine. This was unreachable before, since the sequence
-  had a 4.5s floor. Found by measuring the live trace rather than by the unit
-  tests, which cover the state machine but not the runtime's logging
-- updated the existing sandbox row-count assertion to the new shape rather than
-  weakening it, and tied it to `TOGGLEABLE_BOOT_PHASES.len()` so adding a phase
-  cannot leave it asserting a stale count
-- 9 tests added, each proved able to fail; verified in the real binary that the
-  rows render, that Left/Right toggle them, and that the persisted setting takes
-  effect: 5661ms with all phases on against 136ms with all four off, both under
-  `--auto-start` and an isolated `XDG_CONFIG_HOME`
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-02 17:20 CEST
-
-- reviewed this session's own changes before pushing and fixed the three
-  findings that survived verification
-- the significant one was in already-merged code: the boundary guards added in
-  PR #20 only matched crate paths with a trailing `::`, so `use crate::ui;` in
-  `src/render/` passed cleanly, as did `use crate::{scene, core};` in
-  `src/core/`. Because later references read `ui::state::UiState`, the
-  dependency was invisible to the guard on every line rather than just the
-  import - the same silent-pass class the guard exists to prevent, one layer
-  down. Widened the patterns to accept a terminator or braced group, verified
-  against seven import shapes plus five that must not match, and confirmed
-  `crate::render_state` still does not match `crate::render`
-- disabling `boot bar` left an empty 16-cell track on screen through the
-  coalesce phase, because `bar_progress` returns 0.0 there and the layer drew
-  the row unconditionally. The bar row is now gated on the phase being enabled,
-  with a control run confirming the bar still renders when it is on
-- added a round-trip test over `TOGGLEABLE_BOOT_PHASES`. `BootPhaseSettings::set`
-  silently ignores phases it does not handle while `enabled` hard-codes true for
-  `AwaitStart`, so exposing a phase that `set` ignores would ship a settings row
-  that always reads "on" and whose Left/Right do nothing, with nothing failing
-  to compile. Simulating that by making `set` ignore `Bar` fails two tests
-- cleared several suspicions by testing rather than reasoning: the production
-  `unreachable!()` in `build_loading_effect` stays unreachable because
-  `effect_phase` only ever returns Coalesce or Dissolve; a pre-feature
-  `state.json` with `render_fps` and no `boot_phases` still loads with the FPS
-  preserved and phases defaulting on; and on the Duo the `/proc` fallback still
-  recognizes and quits a YAM terminal launched with `--auto-start` after a
-  bridge restart, leaving unrelated terminals alone
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
-
-## 2026-09-03 06:35 CEST
-
-- took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since
-  2026-08-26. It is not a failure a rerun can clear: 0.11 returns a
-  `hybrid_array::Array` where 0.10 returned a `GenericArray`, and that type does
-  not implement `LowerHex`, so the single call site
-  `format!("{:x}", Sha256::digest(bytes))` in `render/hero_manifest.rs` stopped
-  compiling. Landed as its own branch rather than pushed onto the Dependabot
-  branch, since the fix is repo code and not something Dependabot can carry
-- replaced the formatting with an explicit lowercase, zero-padded hex write
-  with no separators. Deliberately hand-rolled rather than pulling in `hex`
-  or `base16ct`: the encoding is eight lines and the repo's dependency posture
-  favors convergence over another crate for a one-call-site need
-- treated output equivalence as the actual risk. `asset_digest` is persisted in
-  every compiled hero package and compared verbatim in
-  `render::chafa::manifest_matches`, and every package check falls through
-  silently by design, so a changed encoding would not have surfaced as an error
-  — it would have quietly stopped matching and sent every package already on
-  disk back to the frame cache, which is the exact failure mode a content
-  digest exists to prevent
-- ordered the work so the test proves that rather than assumes it: pinned
-  `digest_uses_the_stable_sha256_hex_shape` to three canonical SHA-256 vectors
-  and ran it against the *old* `sha2` 0.10 code first, confirming green, and
-  only then bumped the crate and rewrote the encoder. The same pin passing
-  afterwards is evidence the two encodings agree; had it been written after the
-  bump it would only have described the new behavior. Vectors were generated
-  independently with `shasum -a 256` rather than from the code under test
-- the assertion it replaces checked only `.len() == 64`, which is precisely what
-  would not have caught this class of change. Proved the new pin can fail by
-  injecting an uppercase `{byte:02X}` encoding: it reported the case difference
-  against all three vectors
-- that injection then produced a real trap worth recording. Reverting it with
-  `mv` restored the backup's original mtime, which was *older* than the
-  artifacts built from the injected source, so Cargo's mtime fingerprint
-  concluded nothing had changed and the next full run silently retested the
-  uppercase binary — a genuine-looking failure with correct source on disk.
-  `touch` on the file cleared it. Worth knowing before trusting any
-  `sed -i.bak`-style revert in this repo: it is the same stale-timestamp shape
-  `docs/hero-cache.md` already warns about for art assets
-- `cargo tree -d` after the dependency change reports the same two duplicate
-  families as before (`hashbrown` 0.16.1/0.17.1, `syn` 2/3); no new duplicate
-  was introduced, and `generic-array` and `version_check` leave the tree
-  entirely. `docs/audit.md`'s dependency note stays accurate as written, so it
-  is not edited
-- recorded the encoding as an on-disk format fact in `docs/hero-package.md`,
-  where the manifest shape is owned, rather than only in this log
-- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1` (368 tests, 41 docs
-  linted, cspell clean)

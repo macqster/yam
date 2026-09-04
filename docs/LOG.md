@@ -208,6 +208,53 @@ Logging rule:
   than a developer-visible change
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
 
+## 2026-09-03 09:34 CEST
+
+- swept the active docs for other stale numbers after the roadmap test-count
+  fix, and found one claim worth more than the number that prompted the search:
+  five places still said no second organism family exists
+- it has existed since 2026-07-22. `FloraInstance` carries `Vine` and
+  `Seedling`, with `seedlings()`/`seedlings_mut()`/`push_seedling()` beside the
+  vine accessors, `OrganismFamily::Seedling` wired into the family-count
+  adapters, and `run_greenhouse_growth` advancing it. The greenhouse roadmap
+  documents that landing in its own Gate Checklist two sections below the line
+  claiming only `Vine` exists - the same one-fact-in-two-places drift the
+  test count had
+- corrected `docs/audit.md` (Weakest Areas 3, and the flora-storage risk note),
+  `docs/greenhouse-roadmap.md` (current-seams list, the Flora-storage gate row's
+  Remaining Work, and the locked storage decision), and `TODO.md`
+- the conclusion those docs drew survives even though its reason does not, and
+  that distinction is the actual content here. The growth *rule* is still
+  per-family, but not because a second family is missing: seedling growth is a
+  life-state stage advance while vine growth is geometric mutation of axes and
+  segments, and `SeedlingInstance` has no geometry at all. Rewriting it as
+  "a second family exists, so generalize" would have been wrong in the opposite
+  direction. `systems::growth`'s own doc comment already said this; the docs
+  had simply not caught up
+- re-pointed the two backlog triggers that were parked on a condition already
+  met, rather than only fixing tense. `TODO.md`'s deferred `core::flora` split
+  now fires on a family that needs the vine geometry rather than on any second
+  family, and records that `Seedling` did not fire it; the roadmap's locked
+  storage decision now reads as settled, since the second variant exercised the
+  shape without forcing a change, instead of still waiting to be tested
+- checked the claim that the vine-specific half has one consumer before writing
+  it, and it was wrong: `VineAxis`/`VineOrgan`/`VineGrowthTip`/
+  `VineRootAttachment` are used by `systems::growth`, `systems::aging`,
+  `scene::layers::vine_layer`, and `scene::layers::debug_layer`. What is
+  singular is the family, not the module count, and the item says that instead
+- verified rather than assumed the rest of the sweep. Correct as written:
+  world `212x56` in a `212x57` frame, both hero descriptors and their
+  `r5`/`r6` cache keys, the four named asset-swap gate tests, the boot phase
+  durations behind the 4.5s floor, three selectable worlds, four greenhouse
+  inspection refs, the 6-tick seedling cadence, exactly two duplicate
+  dependency families with Serde at `1.0.229`, that CI really does run
+  `cargo audit`, and the README release line
+- one gap left open deliberately, since it is not a stale number:
+  `docs/rendering.md`'s Layer Order list enumerates popups individually but
+  omits `397` palette, `398` weather popup, `399` greenhouse inspect, and `950`
+  loading, so someone picking a z-index from it could collide with a live layer
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
 ## 2026-09-02 08:34 CEST
 
 - opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,

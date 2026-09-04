@@ -93,9 +93,10 @@ The current repo already has the first seams that greenhouse work should use:
 - `core::organism` owns the first shared identity, species registry, lifecycle,
   stats, and per-instance journal vocabulary.
 - `FloraState` stores organisms through a locked enum-backed family store
-  (`FloraInstance`, one variant per family, currently only `Vine`) rather than
-  a bespoke per-family `Vec<T>` field, with `vines()`/`vines_mut()`/
-  `push_vine()` accessors and family-count/organism-identity adapters.
+  (`FloraInstance`, one variant per family: `Vine`, and `Seedling` since
+  2026-07-22) rather than a bespoke per-family `Vec<T>` field, with
+  `vines()`/`vines_mut()`/`push_vine()` and `seedlings()`/`seedlings_mut()`/
+  `push_seedling()` accessors and family-count/organism-identity adapters.
 - `core::spatial` owns the active projection, anchor, guide-index, and resolver
   vocabulary used by the central render paths.
 - Scene and render layers are read-only visualizers of world/flora/spatial
@@ -128,7 +129,7 @@ this section was trimmed.
 | Docs aligned | Ready | `docs/greenhouse-roadmap.md` owns greenhouse strategy and operation; `TODO.md` carries execution pointers only | Keep future updates in owning docs and log each batch |
 | Verification green | Ready | `bash scripts/verify.sh` passed with docs checks, guard checks, clippy, cargo check, and `368` tests (re-verified 2026-09-03 under `YAM_DOCS_STRICT=1`) | Re-run before each implementation batch |
 | Spatial ownership stable | Ready | `scene::coords` compatibility module retired 2026-07-21 (zero remaining external call sites); all active render paths consume `core::spatial` directly with no intermediate compatibility layer | Masks and organism guidance can layer on `core::spatial` when needed; no further coords-migration work remains |
-| Flora storage decision | Locked | `FloraState` stores an enum-backed `FloraInstance` family store (locked and implemented 2026-07-21); all call sites migrated off the old `vines: Vec<VineInstance>` field | Add a new variant when a second family actually lands; no further shape decision needed |
+| Flora storage decision | Locked | `FloraState` stores an enum-backed `FloraInstance` family store (locked and implemented 2026-07-21); all call sites migrated off the old `vines: Vec<VineInstance>` field | `Seedling` landed as the second variant 2026-07-22, so the shape is now proven by use rather than only by design; each further family adds a variant |
 | Species-profile data format | Locked | Static Rust fixtures, matching `core::flora::border_vine_species_profile()` (locked 2026-07-21), validated by a `core::organism` test proving `SpeciesRegistry` holds multiple distinct profiles independently | Structured files remain deferred until schema stabilizes and real authoring volume appears |
 | Greenhouse/world contract | Ready | `WorldKind::Greenhouse` landed 2026-07-21: selectable via the same `w`-cycle as `Sandbox`, `WorldState.greenhouse` populated with `GreenhouseState::nursery()`, and a minimal read-only `GreenhouseLayer` renders it. Growth dispatch landed 2026-07-22: a first `OrganismFamily::Seedling` occupies `left_tray` and advances `Dormant -> Growing -> Mature` on a 6-tick cadence via `run_greenhouse_growth`. Inspection landed 2026-07-22: a read-only `GreenhouseInspectLayer` (`i` hotkey) surfaces the room's 4 `inspection_refs`. All verified end-to-end in the running app via `tmux`, not just unit tests. | Per-fixture live detail (beyond the static ref text) and any curation/transfer write-path are deferred to Phase 10+ |
 | Hero/render fallback hardened | Prep-ready | Chafa fallback/cache tests cover missing GIF, unavailable Chafa, placeholder cache rejection, and cache freshness | Keep offline `CellGrid` / editor work deferred |
@@ -173,8 +174,9 @@ this section was trimmed.
 - First flora-storage generalization is locked and implemented as an
   enum-backed `FloraInstance` family store (2026-07-21). A generic registry
   or broader store would need to beat this shape with a concrete
-  simplification once a second family is actually proposed; it is not an
-  open bias to revisit speculatively.
+  simplification. `Seedling` landing as the second variant (2026-07-22)
+  exercised the shape without forcing a change, so this reads as settled
+  rather than as an open bias to revisit speculatively.
 
 ## North Star
 

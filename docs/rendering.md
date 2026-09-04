@@ -17,15 +17,33 @@ The active renderer treats ratatui as the final output adapter. Scene layers wri
 
 ## Layer Order
 
-- L0 - world base/background
-- L10 - world props and world-attached composition pieces, including the `WorldKind::Greenhouse`-only room-bounds/fixture-marker render
-- L100 - world-tied companions and anchored world widgets
-- L300 - world-tied debug/dev probes and diagnostic overlays
-- L390 - help popup
-- L395 - move strip
-- L400 - settings popup
-- L405 - quit-confirm popup
-- L1000 - HUD/footer/status
+Every registered layer, in composition order:
+
+- L0 - `FieldLayer`, world base/background
+- L8 - `ScaffoldRearLayer`, the rear support cradle behind the hero
+- L10 - `HeroLayer`, and `GreenhouseLayer`'s `WorldKind::Greenhouse`-only room-bounds/fixture-marker render
+- L15 - `ScaffoldForegroundLayer`, the small foreground nesting edge in front of the hero
+- L20 - `VineLayer`, world-attached flora geometry
+- L100 - `WeatherLayer`, `ClockLayer`, `DateLayer` - world-tied companions and anchored world widgets
+- L300 - `DebugLayer`, world-tied debug/dev probes and diagnostic overlays
+- L305 - `WorldLabelLayer`
+- L390 - `HotkeysLayer`, the help popup
+- L395 - `MoveLayer`, the move strip
+- L397 - `PaletteLayer`
+- L398 - `WeatherPopupLayer`
+- L399 - `GreenhouseInspectLayer`
+- L400 - `SettingsLayer`
+- L405 - `QuitConfirmLayer`
+- L950 - `LoadingLayer`, the boot screen
+- L1000 - `StatusLayer`, HUD/footer/status
+
+`ui::scene::build_ui_layers` is the source of truth for what is registered, and
+`active_layer_z_indices_remain_sorted_by_presentation_order` in `scene` pins the
+whole sorted set, so adding or moving a layer fails that test; treat the failure
+as the prompt to update this list with it. The list is kept complete rather than
+reduced to bands because it is what a new surface picks its `z_index` from, and
+the modal range is denser than it looks: `397`, `398`, and `399` are already
+taken between the move strip and the settings popup.
 
 ## Screen Zones
 

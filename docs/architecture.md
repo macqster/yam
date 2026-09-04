@@ -175,17 +175,14 @@
 
 ## Active Layers
 
-- field/background: `z_index = 0`
-- hero/entity: `z_index = 10`
-- greenhouse room (bounds outline and fixture markers, `WorldKind::Greenhouse` only): `z_index = 10`
-- clock/world companion: `z_index = 100`
-- weather/world companion: `z_index = 100`
-- debug overlay: `z_index = 300`
-- help popup: `z_index = 390`
-- move strip: `z_index = 395`
-- settings popup: `z_index = 400`
-- quit-confirm popup: `z_index = 405`
-- status/footer: `z_index = 1000`
+The registered layers and their `z_index` values live in
+[`rendering.md`](rendering.md)'s Layer Order, which owns them along with the test
+that pins the set. They are deliberately not restated here: the Out of Scope
+section directly above says this file does not define numeric layer meaning in
+detail, and the enumerated list that used to sit here contradicted that while
+omitting nine of the twenty registered layers. The qualitative precedence ladder
+this document does own — world base, world props, world-tied debug, HUD, modal
+overlays last — is under Rendering Pipeline above.
 
 ## Presentation Contract
 

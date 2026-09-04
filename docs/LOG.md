@@ -255,6 +255,46 @@ Logging rule:
   loading, so someone picking a z-index from it could collide with a live layer
 - `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
 
+## 2026-09-03 10:12 CEST
+
+- completed `docs/rendering.md`'s Layer Order list, the gap left open by the two
+  doc-accuracy passes earlier today. It enumerated popups individually but
+  omitted eight of the twenty registered layers, including three modal
+  z-indices sitting between the two it did name
+- the list is what a new surface picks its `z_index` from, which is what made an
+  incomplete list a hazard rather than an untidiness: `397`, `398`, and `399`
+  are taken between the move strip at `395` and the settings popup at `400`, so
+  the doc as written pointed a new popup straight at an occupied slot
+- took the values from `ui::scene::build_ui_layers` and each layer's own
+  `z_index` impl, then cross-checked the result against
+  `active_layer_z_indices_remain_sorted_by_presentation_order`, which pins the
+  whole sorted set. The mapping agrees with that pin exactly. An earlier
+  one-per-file scan had found only nineteen layers and missed
+  `ScaffoldForegroundLayer` at `15`, because `scaffold_layer.rs` defines two
+  layers in one file - the test is what caught it
+- named that test in the doc, since adding or moving a layer fails it and that
+  failure is the only reliable prompt to update the list. The test pins numbers
+  and not the doc, so this is a trigger rather than a guarantee, and the wording
+  says so
+- found the same fact stated a second time while checking for exactly that, in
+  `docs/architecture.md`'s Active Layers section, omitting nine of the twenty.
+  Completing both would have rebuilt the duplication that produced this, so the
+  list is deleted there and points at `rendering.md` instead. Ownership was not
+  a judgment call: `AGENTS.md` gives render order to `rendering.md`, and
+  `architecture.md`'s own Out of Scope section - the section directly above the
+  list - already said it does not define numeric layer meaning in detail. The
+  file contradicted itself in consecutive sections
+- kept the qualitative precedence ladder in `architecture.md` under Rendering
+  Pipeline, which is that file's proper business, and left the four inline
+  `z_index` mentions in its modal-surface prose alone: they are currently
+  correct and each belongs to the surface being described, unlike an enumerated
+  ladder. Recorded here as a decision rather than acted on, since they are the
+  same hazard at smaller scale
+- checked the section name in that new cross-reference instead of trusting the
+  one I first wrote, which was invented: the ladder lives under Rendering
+  Pipeline, not the plausible-sounding Rendering And Layer Rules
+- `bash scripts/verify.sh` green with `YAM_DOCS_STRICT=1`
+
 ## 2026-09-02 08:34 CEST
 
 - opened the `0.4.11` maintenance cycle on `claude/0.4.11-tweaks-20260902`,

@@ -380,6 +380,25 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- `docs/hygiene.md` now records that a remote-tracking ref is a cache rather
+  than a question asked of the remote. `git status` and
+  `git rev-list --left-right --count HEAD...origin/main` both answer from the
+  last `git fetch`, so a host that fetches rarely reports itself up to date with
+  `origin/main` while sitting arbitrarily far behind it. On 2026-09-06 this hid
+  a 14-commit gap on two hosts at once, including the Duo's live deployment,
+  whose `origin/main` ref had last moved minutes before the first of those
+  merges. The fix is to fetch in the same command as the comparison and to treat
+  a sync claim made without one as unverified — the same silent-pass shape as
+  the `rg` boundary guard and the skipped docs linters already documented there.
+
+  Recorded alongside it: a deployed binary is a third state, distinct from both
+  the remote and the checkout it was built from. `yam-rust --identity` names the
+  exact commit a binary was built from, while `--version` prints only the crate
+  version and cannot distinguish two builds of one version from different
+  commits. That distinction matters right after an install, because
+  `cargo install` leaves an already-running process on its old inode, so the new
+  binary is on disk while the old one is still on screen until a restart.
+
 - Three docs stated the CI trigger inaccurately. `docs/hygiene.md`, `AGENTS.md`,
   and `docs/release-model.md` each said `verify.yml` runs on "every push and
   pull request", which reads as though pushing a feature branch runs CI. It does

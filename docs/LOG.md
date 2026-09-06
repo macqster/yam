@@ -24,6 +24,61 @@ Logging rule:
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
 
+## 2026-09-06 13:35 CEST
+
+- reconciled two stale checkouts and the Duo's live deployment against `main`,
+  after a repo review found this workstation 14 commits behind. `main` had moved
+  from `a7c6868` to `f6ba2c3` across seven merges (PRs 23, 25, 26, 27, 28, 29,
+  30) between 2026-09-03 and 2026-09-04; this host and the Duo had both sat at
+  `a7c6868` since 2026-09-02
+- the Duo was the interesting half. Its checkout was clean, on `main`, and
+  reported zero ahead and zero behind - against an `origin/main` ref last
+  fetched 2026-09-02 18:17, minutes before the first of those merges landed. A
+  deployment 14 commits behind read as reconciled because nothing had asked the
+  remote since it was. Recorded in `docs/hygiene.md` beside the stacked-PR
+  gotcha, as the same silent-pass shape as the `rg` boundary guard: the check
+  runs, answers confidently, and never touched what it claims to describe
+- what was actually pending there was less than it looked. Of the fourteen
+  commits exactly one touches code - the `sha2` 0.10 -> 0.11 bump and its
+  hand-rolled hex encoding - and the rest are docs, `CHANGELOG.md`, and the
+  `verify.sh` pre-push default. Every runtime feature the Duo was already
+  running (`--auto-start`, the per-phase boot toggles) shipped in `a7c6868`
+- verified the redeploy was cache-safe before running it rather than after,
+  since `digest_bytes` output is compared verbatim on package load and a
+  changed hex shape would quietly invalidate every compiled hero package on
+  disk. Checked the three vectors `digest_uses_the_stable_sha256_hex_shape`
+  pins against `shasum -a 256` independently of the crate - empty, `abc`, and
+  `hero frame data` all match canonical SHA-256 - so 0.11's output is
+  byte-identical to what 0.10's `{:x}` produced. Confirmed again after the
+  deploy: the 20 MB `hero_gif_2.r5.96x48.frame_cache.json` kept its 2026-08-24
+  mtime and no Chafa child spawned, so the cache was reused, not rebuilt
+- deployed through the repo's own updater (`scripts/update.sh`). The offline
+  path failed as expected, the Duo's registry cache predating the new
+  RustCrypto tree, and the network fallback took it: `hybrid-array`,
+  `const-oid`, `crypto-common` 0.2.2, `digest` 0.11.3, `cpufeatures` 0.3.1, and
+  `sha2` 0.11.0 downloaded; release build 1m46s
+- restarted the live runtime through the dwm control bridge
+  (`dwm-duoctl yam quit` then `launch`) rather than signalling the process, so
+  it came back on the bridge's fixed argument vector with `--auto-start`
+  intact. `cargo install` had left the old binary running on its old inode, so
+  the new build sat on disk while the old one stayed on screen until that
+  restart - worth stating because `--version` cannot tell those two apart and
+  `--identity` can. The live process now reports `build f6ba2c3`, ran all four
+  boot phases, and reached `world_ready` in 6292ms against 6336ms on the
+  previous build
+- fixed the root-owned `~/.cache` on the Duo, which the 2026-08-24 entry worked
+  around rather than resolved: `/home/mcq/.cache` was `root:root` while
+  everything already inside it belonged to `mcq`, so one non-recursive
+  `chown mcq:mcq` was enough and `-R` was not used. Left the `755` mode alone
+  deliberately - `/home/mcq` is `700`, so the group and other bits on `.cache`
+  grant nothing and tightening them would be churn rather than hardening
+- noticed but did not act on: two `scripts/update.sh` runs overlapped on
+  2026-09-02 (process ids 282368 and 282715, 39 seconds apart), both
+  reaching `install_done`. Harmless that time, but two concurrent
+  `cargo install --force` against one path is a real race, and the answer is to
+  avoid overlapping runs rather than to guard the script against them
+- `bash scripts/verify.sh` green
+
 ## 2026-09-03 06:35 CEST
 
 - took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since

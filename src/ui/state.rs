@@ -744,6 +744,26 @@ fn adopted_layout_schema() -> u32 {
     LAYOUT_SCHEMA
 }
 
+/// How long the state must go unchanged before an autosave writes it.
+///
+/// Long enough that holding an arrow key through a widget move coalesces into
+/// one write instead of one per keypress, and short enough that a machine
+/// stopped by a signal rarely dies inside the window. Every site that marks the
+/// state dirty is an explicit user action - move, settings, camera, font,
+/// visibility - and none of the per-frame camera work (`clamp_camera`,
+/// `sync_camera_to_viewport_center`) marks anything, so a settled scene writes
+/// once and then stops rather than rewriting on a timer.
+pub const AUTOSAVE_DEBOUNCE: Duration = Duration::from_secs(2);
+
+/// Whether a pending change has sat still long enough to be written.
+///
+/// Pure and `now`-taking so the debounce is testable without sleeping, matching
+/// `LoadingState::progress`. The dirty and modal guards live in
+/// `autosave_if_due`; this answers only the timing question.
+fn autosave_is_due(last_change: Option<Instant>, now: Instant) -> bool {
+    last_change.is_some_and(|changed_at| now.duration_since(changed_at) >= AUTOSAVE_DEBOUNCE)
+}
+
 /// Whether a loaded snapshot's positions were tuned against a different
 /// composition than the running binary ships, and so should be reseeded.
 ///
@@ -958,6 +978,10 @@ pub struct UiState {
     pub weather_locale: WeatherLocale,
     pub weather_layout: WeatherLayout,
     pub persisted_state_dirty: bool,
+    /// When the state last changed, for the autosave debounce. `None` means
+    /// nothing is pending; it is cleared on write rather than left behind, so a
+    /// settled scene cannot re-trigger a write.
+    last_change_at: Option<Instant>,
     /// Set at load when the saved file was written by a different version.
     /// Positions are reseeded in that case, so an upgrade that moved the
     /// composition lands on the new arrangement rather than on offsets tuned
@@ -994,6 +1018,7 @@ impl UiState {
             weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
             persisted_state_dirty: false,
+            last_change_at: None,
             saved_layout_schema_is_stale: false,
             quit_confirm_open: false,
         }
@@ -1016,6 +1041,7 @@ impl UiState {
         state.camera.y = state.offsets.camera_y;
         state.pointer_blink_on = true;
         state.persisted_state_dirty = false;
+        state.last_change_at = None;
         state.quit_confirm_open = false;
         state.start_weather_refresh();
         state
@@ -1069,6 +1095,7 @@ impl UiState {
         self.loading = LoadingState::default();
         self.pointer_blink_on = true;
         self.persisted_state_dirty = false;
+        self.last_change_at = None;
         self.quit_confirm_open = false;
         self.saved_layout_schema_is_stale = false;
     }
@@ -2064,6 +2091,7 @@ impl UiState {
     pub fn confirm_quit_without_saving(&mut self) -> bool {
         self.quit_confirm_open = false;
         self.persisted_state_dirty = false;
+        self.last_change_at = None;
         true
     }
 
@@ -2153,6 +2181,31 @@ impl UiState {
 
     fn mark_persisted_state_dirty(&mut self) {
         self.persisted_state_dirty = true;
+        self.last_change_at = Some(Instant::now());
+    }
+
+    /// Writes pending changes once they have settled, without waiting for the
+    /// quit-confirm save.
+    ///
+    /// That save was the only path to disk, and it is unreachable on a machine
+    /// whose launcher stops YAM with a signal rather than a keypress - an
+    /// appliance could tune a layout and never keep it. Returns whether a write
+    /// happened so the caller can report it.
+    ///
+    /// Deliberately inert while the quit-confirm modal is open: that modal
+    /// offers to discard the pending changes, and writing them out from
+    /// underneath it would make the discard a lie.
+    pub fn autosave_if_due(&mut self, now: Instant) -> bool {
+        if !self.persisted_state_dirty || self.quit_confirm_open {
+            return false;
+        }
+        if !autosave_is_due(self.last_change_at, now) {
+            return false;
+        }
+        self.persist_state_now();
+        self.persisted_state_dirty = false;
+        self.last_change_at = None;
+        true
     }
 
     fn persist_state_now(&mut self) {
@@ -2213,7 +2266,8 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        layout_is_stale, BootPhaseSettings, BootStartPolicy, LAYOUT_SCHEMA, TOGGLEABLE_BOOT_PHASES,
+        autosave_is_due, layout_is_stale, BootPhaseSettings, BootStartPolicy, AUTOSAVE_DEBOUNCE,
+        LAYOUT_SCHEMA, TOGGLEABLE_BOOT_PHASES,
     };
 
     use std::ffi::OsString;
@@ -2853,6 +2907,82 @@ mod tests {
         assert_eq!(snapshot.layout_schema, LAYOUT_SCHEMA);
         assert_eq!(snapshot.offsets.camera_x, -71);
         assert_eq!(snapshot.offsets.camera_y, -22);
+    }
+
+    /// The debounce itself, driven with synthetic instants rather than sleeps.
+    #[test]
+    fn autosave_waits_for_the_state_to_settle() {
+        let changed = Instant::now();
+
+        assert!(!autosave_is_due(None, changed + AUTOSAVE_DEBOUNCE));
+        assert!(!autosave_is_due(Some(changed), changed));
+        assert!(!autosave_is_due(
+            Some(changed),
+            changed + AUTOSAVE_DEBOUNCE - Duration::from_millis(1)
+        ));
+        assert!(autosave_is_due(Some(changed), changed + AUTOSAVE_DEBOUNCE));
+        assert!(autosave_is_due(
+            Some(changed),
+            changed + AUTOSAVE_DEBOUNCE + Duration::from_secs(30)
+        ));
+    }
+
+    /// A held arrow key must coalesce into one write, not one per keypress:
+    /// each change restarts the wait.
+    #[test]
+    fn a_later_change_restarts_the_autosave_wait() {
+        let first = Instant::now();
+        let later = first + AUTOSAVE_DEBOUNCE - Duration::from_millis(1);
+
+        // The first change would have been due by now...
+        assert!(autosave_is_due(Some(first), first + AUTOSAVE_DEBOUNCE));
+        // ...but a change arriving just before that resets the clock.
+        assert!(!autosave_is_due(Some(later), first + AUTOSAVE_DEBOUNCE));
+        assert!(autosave_is_due(Some(later), later + AUTOSAVE_DEBOUNCE));
+    }
+
+    /// Autosave must not write while the quit-confirm modal is open.
+    ///
+    /// That modal offers to discard the pending changes; writing them out from
+    /// underneath it would make the discard a lie. Proving the guard by state
+    /// rather than by the write, so the test needs no filesystem.
+    #[test]
+    fn autosave_is_inert_while_the_quit_confirm_modal_is_open() {
+        let mut ui = UiState::new();
+        ui.move_camera_left();
+        assert!(ui.persisted_state_dirty);
+
+        let due = Instant::now() + AUTOSAVE_DEBOUNCE;
+
+        ui.quit_confirm_open = true;
+        assert!(!ui.autosave_if_due(due));
+        assert!(
+            ui.persisted_state_dirty,
+            "the change must still be pending, so the modal can still discard it"
+        );
+    }
+
+    /// Nothing pending means nothing written, however long the scene sits.
+    #[test]
+    fn autosave_does_not_write_a_clean_state() {
+        let mut ui = UiState::new();
+        assert!(!ui.persisted_state_dirty);
+
+        assert!(!ui.autosave_if_due(Instant::now() + AUTOSAVE_DEBOUNCE * 100));
+    }
+
+    /// Discarding at the quit prompt clears the pending write too, so a
+    /// discarded change cannot be resurrected by a later autosave tick.
+    #[test]
+    fn discarding_at_quit_also_clears_the_pending_autosave() {
+        let mut ui = UiState::new();
+        ui.move_camera_left();
+        ui.quit_confirm_open = true;
+
+        assert!(ui.confirm_quit_without_saving());
+
+        assert!(!ui.persisted_state_dirty);
+        assert!(!ui.autosave_if_due(Instant::now() + AUTOSAVE_DEBOUNCE));
     }
 
     /// The reseed branch itself, not just the field it reads.

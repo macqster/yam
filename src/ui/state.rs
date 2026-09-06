@@ -716,12 +716,56 @@ impl LoadingState {
     }
 }
 
+/// The version of the *default composition* that saved positions are tuned
+/// against - not the crate version.
+///
+/// Bump this by hand, and only when `UiOffsets::default()` or the seeded
+/// composition actually moves, so an upgrade that changes where things sit
+/// lands on the new arrangement instead of on offsets measured against the old
+/// one. That reseed used to key off `CARGO_PKG_VERSION`, which meant every
+/// patch release discarded a tuned layout for a composition that had not
+/// changed at all - and on a machine with no way to save (an appliance whose
+/// launcher stops YAM with a signal, so the quit-confirm save is unreachable)
+/// the stale stamp could never be refreshed, so *every* boot reseeded and no
+/// position could ever survive. Keeping the trigger on this constant means the
+/// reseed fires when the composition moves and not otherwise.
+pub const LAYOUT_SCHEMA: u32 = 1;
+
+/// A structured snapshot written before `layout_schema` existed is adopted at
+/// the current schema rather than reseeded.
+///
+/// Those files carry deliberately tuned positions and a composition that has
+/// not moved since; treating a missing field as "stale" would discard exactly
+/// the layouts this change exists to preserve. `--hard-reset` remains the way
+/// back to defaults if an adopted layout is unwanted. The pre-snapshot
+/// bare-offsets format is handled separately in `snapshot_from_json` and still
+/// reseeds, since it predates the composition this schema describes.
+fn adopted_layout_schema() -> u32 {
+    LAYOUT_SCHEMA
+}
+
+/// Whether a loaded snapshot's positions were tuned against a different
+/// composition than the running binary ships, and so should be reseeded.
+///
+/// Split out of `load_or_new` so the decision is testable on its own.
+/// `load_or_new` reads a real path, which is why the previous version-based
+/// rule could only ever be covered indirectly through `snapshot_from_json` -
+/// the tests asserted on the parsed field and never on the branch that acts on
+/// it, so the rule itself was effectively untested.
+fn layout_is_stale(snapshot: &UiStateSnapshot) -> bool {
+    snapshot.layout_schema != LAYOUT_SCHEMA
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct UiStateSnapshot {
     offsets: UiOffsets,
     meta: MetaState,
     #[serde(default)]
     runtime: RuntimeSettings,
+    /// Composition schema this file's positions were tuned against. Absent in
+    /// files written before it existed, which `adopted_layout_schema` adopts.
+    #[serde(default = "adopted_layout_schema")]
+    layout_schema: u32,
     /// Crate version that wrote this file. Absent in files written before
     /// 0.4.5, which is why it defaults rather than failing the whole load -
     /// an older file is simply treated as written by an older version, which
@@ -915,10 +959,11 @@ pub struct UiState {
     pub weather_layout: WeatherLayout,
     pub persisted_state_dirty: bool,
     /// Set at load when the saved file was written by a different version.
-    /// Positions are reseeded in that case, so an upgrade lands on the
-    /// composition shipped with it rather than on offsets tuned against the
-    /// previous one.
-    pub saved_state_predates_this_version: bool,
+    /// Positions are reseeded in that case, so an upgrade that moved the
+    /// composition lands on the new arrangement rather than on offsets tuned
+    /// against the old one. Keyed on `LAYOUT_SCHEMA`, not the crate version:
+    /// a release that ships the same composition leaves a tuned layout alone.
+    pub saved_layout_schema_is_stale: bool,
     pub quit_confirm_open: bool,
 }
 
@@ -949,7 +994,7 @@ impl UiState {
             weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
             persisted_state_dirty: false,
-            saved_state_predates_this_version: false,
+            saved_layout_schema_is_stale: false,
             quit_confirm_open: false,
         }
     }
@@ -961,7 +1006,7 @@ impl UiState {
     pub fn load_or_new() -> Self {
         let mut state = Self::new();
         if let Ok(snapshot) = Self::load_snapshot() {
-            state.saved_state_predates_this_version = snapshot.version != Self::current_version();
+            state.saved_layout_schema_is_stale = layout_is_stale(&snapshot);
             state.clock_font = ClockFont::from_name(&snapshot.offsets.clock_font);
             state.offsets = snapshot.offsets;
             state.meta = snapshot.meta;
@@ -1025,7 +1070,7 @@ impl UiState {
         self.pointer_blink_on = true;
         self.persisted_state_dirty = false;
         self.quit_confirm_open = false;
-        self.saved_state_predates_this_version = false;
+        self.saved_layout_schema_is_stale = false;
     }
 
     pub fn refresh_weather_if_due(&mut self) {
@@ -2098,6 +2143,11 @@ impl UiState {
             // Pre-snapshot bare-offsets file: no version to trust, so leave it
             // empty and let the mismatch reseed it.
             version: String::new(),
+            // Schema 0 is "older than the composition schema itself", so this
+            // reseeds - unlike a structured file with no `layout_schema`, which
+            // is adopted. The two cases differ: this format predates the
+            // current composition, that one merely predates the field.
+            layout_schema: 0,
         })
     }
 
@@ -2118,6 +2168,7 @@ impl UiState {
             meta: self.meta.clone(),
             runtime: self.runtime,
             version: Self::current_version().to_string(),
+            layout_schema: LAYOUT_SCHEMA,
         };
         let json = match serde_json::to_string_pretty(&snapshot) {
             Ok(json) => json,
@@ -2161,7 +2212,9 @@ fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{BootPhaseSettings, BootStartPolicy, TOGGLEABLE_BOOT_PHASES};
+    use super::{
+        layout_is_stale, BootPhaseSettings, BootStartPolicy, LAYOUT_SCHEMA, TOGGLEABLE_BOOT_PHASES,
+    };
 
     use std::ffi::OsString;
     use std::path::PathBuf;
@@ -2744,53 +2797,127 @@ mod tests {
     /// could not persist anything and a later save silently overwrote an
     /// earlier hero position with the default.
     #[test]
-    fn state_written_by_this_version_is_not_treated_as_stale() {
+    fn state_matching_the_layout_schema_is_not_treated_as_stale() {
         let json = serde_json::json!({
             "offsets": { "hero_dx": -150, "hero_dy": -12 },
             "meta": {},
             "version": env!("CARGO_PKG_VERSION"),
+            "layout_schema": LAYOUT_SCHEMA,
         })
         .to_string();
 
         let snapshot = UiState::snapshot_from_json(&json).expect("snapshot should load");
 
-        assert_eq!(snapshot.version, env!("CARGO_PKG_VERSION"));
+        assert_eq!(snapshot.layout_schema, LAYOUT_SCHEMA);
         assert_eq!(snapshot.offsets.hero_dx, -150);
     }
 
-    /// The upgrade case: a file written by another version reseeds, so new art
-    /// or a new default composition is not fought by offsets tuned against the
-    /// previous one.
+    /// The composition-moved case: a file tuned against a different default
+    /// arrangement reseeds, so new art is not fought by old offsets.
     #[test]
-    fn state_written_by_another_version_is_stale() {
+    fn state_from_another_layout_schema_is_stale() {
         let json = serde_json::json!({
             "offsets": { "hero_dx": -150 },
             "meta": {},
+            "version": env!("CARGO_PKG_VERSION"),
+            "layout_schema": LAYOUT_SCHEMA + 1,
+        })
+        .to_string();
+
+        let snapshot = UiState::snapshot_from_json(&json).expect("snapshot should load");
+
+        assert_ne!(snapshot.layout_schema, LAYOUT_SCHEMA);
+    }
+
+    /// The regression this schema exists for.
+    ///
+    /// The reseed used to key off `CARGO_PKG_VERSION`, so a release that
+    /// shipped an unchanged composition still discarded every tuned position.
+    /// On a machine whose launcher stops YAM with a signal - an appliance, where
+    /// the quit-confirm save is unreachable - the stamp could never be
+    /// refreshed either, so every boot reseeded and no position could survive at
+    /// all. A differing crate version must no longer imply a stale layout.
+    #[test]
+    fn a_different_crate_version_alone_does_not_make_a_layout_stale() {
+        let json = serde_json::json!({
+            "offsets": { "hero_dx": -150, "camera_x": -71, "camera_y": -22 },
+            "meta": {},
             "version": "0.0.1-not-this-build",
+            "layout_schema": LAYOUT_SCHEMA,
         })
         .to_string();
 
         let snapshot = UiState::snapshot_from_json(&json).expect("snapshot should load");
 
         assert_ne!(snapshot.version, env!("CARGO_PKG_VERSION"));
+        assert_eq!(snapshot.layout_schema, LAYOUT_SCHEMA);
+        assert_eq!(snapshot.offsets.camera_x, -71);
+        assert_eq!(snapshot.offsets.camera_y, -22);
     }
 
-    /// A file predating the version stamp has no claim to being current, so it
-    /// reads as versionless and reseeds rather than being trusted by default.
+    /// The reseed branch itself, not just the field it reads.
+    ///
+    /// Each case is stated against `layout_is_stale` directly, so the rule is
+    /// pinned rather than inferred from a parsed value.
     #[test]
-    fn state_without_a_version_stamp_is_stale() {
-        let stamped = serde_json::json!({
+    fn layout_staleness_keys_on_the_schema_and_not_the_crate_version() {
+        let parse = |json: serde_json::Value| {
+            UiState::snapshot_from_json(&json.to_string()).expect("snapshot should load")
+        };
+
+        // Current schema: keep the tuned layout.
+        assert!(!layout_is_stale(&parse(serde_json::json!({
+            "offsets": {}, "meta": {},
+            "version": env!("CARGO_PKG_VERSION"),
+            "layout_schema": LAYOUT_SCHEMA,
+        }))));
+
+        // The regression: a different crate version alone must not reseed.
+        assert!(!layout_is_stale(&parse(serde_json::json!({
+            "offsets": {}, "meta": {},
+            "version": "0.0.1-not-this-build",
+            "layout_schema": LAYOUT_SCHEMA,
+        }))));
+
+        // Composition actually moved: reseed.
+        assert!(layout_is_stale(&parse(serde_json::json!({
+            "offsets": {}, "meta": {},
+            "version": env!("CARGO_PKG_VERSION"),
+            "layout_schema": LAYOUT_SCHEMA + 1,
+        }))));
+
+        // Structured file predating the field: adopted, not reseeded.
+        assert!(!layout_is_stale(&parse(
+            serde_json::json!({ "offsets": {}, "meta": {} })
+        )));
+
+        // Pre-snapshot bare-offsets format: still reseeds.
+        assert!(layout_is_stale(&parse(
+            serde_json::json!({ "hero_dx": -150 })
+        )));
+    }
+
+    /// A structured file written before the schema field existed is adopted,
+    /// not reseeded: it carries deliberately tuned positions against a
+    /// composition that has not moved. The pre-snapshot bare-offsets format is
+    /// the opposite case - it predates the composition itself, so it stays
+    /// schema 0 and reseeds.
+    #[test]
+    fn a_structured_file_without_a_schema_is_adopted_but_bare_offsets_are_not() {
+        let structured = serde_json::json!({
             "offsets": { "hero_dx": -150 },
             "meta": {},
         })
         .to_string();
-        let legacy = serde_json::json!({ "hero_dx": -150 }).to_string();
+        let bare = serde_json::json!({ "hero_dx": -150 }).to_string();
 
-        for data in [stamped, legacy] {
-            let snapshot = UiState::snapshot_from_json(&data).expect("snapshot should load");
-            assert!(snapshot.version.is_empty());
-            assert_ne!(snapshot.version, env!("CARGO_PKG_VERSION"));
-        }
+        let adopted = UiState::snapshot_from_json(&structured).expect("snapshot should load");
+        assert_eq!(adopted.layout_schema, LAYOUT_SCHEMA);
+        assert_eq!(adopted.offsets.hero_dx, -150);
+
+        let reseeded = UiState::snapshot_from_json(&bare).expect("snapshot should load");
+        assert_eq!(reseeded.layout_schema, 0);
+        assert_ne!(reseeded.layout_schema, LAYOUT_SCHEMA);
     }
 
     #[test]
@@ -2858,6 +2985,7 @@ mod tests {
                 ..RuntimeSettings::default()
             },
             version: "9.9.9".to_string(),
+            layout_schema: LAYOUT_SCHEMA,
         };
 
         let json = serde_json::to_string(&snapshot).expect("snapshot should serialize");

@@ -102,8 +102,8 @@ pub fn run(options: RuntimeOptions) -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut ui_state = UiState::load_or_new();
-    let version_changed = ui_state.saved_state_predates_this_version;
-    if hard_reset || version_changed {
+    let layout_schema_changed = ui_state.saved_layout_schema_is_stale;
+    if hard_reset || layout_schema_changed {
         ui_state.reset_for_clean_launch(initial_world_kind);
     }
     if ui_state.active_world_kind() != initial_world_kind {
@@ -135,7 +135,10 @@ pub fn run(options: RuntimeOptions) -> Result<(), Box<dyn std::error::Error>> {
         &[
             ("initial_world", json!(initial_world_kind.title())),
             ("hard_reset", json!(hard_reset)),
-            ("reseeded_on_version_change", json!(version_changed)),
+            (
+                "reseeded_on_layout_schema_change",
+                json!(layout_schema_changed),
+            ),
             ("boot_start_policy", json!(boot_start_policy.label())),
             ("version", json!(crate::build_info::VERSION)),
             ("build", json!(crate::build_info::build_hash())),

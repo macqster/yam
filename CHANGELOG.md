@@ -380,6 +380,25 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Saved positions are no longer discarded by an ordinary version bump. The
+  reseed that keeps an upgrade from fighting offsets tuned against an older
+  composition was keyed on `CARGO_PKG_VERSION`, so every patch release threw
+  away a tuned layout even when the composition had not moved. It now keys on
+  `ui::state::LAYOUT_SCHEMA`, bumped by hand and only when
+  `UiOffsets::default()` or the seeded composition actually changes.
+
+  The version rule was also unrecoverable on a machine that cannot reach the
+  quit-confirm save, which is the only thing that rewrites the stamp: an
+  appliance whose launcher stops YAM with a signal reseeded on *every* boot and
+  could never persist a position at all. A structured state file with no
+  `layout_schema` is adopted at the current schema rather than reseeded, so
+  existing tuned layouts survive the change; the pre-snapshot bare-offsets
+  format still reseeds, and `--hard-reset` is still the way back to defaults.
+
+  `saved_state_predates_this_version` is now `saved_layout_schema_is_stale`, and
+  the diagnostics key `reseeded_on_version_change` is now
+  `reseeded_on_layout_schema_change`.
+
 - `docs/hygiene.md` now records that a remote-tracking ref is a cache rather
   than a question asked of the remote. `git status` and
   `git rev-list --left-right --count HEAD...origin/main` both answer from the

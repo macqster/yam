@@ -84,6 +84,52 @@ Logging rule:
   for why, rather than restating it
 - `bash scripts/verify.sh` green
 
+## 2026-09-06 14:28 CEST
+
+- reseeding saved positions is now keyed on a hand-bumped
+  `ui::state::LAYOUT_SCHEMA` rather than on `CARGO_PKG_VERSION`. The old rule
+  was wrong in both directions: every patch release discarded a tuned layout for
+  a composition that had not moved, and because the version stamp is only
+  rewritten by the quit-confirm save, a machine that cannot reach that save
+  could never refresh it
+- found it on the Duo rather than by reading the code, and the two halves form a
+  closed loop. Its launcher stops YAM with `os.killpg(SIGTERM)` then `SIGKILL`;
+  YAM installs no signal handler, so `TerminalCleanupGuard` never drops and
+  `confirm_save_and_quit` is unreachable on that machine. `state.json` has
+  therefore been frozen since 2026-09-02 16:44, still stamping `0.4.10` against
+  a `0.4.11` binary, so `reseeded_on_version_change` was true on every boot and
+  a real tuned layout - `camera_x -71`, `camera_y -22`, `hero_fps 6.0`, all
+  non-default - was discarded on every launch. The stamp could only be refreshed
+  by the save the reseed made pointless
+- a structured file with no `layout_schema` is adopted at the current schema
+  rather than reseeded, which is what restores those Duo positions. The
+  pre-snapshot bare-offsets format still reseeds, at schema 0: it predates the
+  composition this schema describes, where the newer file merely predates the
+  field. `--hard-reset` remains the way back to defaults
+- renamed `saved_state_predates_this_version` to `saved_layout_schema_is_stale`
+  and the diagnostics key `reseeded_on_version_change` to
+  `reseeded_on_layout_schema_change`, since neither describes a version any
+  more. Checked `bin/yam-diagnostics` first - it reads only `kind`,
+  `install_step`, and `world_ready`, so no consumer breaks
+- split the decision into `layout_is_stale` so it could be tested at all. The
+  previous rule was never covered directly: `load_or_new` reads a real path, so
+  every test asserted on the parsed field and none on the branch acting on it.
+  Proved the new test fails by reverting `layout_is_stale` to the version
+  comparison - it trips on the "different crate version alone" assertion
+  specifically, not on an unrelated error
+- verified against the real release binary under `tmux`, not only by unit
+  tests, and using the Duo's actual `state.json` rather than a synthetic one:
+  with that file (`version 0.4.10`, no `layout_schema`, `camera_x -71`)
+  `reseeded_on_layout_schema_change` is `false`, where the version rule would
+  have reseeded it. A control run with the same file at `layout_schema: 999`
+  reseeds as it should, so the mechanism still fires and was not merely
+  switched off
+- deliberately not in this slice: giving a signal-stopped machine any save path
+  at all. That is the other half of the Duo's loop and needs its own decision
+  (SIGTERM handler versus debounced autosave), so it was scoped out rather than
+  folded in
+- `bash scripts/verify.sh` green
+
 ## 2026-09-03 06:35 CEST
 
 - took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since

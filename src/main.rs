@@ -105,7 +105,7 @@ fn runtime_options(args: &[String], auto_start_env: Option<OsString>) -> runtime
 
     // Saved dev positions are preserved by default. They are reseeded only on
     // an explicit `--hard-reset`, or automatically when the saved file was
-    // written by a different version - see `saved_state_predates_this_version`.
+    // tuned against a different composition - see `saved_layout_schema_is_stale`.
     let hard_reset = args.iter().any(|a| a == "--hard-reset");
 
     // The flag is authoritative and the variable is the fallback, so a launcher

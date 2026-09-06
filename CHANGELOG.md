@@ -17,6 +17,22 @@ full change history in one running section instead of per-version ones.
 
 ### Added
 
+- A debounced autosave, so the quit-confirm save is no longer the only path to
+  disk. Saved state is written once it has gone 2 seconds without a change,
+  which coalesces a held arrow key through a widget move into a single write.
+
+  This exists for machines that cannot reach the quit prompt at all: a launcher
+  that stops YAM with a signal rather than a keypress never runs
+  `confirm_save_and_quit`, so such a machine could tune a layout and never keep
+  it. Autosave is deliberately inert while the quit-confirm modal is open, since
+  that modal offers to discard the pending change.
+
+  What this changes: once a change has settled it is on disk, so quitting can no
+  longer discard it. The prompt still covers the window between a change and the
+  debounce firing, and `--hard-reset` still returns to defaults, but
+  "confirmed at quit" is now a safety net over that window rather than the gate
+  for everything.
+
 - Per-phase boot toggles on the dev settings popup's `runtime` tab: `coalesce`,
   `bar`, `dissolve`, and `hold` each switch on and off independently, and the
   choice persists. Left means off and Right means on rather than either key

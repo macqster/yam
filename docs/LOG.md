@@ -130,6 +130,51 @@ Logging rule:
   folded in
 - `bash scripts/verify.sh` green
 
+## 2026-09-06 18:34 CEST
+
+- added a debounced autosave, so the quit-confirm save is no longer the only
+  path to disk. `autosave_if_due` writes once the state has gone
+  `AUTOSAVE_DEBOUNCE` (2s) without a change; a held arrow key through a widget
+  move therefore coalesces into one write rather than one per keypress
+- this is the other half of the Duo's loop, closed. Its launcher stops YAM with
+  a signal, so `confirm_save_and_quit` is unreachable there and the machine
+  could read a tuned layout but never write one. The earlier schema fix let it
+  keep positions across a restart; this lets it record them in the first place
+- checked the thing that would have made this a disk-thrashing bug before
+  writing it: every one of the 23 `mark_persisted_state_dirty` call sites is an
+  explicit user action - move, settings, camera, font, visibility, world cycle -
+  and the per-frame camera work (`clamp_camera`,
+  `sync_camera_to_viewport_center`) marks nothing. A settled scene writes once
+  and then stops rather than rewriting on a timer
+- deliberately inert while the quit-confirm modal is open. That modal offers to
+  discard the pending change, and writing it out from underneath the prompt
+  would make the discard a lie; `confirm_quit_without_saving` clears the pending
+  timer too, so a discarded change cannot be resurrected by a later tick
+- the semantic this changes, stated plainly: once a change has settled it is on
+  disk, so quitting can no longer discard it. The prompt still covers the window
+  between a change and the debounce firing, and `--hard-reset` is still the way
+  back to defaults, but "confirmed at quit" is now a safety net over that window
+  rather than the gate for everything
+- kept the decision pure (`autosave_is_due`) so the debounce is testable with
+  synthetic instants instead of sleeps, matching `LoadingState::progress`. Five
+  tests, each proved able to fail: neutralizing the debounce fails the two
+  timing tests on the exact settle assertions, and removing the modal guard
+  fails the inertness test
+- verified with the real release binary under `tmux` on the Duo's own
+  `state.json`: entered dev mode, moved the camera three cells, waited out the
+  debounce, and the file was rewritten with no quit and no save keypress - one
+  `state_autosaved` event, and the file picked up `layout_schema: 1` and
+  `version 0.4.11` on the way. The session was then killed exactly as the bridge
+  kills it, which under the old behavior would have lost the change entirely
+- noted while verifying, not fixed here: `clamp_camera` rewrites
+  `offsets.camera_x`/`camera_y` every frame to fit the current terminal without
+  marking the state dirty, so whichever save runs next persists the *clamped*
+  camera rather than the raw tuned value. In the tmux run a 200-cell-wide
+  terminal pulled `camera_x` from `-71` to `-93` before the three presses took
+  it to `-96`. Long-standing behavior and not introduced here, but autosave
+  makes it reachable without quitting, so it is worth its own slice
+- `bash scripts/verify.sh` green
+
 ## 2026-09-03 06:35 CEST
 
 - took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since

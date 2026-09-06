@@ -406,6 +406,15 @@ pub fn run(options: RuntimeOptions) -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
+        // Write settled changes without waiting for the quit-confirm save.
+        // That save is unreachable on a machine whose launcher stops YAM with a
+        // signal, so it cannot be the only path to disk. Guarded on `quitting`
+        // so the dissolve does not write behind an already-made choice; the
+        // quit-confirm modal is handled inside `autosave_if_due`.
+        if !quitting && ui_state.autosave_if_due(frame_start) {
+            append_event("state_autosaved", &[]);
+        }
+
         if !quitting && frame_start.duration_since(last_world_tick) >= world_tick {
             tick(&mut world);
             last_world_tick = frame_start;

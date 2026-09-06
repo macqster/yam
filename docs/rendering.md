@@ -232,7 +232,7 @@ The active implementation treats camera as a viewport crop helper:
 - `Viewport::from_camera` copies camera coordinates directly as the visible crop origin
 - the default startup camera state is manual pan with the stored seed `(-60, -15)` so the boot view starts with the current frozen screenshot-aligned hero/clock/date/weather composition; this manual seed is distinct from the centered `follow-hero` runtime path
 - follow-hero camera mode keeps the visible crop centered on the world datum across resizes once it is enabled; manual pan mode is still clamped in runtime state and in `build_render_state(...)` so the visible crop can overscan the world border/frame by at most one cell on any edge
-- the centered `124x32` follow-hero crop uses camera `(-62, -16)`
+- the centered `124x32` follow-hero crop uses camera `(-62, -16)` - that is a `124x33` *terminal*, since the bottom row is the footer and the camera is fitted to the world rect rather than the frame
 - debug border sampling is a datum-centered world-space probe that is projected through the active camera; it is not HUD chrome
 - world-ui layers attach to world entities and resolve before screen-space overlay work
 - hud-ui layers attach to the viewport/camera/terminal frame and do not inherit world motion directly

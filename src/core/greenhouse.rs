@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::core::organism::OrganismId;
 use crate::core::spatial::SpatialPoint;
 
@@ -36,6 +34,13 @@ macro_rules! impl_string_id {
                 Self(value)
             }
 
+            // The only item in this file that still needs the allow: the
+            // macro generates `as_str` for every id newtype, and not all of
+            // them have a caller yet. Scoped here rather than left as a
+            // module-wide `#![allow(dead_code)]`, which switched the lint off
+            // for all 790 lines and so could never report a genuinely orphaned
+            // item - the exact failure `docs/hygiene.md` warns about.
+            #[allow(dead_code)]
             pub fn as_str(&self) -> &str {
                 &self.0
             }

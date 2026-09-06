@@ -175,6 +175,184 @@ Logging rule:
   makes it reachable without quitting, so it is worth its own slice
 - `bash scripts/verify.sh` green
 
+## 2026-09-06 20:15 CEST
+
+- split the camera into an authored position and a rendered one, and stopped
+  per-frame work from writing the authored half. `offsets.camera_x`/`camera_y`
+  are what the user set and what gets saved; `camera.x`/`camera.y` are what is
+  drawn after being fitted to the terminal
+- this was the defect flagged but deferred in the autosave batch, and it was
+  worse than recorded there. Two functions wrote the persisted pair on every
+  frame, not one: `clamp_camera` fitted it to the terminal, and
+  `sync_camera_to_viewport_center` overwrote it outright with the viewport
+  centre for as long as follow-hero was on. So simply *opening* a saved layout
+  in a terminal that could not show it rewrote the layout on the first frame,
+  and the autosave then made that loss permanent at the next unrelated edit
+- authoring is now limited to explicit actions, and each one had to be handled
+  rather than just blocked. Moving steps from the rendered position, so a
+  clamped view answers the first keypress instead of needing the twenty-odd it
+  would take to walk the authored value back into range. Turning follow-hero off
+  adopts wherever following left the camera, which is how the old code got that
+  behavior for free by corrupting the stored value. A discrete resize still
+  re-authors through `preserve_camera_center_on_resize` - it has its own
+  contract, preserving the viewport centre - but it transforms the *authored*
+  position rather than the rendered one, since working from the clamped value
+  would bake a clamp into storage, and it marks the state dirty rather than
+  changing it under a later save's name
+- two things were pulled back out during review as scope creep rather than fix:
+  `store_camera_home` briefly stored the rendered position, and the resize path
+  briefly transformed it. Both left the authored value derived from a clamp,
+  which is the defect wearing different clothes
+- collapsing the four `move_camera_*` bodies onto one `step_camera` helper
+  promptly introduced that same bug in miniature - the shared helper wrote both
+  axes, so a horizontal move re-authored the clamped vertical position. No test
+  caught it, which was the more useful finding; the helper now writes only the
+  axis being stepped and
+  `stepping_one_camera_axis_leaves_the_other_authored_value_alone` pins it
+- follow-hero being transient made this tractable: it lives on `Camera`, is
+  never persisted, and is always false at launch, so nothing needed a migration
+- two existing tests asserted the old behavior and were rewritten rather than
+  deleted, since both describe real contracts - the overscan clamp and
+  follow-hero centring - once restated against the rendered camera. Ten tests net were added across the batch
+  (92 to 102 in `src/ui/state.rs`), plus one rename. The regression test fails with `-93` against `-71`
+  when `clamp_camera` is reverted to writing offsets, which are the exact values
+  measured by hand on this workstation during the autosave batch
+- `docs/hygiene.md` now states that `~/.config/yam/state.json` is machine-local
+  and must never be committed, dotfile-managed, or synced. That was true only by
+  accident of path: the fleet's ChezMoi source manages `private_dot_config` but
+  happens not to include `yam`, so nothing enforced it and a later sweep would
+  have broken layouts on every host at once with no error. Deliberately not
+  defended with a `machine_id` stamp in the file - a stamp only detects arrival
+  and would need a policy for what to do about it, which is speculative surface
+  until the file can actually travel
+- `docs/audit.md` records the write-path risk as closed; `TODO.md`'s camera
+  verify item now names the authored/rendered split so the contract is pinned
+  where the backlog can see it
+- an independent review of the diff found two bugs this batch had *introduced*,
+  both the same defect in a smaller costume, and both around leaving follow-hero
+  - which turned out to have two doors rather than one:
+  - an arrow key exits follow as well as stepping, but adopted only the axis it
+    stepped. The other kept a value authored before follow was ever switched on,
+    and the next frame's clamp snapped the view to it: a sideways lurch on a keypress
+    that should have moved one row - 45 columns on the 124-column terminal the
+    test uses, and further on a narrower one, the bound being the distance from
+    the authored value to the clamp window
+  - the runtime drains every queued event before syncing the camera, so an `f`
+    on/off pair arriving in one drain adopted the *previous* frame's clamped
+    position and wrote it into the authored layout. At `render_fps` 15 a key
+    repeat delivers several `f` events per frame routinely, so the parity of the
+    count decided whether a layout survived
+- both now route through one `exit_follow_hero`, which adopts both axes and
+  skips adoption entirely when follow never reached a frame. Each bug has a test
+  proved able to fail against the code as first written, reproducing the
+  reviewer's predicted symptoms exactly: `-107` against `-62` for the lurch, and
+  `-93` against `-71` for the clamp being baked in
+- the review also caught the `AUTOSAVE_DEBOUNCE` comment still claiming every
+  dirty site is a keypress, when this batch had added a resize; a tautological
+  assertion that no implementation could fail; a resize block missing the
+  `!quitting` guard its neighbors have; and `docs/hygiene.md`'s ChezMoi claim
+  being unverifiable as written, since it named no path. All corrected
+- cleanup found separately: `README.md` still said positions are reseeded by "a
+  version change", which stopped being true when the layout schema landed
+  earlier today, and no docs pass had caught it because the claim lives on the
+  front door rather than in a contract doc
+- `src/core/greenhouse.rs` carried a module-wide `#![allow(dead_code)]` over 790
+  lines. Measuring what it actually masked found exactly one item - an `as_str`
+  the id-newtype macro generates for every type, not all of which have callers -
+  so it is now a scoped allow inside the macro and the other 789 lines are
+  lint-visible again. This is the check `docs/hygiene.md` asks for periodically;
+  the module-wide ones are now gone from `src/` entirely. The 127 per-item
+  allows are a separate matter and the first pass over them was too
+  generous: removing all 127 leaves only 67 dead-code warnings, and those
+  cover several items each, so a good share of them are guarding items that
+  have real callers. Logged in `TODO.md` rather than swept here - it is
+  pre-existing, mechanical, and wants its own pass
+- split `docs/architecture.md`'s persistence bullet, which stood at 1893
+  characters at HEAD and which this batch would have pushed past 2400, into four
+  contract statements with the
+  history left to this log; added `authored camera` and `rendered camera` to
+  `docs/glossary.md`, since the pair now appears across four docs and
+  terminology is contract surface
+- a third review, run against the revised diff, found three more - two of them
+  mine, and one a miss in the sweep above:
+  - `store_camera_home` still read the authored pair, which during follow-hero
+    is the *pre-follow* position. Pressing `C` while following bookmarked
+    somewhere the user was not looking, and `recall` later jumped there. This
+    had been written correctly, then reverted in the first review as scope
+    creep: the clamped case it was reverted over is minor, but the follow case
+    makes it a real regression, so it is back and pinned by a test that fails
+    with `-60` against `-62`
+  - the followed camera sat one row below what was drawn. The renderer centres
+    on the world rect, which is a row shorter than the terminal because the
+    bottom row is the footer, while the runtime passed the full height. That
+    was harmless for as long as following never wrote anything down - this
+    batch adopts the followed position when follow is switched off, which would
+    have persisted the off-by-one. The runtime now passes the drawn height
+  - `src/render/hero_cache.rs` still carried a module-wide
+    `#![allow(dead_code)]`, one file over from the one this batch scoped, and it
+    masks nothing at all - the file compiles clean under `-D warnings` without
+    it. The claim above about auditing the remaining allows was true of the
+    per-item ones and missed this
+- four numeric claims in this entry were wrong and are corrected in place: the
+  architecture bullet was 1893 characters at HEAD rather than 2482 (the larger
+  figure was this batch's own additions, measured before the split), the test
+  count was nine net rather than three, and the 45-column lurch is specific to a
+  124-column terminal rather than a general maximum
+- chasing the third review's off-by-one further found the cause underneath it,
+  and a second symptom. State modelled the viewport as the whole terminal while
+  the renderer models it as the world rect, a row shorter for the footer. That
+  one row put their clamp windows one apart - state's `[-29, 29-h]` inside the
+  renderer's `[-29, 30-h]` - so on a terminal tall enough for the two to
+  disagree, the position follow-hero left behind fell outside state's window and
+  the view snapped a row the instant follow was switched off. The runtime now
+  computes the drawn viewport once and passes it to all three of
+  `sync_camera_to_viewport_center`, `clamp_camera`, and
+  `preserve_camera_center_on_resize`. Derived on paper first, and the guard took two
+  attempts: the first test fed the same derived height to both sides and so
+  could not fail, which the fourth review caught by reverting the whole fix
+  and watching every test stay green. The decision of *which* rectangle to fit
+  to now lives in `UiState::fit_camera_to_frame` instead of a loop-local
+  expression no test could reach, and the test drives that entry point and
+  compares against the real `scene::build_render_state`. Reverting the
+  decision now fails it at exactly the predicted `h=58`, `(-62,-29)` against
+  `(-62,-28)`
+- the reviews cost three rounds and found six defects between them, all but
+  one introduced by this batch rather than pre-existing. The pattern was the
+  same each time: a rule applied to the obvious path and missed on a second
+  entrance to the same behavior - two doors out of follow-hero, two readers of
+  the camera pair, two files with the same module-wide allow
+- `bash scripts/verify.sh` green
+
+## 2026-09-06 (continued) 00:09 CEST - review rounds four and five
+
+- the fourth review found the guard written for the viewport fix could not
+  fail. It handed the same derived height to both sides, so they agreed by
+  construction; reverting the whole fix left all 385 tests green. The decision
+  of *which* rectangle the camera is fitted to now lives in
+  `UiState::fit_camera_to_frame` rather than a loop-local expression no test
+  could reach, `scene::world_rect` is the one definition of "terminal minus the
+  footer", and the test drives that entry point and compares against a real
+  `scene::build_render_state` frame. Reverting the decision now fails it
+- the fifth review then found the remaining place state and the renderer still
+  disagreed, and it was the one the test was skipping. `camera_for_frame`
+  force-centres once the viewport covers the world, while `clamped_camera` only
+  collapses to the centre when its window goes empty - not yet true at exactly
+  212 columns or 57 rows. So a `212x57` frame in manual pan drew `(-106,-28)`
+  while the state held `(-105,-27)`. Pre-existing, but this batch had just made
+  `store_camera_home` read the rendered pair *because* it is the view on screen,
+  which in that corner it was not. `clamped_camera` now matches the renderer's
+  condition, and the test's skip is gone rather than papered over
+- swept the invariant rather than trusting the enumerated sizes: 420,000
+  combinations of width, height, follow state and authored position, comparing
+  the state's camera against a real rendered frame. Zero disagreements
+- five review rounds found nine defects. Only two were pre-existing; the rest
+  this batch introduced, and every one followed the same shape - a rule applied
+  to the obvious path and missed on a second entrance to the same behavior. Two
+  doors out of follow-hero, two readers of the camera pair, two files with the
+  same module-wide allow, two encodings of "minus the footer row", and a test
+  that agreed with itself
+- `bash scripts/verify.sh` green
+
 ## 2026-09-03 06:35 CEST
 
 - took the Dependabot `sha2` 0.10.9 -> 0.11.0 bump, which had been red since

@@ -44,6 +44,8 @@ This glossary is the shared vocabulary for YAM-specific nomenclature, recurring 
 | Term | Authority | YAM Meaning | Use For |
 | --- | --- | --- | --- |
 | `camera` | inferred | the world-space crop origin or framing helper | projection and viewport control |
+| `authored camera` | repo | the camera position the user set, held in `offsets.camera_x`/`camera_y` and the pair that is persisted | anything about saved or restored layout |
+| `rendered camera` | repo | the camera position actually drawn, held in `camera.x`/`camera.y` after being fitted to the current terminal | anything about what is on screen now |
 | `viewport` | strict | the visible terminal-sized crop area | what is currently shown |
 | `frame` | strict | one full rendered terminal frame | per-tick output |
 | `HUD` | inferred | screen-attached presentation layer above the world but below modal overlays | footer, status, passive indicators |

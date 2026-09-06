@@ -77,6 +77,11 @@ Logging rule:
   reaching `install_done`. Harmless that time, but two concurrent
   `cargo install --force` against one path is a real race, and the answer is to
   avoid overlapping runs rather than to guard the script against them
+- `skills/yam-maintenance/SKILL.md` opened with "inspect
+  `git status --short --branch` before editing", which is the exact command that
+  misread here - its branch line is built from the same cached ref. The step now
+  says to fetch first when sync state matters and points at `docs/hygiene.md`
+  for why, rather than restating it
 - `bash scripts/verify.sh` green
 
 ## 2026-09-03 06:35 CEST

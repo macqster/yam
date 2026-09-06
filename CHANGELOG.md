@@ -399,6 +399,11 @@ full change history in one running section instead of per-version ones.
   `cargo install` leaves an already-running process on its old inode, so the new
   binary is on disk while the old one is still on screen until a restart.
 
+  `skills/yam-maintenance/SKILL.md` opened its workflow with
+  `git status --short --branch`, which reads that same cached ref, so the step now
+  fetches first when sync state matters and points at `docs/hygiene.md` for the
+  reasoning instead of carrying a second copy of it.
+
 - Three docs stated the CI trigger inaccurately. `docs/hygiene.md`, `AGENTS.md`,
   and `docs/release-model.md` each said `verify.yml` runs on "every push and
   pull request", which reads as though pushing a feature branch runs CI. It does

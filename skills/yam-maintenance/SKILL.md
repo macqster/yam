@@ -14,7 +14,10 @@ description: Use when doing maintenance work in the YAM repository, including cl
 
 ## Workflow
 
-1. Inspect `git status --short --branch` before editing.
+1. Inspect `git status --short --branch` before editing, running
+   `git fetch --prune origin` first whenever the sync state matters: the branch
+   line answers from the last fetch, so a stale clone reads as in-sync while it
+   is arbitrarily far behind. See [../../docs/hygiene.md](../../docs/hygiene.md).
 2. Read the narrow code/docs surface affected by the request.
 3. Keep changes scoped to the maintenance goal and preserve the branch-authority
    and Mac reassessment rules in [../../AGENTS.md](../../AGENTS.md).

@@ -149,7 +149,7 @@ wrapper behavior that matters:
   automatic mode skips the wait for a person, not the animation, and never
   synthesizes a key event
 - `YAM_HERO_SOURCE=<stem>` renders a registered hero source other than the default (`hero_gif_1`, `hero_gif_2`); an unset or unknown stem falls back to the default
-- dev-mode positions saved through move mode persist across launches; `yam --hard-reset` reseeds them to the shipped composition, and a version change reseeds them automatically
+- dev-mode positions saved through move mode persist across launches, written both at the quit prompt and by a debounced autosave a couple of seconds after the last change, so a launcher that stops `yam` with a signal still keeps them; `yam --hard-reset` reseeds them to the shipped composition, and they are reseeded automatically only when the layout schema changes, not on every version bump
 
 <div align="center">
 

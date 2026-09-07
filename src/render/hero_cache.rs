@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::{fs, io, path::Path};
 
 use ratatui::text::Line;

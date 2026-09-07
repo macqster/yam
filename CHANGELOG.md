@@ -396,6 +396,36 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Rendering no longer rewrites saved camera state. `offsets.camera_x`/`camera_y`
+  are the position the user authored and the one that is persisted;
+  `camera.x`/`camera.y` are the position actually rendered after being fitted to
+  the terminal. `clamp_camera` and `sync_camera_to_viewport_center` run on every
+  frame and both wrote the authored pair, so opening a saved layout in a
+  terminal that could not show it rewrote the layout on the first frame — and
+  the debounced autosave made that loss permanent at the next unrelated edit.
+
+  Authoring is now limited to explicit actions: moving the camera steps from the
+  rendered position, so a clamped view still answers the first keypress; leaving
+  follow-hero adopts wherever following put the camera; and a discrete resize
+  re-authors through `preserve_camera_center_on_resize`, which transforms the
+  authored position and marks the state dirty instead of changing it silently.
+
+  The camera the state holds now equals the camera actually drawn, for every
+  terminal size. It is fitted to the world rect (the terminal minus the footer
+  row) rather than the whole frame, and it force-centres on the same condition
+  the renderer does once the viewport covers the world. Previously the two
+  windows sat a row apart, so switching follow-hero off on a 58-row terminal
+  snapped the view, and a `212x57` frame in manual pan held a camera one cell
+  from the one on screen.
+
+  Leaving follow-hero has two doors — the `f` key and any arrow key — and they
+  now route through one exit that adopts *both* axes. Adopting only the stepped
+  axis left the other on a value authored before follow was switched on, so the
+  next frame lurched the view sideways — 45 columns on a 124-column terminal, and further on a narrower one. That exit also skips
+  adoption when follow never reached a frame, since the runtime drains every
+  queued event before syncing the camera: an `f` on/off pair arriving together
+  would otherwise adopt the previous frame's clamped position and persist it.
+
 - Saved positions are no longer discarded by an ordinary version bump. The
   reseed that keeps an upgrade from fighting offsets tuned against an older
   composition was keyed on `CARGO_PKG_VERSION`, so every patch release threw

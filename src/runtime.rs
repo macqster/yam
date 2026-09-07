@@ -439,23 +439,39 @@ pub fn run(options: RuntimeOptions) -> Result<(), Box<dyn std::error::Error>> {
 
         terminal.autoresize().ok();
         let size = terminal.size()?;
-        if size != last_terminal_size {
+        // The camera is fitted to the world rect, not the terminal: the bottom
+        // row is the footer, so `scene::build_render_state` renders through a
+        // rect one row shorter and clamps against that. Passing the full height
+        // here left the state's idea of the viewport one row taller than the
+        // renderer's, which put their clamp windows one apart - the followed
+        // camera sat a row below what was drawn, and on a terminal tall enough
+        // for the two windows to disagree, leaving follow snapped the view by a
+        // row. Harmless while none of it was ever written down; this batch
+        // adopts the followed position when follow is switched off.
+        let drawn =
+            crate::scene::world_rect(ratatui::layout::Rect::new(0, 0, size.width, size.height));
+        let drawn_w = drawn.width as i32;
+        let drawn_h = drawn.height as i32;
+        // `!quitting` matches the camera sync just below. A resize during the
+        // quit dissolve re-authors the camera and marks the state dirty, and
+        // although the autosave is itself gated on `!quitting` so nothing
+        // reaches disk today, leaving the two guards out of step is how that
+        // stops being true after an unrelated change.
+        if !quitting && size != last_terminal_size {
             if ui_state.camera.follow_hero {
-                ui_state.sync_camera_to_viewport_center(size.width as i32, size.height as i32);
+                ui_state.sync_camera_to_viewport_center(drawn_w, drawn_h);
             } else {
                 ui_state.preserve_camera_center_on_resize(
                     last_terminal_size.width as i32,
-                    last_terminal_size.height as i32,
-                    size.width as i32,
-                    size.height as i32,
+                    crate::scene::world_rect(last_terminal_size.into()).height as i32,
+                    drawn_w,
+                    drawn_h,
                 );
             }
             last_terminal_size = size;
         }
-        if !quitting && ui_state.camera.follow_hero {
-            ui_state.sync_camera_to_viewport_center(size.width as i32, size.height as i32);
-        } else if !quitting {
-            ui_state.clamp_camera(size.width as i32, size.height as i32);
+        if !quitting {
+            ui_state.fit_camera_to_frame(ratatui::layout::Rect::new(0, 0, size.width, size.height));
         }
         terminal.draw(|frame| {
             let render_world = if !quitting && ui_state.loading.active {

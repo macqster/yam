@@ -749,10 +749,11 @@ fn adopted_layout_schema() -> u32 {
 /// Long enough that holding an arrow key through a widget move coalesces into
 /// one write instead of one per keypress, and short enough that a machine
 /// stopped by a signal rarely dies inside the window. Every site that marks the
-/// state dirty is an explicit user action - move, settings, camera, font,
-/// visibility - and none of the per-frame camera work (`clamp_camera`,
-/// `sync_camera_to_viewport_center`) marks anything, so a settled scene writes
-/// once and then stops rather than rewriting on a timer.
+/// state dirty is a deliberate act - move, settings, camera, font, visibility,
+/// and a terminal resize, which re-authors the camera to keep the viewport
+/// centre and is the one non-keypress among them. None of the per-frame camera
+/// work (`clamp_camera`, `sync_camera_to_viewport_center`) marks anything, so a
+/// settled scene writes once and then stops rather than rewriting on a timer.
 pub const AUTOSAVE_DEBOUNCE: Duration = Duration::from_secs(2);
 
 /// Whether a pending change has sat still long enough to be written.
@@ -978,6 +979,12 @@ pub struct UiState {
     pub weather_locale: WeatherLocale,
     pub weather_layout: WeatherLayout,
     pub persisted_state_dirty: bool,
+    /// Whether `sync_camera_to_viewport_center` has run since follow-hero was
+    /// switched on. Leaving follow adopts the position it put on screen, and
+    /// without this a follow that never reached a frame would adopt whatever
+    /// the previous `clamp_camera` left behind - a clamped value, written
+    /// straight into the authored layout.
+    follow_applied: bool,
     /// When the state last changed, for the autosave debounce. `None` means
     /// nothing is pending; it is cleared on write rather than left behind, so a
     /// settled scene cannot re-trigger a write.
@@ -1018,6 +1025,7 @@ impl UiState {
             weather_locale: WeatherLocale::Pl,
             weather_layout: WeatherLayout::WttrCompact,
             persisted_state_dirty: false,
+            follow_applied: false,
             last_change_at: None,
             saved_layout_schema_is_stale: false,
             quit_confirm_open: false,
@@ -1091,6 +1099,7 @@ impl UiState {
         self.camera.x = self.offsets.camera_x;
         self.camera.y = self.offsets.camera_y;
         self.camera.follow_hero = false;
+        self.follow_applied = false;
         self.settings_edit.clear();
         self.loading = LoadingState::default();
         self.pointer_blink_on = true;
@@ -1770,6 +1779,7 @@ impl UiState {
                 self.offsets.camera_x = x;
                 self.offsets.camera_y = y;
                 self.camera.follow_hero = false;
+                self.follow_applied = false;
                 self.camera.x = x;
                 self.camera.y = y;
             }
@@ -1981,18 +1991,55 @@ impl UiState {
         self.mark_persisted_state_dirty();
     }
 
+    /// Leaves follow-hero, adopting whatever it put on screen.
+    ///
+    /// The single exit path, because there are two ways out - the `f` key and
+    /// any arrow key - and they must agree. Adopting *both* axes matters:
+    /// stepping one axis on the way out would leave the other holding a value
+    /// authored before follow was ever switched on, and the next frame's clamp
+    /// would snap the view to it.
+    ///
+    /// Adoption is skipped when follow never reached a frame. The runtime
+    /// drains every queued event before syncing the camera, so an on/off pair
+    /// arriving together would otherwise adopt the previous frame's *clamped*
+    /// position and write it into the authored layout - the loss this whole
+    /// split exists to prevent, reached by tapping `f` twice.
+    fn exit_follow_hero(&mut self) {
+        if !self.camera.follow_hero {
+            return;
+        }
+        self.camera.follow_hero = false;
+        if self.follow_applied {
+            self.offsets.camera_x = self.camera.x;
+            self.offsets.camera_y = self.camera.y;
+            self.mark_persisted_state_dirty();
+        }
+        self.follow_applied = false;
+    }
+
     pub fn toggle_follow_hero(&mut self) {
-        self.camera.follow_hero = !self.camera.follow_hero;
+        if self.camera.follow_hero {
+            self.exit_follow_hero();
+        } else {
+            self.camera.follow_hero = true;
+            self.follow_applied = false;
+        }
     }
 
     pub fn store_camera_home(&mut self) {
-        self.offsets.camera_home_x = self.offsets.camera_x;
-        self.offsets.camera_home_y = self.offsets.camera_y;
+        // From the rendered pair, because "home" means the view on screen. The
+        // two diverge whenever the terminal clamps, and during follow-hero the
+        // authored pair is the *pre-follow* position - so reading it here
+        // bookmarked somewhere the user was not looking, and `recall` then
+        // jumped to a place they never chose.
+        self.offsets.camera_home_x = self.camera.x;
+        self.offsets.camera_home_y = self.camera.y;
         self.mark_persisted_state_dirty();
     }
 
     pub fn recall_camera_home(&mut self) {
         self.camera.follow_hero = false;
+        self.follow_applied = false;
         self.offsets.camera_x = self.offsets.camera_home_x;
         self.offsets.camera_y = self.offsets.camera_home_y;
         self.camera.x = self.offsets.camera_x;
@@ -2010,17 +2057,46 @@ impl UiState {
         self.mark_persisted_state_dirty();
     }
 
-    pub fn clamp_camera(&mut self, screen_w: i32, screen_h: i32) {
-        use crate::scene::{CAMERA_OVERSCAN_CELLS, WORLD_HALF_H, WORLD_HALF_W};
+    /// Fits the rendered camera to a terminal frame, for one frame.
+    ///
+    /// The decision this makes is *which rectangle the camera is fitted to*, and
+    /// it lives here rather than in the runtime loop so it can be tested. The
+    /// answer is `scene::world_rect` - the terminal minus the footer row, which
+    /// is what the renderer actually draws through. While the loop passed the
+    /// full terminal height instead, the state's clamp window sat one row
+    /// tighter than the renderer's, and the position follow-hero left behind
+    /// fell outside it: the view snapped a row the moment follow was switched
+    /// off. Nothing caught that, because the choice was a loop-local expression
+    /// no test could reach.
+    pub fn fit_camera_to_frame(&mut self, full: ratatui::layout::Rect) {
+        let drawn = crate::scene::world_rect(full);
+        let (w, h) = (drawn.width as i32, drawn.height as i32);
+        if self.camera.follow_hero {
+            self.sync_camera_to_viewport_center(w, h);
+        } else {
+            self.clamp_camera(w, h);
+        }
+    }
 
-        let min_x = -WORLD_HALF_W - CAMERA_OVERSCAN_CELLS;
-        let max_x = WORLD_HALF_W - 1 + CAMERA_OVERSCAN_CELLS - screen_w + 1;
-        let min_y = -WORLD_HALF_H - CAMERA_OVERSCAN_CELLS;
-        let max_y = WORLD_HALF_H - 1 + CAMERA_OVERSCAN_CELLS - screen_h + 1;
-        self.offsets.camera_x = clamp_axis(self.offsets.camera_x, min_x, max_x, screen_w);
-        self.offsets.camera_y = clamp_axis(self.offsets.camera_y, min_y, max_y, screen_h);
-        self.camera.x = self.offsets.camera_x;
-        self.camera.y = self.offsets.camera_y;
+    /// Fits the *rendered* camera to the current terminal.
+    ///
+    /// Writes `self.camera` only. `offsets.camera_x`/`camera_y` are the
+    /// position the user authored and the one that gets persisted; this runs on
+    /// every frame, so writing them here meant merely *looking* at a saved
+    /// layout in a differently-sized terminal rewrote it. That was survivable
+    /// while the quit-confirm save was the only way to disk and easy to miss;
+    /// with the autosave it means one unrelated edit silently narrows a stored
+    /// layout to whatever the current terminal happened to allow. Passive
+    /// rendering must not author state - only an explicit action may.
+    pub fn clamp_camera(&mut self, screen_w: i32, screen_h: i32) {
+        let (x, y) = clamped_camera(
+            self.offsets.camera_x,
+            self.offsets.camera_y,
+            screen_w,
+            screen_h,
+        );
+        self.camera.x = x;
+        self.camera.y = y;
     }
 
     pub fn preserve_camera_center_on_resize(
@@ -2030,46 +2106,74 @@ impl UiState {
         new_screen_w: i32,
         new_screen_h: i32,
     ) {
+        // Transforms the authored position, not the rendered one. Working from
+        // the rendered camera would bake a clamp into storage, which is exactly
+        // what this split removes. A resize is a discrete event with its own
+        // contract (preserve the viewport centre), so re-authoring here is
+        // legitimate where the per-frame paths' writes were not - and it marks
+        // the state dirty rather than letting a later unrelated save carry the
+        // change out under its own name.
         let center_x = self.offsets.camera_x + old_screen_w / 2;
         let center_y = self.offsets.camera_y + old_screen_h / 2;
         self.offsets.camera_x = center_x - new_screen_w / 2;
         self.offsets.camera_y = center_y - new_screen_h / 2;
+        self.mark_persisted_state_dirty();
         self.clamp_camera(new_screen_w, new_screen_h);
     }
 
+    /// Centres the *rendered* camera on the viewport while follow-hero is on.
+    ///
+    /// Writes `self.camera` only, for the same reason as `clamp_camera`: this
+    /// runs every frame, and follow-hero is a transient session mode that is
+    /// never persisted, so it must not overwrite the authored position. Turning
+    /// follow off adopts wherever it left the camera - see
+    /// `toggle_follow_hero` - which is an explicit action and may author.
     pub fn sync_camera_to_viewport_center(&mut self, screen_w: i32, screen_h: i32) {
-        self.offsets.camera_x = -(screen_w / 2);
-        self.offsets.camera_y = -(screen_h / 2);
-        self.camera.x = self.offsets.camera_x;
-        self.camera.y = self.offsets.camera_y;
+        self.camera.x = -(screen_w / 2);
+        self.camera.y = -(screen_h / 2);
+        self.follow_applied = true;
+    }
+
+    /// Steps the camera by one cell, authoring the result.
+    ///
+    /// Starts from the *rendered* position rather than the authored one: when
+    /// the two differ because the terminal clamped the view, stepping from the
+    /// authored value would take as many presses as the gap before anything
+    /// moved on screen. Stepping from what is displayed keeps the first
+    /// keypress responsive, and the result becomes the new authored position -
+    /// this is an explicit action, so it is entitled to author.
+    fn step_camera(&mut self, dx: i32, dy: i32) {
+        // An arrow key is also a way out of follow-hero, so it exits through
+        // the shared path rather than clearing the flag itself.
+        self.exit_follow_hero();
+        // Only the axis actually being stepped is re-authored. Writing both
+        // would let a horizontal move overwrite the authored `camera_y` with a
+        // clamped one, which is the same passive-authoring bug in miniature.
+        if dx != 0 {
+            self.offsets.camera_x = self.camera.x + dx;
+            self.camera.x = self.offsets.camera_x;
+        }
+        if dy != 0 {
+            self.offsets.camera_y = self.camera.y + dy;
+            self.camera.y = self.offsets.camera_y;
+        }
+        self.mark_persisted_state_dirty();
     }
 
     pub fn move_camera_left(&mut self) {
-        self.camera.follow_hero = false;
-        self.offsets.camera_x -= 1;
-        self.camera.x = self.offsets.camera_x;
-        self.mark_persisted_state_dirty();
+        self.step_camera(-1, 0);
     }
 
     pub fn move_camera_right(&mut self) {
-        self.camera.follow_hero = false;
-        self.offsets.camera_x += 1;
-        self.camera.x = self.offsets.camera_x;
-        self.mark_persisted_state_dirty();
+        self.step_camera(1, 0);
     }
 
     pub fn move_camera_up(&mut self) {
-        self.camera.follow_hero = false;
-        self.offsets.camera_y += 1;
-        self.camera.y = self.offsets.camera_y;
-        self.mark_persisted_state_dirty();
+        self.step_camera(0, 1);
     }
 
     pub fn move_camera_down(&mut self) {
-        self.camera.follow_hero = false;
-        self.offsets.camera_y -= 1;
-        self.camera.y = self.offsets.camera_y;
-        self.mark_persisted_state_dirty();
+        self.step_camera(0, -1);
     }
 
     pub fn begin_quit(&mut self) -> bool {
@@ -2255,6 +2359,35 @@ fn default_hero() -> Hero {
     Hero::new(300, 120)
 }
 
+/// The camera position that actually fits `screen_w` x `screen_h`.
+///
+/// Pure, so the fit is testable without a terminal, and separate from the
+/// authored position it is derived from.
+fn clamped_camera(camera_x: i32, camera_y: i32, screen_w: i32, screen_h: i32) -> (i32, i32) {
+    use crate::scene::{
+        CAMERA_OVERSCAN_CELLS, WORLD_HALF_H, WORLD_HALF_W, WORLD_HEIGHT, WORLD_WIDTH,
+    };
+
+    // Once the viewport covers the whole world there is nothing left to pan, and
+    // `scene::camera_for_frame` force-centres. Clamping per-axis instead landed
+    // one cell away from that at exactly the boundary - a 212-wide or 57-row
+    // frame - because the per-axis fallback only triggers once the window is
+    // empty, which there it is not quite. Matching the renderer's condition
+    // keeps the state's camera equal to the drawn one everywhere.
+    if screen_w >= WORLD_WIDTH && screen_h >= WORLD_HEIGHT {
+        return (-(screen_w / 2), -(screen_h / 2));
+    }
+
+    let min_x = -WORLD_HALF_W - CAMERA_OVERSCAN_CELLS;
+    let max_x = WORLD_HALF_W - 1 + CAMERA_OVERSCAN_CELLS - screen_w + 1;
+    let min_y = -WORLD_HALF_H - CAMERA_OVERSCAN_CELLS;
+    let max_y = WORLD_HALF_H - 1 + CAMERA_OVERSCAN_CELLS - screen_h + 1;
+    (
+        clamp_axis(camera_x, min_x, max_x, screen_w),
+        clamp_axis(camera_y, min_y, max_y, screen_h),
+    )
+}
+
 fn clamp_axis(value: i32, min: i32, max: i32, viewport_len: i32) -> i32 {
     if min > max {
         -(viewport_len / 2)
@@ -2356,7 +2489,7 @@ mod tests {
     }
 
     #[test]
-    fn clamp_camera_limits_windowed_pan_to_one_cell_overscan() {
+    fn clamp_camera_fits_the_view_without_touching_the_authored_position() {
         let mut ui = UiState::new();
         ui.camera.follow_hero = false;
         ui.offsets.camera_x = 500;
@@ -2366,24 +2499,303 @@ mod tests {
 
         ui.clamp_camera(124, 32);
 
-        assert_eq!(ui.offsets.camera_x, -17);
-        assert_eq!(ui.offsets.camera_y, -29);
-        assert_eq!(ui.camera.x, ui.offsets.camera_x);
-        assert_eq!(ui.camera.y, ui.offsets.camera_y);
+        // The rendered camera is pulled into the one-cell overscan window...
+        assert_eq!(ui.camera.x, -17);
+        assert_eq!(ui.camera.y, -29);
+        // ...and the authored position, which is what gets persisted, is left
+        // exactly as the user set it.
+        assert_eq!(ui.offsets.camera_x, 500);
+        assert_eq!(ui.offsets.camera_y, -500);
     }
 
     #[test]
     fn follow_hero_camera_syncs_to_viewport_center_without_disabling_follow_mode() {
         let mut ui = UiState::new();
         ui.camera.follow_hero = true;
+        let authored = (ui.offsets.camera_x, ui.offsets.camera_y);
 
         ui.sync_camera_to_viewport_center(124, 32);
 
         assert!(ui.camera.follow_hero);
-        assert_eq!(ui.offsets.camera_x, -62);
-        assert_eq!(ui.offsets.camera_y, -16);
         assert_eq!(ui.camera.x, -62);
         assert_eq!(ui.camera.y, -16);
+        // Follow-hero is a transient session mode and is never persisted, so it
+        // must not rewrite the authored position on the way past.
+        assert_eq!((ui.offsets.camera_x, ui.offsets.camera_y), authored);
+    }
+
+    /// The regression the authored/rendered split exists for.
+    ///
+    /// Opening a saved layout in a terminal that cannot show it used to rewrite
+    /// the stored camera on the very first frame, so simply *looking* at the
+    /// layout narrowed it. With the autosave that loss became permanent on the
+    /// next unrelated edit.
+    #[test]
+    fn viewing_a_saved_layout_in_a_smaller_terminal_does_not_rewrite_it() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
+        ui.offsets.camera_x = -71;
+        ui.offsets.camera_y = -22;
+
+        // Several frames at a width that cannot accommodate it.
+        for _ in 0..10 {
+            ui.clamp_camera(200, 50);
+        }
+
+        assert_eq!(ui.offsets.camera_x, -71);
+        assert_eq!(ui.offsets.camera_y, -22);
+        assert!(
+            !ui.persisted_state_dirty,
+            "rendering must not mark state dirty, or the autosave would write the clamped value"
+        );
+        assert_ne!(
+            ui.camera.x, ui.offsets.camera_x,
+            "the rendered camera should differ here, or this proves nothing"
+        );
+    }
+
+    /// Moving steps from what is on screen, so a clamped view still responds to
+    /// the first keypress instead of needing several to catch up.
+    #[test]
+    fn moving_the_camera_steps_from_the_rendered_position() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
+        ui.offsets.camera_x = 500;
+        ui.clamp_camera(124, 32);
+        let rendered = ui.camera.x;
+        assert_ne!(rendered, 500, "precondition: the view is clamped");
+
+        ui.move_camera_left();
+
+        assert_eq!(ui.offsets.camera_x, rendered - 1);
+        assert_eq!(ui.camera.x, rendered - 1);
+        assert!(ui.persisted_state_dirty);
+    }
+
+    /// Moving on one axis must not re-author the other.
+    ///
+    /// A shared step helper makes it easy to write both axes at once, which
+    /// would let a horizontal move overwrite the authored `camera_y` with the
+    /// clamped one - the same passive-authoring bug this batch removes, in
+    /// miniature. Caught exactly that way while refactoring the four movers
+    /// onto one helper.
+    #[test]
+    fn stepping_one_camera_axis_leaves_the_other_authored_value_alone() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
+        ui.offsets.camera_x = -71;
+        ui.offsets.camera_y = 500;
+        ui.clamp_camera(124, 32);
+        assert_ne!(
+            ui.camera.y, ui.offsets.camera_y,
+            "precondition: the vertical view is clamped"
+        );
+
+        ui.move_camera_left();
+
+        assert_eq!(
+            ui.offsets.camera_y, 500,
+            "a horizontal move must not touch the authored vertical position"
+        );
+    }
+
+    /// The camera the state maintains must equal the camera actually drawn.
+    ///
+    /// This is the guard for the viewport definition itself, so it deliberately
+    /// goes through the *real* renderer (`scene::build_render_state`) and the
+    /// *real* shared derivation (`scene::world_rect`) rather than restating
+    /// either. Feeding both sides the same number would make it tautological -
+    /// which is exactly how the first version of this test managed to pass with
+    /// the fix reverted.
+    ///
+    /// The renderer draws through a rect one row shorter than the terminal (the
+    /// footer). While the state clamped against the full height its window sat
+    /// one row tighter, so the position follow-hero left behind fell outside it
+    /// and the view snapped a row the moment follow was switched off - at
+    /// terminal height 58 with a width under the full world.
+    #[test]
+    fn the_state_camera_matches_the_camera_that_is_actually_drawn() {
+        use ratatui::layout::Rect;
+
+        // Even heights are what discriminate (33/2 == 32/2), and the sizes at
+        // and just past the point where the viewport covers the world are where
+        // the state and the renderer used to part company.
+        for (w, h) in [
+            (124_u16, 33_u16),
+            (124, 34),
+            (124, 58),
+            (124, 59),
+            (200, 50),
+            (80, 24),
+            (212, 56),
+            (212, 57),
+            (212, 58),
+            (240, 80),
+        ] {
+            for follow in [true, false] {
+                let mut ui = UiState::new();
+                if follow {
+                    ui.toggle_follow_hero();
+                }
+                // Through the same entry point the runtime uses, so the choice
+                // of rectangle is under test rather than restated here.
+                ui.fit_camera_to_frame(Rect::new(0, 0, w, h));
+
+                // What the renderer will put on screen for this exact frame.
+                let rendered = crate::scene::build_render_state(Rect::new(0, 0, w, h), &ui)
+                    .hud
+                    .camera;
+
+                assert_eq!(
+                    (ui.camera.x, ui.camera.y),
+                    (rendered.x, rendered.y),
+                    "state and renderer disagree at {w}x{h} (follow={follow})"
+                );
+            }
+        }
+    }
+
+    /// "Home" must be the view on screen, not the authored pair behind it.
+    ///
+    /// During follow-hero the two diverge - the authored pair still holds the
+    /// pre-follow position - so reading it here bookmarked somewhere the user
+    /// was not looking, and `recall` later jumped to a place they never chose.
+    #[test]
+    fn storing_camera_home_during_follow_records_what_is_on_screen() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -60;
+        ui.offsets.camera_y = -15;
+        ui.toggle_follow_hero();
+        ui.sync_camera_to_viewport_center(124, 32);
+        assert_ne!(
+            (ui.camera.x, ui.camera.y),
+            (ui.offsets.camera_x, ui.offsets.camera_y),
+            "precondition: following has moved the view off the authored pair"
+        );
+
+        ui.store_camera_home();
+
+        assert_eq!(ui.offsets.camera_home_x, ui.camera.x);
+        assert_eq!(ui.offsets.camera_home_y, ui.camera.y);
+        assert_eq!(
+            (ui.offsets.camera_home_x, ui.offsets.camera_home_y),
+            (-62, -16)
+        );
+    }
+
+    /// Bug A: an arrow key during follow-hero must not leave the perpendicular
+    /// axis on a stale authored value.
+    ///
+    /// `step_camera` also exits follow, so if it adopted only the axis it
+    /// steps, the other kept a value authored before follow was switched on and
+    /// the next frame's clamp snapped the view to it - a sideways lurch on a
+    /// keypress that should only move vertically.
+    #[test]
+    fn an_arrow_key_during_follow_hero_does_not_lurch_the_other_axis() {
+        let mut ui = UiState::new();
+        ui.offsets.camera_x = -107;
+        ui.offsets.camera_y = -15;
+        ui.toggle_follow_hero();
+        assert!(ui.camera.follow_hero);
+        ui.sync_camera_to_viewport_center(124, 32);
+        assert_eq!((ui.camera.x, ui.camera.y), (-62, -16));
+
+        ui.move_camera_up();
+
+        assert!(!ui.camera.follow_hero);
+        // Both axes adopted the followed position; only y then stepped.
+        assert_eq!(ui.offsets.camera_x, -62);
+        assert_eq!(ui.offsets.camera_y, -15);
+
+        // The next frame must not move the view.
+        let before = (ui.camera.x, ui.camera.y);
+        ui.clamp_camera(124, 32);
+        assert_eq!(
+            (ui.camera.x, ui.camera.y),
+            before,
+            "the view must be stable after the step, not snap to a stale axis"
+        );
+    }
+
+    /// Bug B: an on/off pair of `f` presses arriving in one event drain must not
+    /// bake the clamped view into the authored layout.
+    ///
+    /// The runtime drains every queued event before syncing the camera, so on
+    /// the second toggle `camera.x`/`camera.y` still hold the *previous*
+    /// frame's clamp output. Adopting that would write the clamped value over
+    /// the authored one - exactly the loss the split exists to prevent.
+    #[test]
+    fn toggling_follow_hero_twice_before_a_frame_keeps_the_authored_position() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
+        ui.offsets.camera_x = -71;
+        ui.offsets.camera_y = -22;
+        ui.clamp_camera(200, 50);
+        assert_ne!(
+            ui.camera.x, ui.offsets.camera_x,
+            "precondition: the view is clamped away from the authored position"
+        );
+
+        // Both presses land before the next sync.
+        ui.toggle_follow_hero();
+        ui.toggle_follow_hero();
+
+        assert!(!ui.camera.follow_hero);
+        assert_eq!(ui.offsets.camera_x, -71);
+        assert_eq!(ui.offsets.camera_y, -22);
+        assert!(
+            !ui.persisted_state_dirty,
+            "nothing was authored, so nothing should be queued for the autosave"
+        );
+    }
+
+    /// A resize re-authors, so it must say so - the autosave is what carries the
+    /// change to disk, and a silent one would travel under an unrelated edit's
+    /// name.
+    #[test]
+    fn a_resize_marks_the_state_dirty() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
+        ui.clamp_camera(124, 32);
+        assert!(!ui.persisted_state_dirty);
+
+        ui.preserve_camera_center_on_resize(124, 32, 156, 40);
+
+        assert!(ui.persisted_state_dirty);
+    }
+
+    /// A resize on a clamped view must transform the authored position, not the
+    /// rendered one, or it would bake the clamp into storage.
+    #[test]
+    fn a_resize_on_a_clamped_view_does_not_bake_the_clamp_into_storage() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = false;
+        ui.offsets.camera_x = -71;
+        ui.clamp_camera(200, 50);
+        assert_ne!(ui.camera.x, ui.offsets.camera_x, "precondition: clamped");
+
+        ui.preserve_camera_center_on_resize(200, 50, 180, 50);
+
+        // -71 + 100 - 90 = -61: the authored value moved by the half-width
+        // difference, with no trace of the clamped -93.
+        assert_eq!(ui.offsets.camera_x, -61);
+    }
+
+    /// Turning follow-hero off keeps the view rather than snapping back, and
+    /// does so by authoring explicitly instead of letting a per-frame path do it.
+    #[test]
+    fn turning_follow_hero_off_adopts_the_rendered_position() {
+        let mut ui = UiState::new();
+        ui.camera.follow_hero = true;
+        ui.sync_camera_to_viewport_center(124, 32);
+        assert_ne!(ui.offsets.camera_x, ui.camera.x);
+
+        ui.toggle_follow_hero();
+
+        assert!(!ui.camera.follow_hero);
+        assert_eq!(ui.offsets.camera_x, -62);
+        assert_eq!(ui.offsets.camera_y, -16);
+        assert!(ui.persisted_state_dirty);
     }
 
     #[test]

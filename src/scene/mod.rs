@@ -181,8 +181,20 @@ pub fn render_scene(frame: &mut Frame<'_>, world: &WorldState, ui: &UiState, fon
     render_scene_with_scene(&scene, frame, world, ui, fonts);
 }
 
+/// The rect the world is actually drawn through: the terminal minus the footer
+/// row.
+///
+/// Exposed because the camera has to be fitted to *this*, not to the terminal.
+/// The runtime clamps and centres `UiState`'s camera against it before the
+/// frame is built, and when the two disagreed by the footer row their clamp
+/// windows sat one apart - enough to snap the view when follow-hero was
+/// switched off on a tall terminal. One definition, used by both.
+pub fn world_rect(full: Rect) -> Rect {
+    Rect::new(full.x, full.y, full.width, full.height.saturating_sub(1))
+}
+
 pub fn build_render_state(full: Rect, ui: &UiState) -> RenderState {
-    let world_rect = Rect::new(full.x, full.y, full.width, full.height.saturating_sub(1));
+    let world_rect = world_rect(full);
     let camera = camera_for_frame(world_rect, ui);
     let viewport = Viewport::from_camera(&camera, world_rect.width, world_rect.height);
     let viewport_rect = world_rect;

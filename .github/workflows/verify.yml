@@ -35,6 +35,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes chafa
 
+      - name: Compile all registered hero packages
+        run: cargo run --release -- --compile-all-heroes
+
       - name: Run full verification
         # YAM_DOCS_STRICT turns a missing markdown/spelling linter into a
         # failure instead of a skip, so a broken install step can never let CI

@@ -4,6 +4,15 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-09 10:04 CEST
+
+- extended CI to run the release binary's `--compile-all-heroes` path after
+  installing Chafa, so the registry-wide package refresh used by local machine
+  updates is exercised on every pull request rather than only on this iMac
+- kept the package output disposable in CI; the workflow validates the
+  source-owned compiler, geometry, frame counts, and manifest contract without
+  turning generated cache artifacts into repository state
+
 ## 2026-09-09 09:47 CEST
 
 - tightened updater hygiene so `scripts/update.sh` checks for Chafa before

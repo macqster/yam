@@ -4,6 +4,16 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-09 09:36 CEST
+
+- removed the last duplicated hero payload authority: the legacy Python
+  `hero/assets/hero_go.gif` path is now a repository-relative compatibility
+  symlink to `assets/hero_gif_1.gif`, after verifying the two payloads were
+  byte-identical before the conversion
+- retained the historical legacy path for frozen reference tooling while
+  making the Rust asset the one editable GIF source; updated the audit with
+  the portability and divergence rationale
+
 ## 2026-09-09 09:30 CEST
 
 - corrected the user-visible `hero_gif_2` policy: the previous `#336699`

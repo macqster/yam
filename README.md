@@ -100,8 +100,8 @@ check runtime identity:
 cargo run --release -- --identity
 ```
 
-compile a hero package (optional, and the only way to get one — the runtime
-never writes one on its own):
+compile one selected hero package explicitly (the runtime never writes a
+package during ordinary startup):
 
 ```bash
 cargo run --release -- --compile-hero

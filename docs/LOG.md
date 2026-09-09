@@ -4,6 +4,13 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-09 10:18 CEST
+
+- corrected the README compiler wording after the updater became
+  registry-aware: explicit `--compile-hero` is now described as a one-source
+  command, while `scripts/update.sh` / `--compile-all-heroes` is identified as
+  the normal machine refresh path
+
 ## 2026-09-09 10:04 CEST
 
 - extended CI to run the release binary's `--compile-all-heroes` path after

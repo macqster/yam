@@ -117,6 +117,12 @@ run_cargo_with_offline_fallback() {
 
 cd "$ROOT"
 
+if ! command -v chafa >/dev/null 2>&1; then
+  echo "[yam] chafa is required to refresh the registered hero packages" >&2
+  echo "[yam] install it through the host package baseline, then rerun this updater" >&2
+  exit 1
+fi
+
 append_diagnostics_event \
   install_start \
   version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)" \
@@ -124,6 +130,20 @@ append_diagnostics_event \
 
 run_cargo_with_offline_fallback "checking build" check --locked
 run_cargo_with_offline_fallback "rebuilding + reinstalling" install --path . --force --locked
+hero_bin="${YAM_RUST_BIN:-$HOME/.cargo/bin/yam-rust}"
+if [[ ! -x "$hero_bin" ]]; then
+  echo "[yam] installed runtime is missing after cargo install: $hero_bin" >&2
+  exit 1
+fi
+echo "[yam] compiling all registered hero packages..."
+hero_start_ms="$(now_ms)"
+"$hero_bin" --compile-all-heroes
+hero_end_ms="$(now_ms)"
+append_diagnostics_event \
+  install_step \
+  description="compiling all registered hero packages" \
+  mode=local-chafa \
+  duration_ms="$((hero_end_ms - hero_start_ms))"
 echo "[yam] installing launcher wrappers..."
 install_wrappers
 echo "[yam] done."

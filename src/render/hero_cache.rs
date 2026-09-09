@@ -10,11 +10,14 @@ use crate::render::cell_grid::CellGrid;
 /// purely to skip GIF-decode/chafa-spawn cost on ordinary startup and is
 /// never the authority for what the hero should look like. The validated,
 /// versioned authority is `render::hero_package::HeroPackage`; this type
-/// intentionally carries no manifest/provenance fields.
+/// carries only the small preset provenance needed to reject frames compiled
+/// with a different rendering policy.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HeroFrameSet {
     pub render_width: u16,
     pub render_height: u16,
+    pub preset_id: String,
+    pub compiler_args: Vec<String>,
     pub frames: Vec<CellGrid>,
 }
 
@@ -22,6 +25,8 @@ impl HeroFrameSet {
     pub fn from_lines(
         render_width: u16,
         render_height: u16,
+        preset_id: impl Into<String>,
+        compiler_args: Vec<String>,
         frames: &[Vec<Line<'static>>],
     ) -> Self {
         let frames = frames
@@ -31,6 +36,8 @@ impl HeroFrameSet {
         Self {
             render_width,
             render_height,
+            preset_id: preset_id.into(),
+            compiler_args,
             frames,
         }
     }
@@ -83,7 +90,13 @@ mod tests {
             )]),
         ]];
 
-        let frame_set = HeroFrameSet::from_lines(4, 2, &frames);
+        let frame_set = HeroFrameSet::from_lines(
+            4,
+            2,
+            "test-preset",
+            vec!["--symbols=braille".to_string()],
+            &frames,
+        );
         let round_trip = frame_set.to_lines();
 
         assert_eq!(round_trip.len(), 1);
@@ -110,7 +123,7 @@ mod tests {
             "stub",
             Style::default().fg(Color::Rgb(220, 216, 203)),
         )])]];
-        let frame_set = HeroFrameSet::from_lines(4, 1, &frames);
+        let frame_set = HeroFrameSet::from_lines(4, 1, "test-preset", vec![], &frames);
         let dir = tempdir().expect("temp dir should exist");
         let path = dir.path().join("hero-frames.json");
 

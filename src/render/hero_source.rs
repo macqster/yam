@@ -101,18 +101,16 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
     frame_count: 48,
     render_width: 96,
     render_height: 48,
-    cache_revision: 5,
-    // Measured 2026-08-19 against chafa 1.18.2 at the chosen absent_color:
-    // 923/4608 cells, 20.0%.
+    cache_revision: 6,
+    // Measured 2026-09-09 against chafa 1.18.2 at the non-overlapping
+    // absent_color: 1725/4608 cells, 37.4%. The dark tiers remain visible,
+    // matching the MBP reference rather than being culled as already-painted.
     min_frame0_coverage_percent: 10,
-    // #336699. Unlike IVY this deliberately overlaps its own palette, because
-    // the cull is wanted: flat fills render as fully-lit braille, and dropping
-    // the darkest tiers is what keeps the hero open rather than a solid mass.
-    // Chosen because 7c0307 and 332a29 have identical RGB sums (134 each), so
-    // no neutral value separates them - a chromatically opposite one does,
-    // keeping the dark red while still dropping the leggings and line art.
-    // Nearest art colour (104, 90, 110) at 69; see ACCEPTED_OVERLAP in chafa.rs.
-    absent_color: [51, 102, 153],
+    // #00e000 is absent from the source palette and is the least-clearance
+    // value measured that still clears Chafa's drop radius for both sources.
+    // It avoids the old #336699 overlap that discarded the leggings, dark
+    // red, and line art, while limiting edge bleed.
+    absent_color: [0, 224, 0],
 };
 
 /// Every hero source the runtime knows about.
@@ -247,7 +245,7 @@ mod tests {
     fn ivy_vector_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY_VECTOR.cache_file_name(),
-            "hero_gif_2.r5.96x48.frame_cache.json"
+            "hero_gif_2.r6.96x48.frame_cache.json"
         );
     }
 

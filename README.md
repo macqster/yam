@@ -100,12 +100,17 @@ check runtime identity:
 cargo run --release -- --identity
 ```
 
-compile a hero package (optional, and the only way to get one — the runtime
-never writes one on its own):
+compile one selected hero package explicitly (the runtime never writes a
+package during ordinary startup):
 
 ```bash
 cargo run --release -- --compile-hero
 ```
+
+To refresh the complete registered hero set, including both GIF packages used
+by source selection and fallback, run `cargo run --release --
+--compile-all-heroes`. `scripts/update.sh` performs this registry-wide compile
+after reinstalling the runtime.
 
 run the full maintenance gate:
 

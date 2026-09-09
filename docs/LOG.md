@@ -4,6 +4,68 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-09 10:18 CEST
+
+- corrected the README compiler wording after the updater became
+  registry-aware: explicit `--compile-hero` is now described as a one-source
+  command, while `scripts/update.sh` / `--compile-all-heroes` is identified as
+  the normal machine refresh path
+
+## 2026-09-09 10:04 CEST
+
+- extended CI to run the release binary's `--compile-all-heroes` path after
+  installing Chafa, so the registry-wide package refresh used by local machine
+  updates is exercised on every pull request rather than only on this iMac
+- kept the package output disposable in CI; the workflow validates the
+  source-owned compiler, geometry, frame counts, and manifest contract without
+  turning generated cache artifacts into repository state
+
+## 2026-09-09 09:47 CEST
+
+- tightened updater hygiene so `scripts/update.sh` checks for Chafa before
+  replacing the installed runtime; a missing renderer now fails before any
+  install mutation rather than after a partial refresh
+- reconciled the active rendering and audit prose with the corrected
+  non-overlapping source policy, removing stale references to an active
+  `ACCEPTED_OVERLAP` exception
+
+## 2026-09-09 09:36 CEST
+
+- removed the last duplicated hero payload authority: the legacy Python
+  `hero/assets/hero_go.gif` path is now a repository-relative compatibility
+  symlink to `assets/hero_gif_1.gif`, after verifying the two payloads were
+  byte-identical before the conversion
+- retained the historical legacy path for frozen reference tooling while
+  making the Rust asset the one editable GIF source; updated the audit with
+  the portability and divergence rationale
+
+## 2026-09-09 09:30 CEST
+
+- corrected the user-visible `hero_gif_2` policy: the previous `#336699`
+  `--bg` deliberately culled the dark leggings, dark red, and line art, which
+  contradicted the MBP reference. `IVY_VECTOR` now uses the measured
+  non-overlapping `#00e000` value, its cache revision is 6, and the overlap
+  exception was removed from the source gate
+- regenerated both local packages through the release compiler and confirmed
+  the vector package records `--bg=#00e000`, 48 frames, and the current source
+  digest; the measured frame-0 coverage returns to 1725/4608 cells (37.4%)
+- updated the active Chafa guidance and audit disposition while retaining the
+  old `#336699` measurements as historical evidence rather than silently
+  rewriting the record
+
+## 2026-09-09 - Make hero package refresh registry-wide
+
+- closed the remaining install-path drift: `scripts/update.sh` now invokes the
+  freshly installed runtime with `--compile-all-heroes`, so every registered
+  GIF gets a package compiled from the source-owned Chafa preset on each
+  machine update rather than leaving package/cache/live selection to local
+  history
+- added the explicit `--compile-all-heroes` CLI path; it iterates
+  `hero_source::ALL` and deliberately ignores `YAM_HERO_SOURCE`, while the
+  existing `--compile-hero` command remains useful for one-source inspection
+- recorded the compile step in opt-in diagnostics with its own duration and
+  made the updater fail if the expected freshly installed binary is absent
+
 Logging rule:
 
 - Prefer day headers in the form `## YYYY-MM-DD` for grouping.
@@ -23,6 +85,37 @@ Logging rule:
 - New entries should use a full date and time stamp whenever practical, especially when the exact sequence within a day matters.
 - Existing historical entries are kept intact unless a future maintenance pass explicitly needs to refine them.
 - Prefer append-only additions over rewriting older lines.
+
+## 2026-09-09 09:22 CEST
+
+- tightened the declarative hero-art contract so prepared output cannot drift
+  from the source-owned Chafa preset across machines. Package loading now
+  compares the manifest's literal `compiler_args` with the current preset,
+  while the disposable `HeroFrameSet` cache stores and checks both its preset
+  id and literal compiler arguments before reuse
+- added a regression test for a package whose preset label is unchanged but
+  whose literal compiler arguments differ; updated `docs/hero-package.md` and
+  `docs/hero-cache.md` to describe the stronger validation boundary
+- existing pre-change caches are intentionally disposable: their old JSON
+  lacks the new provenance fields, so they fall through once and regenerate
+  from the current source descriptor and shared preset
+
+## 2026-09-09 09:07 CEST
+
+- completed the local YAM dependency audit after reconciling the checkout and
+  removing the obsolete Claude worktree. Rust/Cargo 1.98.0, Chafa 1.18.2,
+  markdownlint-cli2 0.23.2, CSpell 10.1.1, Node 26.7.0, npm 11.19.0, and
+  cargo-audit 0.22.2 are now installed and discoverable on `PATH`; the latter
+  was installed with Homebrew because it was the only CI-required project tool
+  missing on this machine
+- `cargo audit` loaded 1,242 RustSec advisories and exited successfully. It
+  reported one allowed unsoundness warning, `RUSTSEC-2026-0253` affecting
+  transitive `lru` 0.18.1 through `ratatui-core`; no blocking vulnerability was
+  reported. The dependency risk note in `docs/audit.md` now records this
+  current result instead of the stale 2026-08-07 no-findings result
+- reran `bash scripts/verify.sh` after installation and documentation updates:
+  markdown and spelling checks passed, all ownership/check gates passed, and
+  all 385 tests passed
 
 ## 2026-09-06 13:35 CEST
 

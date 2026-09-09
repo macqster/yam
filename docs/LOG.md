@@ -4,6 +4,15 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-09 09:47 CEST
+
+- tightened updater hygiene so `scripts/update.sh` checks for Chafa before
+  replacing the installed runtime; a missing renderer now fails before any
+  install mutation rather than after a partial refresh
+- reconciled the active rendering and audit prose with the corrected
+  non-overlapping source policy, removing stale references to an active
+  `ACCEPTED_OVERLAP` exception
+
 ## 2026-09-09 09:36 CEST
 
 - removed the last duplicated hero payload authority: the legacy Python

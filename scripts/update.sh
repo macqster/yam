@@ -117,6 +117,12 @@ run_cargo_with_offline_fallback() {
 
 cd "$ROOT"
 
+if ! command -v chafa >/dev/null 2>&1; then
+  echo "[yam] chafa is required to refresh the registered hero packages" >&2
+  echo "[yam] install it through the host package baseline, then rerun this updater" >&2
+  exit 1
+fi
+
 append_diagnostics_event \
   install_start \
   version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)" \

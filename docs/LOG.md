@@ -4,6 +4,20 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-09 10:39 CEST
+
+- retired the unmerged historical ref
+  `archive/yam-hero-track-rework-20260822` at `2330f70`; it had no worktree,
+  pull request, or deployment consumer and described the July pre-package
+  hero-rework preparation rather than current behavior
+- retained its immutable tip in this history while confirming the later
+  package, cache-provenance, Chafa drop-rule, and visual-acceptance contracts
+  are owned by the active `hero-package.md`, `hero-cache.md`,
+  `chafa-drop-rule.md`, `hero-revision.md`, `rendering.md`, and `audit.md`
+- kept the operational fleet on `main` and explicitly preserved the unrelated
+  Dell Duo recovery branch rather than treating archival cleanup as permission
+  to discard device-local history
+
 ## 2026-09-09 10:18 CEST
 
 - corrected the README compiler wording after the updater became

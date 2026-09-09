@@ -25,6 +25,16 @@ cargo build --release
 target/release/yam-rust --compile-hero [STEM_OR_PATH]
 ```
 
+The install/update path uses the registry-wide form so every registered
+source has a fresh package on the machine:
+
+```bash
+target/release/yam-rust --compile-all-heroes
+```
+
+This command intentionally ignores `YAM_HERO_SOURCE`; it is a machine refresh
+of the complete registry, not a probe of the source selected for one launch.
+
 `STEM_OR_PATH` names a *registered* source, by stem (`hero_gif_1`), by full
 path, or by bare filename. Omitted, it is whichever source an ordinary launch
 would render - `hero_source::DEFAULT`, or whatever `YAM_HERO_SOURCE` selects -
@@ -82,7 +92,7 @@ machine-checkable facts:
 - every frame contains exactly `width * height` serialized cells
 - no frame is entirely blank (unstyled spaces), which would indicate a
   placeholder or a failed compile step
-- provenance fields (`compiler_id`, `preset_id`, `asset_digest`) are present
+- provenance fields (`compiler_id`, `preset_id`, `compiler_args`, `asset_digest`) are present
 - the package schema revision is supported by the current reader
 
 It returns every issue found, not just the first, as a `PackageValidation`
@@ -108,6 +118,7 @@ live path can always rebuild:
 
 - schema revision matches `HERO_PACKAGE_SCHEMA_REVISION`
 - `preset_id` matches the runtime's current `HERO_PRESET_ID`
+- `compiler_args` exactly match the runtime's current source-owned Chafa preset
 - render geometry matches what the caller asked for
 - the source file's SHA-256 digest matches the manifest's `asset_digest`
 - `validate()` reports no issues
@@ -116,6 +127,7 @@ That digest check is what makes a package safer than the frame cache it
 supersedes. The cache can only compare mtimes, so art swapped in with an older
 timestamp is served as trusted; a package is validated on content.
 
-The hero's dark-color defect was fixed separately on 2026-08-19 - see
+The hero's dark-color and silhouette defect was corrected on 2026-09-09 by
+removing the deliberate `hero_gif_2` palette overlap from its descriptor; see
 [`chafa-drop-rule.md`](chafa-drop-rule.md). Structural validation still cannot
 judge color, so the real-terminal review above remains required.

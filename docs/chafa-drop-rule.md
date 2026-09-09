@@ -118,11 +118,11 @@ That harness produced every number in this note. Two traps it must avoid:
    directory first - a revision number used by an earlier experiment can still
    be present and would be accepted as fresh.
 
-6. **If the value deliberately overlaps the palette**, list the source in
-   `ACCEPTED_OVERLAP` in `absent_color_is_actually_absent_from_every_source`
-   with its measured overlap. The gate then pins that number instead of
-   requiring separation, so drift in the palette, the radius, or the chosen
-   color still fails.
+6. **Only deliberately overlap the palette with an explicit visual review.**
+   The normal contract requires separation, and the test will reject a
+   significant overlap. If a future source truly needs culling, add a narrow
+   source-owned exception and document the exact keep-set and measurement in
+   the same change; do not make an implicit overlap the default policy.
 
 7. **Verify live against a fresh cache**, not only by test:
 
@@ -137,7 +137,7 @@ so it needs no build and no cache:
 ```sh
 chafa assets/hero_gif_2.gif --size 96x48 --format=symbols --symbols=braille \
   --colors=full --color-space=rgb --color-extractor=average --dither=none \
-  --fg-only --bg=#336699
+  --fg-only --bg=#00e000
 ```
 
 ## Reference Data For Current Assets
@@ -146,7 +146,11 @@ chafa assets/hero_gif_2.gif --size 96x48 --format=symbols --symbols=braille \
 distinct opaque colors; 93.8% of opaque pixels are those ten and the remaining
 6.16% is anti-aliasing fringe.
 
-Darkest survivable value per family at `--bg=#336699`, pinned to 0.012 HSV:
+The historical `#336699` sweep below is retained as evidence for why it was
+rejected; the active `hero_gif_2` package uses the non-overlapping
+`--bg=#00e000` value so the dark tiers remain visible.
+
+Darkest survivable value per family at the historical `--bg=#336699`, pinned to 0.012 HSV:
 
 | color | anchor V | floor V | headroom |
 | --- | --- | --- | --- |

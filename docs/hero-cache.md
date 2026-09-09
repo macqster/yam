@@ -17,7 +17,7 @@ The intended direction is:
 2. persist them as a runtime-owned cache
 3. let normal startup load that cache directly
 
-As of 0.4.9 this cache is the *second* choice, not the first: `hero_frames_cached_from` prefers a validated `HeroPackage` when one is present, then this cache, then the live chafa path. See [hero-package.md](hero-package.md). The distinction matters because a package is validated on the source's SHA-256 digest and its preset id, while this cache can only compare mtimes - art swapped in with an older timestamp defeats the cache but not a package.
+As of 0.4.9 this cache is the *second* choice, not the first: `hero_frames_cached_from` prefers a validated `HeroPackage` when one is present, then this cache, then the live chafa path. See [hero-package.md](hero-package.md). The distinction matters because a package is validated on the source's SHA-256 digest and its preset id, while this cache compares source freshness and carries the exact preset arguments - art swapped in with an older timestamp still defeats the cache but not a package.
 
 Runtime cache files live in the user cache directory, one per hero source:
 
@@ -63,6 +63,8 @@ The initial runtime cache contract is:
 - `HeroFrameSet`
   - `render_width`
   - `render_height`
+  - `preset_id`
+  - `compiler_args`
   - `frames: Vec<CellGrid>`
 - `CellGrid`
   - `width`
@@ -97,7 +99,7 @@ second, and live Chafa third. The package contract belongs in
 - Runtime startup should avoid GIF decode plus temporary-frame writes and
   per-frame process spawning whenever a valid package or cache is available.
 - Visible hero geometry, frame count, and color stability should stay aligned with the current Chafa baseline.
-- The cache should remain a runtime-owned representation, not a second independent rendering authority.
+- The cache should remain a runtime-owned representation, not a second independent rendering authority. Its stored preset id and literal compiler arguments must match the current source-owned preset before frames are reused.
 - The cache freshness rule should stay simple and explicit: cached hero frames are reusable when the cache file is at least as new as the source GIF. If the compile-time source path is no longer reachable after a build tree is moved or removed, an existing revision-matched cache remains reusable because it is the only path to real art.
 - Source changes are therefore expected to produce one rebuild, not a Chafa
   invocation on every animation frame; after the rebuild, animation reads the

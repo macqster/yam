@@ -53,6 +53,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.iter().any(|a| a == "--update") {
         return run("bash", &["scripts/update.sh"]);
     }
+    if args.iter().any(|a| a == "--compile-all-heroes") {
+        for source in render::hero_source::ALL {
+            println!("compiling registered hero source {:?}", source.stem);
+            render::hero_compiler::compile(&render::hero_compiler::CompileOptions::for_source(
+                source,
+            ))
+            .map(|_| ())
+            .map_err(|err| format!("hero source {:?} failed: {err}", source.stem))?;
+        }
+        return Ok(());
+    }
     if let Some(flag_pos) = args.iter().position(|a| a == "--compile-hero") {
         // The argument selects a *registered* source, by stem or path. It
         // cannot just override `source_path`: geometry and `absent_color` come
@@ -93,9 +104,9 @@ const AUTO_START_ENV: &str = "YAM_AUTO_START";
 /// racy under the parallel test harness.
 ///
 /// Note this is only reached for an ordinary run: `--version`, `--identity`,
-/// `--check-updates`, `--update` and `--compile-hero` are handled earlier in
-/// `main` and return before this point, so those modes are unaffected by the
-/// flags below.
+/// `--check-updates`, `--update`, `--compile-all-heroes` and `--compile-hero`
+/// are handled earlier in `main` and return before this point, so those modes
+/// are unaffected by the flags below.
 fn runtime_options(args: &[String], auto_start_env: Option<OsString>) -> runtime::RuntimeOptions {
     let initial_world_kind = if args.iter().any(|a| a == "--sandbox") {
         crate::core::world::WorldKind::Sandbox

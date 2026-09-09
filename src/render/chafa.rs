@@ -154,12 +154,19 @@ pub(crate) fn hero_package_path(source: &HeroSource) -> PathBuf {
 /// filesystem - the loader's other failure modes (missing file, unreadable
 /// source) are IO, but this is the part that decides whether a package is
 /// *the right one*, and it is the part worth pinning.
-fn manifest_matches(manifest: &HeroManifest, width: u16, height: u16, source_digest: &str) -> bool {
+fn manifest_matches(
+    manifest: &HeroManifest,
+    width: u16,
+    height: u16,
+    source_digest: &str,
+    expected_compiler_args: &[String],
+) -> bool {
     manifest.schema_revision == HERO_PACKAGE_SCHEMA_REVISION
         && manifest.preset_id == HERO_PRESET_ID
         && manifest.render_width == width
         && manifest.render_height == height
         && manifest.asset_digest == source_digest
+        && manifest.compiler_args == expected_compiler_args
 }
 
 /// Frames from a compiled `HeroPackage`, if one is present and provably built
@@ -177,7 +184,8 @@ fn load_packaged_hero_frames(
 ) -> Option<Vec<Vec<Line<'static>>>> {
     let package = load_hero_package(&hero_package_path(source)).ok()?;
     let digest = HeroManifest::digest_source_file(Path::new(source.path)).ok()?;
-    if !manifest_matches(&package.manifest, width, height, &digest) {
+    let expected_args = chafa_preset_args(source.absent_color);
+    if !manifest_matches(&package.manifest, width, height, &digest, &expected_args) {
         return None;
     }
     if !package.validate().is_valid() {
@@ -203,7 +211,13 @@ pub fn hero_frames_cached_from(
 
     let frames = hero_frames_from(source, width, height);
     if hero_frames_are_cacheable(&frames) {
-        let frame_set = HeroFrameSet::from_lines(width, height, &frames);
+        let frame_set = HeroFrameSet::from_lines(
+            width,
+            height,
+            HERO_PRESET_ID,
+            chafa_preset_args(source.absent_color),
+            &frames,
+        );
         let _ = save_hero_frame_set(&cache_path, &frame_set);
     }
     frames
@@ -261,6 +275,11 @@ fn load_cached_hero_frames(
 
     let frame_set = load_hero_frame_set(path).ok()?;
     if frame_set.render_width != width || frame_set.render_height != height {
+        return None;
+    }
+    if frame_set.preset_id != HERO_PRESET_ID
+        || frame_set.compiler_args != chafa_preset_args(source.absent_color)
+    {
         return None;
     }
     if frame_set.frames.is_empty() {
@@ -584,14 +603,6 @@ mod tests {
         }
     }
 
-    /// Sources whose `absent_color` is deliberately inside their own palette,
-    /// with the pixel count that choice puts inside `DROP_RADIUS` in the worst
-    /// frame. These are accepted exceptions rather than absences, so the gate
-    /// pins the number instead of requiring separation: the art is still
-    /// guarded, because any drift in the palette, the radius, or the chosen
-    /// colour changes this count and fails.
-    const ACCEPTED_OVERLAP: &[(&str, usize)] = &[("hero_gif_2", 259464)];
-
     /// `absent_color` only works if it is genuinely absent.
     ///
     /// It is handed to chafa as the colour that is already on screen, so any
@@ -613,8 +624,6 @@ mod tests {
     /// On `hero_gif_1` that fringe is 108 of 249 distinct colours, and it was
     /// what set this gate's reported clearance before 0.4.3.
     ///
-    /// A source listed in `ACCEPTED_OVERLAP` overlaps its palette on purpose
-    /// and has that overlap pinned instead of being required to separate.
     #[test]
     fn absent_color_is_actually_absent_from_every_source() {
         const DROP_RADIUS: i32 = 128;
@@ -654,17 +663,6 @@ mod tests {
             }
 
             let (frame_index, colour) = offender.expect("every source has opaque pixels");
-
-            if let Some((_, pinned)) = ACCEPTED_OVERLAP.iter().find(|(name, _)| *name == stem) {
-                assert_eq!(
-                    worst_frame_inside, *pinned,
-                    "{stem} is an accepted overlap pinned at {pinned} pixels within \
-                     {DROP_RADIUS} of its absent_color {:?}, but now measures \
-                     {worst_frame_inside}. Re-pin it only if the change was intended.",
-                    source.absent_color
-                );
-                continue;
-            }
 
             assert!(
                 worst_frame_inside < significant,
@@ -840,7 +838,7 @@ mod tests {
             compiler_id: "chafa".to_string(),
             compiler_version: "test".to_string(),
             preset_id: super::HERO_PRESET_ID.to_string(),
-            compiler_args: vec![],
+            compiler_args: super::chafa_preset_args([51, 102, 153]),
             render_width: 96,
             render_height: 48,
             schema_revision: HERO_PACKAGE_SCHEMA_REVISION,
@@ -853,7 +851,8 @@ mod tests {
             &manifest_for_tests("abc"),
             96,
             48,
-            "abc"
+            "abc",
+            &super::chafa_preset_args([51, 102, 153])
         ));
     }
 
@@ -866,7 +865,8 @@ mod tests {
             &manifest_for_tests("abc"),
             96,
             48,
-            "a-different-digest"
+            "a-different-digest",
+            &super::chafa_preset_args([51, 102, 153])
         ));
     }
 
@@ -876,7 +876,26 @@ mod tests {
     fn a_manifest_from_another_preset_is_rejected() {
         let mut manifest = manifest_for_tests("abc");
         manifest.preset_id = "rgb-median-fgonly-braille-v1".to_string();
-        assert!(!super::manifest_matches(&manifest, 96, 48, "abc"));
+        assert!(!super::manifest_matches(
+            &manifest,
+            96,
+            48,
+            "abc",
+            &super::chafa_preset_args([51, 102, 153])
+        ));
+    }
+
+    #[test]
+    fn a_manifest_with_different_literal_compiler_args_is_rejected() {
+        let mut manifest = manifest_for_tests("abc");
+        manifest.compiler_args.push("--font-ratio=1/1".to_string());
+        assert!(!super::manifest_matches(
+            &manifest,
+            96,
+            48,
+            "abc",
+            &super::chafa_preset_args([51, 102, 153])
+        ));
     }
 
     #[test]
@@ -885,12 +904,19 @@ mod tests {
             &manifest_for_tests("abc"),
             80,
             48,
-            "abc"
+            "abc",
+            &super::chafa_preset_args([51, 102, 153])
         ));
 
         let mut manifest = manifest_for_tests("abc");
         manifest.schema_revision = HERO_PACKAGE_SCHEMA_REVISION + 1;
-        assert!(!super::manifest_matches(&manifest, 96, 48, "abc"));
+        assert!(!super::manifest_matches(
+            &manifest,
+            96,
+            48,
+            "abc",
+            &super::chafa_preset_args([51, 102, 153])
+        ));
     }
 
     #[test]

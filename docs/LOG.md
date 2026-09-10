@@ -4,6 +4,21 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-10 18:18 CEST
+
+- published the restored default hero contract through PR #37 after the
+  required GitHub `verify` workflow passed (registry-wide package compilation,
+  full verification, and dependency audit); `main` merged at `6c0e828`
+- deployed the merged source to MBP and Dell Duo. Both generated r7 packages
+  from the literal median/diffusion/`1x1`-grain contract; Duo retained Chafa
+  1.14.5 and recorded the same default `hero_gif_2` arguments, including
+  `--bg=#336699`, rather than receiving an operating-system package update
+- completed live `tmux` smoke checks on both machines and received visual
+  acceptance for the corrected hero shape; this records a real-terminal
+  disposition, while package validation remains structural evidence only
+- pruned the merged review branch locally and remotely; retained Duo's
+  unrelated `duo-wip-260902` recovery branch untouched
+
 ## 2026-09-10 17:26 CEST
 
 - restored the user-approved default `hero_gif_2` Chafa contract: `96x48`

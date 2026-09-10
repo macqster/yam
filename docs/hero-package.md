@@ -127,7 +127,8 @@ That digest check is what makes a package safer than the frame cache it
 supersedes. The cache can only compare mtimes, so art swapped in with an older
 timestamp is served as trusted; a package is validated on content.
 
-The hero's dark-color and silhouette defect was corrected on 2026-09-09 by
-removing the deliberate `hero_gif_2` palette overlap from its descriptor; see
-[`chafa-drop-rule.md`](chafa-drop-rule.md). Structural validation still cannot
-judge color, so the real-terminal review above remains required.
+The default hero's current `#336699` overlap is deliberate and source-owned;
+its exact compiler arguments and pinned overlap guard are documented in
+[`chafa-drop-rule.md`](chafa-drop-rule.md). The September 9 non-overlapping
+experiment is historical rather than active policy. Structural validation still
+cannot judge color, so the real-terminal review above remains required.

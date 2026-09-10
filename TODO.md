@@ -94,7 +94,8 @@ Issue link rule:
 - `verify` keep `hero_source::IVY_VECTOR` / `assets/hero_gif_2.gif` as the
   current default and retain `IVY` / `assets/hero_gif_1.gif` as a registered
   comparison source; any source swap must remain explicit and reversible.
-- `verify` runtime startup remains package-first, then disposable cache, then
+- `verify` runtime startup uses a checksum-verified canonical package for a
+  source that declares one, then machine-local package, disposable cache, and
   live Chafa fallback; preserve fixed geometry, provenance checks, graceful
   fallback, and renderer ownership.
 - `verify` require real-terminal review of representative frames and motion

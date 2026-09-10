@@ -55,6 +55,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if args.iter().any(|a| a == "--compile-all-heroes") {
         for source in render::hero_source::ALL {
+            if source.has_canonical_package() {
+                println!(
+                    "registered hero source {:?} uses its reviewed canonical package; skipping local compile",
+                    source.stem
+                );
+                continue;
+            }
             println!("compiling registered hero source {:?}", source.stem);
             render::hero_compiler::compile(&render::hero_compiler::CompileOptions::for_source(
                 source,

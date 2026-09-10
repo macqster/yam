@@ -128,7 +128,9 @@ Last reviewed: 2026-09-10 (default hero contract published, deployed on MBP and 
   Cache revision 7 still invalidates prior frames; local manifests still bind
   literal invocation to output, but version text is no longer treated as
   visual-equivalence proof. MBP and Dell Duo received real-terminal visual
-  acceptance; iMac must be re-reviewed from the canonical package.
+  acceptance. iMac deployed the canonical package at `5c2acf5`; its installed
+  binary smoke no longer showed the detached dark mass, while direct display
+  acceptance remains a separate maintainer decision.
   - evidence: `src/render/chafa.rs`, `src/render/hero_source.rs`,
     `assets/hero_packages/`, `docs/hero-package.md`, `docs/LOG.md`
 - `low` Edge-cell bleed is the residual cost of a separated `absent_color` and is reduced, not eliminated (2026-08-19). `IVY` keeps `#00e000`, the least clearance that avoids its drop radius; the earlier cross-asset counts (`#ffffff` 0 off-palette cells, `#00e000` 8, `#00ff00` 15, `#00f0b0` 50) remain measurement history, not the default vector policy. `IVY_VECTOR` deliberately uses `#336699` and therefore has an explicit cull contract rather than a separation/bleed tradeoff.

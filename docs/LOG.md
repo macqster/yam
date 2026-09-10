@@ -4,6 +4,19 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-10 20:04 CEST
+
+- deployed the merged canonical-package repair (`5c2acf5`) to iMac from its
+  clean `main` checkout. The installed runtime identifies itself as build
+  `260910-1758 (5c2acf5)`; the tracked package's SHA-256 matched its sidecar
+- the updater compiled only the non-canonical legacy source and explicitly
+  skipped `hero_gif_2`, so the previous 19 MB iMac-local default package no
+  longer has precedence over the MBP-reviewed payload
+- an installed-binary `tmux` smoke reached the main scene with footer
+  `yam 0.4.11 (5c2acf5)` and did not reproduce the detached dark mass from the
+  earlier iMac capture. This is deployment and smoke evidence; direct visual
+  acceptance on the iMac display remains a separate maintainer decision
+
 ## 2026-09-10 19:55 CEST
 
 - investigated the iMac hero regression after deployment rather than changing

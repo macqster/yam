@@ -25,8 +25,8 @@ cargo build --release
 target/release/yam-rust --compile-hero [STEM_OR_PATH]
 ```
 
-The install/update path uses the registry-wide form so every registered
-source has a fresh package on the machine:
+The install/update path uses the registry-wide form to refresh every source
+that has no reviewed portable package:
 
 ```bash
 target/release/yam-rust --compile-all-heroes
@@ -34,6 +34,8 @@ target/release/yam-rust --compile-all-heroes
 
 This command intentionally ignores `YAM_HERO_SOURCE`; it is a machine refresh
 of the complete registry, not a probe of the source selected for one launch.
+It deliberately skips a source with a canonical package: recompiling that
+source locally would create a second visual authority.
 
 `STEM_OR_PATH` names a *registered* source, by stem (`hero_gif_1`), by full
 path, or by bare filename. Omitted, it is whichever source an ordinary launch
@@ -56,6 +58,30 @@ for it: `<cache dir>/<stem>.hero_package.json`.
 Geometry and `absent_color` come from the source's descriptor rather than
 constants, so a package cannot be rendered against a different drop reference
 than the runtime uses for the same asset.
+
+## Canonical Default Package
+
+The default `hero_gif_2` has a source-owned, gzip-compressed package at
+`assets/hero_packages/hero_gif_2.r7.rgb-median-diffusion-fgonly-braille-v3.json.gz`.
+Its adjacent `.sha256` file verifies the compressed bytes before the runtime
+decodes it. The default loader uses this artifact before any machine-local
+package, cache, or live Chafa compilation, and then applies the ordinary
+manifest, source-digest, geometry, literal-argument, and structural checks.
+
+This exception exists because the MBP arm64 and iMac x86_64 Chafa 1.18.2
+executables produced different `CellGrid` payloads from identical GIF bytes
+and literal arguments; the iMac-local result visibly created a large dark
+mass. Nominal Chafa version text is therefore provenance, not proof of
+cross-host visual equivalence. The reviewed MBP package is the one fleet
+authority for this default; it is not a cache and must not be overwritten by
+the updater.
+
+Refresh it only on the accepted MBP renderer after a real-terminal review of
+the candidate, using the release compiler and deterministic gzip (`gzip -9 -n`).
+Update the `.sha256` sidecar in the same reviewed change, run the full gate,
+and deploy the resulting source checkout. Do not copy an iMac-compiled default
+package into this path. `IVY` has no canonical package and remains on the
+normal local compiler path.
 
 ## Manifest Shape
 
@@ -110,11 +136,11 @@ visible output.
 
 ## Current Status
 
-Runtime wiring landed in 0.4.9: `hero_frames_cached_from` prefers a validated
-package over the frame cache and the live Chafa path, in that order. A package
-is used only when all of these hold, and any failure falls through silently
-rather than erroring, because a package is an optional acceleration and the
-live path can always rebuild:
+Runtime wiring landed in 0.4.9. For a source declaring one, the runtime first
+tries the checksum-verified canonical package; otherwise it prefers a validated
+machine-local package, then the frame cache, and finally the live Chafa path.
+Every package candidate is used only when all of these hold, and a failed
+candidate falls through rather than erroring:
 
 - schema revision matches `HERO_PACKAGE_SCHEMA_REVISION`
 - `preset_id` matches the runtime's current `HERO_PRESET_ID`

@@ -17,6 +17,7 @@
 //! `scripts/tmux-smoke.sh` is still required after any compiler/source
 //! change.
 
+use std::io::Read;
 use std::{fmt, fs, io, path::Path};
 
 use serde::{Deserialize, Serialize};
@@ -129,8 +130,14 @@ impl HeroPackage {
 
 #[allow(dead_code)]
 pub fn load_hero_package(path: &Path) -> io::Result<HeroPackage> {
-    let json = fs::read_to_string(path)?;
-    serde_json::from_str(&json).map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
+    load_hero_package_reader(fs::File::open(path)?)
+}
+
+/// Decode a package from any byte stream. The portable default package is
+/// compressed in the repository, while machine-local packages remain plain
+/// JSON in the cache directory; both must pass through the same serde shape.
+pub fn load_hero_package_reader<R: Read>(reader: R) -> io::Result<HeroPackage> {
+    serde_json::from_reader(reader).map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
 }
 
 pub fn save_hero_package(path: &Path, package: &HeroPackage) -> io::Result<()> {

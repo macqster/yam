@@ -62,6 +62,11 @@ pub struct HeroSource {
     /// drop radius. `absent_color_is_actually_absent_from_every_source` keeps the
     /// near side honest.
     pub absent_color: [u8; 3],
+    /// Repository-owned, gzip-compressed package accepted after a real
+    /// terminal review, if this source needs identical cells on every host.
+    /// The matching `.sha256` sidecar is part of the artifact contract.
+    /// `None` retains the normal local offline-compiler path.
+    pub canonical_package_path: Option<&'static str>,
 }
 
 /// The original BTAS/TNBA-derived Ivy hero.
@@ -85,6 +90,7 @@ pub const IVY: HeroSource = HeroSource {
     min_frame0_coverage_percent: 20,
     // Nearest renderable art colour is the green eye, (70, 78, 4), at 162.
     absent_color: [0, 224, 0],
+    canonical_package_path: None,
 };
 
 /// The Moho vector rebuild of the same window loop, and the hero since 0.4.1.
@@ -107,6 +113,10 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
     // its cull keeps the default hero open rather than a solid braille mass;
     // the overlap is pinned in chafa.rs and is part of the visual contract.
     absent_color: [51, 102, 153],
+    canonical_package_path: Some(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/assets/hero_packages/hero_gif_2.r7.rgb-median-diffusion-fgonly-braille-v3.json.gz"
+    )),
 };
 
 /// Every hero source the runtime knows about.
@@ -170,6 +180,14 @@ pub fn resolve_from_env() -> HeroSource {
 }
 
 impl HeroSource {
+    /// Whether this source has a reviewed portable package. A canonical
+    /// package is deliberately source-owned rather than a machine cache: it
+    /// prevents different Chafa builds from becoming competing visual
+    /// authorities under the same nominal preset and version.
+    pub fn has_canonical_package(&self) -> bool {
+        self.canonical_package_path.is_some()
+    }
+
     /// Compiled-package filename for this source.
     ///
     /// Deliberately carries no revision counter, unlike `cache_file_name`. A

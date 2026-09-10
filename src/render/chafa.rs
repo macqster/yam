@@ -1,11 +1,13 @@
 use std::{
     env, fs,
+    io::Read,
     path::{Path, PathBuf},
     process::{Command, Output},
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use ansi_to_tui::IntoText;
+use flate2::read::GzDecoder;
 use image::{codecs::gif::GifDecoder, AnimationDecoder, DynamicImage, ImageDecoder, ImageFormat};
 use image::{Rgba, RgbaImage};
 use ratatui::text::{Line, Text};
@@ -13,7 +15,7 @@ use ratatui::text::{Line, Text};
 use crate::render::cell_grid::CellGrid;
 use crate::render::hero_cache::{load_hero_frame_set, save_hero_frame_set, HeroFrameSet};
 use crate::render::hero_manifest::{HeroManifest, HERO_PACKAGE_SCHEMA_REVISION};
-use crate::render::hero_package::load_hero_package;
+use crate::render::hero_package::{load_hero_package, load_hero_package_reader, HeroPackage};
 use crate::render::hero_source::HeroSource;
 
 /// Human-readable name for the exact chafa preset below. Bump whenever
@@ -195,11 +197,54 @@ fn load_packaged_hero_frames(
     Some(package.frames.iter().map(CellGrid::to_lines).collect())
 }
 
+/// Read a reviewed package shipped with the source tree. The compressed bytes
+/// have an adjacent SHA-256 file so an interrupted checkout or local edit
+/// cannot silently become visual authority. The package still has to satisfy
+/// the ordinary source/preset/geometry validation below.
+fn load_canonical_hero_package(source: &HeroSource) -> Option<HeroPackage> {
+    let path = Path::new(source.canonical_package_path?);
+    let checksum_path = PathBuf::from(format!("{}.sha256", path.display()));
+    let expected = fs::read_to_string(checksum_path).ok()?;
+    let expected = expected.split_whitespace().next()?;
+    let actual = HeroManifest::digest_source_file(path).ok()?;
+    if actual != expected {
+        return None;
+    }
+
+    let compressed = fs::File::open(path).ok()?;
+    let mut decoder = GzDecoder::new(compressed);
+    let mut package_json = Vec::new();
+    decoder.read_to_end(&mut package_json).ok()?;
+    load_hero_package_reader(package_json.as_slice()).ok()
+}
+
+/// Frames from the source-owned canonical package, if this source declares
+/// one and its bytes plus ordinary package contract all validate.
+fn load_canonical_hero_frames(
+    source: &HeroSource,
+    width: u16,
+    height: u16,
+) -> Option<Vec<Vec<Line<'static>>>> {
+    let package = load_canonical_hero_package(source)?;
+    let digest = HeroManifest::digest_source_file(Path::new(source.path)).ok()?;
+    let expected_args = chafa_preset_args(source.absent_color);
+    if !manifest_matches(&package.manifest, width, height, &digest, &expected_args)
+        || !package.validate().is_valid()
+    {
+        return None;
+    }
+
+    Some(package.frames.iter().map(CellGrid::to_lines).collect())
+}
+
 pub fn hero_frames_cached_from(
     source: &HeroSource,
     width: u16,
     height: u16,
 ) -> Vec<Vec<Line<'static>>> {
+    if let Some(frames) = load_canonical_hero_frames(source, width, height) {
+        return frames;
+    }
     if let Some(frames) = load_packaged_hero_frames(source, width, height) {
         return frames;
     }
@@ -448,7 +493,7 @@ mod tests {
     use crate::render::hero_manifest::{HeroManifest, HERO_PACKAGE_SCHEMA_REVISION};
     use crate::render::hero_source::{self, HeroSource, DEFAULT as DEFAULT_HERO_SOURCE};
     use ratatui::text::Line;
-    use std::{fs, thread, time::Duration};
+    use std::{fs, path::Path, thread, time::Duration};
 
     #[test]
     fn hero_frame_buffer_has_multiple_frames() {
@@ -888,6 +933,24 @@ mod tests {
             "abc",
             &super::chafa_preset_args([51, 102, 153])
         ));
+    }
+
+    #[test]
+    fn default_canonical_package_is_intact_and_matches_its_source_contract() {
+        let source = crate::render::hero_source::DEFAULT;
+        assert!(source.has_canonical_package());
+        let package = super::load_canonical_hero_package(&source)
+            .expect("the tracked default package and checksum should decode");
+        let digest = HeroManifest::digest_source_file(Path::new(source.path))
+            .expect("tracked default source should be readable");
+        assert!(super::manifest_matches(
+            &package.manifest,
+            source.render_width,
+            source.render_height,
+            &digest,
+            &super::chafa_preset_args(source.absent_color),
+        ));
+        assert!(package.validate().is_valid());
     }
 
     /// The digest check is the whole reason a package is safer than the frame

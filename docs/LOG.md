@@ -4,6 +4,22 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-10 19:55 CEST
+
+- investigated the iMac hero regression after deployment rather than changing
+  Chafa flags again. The live iMac binary was correctly built from `0f5a29b`
+  and recorded the same `hero_gif_2` source digest, Chafa 1.18.2 version text,
+  and literal median/diffusion/`#336699` arguments as MBP, but its x86_64
+  compiler emitted different frame cells and visibly formed a dark mass
+- promoted the MBP-reviewed default output to a small deterministic gzip source
+  artifact with a SHA-256 sidecar. Runtime validates those compressed bytes and
+  the ordinary package/source contract before using it ahead of local package,
+  cache, or live compilation; this makes the accepted visual payload explicit
+  across hosts instead of assuming nominal compiler version equality
+- changed registry-wide package refresh to skip a source with a canonical
+  package, preventing the updater from silently replacing visual authority;
+  retained the local offline compiler path for the legacy selectable hero
+
 ## 2026-09-10 18:18 CEST
 
 - published the restored default hero contract through PR #37 after the

@@ -77,7 +77,7 @@ pub const IVY: HeroSource = HeroSource {
     frame_count: 64,
     render_width: 96,
     render_height: 48,
-    cache_revision: 6,
+    cache_revision: 7,
     // Measured 2026-08-19 against chafa 1.18.2: 932/4608 cells, 20.2%. The
     // floor is left at its original 20% rather than recalibrated here, but note
     // it now sits 0.2 points under the measurement, not the ~2x headroom the
@@ -101,16 +101,12 @@ pub const IVY_VECTOR: HeroSource = HeroSource {
     frame_count: 48,
     render_width: 96,
     render_height: 48,
-    cache_revision: 6,
-    // Measured 2026-09-09 against chafa 1.18.2 at the non-overlapping
-    // absent_color: 1725/4608 cells, 37.4%. The dark tiers remain visible,
-    // matching the MBP reference rather than being culled as already-painted.
+    cache_revision: 7,
     min_frame0_coverage_percent: 10,
-    // #00e000 is absent from the source palette and is the least-clearance
-    // value measured that still clears Chafa's drop radius for both sources.
-    // It avoids the old #336699 overlap that discarded the leggings, dark
-    // red, and line art, while limiting edge bleed.
-    absent_color: [0, 224, 0],
+    // #336699 deliberately overlaps this flat-filled source. Under --fg-only
+    // its cull keeps the default hero open rather than a solid braille mass;
+    // the overlap is pinned in chafa.rs and is part of the visual contract.
+    absent_color: [51, 102, 153],
 };
 
 /// Every hero source the runtime knows about.
@@ -237,7 +233,7 @@ mod tests {
     fn ivy_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY.cache_file_name(),
-            "hero_gif_1.r6.96x48.frame_cache.json"
+            "hero_gif_1.r7.96x48.frame_cache.json"
         );
     }
 
@@ -245,7 +241,7 @@ mod tests {
     fn ivy_vector_cache_name_matches_the_documented_runtime_path() {
         assert_eq!(
             IVY_VECTOR.cache_file_name(),
-            "hero_gif_2.r6.96x48.frame_cache.json"
+            "hero_gif_2.r7.96x48.frame_cache.json"
         );
     }
 

@@ -4,6 +4,22 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-10 17:26 CEST
+
+- restored the user-approved default `hero_gif_2` Chafa contract: `96x48`
+  braille/full RGB, `--color-extractor=median`, `--dither=diffusion`,
+  `--dither-grain=1x1`, `--fg-only`, and the source-owned `--bg=#336699`
+- made that choice declarative in the one preset shared by runtime and offline
+  compiler; updated the preset identifier and both source cache revisions to
+  7, so existing packages and frame caches cannot silently serve the prior
+  `average` / no-dither / `#00e000` policy
+- restored the default vector source's explicit, test-pinned overlap contract
+  (259464 pixels within the drop radius in its worst frame); `IVY` retains its
+  separate non-overlapping `#00e000` cull reference
+- reconciled the active rendering, cache, drop-rule, architecture, and audit
+  documentation; the 2026-09-09 `#00e000` disposition remains historical
+  evidence rather than an active default
+
 ## 2026-09-09 10:39 CEST
 
 - retired the unmerged historical ref

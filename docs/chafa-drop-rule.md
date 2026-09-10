@@ -118,11 +118,11 @@ That harness produced every number in this note. Two traps it must avoid:
    directory first - a revision number used by an earlier experiment can still
    be present and would be accepted as fresh.
 
-6. **Only deliberately overlap the palette with an explicit visual review.**
-   The normal contract requires separation, and the test will reject a
-   significant overlap. If a future source truly needs culling, add a narrow
-   source-owned exception and document the exact keep-set and measurement in
-   the same change; do not make an implicit overlap the default policy.
+6. **Only deliberately overlap the palette with an explicit visual contract.**
+   The normal contract requires separation. `IVY_VECTOR`, the default source,
+   is the narrow exception: its `#336699` overlap is intentional and pinned by
+   test so its keep/cull shape cannot drift silently. A new source must add its
+   own explicit exception and measurement; never inherit this cull by accident.
 
 7. **Verify live against a fresh cache**, not only by test:
 
@@ -136,8 +136,8 @@ so it needs no build and no cache:
 
 ```sh
 chafa assets/hero_gif_2.gif --size 96x48 --format=symbols --symbols=braille \
-  --colors=full --color-space=rgb --color-extractor=average --dither=none \
-  --fg-only --bg=#00e000
+  --colors=full --color-space=rgb --color-extractor=median --dither=diffusion \
+  --dither-grain=1x1 --fg-only --bg=#336699
 ```
 
 ## Reference Data For Current Assets
@@ -146,9 +146,9 @@ chafa assets/hero_gif_2.gif --size 96x48 --format=symbols --symbols=braille \
 distinct opaque colors; 93.8% of opaque pixels are those ten and the remaining
 6.16% is anti-aliasing fringe.
 
-The historical `#336699` sweep below is retained as evidence for why it was
-rejected; the active `hero_gif_2` package uses the non-overlapping
-`--bg=#00e000` value so the dark tiers remain visible.
+The default `hero_gif_2` package uses the deliberate `--bg=#336699` cull
+contract below. It is a visual choice for this flat-filled asset, not a general
+rule for other sources.
 
 Darkest survivable value per family at the historical `--bg=#336699`, pinned to 0.012 HSV:
 
@@ -230,10 +230,12 @@ Menlo returned byte-identical output. That may mean the built-in model matches
 it, or that the `.ttc` failed to load and chafa fell back silently - not
 verified, so do not rely on it either way.
 
-## Settings With No Effect
+## Settings Measured As Inert In Earlier Harness Runs
 
-Measured inert at `--colors=full`, which is what the runtime uses. Recorded so
-they are not re-tested or tuned in the expectation of an effect.
+Earlier harness runs measured the following as byte-identical at
+`--colors=full`. The default nevertheless records the user-approved
+`diffusion` and `1x1` grain literally, so the deployed invocation is
+reconstructable and does not depend on an implicit Chafa default.
 
 | setting | evidence |
 | --- | --- |

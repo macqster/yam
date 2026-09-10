@@ -22,9 +22,10 @@ use crate::render::hero_source::HeroSource;
 /// (`render::hero_manifest`) so a package's rendering intent is legible
 /// without cross-referencing this file.
 ///
-/// v2: the extractor moved from `median` to `average`, and `--bg` became
+/// v3: the default hero reference uses `median`, diffusion with a `1x1`
+/// grain, and its source-owned `#336699` cull reference. `--bg` remains
 /// per-source rather than a global constant.
-pub(crate) const HERO_PRESET_ID: &str = "rgb-average-fgonly-braille-v2";
+pub(crate) const HERO_PRESET_ID: &str = "rgb-median-diffusion-fgonly-braille-v3";
 
 /// The single authoritative chafa preset, shared by ordinary runtime
 /// rendering (`chafa_output`) and the offline compiler
@@ -43,15 +44,14 @@ pub(crate) fn chafa_preset_args(absent_color: [u8; 3]) -> Vec<String> {
         // nearest-match for a colour space to affect. Kept explicit so the
         // invocation stays self-describing; see docs/chafa-drop-rule.md.
         "--color-space=rgb".to_string(),
-        "--color-extractor=average".to_string(),
-        // Also inert here - chafa documents "No effect with 24-bit color".
-        "--dither=none".to_string(),
+        "--color-extractor=median".to_string(),
+        "--dither=diffusion".to_string(),
+        "--dither-grain=1x1".to_string(),
         "--fg-only".to_string(),
         format!(
             "--bg=#{:02x}{:02x}{:02x}",
             absent_color[0], absent_color[1], absent_color[2]
         ),
-        "--animate=off".to_string(),
     ]
 }
 
@@ -603,7 +603,16 @@ mod tests {
         }
     }
 
-    /// `absent_color` only works if it is genuinely absent.
+    /// Sources whose `absent_color` is deliberately inside their own palette,
+    /// with the pixel count that choice puts inside `DROP_RADIUS` in the worst
+    /// frame. These are accepted exceptions rather than absences, so the gate
+    /// pins the number instead of requiring separation: the art is still
+    /// guarded, because any drift in the palette, the radius, or the chosen
+    /// colour changes this count and fails.
+    const ACCEPTED_OVERLAP: &[(&str, usize)] = &[("hero_gif_2", 259464)];
+
+    /// `absent_color` works when it is genuinely absent, unless a source has
+    /// an explicit, pinned visual cull contract below.
     ///
     /// It is handed to chafa as the colour that is already on screen, so any
     /// art resembling it is dropped instead of drawn. A source whose palette
@@ -622,7 +631,9 @@ mod tests {
     /// averaging discards it whatever `absent_color` is - policing it would be
     /// policing the GIF exporter's anti-aliasing fringe rather than the art.
     /// On `hero_gif_1` that fringe is 108 of 249 distinct colours, and it was
-    /// what set this gate's reported clearance before 0.4.3.
+    /// what set this gate's reported clearance before 0.4.3. A source in
+    /// `ACCEPTED_OVERLAP` intentionally culls part of its own palette and has
+    /// that exact overlap pinned instead.
     ///
     #[test]
     fn absent_color_is_actually_absent_from_every_source() {
@@ -663,6 +674,17 @@ mod tests {
             }
 
             let (frame_index, colour) = offender.expect("every source has opaque pixels");
+
+            if let Some((_, pinned)) = ACCEPTED_OVERLAP.iter().find(|(name, _)| *name == stem) {
+                assert_eq!(
+                    worst_frame_inside, *pinned,
+                    "{stem} is an accepted overlap pinned at {pinned} pixels within \
+                     {DROP_RADIUS} of its absent_color {:?}, but now measures \
+                     {worst_frame_inside}. Re-pin it only if the change was intended.",
+                    source.absent_color
+                );
+                continue;
+            }
 
             assert!(
                 worst_frame_inside < significant,
@@ -811,8 +833,20 @@ mod tests {
         );
         assert!(args.contains(&"--symbols=braille".to_string()));
         assert!(args.contains(&"--fg-only".to_string()));
-        let [r, g, b] = source.absent_color;
-        assert!(args.contains(&format!("--bg=#{r:02x}{g:02x}{b:02x}")));
+        assert_eq!(
+            args,
+            vec![
+                "--format=symbols",
+                "--symbols=braille",
+                "--colors=full",
+                "--color-space=rgb",
+                "--color-extractor=median",
+                "--dither=diffusion",
+                "--dither-grain=1x1",
+                "--fg-only",
+                "--bg=#336699",
+            ]
+        );
     }
 
     /// Two sources with different `absent_color` must not produce the same

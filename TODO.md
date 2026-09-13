@@ -117,7 +117,6 @@ Issue link rule:
 ## 6. UI, Dev Surfaces, And Workflow
 
 - `refactor` extract small helper/state seams from `UiState` only where a concrete workflow gets simpler: world switching, companion offsets, weather refresh, settings editing, or dev overlay toggles.
-- `verify` `calendar (reserved)` stays demoted outside lightweight move/help surfaces until a live calendar surface exists.
 - `verify` hotkeys, move strip, footer, settings, help, palette, weather inspection, pointer probe, and quit-confirm keep separate roles and one shared modal-shell vocabulary where applicable.
 - `inspect` introduce a dedicated FIGlet/font subsystem for YAM text-art surfaces instead of continuing one-off ASCII literals; use `docs/reference-sigye.md` as the starter reference.
 - `inspect` add a reusable styled hotkey-hint formatter so overlays can present compact cues like `up/down nav` and `left/right change` with explicit token/description contrast.

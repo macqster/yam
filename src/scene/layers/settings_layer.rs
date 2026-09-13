@@ -41,10 +41,9 @@ impl Layer for SettingsLayer {
                 right: "? ⎋",
             }),
         );
-        let body_x = frame.x + 2;
-        let body_y = frame.y + 3;
+        let (body_x, body_y) = frame.body_origin();
         draw_tabs(&mut grid, body_x, frame.y + 1, ui.meta.settings_tab);
-        draw_tab_body(&mut grid, body_x, body_y, frame.width - 4, ui, ctx);
+        draw_tab_body(&mut grid, body_x, body_y, frame.body_width(), ui, ctx);
         LayerOutput { grid, mask: None }
     }
 }
@@ -657,5 +656,22 @@ mod tests {
         assert!(text.contains("hero fps:"));
         assert!(text.contains("clock font:"));
         assert!(text.contains("hero render: chafa-backed"));
+    }
+
+    #[test]
+    fn settings_overlay_clips_safely_in_a_three_column_terminal() {
+        let layer = SettingsLayer;
+        let world = WorldState::new();
+        let fonts = FontRegistry::new();
+        let render_state = render_state(0, 0, 3, 2, 0, 0, false);
+        let mut ui = UiState::new();
+        ui.meta.dev_mode = true;
+        ui.meta.settings_open = true;
+
+        let output = layer.render_to_grid(3, 2, &world, &ui, &fonts, &render_state);
+
+        assert_eq!(output.grid.width, 3);
+        assert_eq!(output.grid.height, 2);
+        assert_eq!(output.grid.cells.len(), 6);
     }
 }

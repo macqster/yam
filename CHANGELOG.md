@@ -396,6 +396,15 @@ full change history in one running section instead of per-version ones.
 
 ### Fixed
 
+- Compact weather temperatures now use the standard Unicode degree sign (for
+  example, `11°C`) instead of a font-dependent private-use glyph. This keeps
+  the day/night values readable across terminal font configurations without
+  changing the weather data, layout, or icon order.
+
+- The Settings modal now safely clips in terminals narrower than its horizontal
+  gutter instead of allowing an unsigned body-width subtraction to wrap and
+  panic. Normal-size modal geometry and styling are unchanged.
+
 - Rendering no longer rewrites saved camera state. `offsets.camera_x`/`camera_y`
   are the position the user authored and the one that is persisted;
   `camera.x`/`camera.y` are the position actually rendered after being fitted to

@@ -4,6 +4,34 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-13 12:20 CEST
+
+- corrected the compact weather temperature row to use Unicode `U+00B0` (`°`)
+  before `C` instead of the font-dependent private-use `U+E33E` glyph. The
+  day/night values, icon order, width, weather data path, and layout ownership
+  are unchanged
+- updated the focused formatter regression and the active weather-widget
+  presentation contract; the historical log retains prior captured glyph text
+  as evidence of the superseded output
+
+## 2026-09-13 11:52 CEST
+
+- repaired the narrow-terminal Settings modal panic found in the widget-polish
+  review: `SettingsLayer` now consumes shared saturating modal-body geometry
+  rather than directly subtracting its horizontal gutter from a terminal-bounded
+  `u16` width
+- added a compact `3x2` Settings render regression and shared modal-geometry
+  coverage. A constrained terminal now clips panel content safely instead of
+  wrapping its width or panicking; ordinary modal dimensions and styling are
+  unchanged
+- recorded the terminal-bounded modal contract in `docs/rendering.md`; this is
+  a render/layout safety repair, not a new widget surface or a change to
+  world/HUD/overlay ownership
+- reconciled the completed calendar-seam demotion in the active backlog and
+  audit: current source and the move-layer regression confirm that calendar is
+  absent from lightweight move/help controls and remains settings-only until a
+  live calendar surface exists, as `docs/rendering.md` already specifies
+
 ## 2026-09-10 20:04 CEST
 
 - deployed the merged canonical-package repair (`5c2acf5`) to iMac from its

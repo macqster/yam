@@ -35,7 +35,17 @@ impl ModalFrame {
     }
 
     pub fn body_origin(self) -> (u16, u16) {
-        (self.x + 2, self.y + 3)
+        (self.x.saturating_add(2), self.y.saturating_add(3))
+    }
+
+    /// Width available inside the shared modal border and horizontal gutter.
+    ///
+    /// A modal may be clamped below its preferred size by a narrow terminal,
+    /// so callers must use this instead of subtracting from `frame.width`
+    /// directly. Zero is a valid compact-layout result: content then clips
+    /// through the grid writer rather than wrapping an unsigned width.
+    pub fn body_width(self) -> u16 {
+        self.width.saturating_sub(4)
     }
 }
 
@@ -192,6 +202,23 @@ mod tests {
         assert_eq!(frame.height, 16);
         assert_eq!(frame.x, 28);
         assert_eq!(frame.y, 8);
+    }
+
+    #[test]
+    fn modal_body_geometry_clamps_when_the_terminal_is_smaller_than_the_gutter() {
+        let frame = ModalFrame::centered(3, 2, 68, 16);
+
+        assert_eq!(
+            frame,
+            ModalFrame {
+                x: 0,
+                y: 0,
+                width: 3,
+                height: 2,
+            }
+        );
+        assert_eq!(frame.body_origin(), (2, 3));
+        assert_eq!(frame.body_width(), 0);
     }
 
     #[test]

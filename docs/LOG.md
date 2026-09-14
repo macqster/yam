@@ -4,6 +4,25 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-13 12:43 CEST
+
+- merged the weather and compact-modal safety repair through PR #41 after its
+  required GitHub `verify` workflow passed. Protected `main` advanced to merge
+  commit `aec16f7`, retaining the reviewed implementation commit `676c7ef`
+  underneath it
+- deployed the accepted `main` revision through the repository-owned
+  `scripts/update.sh` updater on MBP, Dell Duo, and iMac. The installed
+  runtimes identify as `260913-1040 (aec16f7)` on MBP and Dell Duo and
+  `260913-1042 (aec16f7)` on iMac; every checkout was clean at that source SHA
+- all three updaters refreshed the non-canonical legacy hero package and
+  deliberately skipped the reviewed default `hero_gif_2` package. Its tracked
+  gzip payload matched its SHA-256 sidecar on every host
+- release-binary `tmux` smoke captures on all three hosts reached the main
+  scene and showed the compact weather row with `°C`. Dell Duo's visible YAM
+  session was restarted through its `dwm-duoctl` owner path and now runs the
+  new binary. These are source, installed-runtime, and terminal-smoke receipts;
+  direct physical-display acceptance remains a separate maintainer decision
+
 ## 2026-09-13 12:20 CEST
 
 - corrected the compact weather temperature row to use Unicode `U+00B0` (`°`)

@@ -4,6 +4,18 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-15 06:06 CEST
+
+- deployed merged `main` revision `854334c` to the iMac and Dell Duo through
+  the repository-owned `scripts/update.sh` path; both updaters skipped the two
+  tracked canonical hero packages as intended
+- the iMac installed runtime reports `yam 0.4.11`, build `854334c`; the Duo
+  checkout and installed runtime report the same merge commit
+- restarted the visible Duo YAM session through `dwm-duoctl yam quit` and
+  `dwm-duoctl yam launch`, then confirmed the owner reports `yam=running`
+- MBP deployment remains pending because `mbp.local` resolves to
+  `192.168.2.166` but its SSH service currently refuses connections
+
 ## 2026-09-15
 
 - extended the canonical hero-package contract from the default vector source

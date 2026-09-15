@@ -19,6 +19,9 @@ This file is append-only and historical only; current rules live in the active d
   skipped both canonical sources as intended, and the installed runtime reports
   build `71bc345`. This is installed-runtime and terminal-smoke evidence, not
   direct physical-display acceptance of the legacy source.
+- aligned the legacy Python Chafa fallback with the current source-owned
+  rendering semantics so its emergency/reference path no longer uses the old
+  `colors=none`/`#101010` dark-drop preset
 
 ## 2026-09-13 12:43 CEST
 

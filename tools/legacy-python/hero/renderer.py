@@ -8,7 +8,7 @@ import subprocess
 
 @dataclass(slots=True)
 class ChafaRenderer:
-    """Shell out to chafa so Python mirrors the Go hero pipeline."""
+    """Shell out to the current YAM Chafa preset for legacy fallback output."""
 
     def render_frame(self, gif_path: str, width: int, height: int) -> str:
         result = subprocess.run(
@@ -16,10 +16,13 @@ class ChafaRenderer:
                 "chafa",
                 "--format=symbols",
                 "--symbols=braille",
-                "--colors=none",
-                "--animate=off",
-                "--bg=#101010",
+                "--colors=full",
+                "--color-space=rgb",
+                "--color-extractor=median",
+                "--dither=diffusion",
+                "--dither-grain=1x1",
                 "--fg-only",
+                "--bg=#00e000",
                 "--size",
                 f"{width}x{height}",
                 gif_path,

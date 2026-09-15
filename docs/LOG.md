@@ -22,6 +22,9 @@ This file is append-only and historical only; current rules live in the active d
 - aligned the legacy Python Chafa fallback with the current source-owned
   rendering semantics so its emergency/reference path no longer uses the old
   `colors=none`/`#101010` dark-drop preset
+- made the experimental config loader resolve its historical relative hero
+  path through the repository's legacy compatibility root, removing the
+  working-directory-dependent failure in the fallback path
 
 ## 2026-09-13 12:43 CEST
 

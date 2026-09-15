@@ -4,6 +4,30 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-15 13:00 CEST
+
+- reconciled the MBP checkout from the stale pre-package `fec7948` tip to
+  current `main` `37b8964`; the worktree remained clean throughout
+- ran the repository-owned updater from the reconciled checkout. The installed
+  runtime now identifies as `yam 0.4.11`, build `260915-1058 (37b8964)`, from
+  `/Users/mcq/_git/yam`; installed and release binaries have the same SHA-256
+- verified both tracked canonical packages without regeneration:
+  `hero_gif_1` `10430d377d09158b7db3ca312ab0456c573e878ff2cfbe0875a79c18babb2a19`
+  and `hero_gif_2`
+  `d983b1e8ebfc3966b64685cbc2ae46407872aa764e0134a912375c0bb6126276`;
+  `--compile-all-heroes` skipped both source-owned packages
+- completed release-binary tmux smoke for the normal default and the reversible
+  `YAM_HERO_SOURCE=hero_gif_1` launch. Both reached the main scene at
+  `200x50` cells and reported footer identity `yam 0.4.11 (37b8964)`
+- the current host has Chafa `1.18.2`, tmux `3.7c`, MarkdownLint `0.23.2`,
+  cargo-audit `0.22.2`, and all required command-line tools. `brew bundle check`
+  still reports Ghostty as missing because `/Applications/Ghostty.app` is
+  externally managed rather than Homebrew-owned; no forced replacement was
+  performed
+- direct physical-terminal screenshot acceptance remains open: these are
+  source, package, installed-runtime, and tmux-smoke receipts, not proof of
+  the visible MBP display's exact cell geometry or absence of a white perimeter
+
 ## 2026-09-15 06:06 CEST
 
 - deployed merged `main` revision `854334c` to the iMac and Dell Duo through

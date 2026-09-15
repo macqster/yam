@@ -63,7 +63,8 @@ pub struct HeroSource {
     /// near side honest.
     pub absent_color: [u8; 3],
     /// Repository-owned, gzip-compressed package accepted after a real
-    /// terminal review, if this source needs identical cells on every host.
+    /// terminal review, so every host consumes identical cells for this
+    /// source instead of compiling through its local Chafa build.
     /// The matching `.sha256` sidecar is part of the artifact contract.
     /// `None` retains the normal local offline-compiler path.
     pub canonical_package_path: Option<&'static str>,
@@ -90,7 +91,10 @@ pub const IVY: HeroSource = HeroSource {
     min_frame0_coverage_percent: 20,
     // Nearest renderable art colour is the green eye, (70, 78, 4), at 162.
     absent_color: [0, 224, 0],
-    canonical_package_path: None,
+    canonical_package_path: Some(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/assets/hero_packages/hero_gif_1.r7.rgb-median-diffusion-fgonly-braille-v3.json.gz"
+    )),
 };
 
 /// The Moho vector rebuild of the same window loop, and the hero since 0.4.1.

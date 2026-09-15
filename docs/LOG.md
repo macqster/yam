@@ -4,6 +4,18 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-15
+
+- extended the canonical hero-package contract from the default vector source
+  to every registered source, adding the checksum-verified `hero_gif_1`
+  package and keeping its source descriptor as the only package-path authority
+- aligned the package and rendering docs with the fleet-wide behavior: the
+  updater skips all canonical sources, so a selected hero no longer changes
+  rendering behavior merely because the host uses a different Chafa binary
+- generated the legacy package with the shared release compiler and the exact
+  source-owned median/diffusion/`#00e000` preset, then verified its manifest,
+  deterministic gzip payload, and sidecar checksum
+
 ## 2026-09-13 12:43 CEST
 
 - merged the weather and compact-modal safety repair through PR #41 after its

@@ -344,8 +344,8 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - Hero frames must remain fixed width and fixed height before render.
 - Hero rendering must not use ratatui wrapping.
 - Hero startup first uses a checksum-verified canonical package when the source
-  declares one (currently the visually accepted `hero_gif_2` MBP package),
-  then a validated machine-local `HeroPackage`, the disposable per-source
+  declares one (currently both registered sources), then a validated
+  machine-local `HeroPackage`, the disposable per-source
   `HeroFrameSet` cache, and finally live Chafa compilation. This first step is
   necessary because equal Chafa version text on MBP arm64 and iMac x86_64 did
   not yield equal cells. Package and cache ownership remain separate: the
@@ -373,13 +373,13 @@ Current mask behavior is intentionally limited. The hero layer can emit a silhou
 - The first render-loop allocation cleanup slices are now live: runtime keeps one long-lived `Scene`, reuses the boxed layer stack across frames, skips obviously closed modal/help/quit layers before asking them to allocate grids at all, reuses the final composed `Grid` across frames in the live runtime loop, and now has a reusable per-layer scratch-grid seam adopted by the simple always-active layers, the lightweight companion projection layers (`clock`, `weather`, `date`), the always-active hero layer, the debug overlay, and the vine layer. The next conservative step on that path is no longer “take another obvious layer,” but deciding whether any of those remaining draw paths should move to even cheaper specialized helpers without destabilizing the current layer contract.
 - There is now also a narrow fast ASCII-only compositor write path for plain UI chrome. It preserves the existing “spaces style but do not overwrite symbols” contract, falls back to the general grapheme-aware writer for non-ASCII text, and is currently used only by obviously ASCII-bound always-on chrome such as the footer, world label, and debug-panel/tab labels.
 - The concrete disposable-cache contract lives in [`docs/hero-cache.md`](hero-cache.md), and the validated package contract lives in [`docs/hero-package.md`](hero-package.md); broader renderer strategy remains here.
-- The canonical default package lives with its source under
-  `assets/hero_packages/` and has a checked SHA-256 sidecar. Other prepared
-  artifacts live in the user runtime cache directory (`$XDG_CACHE_HOME/yam/`
-  when available, otherwise `~/.cache/yam/`). If no valid canonical package is
-  available, startup checks a matching local package, then the revision-keyed
-  frame cache before falling back to GIF decode, temporary frames, and live
-  Chafa.
+- Canonical packages for all registered hero sources live with the source
+  under `assets/hero_packages/` and each has a checked SHA-256 sidecar. Other
+  prepared artifacts live in the user runtime cache directory
+  (`$XDG_CACHE_HOME/yam/` when available, otherwise `~/.cache/yam/`). If a
+  source's canonical package is invalid or absent, startup checks a matching
+  local package, then the revision-keyed frame cache before falling back to GIF
+  decode, temporary frames, and live Chafa.
 - The final fallback is intentionally non-fatal when `chafa` is unavailable: if neither prepared artifact is usable and the compiler backend cannot be spawned, the renderer returns an explicit placeholder frame instead of panicking.
 - Third-party ANSI editors are useful references, but current tools tend to split between CP437/limited-color manual editing, destructive image conversion, and non-editable terminal replay; none should be treated as the primary YAM editing surface unless it proves Unicode braille, truecolor, animation, and lossless cell round-tripping.
 - REXPaint is viable through CrossOver as an optional manual editing node, but `.xp` should stay an interchange/export target rather than the YAM source of truth: REXPaint is CP437/font-atlas oriented, so braille glyphs require a controlled tile/font mapping and round-trip validation before edited frames can feed `HeroFrameSet`.

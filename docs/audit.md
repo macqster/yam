@@ -3,7 +3,7 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-09-10 (default hero contract published, deployed on MBP and Dell Duo, and visually accepted)
+Last reviewed: 2026-09-15 (all registered hero sources canonicalized and the iMac feature branch deployed)
 
 ## Unresolved Risks
 

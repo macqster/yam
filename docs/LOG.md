@@ -15,6 +15,10 @@ This file is append-only and historical only; current rules live in the active d
 - generated the legacy package with the shared release compiler and the exact
   source-owned median/diffusion/`#00e000` preset, then verified its manifest,
   deterministic gzip payload, and sidecar checksum
+- deployed the feature branch locally through `scripts/update.sh`; the updater
+  skipped both canonical sources as intended, and the installed runtime reports
+  build `71bc345`. This is installed-runtime and terminal-smoke evidence, not
+  direct physical-display acceptance of the legacy source.
 
 ## 2026-09-13 12:43 CEST
 

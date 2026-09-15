@@ -28,12 +28,36 @@ def default_scene_config_path(repo_root: Path) -> Path:
     return repo_root / "scene_config.json"
 
 
+def resolve_gif_path(config_path: Path, value: str | Path) -> Path:
+    """Resolve a tooling GIF path from the config location and repo layout.
+
+    The tracked preset keeps the historical ``hero/assets`` spelling used by
+    the legacy tooling, while the actual asset lives below
+    ``tools/legacy-python``. Resolving that mapping here makes the fallback
+    independent of the caller's current working directory.
+    """
+    requested = Path(value)
+    if requested.is_absolute():
+        return requested
+
+    direct = config_path.parent / requested
+    if direct.exists():
+        return direct
+
+    for parent in (config_path.parent, *config_path.parent.parents):
+        legacy_asset = parent / "tools" / "legacy-python" / requested
+        if legacy_asset.exists():
+            return legacy_asset
+
+    return direct
+
+
 def load_scene_config(path: Path) -> SceneConfig:
     """Load scene config from JSON, falling back to defaults if absent."""
     if not path.exists():
         return SceneConfig(
             clock_font_name="Fender",
-            gif_path=Path("hero/assets/hero_go.gif"),
+            gif_path=resolve_gif_path(path, "hero/assets/hero_go.gif"),
             hero_anchor="left",
             hero_width=10,
             hero_height=6,
@@ -46,7 +70,9 @@ def load_scene_config(path: Path) -> SceneConfig:
     clock_font_name = str(data.get("clock_font_name", "Fender"))
     day_format = str(data.get("day_format", "%A, %d %B"))
     clock_format = str(data.get("clock_format", "%H:%M"))
-    gif_path = Path(data.get("gif_path", "hero/assets/hero_go.gif"))
+    gif_path = resolve_gif_path(
+        path, data.get("gif_path", "hero/assets/hero_go.gif")
+    )
     hero_anchor = str(data.get("hero_anchor", "left"))
     hero_width = int(data.get("hero_width", 10))
     hero_height = int(data.get("hero_height", 6))

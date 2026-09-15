@@ -59,29 +59,30 @@ Geometry and `absent_color` come from the source's descriptor rather than
 constants, so a package cannot be rendered against a different drop reference
 than the runtime uses for the same asset.
 
-## Canonical Default Package
+## Canonical Source Packages
 
-The default `hero_gif_2` has a source-owned, gzip-compressed package at
-`assets/hero_packages/hero_gif_2.r7.rgb-median-diffusion-fgonly-braille-v3.json.gz`.
-Its adjacent `.sha256` file verifies the compressed bytes before the runtime
-decodes it. The default loader uses this artifact before any machine-local
-package, cache, or live Chafa compilation, and then applies the ordinary
-manifest, source-digest, geometry, literal-argument, and structural checks.
+Every registered source now has a source-owned, gzip-compressed package under
+`assets/hero_packages/`, with an adjacent `.sha256` sidecar. The loader uses a
+source's checksum-verified artifact before any machine-local package, cache,
+or live Chafa compilation, and then applies the ordinary manifest,
+source-digest, geometry, literal-argument, and structural checks. This makes
+the selected hero independent of the host architecture and local Chafa build,
+including when `YAM_HERO_SOURCE=hero_gif_1` selects the legacy source.
 
-This exception exists because the MBP arm64 and iMac x86_64 Chafa 1.18.2
+The default `hero_gif_2` package is the MBP-reviewed fleet authority because
+the MBP arm64 and iMac x86_64 Chafa 1.18.2
 executables produced different `CellGrid` payloads from identical GIF bytes
 and literal arguments; the iMac-local result visibly created a large dark
 mass. Nominal Chafa version text is therefore provenance, not proof of
-cross-host visual equivalence. The reviewed MBP package is the one fleet
-authority for this default; it is not a cache and must not be overwritten by
-the updater.
+cross-host visual equivalence. The legacy `hero_gif_1` package is likewise
+source-owned and keeps the same portable-cell contract for the reversible
+source selection path.
 
-Refresh it only on the accepted MBP renderer after a real-terminal review of
-the candidate, using the release compiler and deterministic gzip (`gzip -9 -n`).
-Update the `.sha256` sidecar in the same reviewed change, run the full gate,
-and deploy the resulting source checkout. Do not copy an iMac-compiled default
-package into this path. `IVY` has no canonical package and remains on the
-normal local compiler path.
+Refresh canonical packages only after a real-terminal review of the candidate,
+using the release compiler and deterministic gzip (`gzip -9 -n`). Update the
+`.sha256` sidecar in the same reviewed change, run the full gate, and deploy
+the resulting source checkout. The updater must never overwrite these tracked
+artifacts; it skips every source that declares one.
 
 ## Manifest Shape
 

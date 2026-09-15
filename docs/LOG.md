@@ -4,6 +4,31 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-15
+
+- extended the canonical hero-package contract from the default vector source
+  to every registered source, adding the checksum-verified `hero_gif_1`
+  package and keeping its source descriptor as the only package-path authority
+- aligned the package and rendering docs with the fleet-wide behavior: the
+  updater skips all canonical sources, so a selected hero no longer changes
+  rendering behavior merely because the host uses a different Chafa binary
+- generated the legacy package with the shared release compiler and the exact
+  source-owned median/diffusion/`#00e000` preset, then verified its manifest,
+  deterministic gzip payload, and sidecar checksum
+- deployed the feature branch locally through `scripts/update.sh`; the updater
+  skipped both canonical sources as intended, and the installed runtime reports
+  build `71bc345`. This is installed-runtime and terminal-smoke evidence, not
+  direct physical-display acceptance of the legacy source.
+- aligned the legacy Python Chafa fallback with the current source-owned
+  rendering semantics so its emergency/reference path no longer uses the old
+  `colors=none`/`#101010` dark-drop preset
+- made the experimental config loader resolve its historical relative hero
+  path through the repository's legacy compatibility root, removing the
+  working-directory-dependent failure in the fallback path
+- corrected `Brewfile`'s Ghostty declaration from a formula to a cask and
+  declared the Rust, Node, tmux, and ripgrep host tools used by the verified
+  workflow; `brew bundle check --no-upgrade` now passes on the iMac
+
 ## 2026-09-13 12:43 CEST
 
 - merged the weather and compact-modal safety repair through PR #41 after its

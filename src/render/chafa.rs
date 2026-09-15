@@ -936,21 +936,28 @@ mod tests {
     }
 
     #[test]
-    fn default_canonical_package_is_intact_and_matches_its_source_contract() {
-        let source = crate::render::hero_source::DEFAULT;
-        assert!(source.has_canonical_package());
-        let package = super::load_canonical_hero_package(&source)
-            .expect("the tracked default package and checksum should decode");
-        let digest = HeroManifest::digest_source_file(Path::new(source.path))
-            .expect("tracked default source should be readable");
-        assert!(super::manifest_matches(
-            &package.manifest,
-            source.render_width,
-            source.render_height,
-            &digest,
-            &super::chafa_preset_args(source.absent_color),
-        ));
-        assert!(package.validate().is_valid());
+    fn every_registered_canonical_package_matches_its_source_contract() {
+        for source in crate::render::hero_source::ALL {
+            assert!(
+                source.has_canonical_package(),
+                "registered source {} must declare a canonical package",
+                source.stem
+            );
+            let package = super::load_canonical_hero_package(source)
+                .unwrap_or_else(|| panic!("tracked package for {} should decode", source.stem));
+            let digest =
+                HeroManifest::digest_source_file(Path::new(source.path)).unwrap_or_else(|err| {
+                    panic!("tracked source {} should be readable: {err}", source.stem)
+                });
+            assert!(super::manifest_matches(
+                &package.manifest,
+                source.render_width,
+                source.render_height,
+                &digest,
+                &super::chafa_preset_args(source.absent_color),
+            ));
+            assert!(package.validate().is_valid());
+        }
     }
 
     /// The digest check is the whole reason a package is safer than the frame

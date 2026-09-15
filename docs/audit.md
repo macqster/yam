@@ -3,7 +3,7 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-09-15 (all registered hero sources canonicalized and the iMac feature branch deployed)
+Last reviewed: 2026-09-15 (all registered hero sources canonicalized; merged deployment reconciled on iMac and Duo; MBP access re-probed)
 
 ## Unresolved Risks
 
@@ -141,6 +141,17 @@ Last reviewed: 2026-09-15 (all registered hero sources canonicalized and the iMa
   architectures.
   - evidence: `src/render/hero_source.rs`, `src/main.rs`, `scripts/update.sh`,
     `assets/hero_packages/`, `docs/hero-package.md`
+- `medium` **Current fleet-validation boundary, rechecked 2026-09-15.** The
+  iMac and Dell Duo are deployed from merged `main` revision `854334c`, and
+  the Duo session was restarted through its owner path. The MBP remains
+  reachable by ICMP and resolves as `mbp.local -> 192.168.2.166`, but SSH on
+  port 22 still returns `connection refused`; the bounded probes for VNC,
+  Apple Remote Desktop, RDP, SMB, HTTP, and HTTPS also found no open
+  management path. MBP source, installed-binary, cache, and post-fix display
+  proof therefore remain unverified. This is an access boundary, not evidence
+  of a rendering or repository defect.
+  - evidence: `docs/LOG.md`, live mDNS/ARP/ICMP/port probes, iMac and Duo
+    deployment identity receipts
 - `low` Edge-cell bleed is the residual cost of a separated `absent_color` and is reduced, not eliminated (2026-08-19). `IVY` keeps `#00e000`, the least clearance that avoids its drop radius; the earlier cross-asset counts (`#ffffff` 0 off-palette cells, `#00e000` 8, `#00ff00` 15, `#00f0b0` 50) remain measurement history, not the default vector policy. `IVY_VECTOR` deliberately uses `#336699` and therefore has an explicit cull contract rather than a separation/bleed tradeoff.
   - evidence: `src/render/hero_source.rs`, `docs/rendering.md`
 - `low` Fixed the dark-region/dark-red coverage loss that has affected hero rendering since the Rust baseline (2026-07-22): a direct sanity-check investigation found the prior `--color-extractor=average` Chafa flag, combined with flattening every frame onto an opaque matte canvas, was dropping roughly 80% of the frame grid as "no coverage" — not desaturating it, omitting it — because low-contrast dark regions (any dark content, not only reds) read as close enough to the assumed background to skip. Two changes together fix it: the source asset (`assets/hero_gif_1.gif`) now carries real per-pixel alpha that the pipeline preserves end to end instead of discarding at flatten time, and the extractor switched to `--color-extractor=median`. The asset's provenance is worth recording precisely, because it explains the "since day 0" part: the alpha-carrying original has been tracked in this repo the whole time at `tools/legacy-python/hero/assets/hero_go.gif` (imported in `768b193`, used by the legacy Python hero pipeline), and the very first Rust hero commit (`0606be7`, 2026-04-23) added `assets/hero_gif_1.gif` as a *separate, flattened, alpha-stripped copy* of that same art rather than pointing at the original. The Rust renderer has therefore been reading alpha-free frames since its first day, which is exactly the window over which dark reds were reported missing. The new `assets/hero_gif_1.gif` is byte-identical (md5 `8afff117…`) to that in-repo original. Neither alone is correct: `median` against the old flattened canvas recovered coverage only by also painting the true background; real alpha alone (`average` extractor) barely moved the numbers. Verified live in the running app (`scripts/tmux-smoke.sh`), not just synthetic frame tests: color codes in the rendered output now include genuine dark-red values that were previously absent. The renamed `HERO_DISPLAY_BG` constant (formerly `HERO_FRAME_BG`) now reflects its actual role, "chafa `--bg` display hint only," not "opaque flatten fill," and the corner-transparency assumption in `decoded_hero_frames_keep_full_canvas_geometry` flipped from asserting opacity to asserting transparency.

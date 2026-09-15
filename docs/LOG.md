@@ -25,6 +25,16 @@ This file is append-only and historical only; current rules live in the active d
   the later `average` comparison as historical evidence rather than current
   configuration.
 
+## 2026-09-15 06:25 CEST
+
+- Re-probed the MBP fleet-validation boundary after the merged deployment:
+  `mbp.local` still resolves to `192.168.2.166`, ICMP succeeds, SSH returns
+  `connection refused`, and the bounded VNC/Apple Remote Desktop/RDP/SMB/HTTP/
+  HTTPS probes found no alternate management path. Updated `docs/audit.md` to
+  distinguish the previously accepted canonical package payload from current
+  live MBP runtime and display proof, which remains unavailable until an
+  authorized management path is restored.
+
 ## 2026-09-15
 
 - extended the canonical hero-package contract from the default vector source

@@ -16,6 +16,15 @@ This file is append-only and historical only; current rules live in the active d
 - MBP deployment remains pending because `mbp.local` resolves to
   `192.168.2.166` but its SSH service currently refuses connections
 
+## 2026-09-15 06:20 CEST
+
+- Re-audited the merged hero/render/cache contract and corrected one stale
+  sentence in `docs/rendering.md` that said the extractor had returned to
+  `average`; the active shared preset, canonical package manifests, legacy
+  fallback, and architecture docs all use `median`, so the prose now describes
+  the later `average` comparison as historical evidence rather than current
+  configuration.
+
 ## 2026-09-15
 
 - extended the canonical hero-package contract from the default vector source

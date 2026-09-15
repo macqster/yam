@@ -25,6 +25,9 @@ This file is append-only and historical only; current rules live in the active d
 - made the experimental config loader resolve its historical relative hero
   path through the repository's legacy compatibility root, removing the
   working-directory-dependent failure in the fallback path
+- corrected `Brewfile`'s Ghostty declaration from a formula to a cask and
+  declared the Rust, Node, tmux, and ripgrep host tools used by the verified
+  workflow; `brew bundle check --no-upgrade` now passes on the iMac
 
 ## 2026-09-13 12:43 CEST
 

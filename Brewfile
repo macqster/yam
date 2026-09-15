@@ -1,3 +1,7 @@
-brew "ghostty"
+cask "ghostty"
 brew "fastfetch"
 brew "chafa"
+brew "rust"
+brew "node"
+brew "tmux"
+brew "ripgrep"

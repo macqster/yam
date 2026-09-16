@@ -3,7 +3,8 @@
 <!-- cspell:ignore twimc -->
 
 Date: 2026-04-27
-Last reviewed: 2026-09-15 (all registered hero sources canonicalized; merged deployment reconciled on iMac and Duo; MBP access re-probed)
+Last reviewed: 2026-09-16 (dependency graph and vulnerability audit rechecked;
+all other risk notes carried forward from the 2026-09-15 fleet review)
 
 ## Unresolved Risks
 
@@ -71,7 +72,7 @@ Last reviewed: 2026-09-15 (all registered hero sources canonicalized; merged dep
 
 ## Active Risk Notes
 
-- `medium` The current dependency graph contains two known duplicate families: `hashbrown` `0.16.1`/`0.17.1` inside Ratatui's tree and `syn` 2/3 across transitive procedural-macro dependencies. `Cargo.lock` resolves Serde `1.0.229`. A fresh local `cargo audit` on 2026-09-09 loaded 1,242 RustSec advisories and reported one allowed unsoundness warning, `RUSTSEC-2026-0253` for transitive `lru` `0.18.1` through `ratatui-core`; it exited successfully with no blocking vulnerability. CI enforces the same audit. The older dependency paragraph below is retained only as the 2026-07-22 remediation record and is not current lockfile guidance.
+- `medium` The current dependency graph contains two known duplicate families: `hashbrown` `0.16.1`/`0.17.1` inside Ratatui's tree and `syn` 2/3 across transitive procedural-macro dependencies. `Cargo.lock` resolves Serde `1.0.229`, `flate2` `1.1.10`, and `tachyonfx` `0.25.2`. A fresh local `cargo audit` on 2026-09-16 loaded 1,246 RustSec advisories and reported one allowed unsoundness warning, `RUSTSEC-2026-0253` for transitive `lru` `0.18.1` through `ratatui-core`; it exited successfully with no blocking vulnerability. CI enforces the same audit. The older dependency paragraph below is retained only as the 2026-07-22 remediation record and is not current lockfile guidance.
   - evidence: `Cargo.lock`, `Cargo.toml`, `.github/workflows/verify.yml`
 
 - `low` Terminal teardown runs through a drop guard in `runtime.rs`, so an early return from a size/input/draw step is less likely to strand raw-mode / alternate-screen state.

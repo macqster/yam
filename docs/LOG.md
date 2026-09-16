@@ -4,6 +4,24 @@
 
 This file is append-only and historical only; current rules live in the active docs.
 
+## 2026-09-16 18:05 CEST
+
+- Reconciled the canonical iMac checkout with remote `main`, first taking the
+  merged MBP-validation record and then independently reviewing the two queued
+  Dependabot patch updates. `flate2` advanced `1.1.9` → `1.1.10` and
+  `tachyonfx` `0.25.1` → `0.25.2`; both changes are lockfile-only.
+- Tested the two updates together in an isolated worktree before either remote
+  merge. `bash scripts/verify.sh` passed all docs and Rust checks and all
+  `389/389` tests; `cargo audit` exited successfully. The final integrated
+  tree was byte-for-byte the same as canonical `main` after both merges.
+- The refreshed upstream `verify` workflow passed for each PR. The rebase of
+  the second Dependabot branch was requested after the first merge rather than
+  accepting its stale CI result. Canonical `main` now includes PR #50
+  (`flate2`) at `833c308` and PR #49 (`tachyonfx`) at `145c1ad`.
+- `cargo audit` loaded 1,246 RustSec advisories and retained the one already
+  documented allowed warning, `RUSTSEC-2026-0253` in transitive `lru` `0.18.1`
+  through `ratatui-core`. No new blocking advisory was introduced.
+
 ## 2026-09-15 13:00 CEST
 
 - reconciled the MBP checkout from the stale pre-package `fec7948` tip to
